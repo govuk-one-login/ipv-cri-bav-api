@@ -71,7 +71,6 @@ Resources:
       KeySchema:
         - AttributeName: "sessionId"
           KeyType: "HASH"
-      GlobalSecondaryIndexes:
       TimeToLiveSpecification:
         AttributeName: expiryDate
         Enabled: true
