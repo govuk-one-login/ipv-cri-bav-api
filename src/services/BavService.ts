@@ -2,7 +2,6 @@ import { SendMessageCommand } from "@aws-sdk/client-sqs";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { DynamoDBDocument, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
-import { EnvironmentVariables } from "./EnvironmentVariables";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { ISessionItem } from "../models/ISessionItem";
 import { MessageCodes } from "../models/enums/MessageCodes";
@@ -20,15 +19,12 @@ export class BavService {
 
 	readonly logger: Logger;
 
-	private readonly environmentVariables: EnvironmentVariables;
-
 	private static instance: BavService;
 
-	constructor(tableName: any, logger: Logger, dynamoDbClient: DynamoDBDocument) {
+	constructor(tableName: string, logger: Logger, dynamoDbClient: DynamoDBDocument) {
 		this.tableName = tableName;
 		this.dynamo = dynamoDbClient;
 		this.logger = logger;
-		this.environmentVariables = new EnvironmentVariables(logger, ServicesEnum.NA);
 	}
 
 	static getInstance(tableName: string, logger: Logger, dynamoDbClient: DynamoDBDocument): BavService {
