@@ -92,8 +92,18 @@ export class BavService {
 			TableName: process.env.PERSON_IDENTITY_TABLE_NAME,
 			Item: personIdentityItem,
 		});
-		await this.dynamo.send(putSessionCommand);
-		return putSessionCommand?.input?.Item?.sessionId;
+
+		this.logger.info({ message: "Saving personal identity data in DynamoDB" });
+
+		try {
+			await this.dynamo.send(putSessionCommand);
+			this.logger.info("Successfully created session in dynamodb");
+			return putSessionCommand?.input?.Item?.sessionId;
+
+		} catch (error) {
+			this.logger.error({ message: "Failed to save personal identity information", error });
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "Failed to save personal identity information" );
+		}
 	}
 
 	async createAuthSession(session: ISessionItem): Promise<void> {
@@ -103,12 +113,14 @@ export class BavService {
 		});
 
 		this.logger.info({ message: "Saving session data in DynamoDB" });
+
 		try {
 			await this.dynamo.send(putSessionCommand);
 			this.logger.info("Successfully created session in dynamodb");
+
 		} catch (error) {
-			this.logger.error("got error " + error);
-			throw new AppError(HttpCodesEnum.SERVER_ERROR, "saveItem - failed " );
+			this.logger.error({ message: "Failed to save session data", error });
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "Failed to save session data" );
 		}
 	}
 

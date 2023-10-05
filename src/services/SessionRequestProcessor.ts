@@ -3,15 +3,16 @@ import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { BavService } from "./BavService";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
+import { MessageCodes } from "../models/enums/MessageCodes";
 import { ISessionItem } from "../models/ISessionItem";
 import { JwtPayload, Jwt } from "../models/IVeriCredential";
+import { AppError } from "../utils/AppError";
 import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
-import { MessageCodes } from "../models/enums/MessageCodes";
 import { Response, GenericServerError, UnauthorizedResponse, SECURITY_HEADERS } from "../utils/Response";
-import { AppError } from "../utils/AppError";
-import { ValidationHelper } from "../utils/ValidationHelper";
+import { buildCoreEventFields } from "../utils/TxmaEvent";
+import { isJwtValid, isPersonDetailsValid } from "../utils/Validations";
 
 interface ClientConfig {
 	jwksEndpoint: string;
@@ -41,8 +42,9 @@ export class SessionRequestProcessor {
   	if (!sessionTableName || !encryptionKeyIds) {
   		this.logger.error({
   			message: "Missing AUTH_SESSION_TTL_SECS or SESSION_TABLE environment variable",
-  			sessionTableName,
-  			encryptionKeyIds,
+  			sessionTableName: !!sessionTableName,
+  			// Don't want to log sensitive information
+  			encryptionKeyIds: !!encryptionKeyIds,
   			messageCode: MessageCodes.MISSING_CONFIGURATION,
   		});
   		throw new AppError(HttpCodesEnum.SERVER_ERROR, "Session Service incorrectly configured");
@@ -139,7 +141,7 @@ export class SessionRequestProcessor {
   	}
 
   	const jwtPayload: JwtPayload = parsedJwt.payload;
-  	const JwtErrors = this.validationHelper.isJwtValid(jwtPayload, requestBodyClientId, configClient.redirectUri);
+  	const JwtErrors = isJwtValid(jwtPayload, requestBodyClientId, configClient.redirectUri);
   	if (JwtErrors.length > 0) {
   		this.logger.error(JwtErrors, {
   			messageCode: MessageCodes.FAILED_VALIDATING_JWT,
@@ -147,17 +149,12 @@ export class SessionRequestProcessor {
   		return UnauthorizedResponse;
   	}
 
-  	// Validate the user details of the shared_claims received from the jwt.
-  	const data = this.validationHelper.isPersonDetailsValid(jwtPayload.shared_claims.emailAddress, jwtPayload.shared_claims.name);
-  	if (data.errorMessage.length > 0) {
-  		this.logger.error( { message: data.errorMessage + "  from shared claims data" }, { messageCode : data.errorMessageCode });
-  		return UnauthorizedResponse;
-  	}
-
-  	// Validate the address format of the shared_claims received from the jwt.
-  	const { errorMessage, errorMessageCode } = this.validationHelper.isAddressFormatValid(jwtPayload);
-  	if (errorMessage.length > 0) {
-  		this.logger.error( { message: errorMessage }, { messageCode : errorMessageCode });
+  	const personDetailsError = isPersonDetailsValid(jwtPayload.shared_claims.emailAddress, jwtPayload.shared_claims.name);
+  	if (personDetailsError.length > 0) {
+  		this.logger.error({
+  			message: personDetailsError + "  from shared claims data",
+  			messageCode: MessageCodes.INVALID_PERSONAL_DETAILS,
+  		});
   		return UnauthorizedResponse;
   	}
 
@@ -186,45 +183,44 @@ export class SessionRequestProcessor {
   		createdDate: absoluteTimeNow(),
   		state: jwtPayload.state,
   		subject: jwtPayload.sub ? jwtPayload.sub : "",
-  		persistentSessionId: jwtPayload.persistent_session_id, //Might not be used
+  		persistentSessionId: jwtPayload.persistent_session_id,
   		clientIpAddress,
   		attemptCount: 0,
   		authSessionState: "F2F_SESSION_CREATED",
   		evidence_requested: jwtPayload.evidence_requested,
   	};
 
-  	try {
+  	// TODO don't understand why these need to be wrapped in try/catches
+  	// try {
   		await this.BavService.createAuthSession(session);
-  	} catch (error: any) {
-  		this.logger.error("Failed to create session in session table", {
-  			error,
-  			messageCode: MessageCodes.FAILED_CREATING_SESSION,
+  	// } catch (error: any) {
+  	// 	this.logger.error("Failed to create session in session table", {
+  	// 		error,
+  	// 		messageCode: MessageCodes.FAILED_CREATING_SESSION,
+  	// 	});
+  	// 	return GenericServerError;
+  	// }
+
+  	// try {
+  		await this.BavService.savePersonIdentity(jwtPayload.shared_claims, sessionId);
+  	// } catch (error: any) {
+  	// 	this.logger.error("Failed to create session in person identity table", {
+  	// 		error,
+  	// 		messageCode: MessageCodes.FAILED_SAVING_PERSON_IDENTITY,
+  	// 	});
+  	// 	return GenericServerError;
+  	// }
+
+  	const issuer = process.env.ISSUER;
+  	if (!issuer) {
+  		this.logger.error({
+  			message: "Missing ISSUER environment variable",
+  			messageCode: MessageCodes.MISSING_CONFIGURATION,
   		});
   		return GenericServerError;
   	}
 
-  	if (jwtPayload.shared_claims) {
-  		try {
-  			await this.BavService.savePersonIdentity(jwtPayload.shared_claims, sessionId);
-  		} catch (error: any) {
-  			this.logger.error("Failed to create session in person identity table", {
-  				error,
-  				messageCode: MessageCodes.FAILED_SAVING_PERSON_IDENTITY,
-  			});
-  			return GenericServerError;
-  		}
-  	}
-
   	try {
-  		const issuer = process.env.ISSUER;
-  		if (!issuer) {
-  			this.logger.error({
-  				message: "Missing ISSUER environment variable",
-  				messageCode: MessageCodes.MISSING_CONFIGURATION,
-  			});
-  			return GenericServerError;
-  		}
-
   		const coreEventFields = buildCoreEventFields(session, issuer, clientIpAddress, absoluteTimeNow);
   		await this.BavService.sendToTXMA({
   			event_name: "BAV_CRI_START",
