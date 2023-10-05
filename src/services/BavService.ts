@@ -5,7 +5,6 @@ import { randomUUID } from "crypto";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { ISessionItem } from "../models/ISessionItem";
 import { MessageCodes } from "../models/enums/MessageCodes";
-import { ServicesEnum } from "../models/enums/ServicesEnum";
 import { AppError } from "../utils/AppError";
 import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { sqsClient } from "../utils/SqsClient";

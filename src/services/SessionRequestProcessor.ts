@@ -11,7 +11,6 @@ import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { Response, GenericServerError, UnauthorizedResponse, SECURITY_HEADERS } from "../utils/Response";
 import { AppError } from "../utils/AppError";
-import { buildCoreEventFields } from "../utils/TxmaEvent";
 import { ValidationHelper } from "../utils/ValidationHelper";
 
 interface ClientConfig {
@@ -31,15 +30,11 @@ export class SessionRequestProcessor {
 
   private readonly kmsDecryptor: KmsJwtAdapter;
 
-  private readonly validationHelper: ValidationHelper;
-
-
   constructor(logger: Logger, metrics: Metrics) {
   	this.logger = logger;
   	this.metrics = metrics;
   	logger.debug("metrics is  " + JSON.stringify(this.metrics));
   	this.metrics.addMetric("Called", MetricUnits.Count, 1);
-  	this.validationHelper = new ValidationHelper();
 
   	const sessionTableName: string | undefined = process.env.SESSION_TABLE;
   	const encryptionKeyIds: string | undefined  = process.env.ENCRYPTION_KEY_IDS;
