@@ -6,7 +6,7 @@ export const handler = async (
   if (event.queryStringParameters?.error != null) {
     return {
       statusCode: 200,
-      body: "Authorisation Grant Failed. See logs for details",
+      body: "IPV Callback endpoint Failed. See logs for details",
     };
   } else {
     return {

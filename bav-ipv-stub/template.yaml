@@ -42,14 +42,14 @@ Mappings:
   Configuration:
     dev:
       IPVStubID: "5C584572"
-      JWKSURI: "https://api-bav-cri-api.review-o.dev.account.gov.uk"
-      IPVSTUBURL: "ipvstub.review-o.dev.account.gov.uk"
-      OAUTHFRONTBASEURI: "https://bav-cri-front.review-o.dev.account.gov.uk"
+      JWKSURI: "https://api-bav-cri-api.review-bav.dev.account.gov.uk"
+      IPVSTUBURL: "ipvstub.review-bav.dev.account.gov.uk"
+      OAUTHFRONTBASEURI: "https://bav-cri-front.review-bav.dev.account.gov.uk"
     build:
       IPVStubID: "BD7B2A5D"
-      JWKSURI: "https://api.review-o.build.account.gov.uk"
-      IPVSTUBURL: "ipvstub.review-o.build.account.gov.uk"
-      OAUTHFRONTBASEURI:  "https://www.review-o.build.account.gov.uk"
+      JWKSURI: "https://api.review-bav.build.account.gov.uk"
+      IPVSTUBURL: "ipvstub.review-bav.build.account.gov.uk"
+      OAUTHFRONTBASEURI:  "https://www.review-bav.build.account.gov.uk"
     staging:
       IPVStubID: "9CDA6F61"
     integration:
