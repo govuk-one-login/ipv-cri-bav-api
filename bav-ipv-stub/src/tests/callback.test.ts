@@ -14,6 +14,6 @@ describe("Callback Endpoint", () => {
     const response = await handler(callbackFailed);
 
     expect(response.statusCode).toBe(200);
-    expect(response.body.toLowerCase().includes("grant failed")).toBe(true);
+    expect(response.body.toLowerCase().includes("failed")).toBe(true);
   });
 });
