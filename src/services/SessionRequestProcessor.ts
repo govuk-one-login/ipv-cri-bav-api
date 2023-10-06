@@ -152,7 +152,7 @@ export class SessionRequestProcessor {
   	const personDetailsError = isPersonDetailsValid(jwtPayload.shared_claims.emailAddress, jwtPayload.shared_claims.name);
   	if (personDetailsError.length > 0) {
   		this.logger.error({
-  			message: personDetailsError + "  from shared claims data",
+  			message: personDetailsError + " from shared claims data",
   			messageCode: MessageCodes.INVALID_PERSONAL_DETAILS,
   		});
   		return UnauthorizedResponse;
@@ -220,23 +220,15 @@ export class SessionRequestProcessor {
   		return GenericServerError;
   	}
 
-  	try {
-  		const coreEventFields = buildCoreEventFields(session, issuer, clientIpAddress, absoluteTimeNow);
-  		await this.BavService.sendToTXMA({
-  			event_name: "BAV_CRI_START",
-  			...coreEventFields,
-  			user: {
-  				...coreEventFields.user,
-  				govuk_signin_journey_id: session.clientSessionId,
-  			},
-  		});
-  	} catch (error: any) {
-  		this.logger.error("Auth session successfully created. Failed to send CIC_CRI_START event to TXMA", {
-  			sessionId: session.sessionId,
-  			error,
-  			messageCode: MessageCodes.FAILED_TO_WRITE_TXMA,
-  		});
-  	}
+  	const coreEventFields = buildCoreEventFields(session, issuer, clientIpAddress, absoluteTimeNow);
+  	await this.BavService.sendToTXMA({
+  		event_name: "BAV_CRI_START",
+  		...coreEventFields,
+  		user: {
+  			...coreEventFields.user,
+  			govuk_signin_journey_id: session.clientSessionId,
+  		},
+  	});
 
   	this.logger.info("Session created successfully. Returning 200OK");
 

@@ -11,7 +11,6 @@ import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { sqsClient } from "../utils/SqsClient";
 import { TxmaEvent } from "../utils/TxmaEvent";
 
-// TODO add tests
 export class BavService {
 	readonly tableName: string;
 
@@ -49,7 +48,8 @@ export class BavService {
 		} catch (error) {
 			this.logger.error({ message: "getSessionById - failed executing get from dynamodb:" }, {
 				messageCode: MessageCodes.FAILED_FETCHING_SESSION,
-				error });
+				error,
+			});
 			throw new AppError(HttpCodesEnum.SERVER_ERROR, "Error retrieving Session");
 		}
 
@@ -75,8 +75,12 @@ export class BavService {
 			await sqsClient.send(new SendMessageCommand(params));
 			this.logger.info("Sent message to TxMA");
 		} catch (error) {
-			this.logger.error({ message: "Error when sending message to TXMA Queue", error });
-			throw new AppError(HttpCodesEnum.SERVER_ERROR, "sending event to txma queue - failed ");
+			// highlight in the PR that I changed this
+			this.logger.error({
+				message: `Error when sending event ${event.event_name} to TXMA Queue`,
+				error,
+				messageCode: MessageCodes.FAILED_TO_WRITE_TXMA,
+			});
 		}
 	}
 
@@ -158,23 +162,21 @@ export class BavService {
 
 		} catch (error) {
 			this.logger.error({ message: "Failed to save session data", error });
-			throw new AppError(HttpCodesEnum.SERVER_ERROR, "Failed to save session data" );
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "Failed to save session data");
 		}
 	}
 
-	// TODO give this a good old test
 	async generateSessionId(count = 1): Promise<string> {
   	const sessionId: string = randomUUID();
+		const existingSession = await this.getSessionById(sessionId);
 
-  	if (await this.getSessionById(sessionId) && count < 3) {
+  	if (existingSession && count < 3) {
   		this.logger.info("Session ID already exists in database, generating another");
-			return this.generateSessionId();
-  	} else if (count > 3) {
+			return this.generateSessionId(count + 1);
+  	} else if (existingSession && count >= 3) {
 			this.logger.error("Failed to generate unique sessionId");
-			throw new AppError(HttpCodesEnum.SERVER_ERROR, "Failed to generate unique sessionId" );
-		} else {
-			return sessionId;
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "Failed to generate unique sessionId");
 		}
-
+		return sessionId;
 	}
 }

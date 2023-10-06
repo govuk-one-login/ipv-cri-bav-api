@@ -1,5 +1,6 @@
 process.env.REGION = 'eu-west-2'
 process.env.SESSION_TABLE = 'SESSIONTABLE'
+process.env.KMS_KEY_ARN = 'MYKMSKEY'
 process.env.AUTH_SESSION_TTL_SECS = '950400'
 process.env.ISSUER = 'https://XXX-c.env.account.gov.uk'
 process.env.ENCRYPTION_KEY_IDS = 'EncryptionKeyArn'

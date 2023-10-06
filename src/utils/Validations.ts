@@ -2,7 +2,6 @@ import { absoluteTimeNow } from "./DateTimeUtils";
 import { JwtPayload } from "../models/IVeriCredential";
 import { PersonIdentityName } from "../models/PersonIdentityItem";
 
-// TODO add tests
 export const	isJwtValid = (jwtPayload: JwtPayload,
 	requestBodyClientId: string, expectedRedirectUri: string): string => {
 
@@ -32,9 +31,8 @@ const isJwtComplete = (payload: JwtPayload): boolean => {
 	return !mandatoryJwtValues.some((value) => value === undefined);
 };
 
-const isValidString = (params: Array<string | undefined>): boolean => {
-	// TODO I think this can be refactored
-	if (params.some((param) => (param && param.trim()) )) {
+export const isValidStrings = (params: Array<string | undefined>): boolean => {
+	if (params.some((param) => (param && param.trim()))) {
 		return true;
 	}
 	return false;
@@ -54,10 +52,10 @@ const isPersonNameValid = (personName: PersonIdentityName[]) : boolean => {
 				isValid = false;
 			} else {
 				for (const namePart of nameParts) {
-					if (namePart.type === "GivenName" && isValidString([namePart.value])) {
+					if (namePart.type === "GivenName" && isValidStrings([namePart.value])) {
 						givenNames.push(namePart.value);
 					}
-					if (namePart.type === "FamilyName" && isValidString([namePart.value])) {
+					if (namePart.type === "FamilyName" && isValidStrings([namePart.value])) {
 						familyNames.push(namePart.value);
 					}
 				}
@@ -72,7 +70,7 @@ const isPersonNameValid = (personName: PersonIdentityName[]) : boolean => {
 };
 
 export const isPersonDetailsValid = (personEmail: string, personName: PersonIdentityName[]): string => {
-	if (!isValidString([personEmail])) {
+	if (!isValidStrings([personEmail])) {
 		return "Missing emailAddress";
 	} else if (!personName || !isPersonNameValid(personName)) {
 		return "Missing person's GivenName or FamilyName";

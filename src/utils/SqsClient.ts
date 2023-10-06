@@ -4,7 +4,6 @@ import AWSXRay from "aws-xray-sdk-core";
 
 AWSXRay.setContextMissingStrategy("LOG_ERROR");
 
-// TODO I don't think this error is right
 const sqsClientRaw = new SQSClient({
 	region: process.env.REGION,
 	maxAttempts: 2,

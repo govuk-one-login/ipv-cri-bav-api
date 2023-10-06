@@ -24,7 +24,8 @@ describe("SessionHandler", () => {
 	});
 
 	it("return error when SessionRequestProcessor throws an error", async () => {
-		SessionRequestProcessor.getInstance = jest.fn().mockRejectedValueOnce("Error");
+		SessionRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedSessionRequestProcessor);
+		mockedSessionRequestProcessor.processRequest.mockRejectedValueOnce("Error");
 
 		const response = await lambdaHandler(VALID_SESSION, CONTEXT);
 
