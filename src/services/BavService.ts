@@ -5,6 +5,7 @@ import { randomUUID } from "crypto";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { ISessionItem } from "../models/ISessionItem";
 import { MessageCodes } from "../models/enums/MessageCodes";
+import { SharedClaimsPersonIdentity, PersonIdentityItem, PersonIdentityName, PersonIdentityDateOfBirth } from "../models/PersonIdentityItem";
 import { AppError } from "../utils/AppError";
 import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { sqsClient } from "../utils/SqsClient";
@@ -77,6 +78,43 @@ export class BavService {
 			this.logger.error({ message: "Error when sending message to TXMA Queue", error });
 			throw new AppError(HttpCodesEnum.SERVER_ERROR, "sending event to txma queue - failed ");
 		}
+	}
+
+	private mapBirthDate(birthDate: PersonIdentityDateOfBirth[]): PersonIdentityDateOfBirth[] {
+		return birthDate?.map((bd) => ({ value: bd.value }));
+	}
+
+	private mapNames(name: PersonIdentityName[]): PersonIdentityName[] {
+		return name?.map((index) => ({
+			nameParts: index?.nameParts?.map((namePart) => ({
+				type: namePart.type,
+				value: namePart.value,
+			})),
+		}));
+	}
+
+	private createPersonIdentityItem(
+		sharedClaims: SharedClaimsPersonIdentity,
+		sessionId: string,
+	): PersonIdentityItem {
+
+		const authSessionTtlInSecs: string | undefined = process.env.AUTH_SESSION_TTL_SECS;
+  	if (!authSessionTtlInSecs) {
+  		this.logger.error({
+  			message: "Missing AUTH_SESSION_TTL_SECS environment variable",
+  			messageCode: MessageCodes.MISSING_CONFIGURATION,
+  		});
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "Missing configuration" );
+  	}
+
+		return {
+			sessionId,
+			birthDate: this.mapBirthDate(sharedClaims.birthDate),
+			emailAddress: sharedClaims.emailAddress,
+			name: this.mapNames(sharedClaims.name),
+  		expiryDate: absoluteTimeNow() + +authSessionTtlInSecs,
+			createdDate: absoluteTimeNow(),
+		};
 	}
 
 	async savePersonIdentity(
