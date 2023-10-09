@@ -1,0 +1,42 @@
+{
+
+    "yotiMockID": "0000",
+    "shared_claims": {
+        "name": [
+            {
+                "nameParts": [
+                    {
+                        "value": "API",
+                        "type": "GivenName"
+                    },
+                    {
+                        "value": "Automated",
+                        "type": "GivenName"
+                    },
+                    {
+                        "value": "Test",
+                        "type": "FamilyName"
+                    }
+                ]
+            }
+        ],
+        "birthDate": [
+            {
+                "value": "1960-02-02"
+            }
+        ],
+        "address": [
+            {
+                "uprn": "987654321",
+                "buildingNumber": "221b",
+                "buildingName": "The Building Name",
+                "subBuildingName": "Sub Building Name",
+                "streetName": "Baker St",
+                "addressLocality": "London",
+                "addressCountry": "GB",
+                "postalCode": "NW1"
+            }
+        ],
+        "emailAddress": "test@domain.com"
+    }
+}
