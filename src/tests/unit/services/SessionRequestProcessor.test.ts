@@ -253,32 +253,6 @@ describe("SessionRequestProcessor", () => {
 		});
 	});
 
-	// it("should fail to create a session", async () => {
-	// 	mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
-	// 	mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
-	// 	mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
-	// 	mockValidationHelper.isJwtValid.mockReturnValue("");
-	// 	mockValidationHelper.isPersonDetailsValid.mockReturnValue({ errorMessage : "", errorMessageCode : "" });
-	// 	mockValidationHelper.isAddressFormatValid.mockReturnValue({ errorMessage:"", errorMessageCode: "" });
-	// 	mockBavService.getSessionById.mockResolvedValue(undefined);
-	// 	mockBavService.createAuthSession.mockRejectedValue("error");
-
-	// 	const response = await sessionRequestProcessor.processRequest(VALID_SESSION);
-
-	// 	expect(logger.error).toHaveBeenCalledTimes(1);
-	// 	expect(logger.error).toHaveBeenCalledWith(
-	// 		expect.anything(),
-	// 		expect.objectContaining({
-	// 			messageCode: "FAILED_CREATING_SESSION",
-	// 		}),
-	// 	);
-	// 	expect(response.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);
-	// 	expect(logger.appendKeys).toHaveBeenCalledWith({
-	// 		sessionId: expect.any(String),
-	// 		govuk_signin_journey_id: "abcdef",
-	// 	});
-	// });
-
 	it("throws error if ISSUER is not set", async () => {
 		process.env.ISSUER = "";
 		mockKmsJwtAdapter.decrypt.mockResolvedValue("success");

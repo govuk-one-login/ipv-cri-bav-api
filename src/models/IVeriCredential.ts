@@ -97,26 +97,12 @@ export type VerifiedCredentialEvidence = Array<{
 	strengthScore: number;
 	validityScore: number;
 	verificationScore: number;
-	checkDetails?: Array<{
-		photoVerificationProcessLevel?: number;
-		checkMethod: string;
-		identityCheckPolicy?: string;
-		activityFrom?: string;
-		biometricVerificationProcessLevel?: number;
-	}>;
 	ci?: string[];
-	failedCheckDetails?: Array<{
-		photoVerificationProcessLevel?: number;
-		checkMethod: string;
-		identityCheckPolicy?: string;
-		biometricVerificationProcessLevel?: number;
-	}>;
 }>;
 
 export interface VerifiedCredentialSubject {
 	name?: Name[];
 	birthDate?: BirthDate[];
-	address?: Address[];
 }
 
 export interface Name {
@@ -130,19 +116,4 @@ export interface NamePart {
 
 export interface BirthDate {
 	value: string;
-}
-
-export interface Address {
-	uprn?: string;
-	organisationName?: any;
-	subBuildingName?: any;
-	buildingNumber: string;
-	buildingName?: string;
-	dependentStreetName?: any;
-	streetName?: string;
-	doubleDependentAddressLocality?: any;
-	dependentAddressLocality?: any;
-	addressLocality: string;
-	postalCode: string;
-	addressCountry: string;
 }

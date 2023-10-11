@@ -186,7 +186,7 @@ export class SessionRequestProcessor {
   		persistentSessionId: jwtPayload.persistent_session_id,
   		clientIpAddress,
   		attemptCount: 0,
-  		authSessionState: "F2F_SESSION_CREATED",
+  		authSessionState: "BAV_SESSION_CREATED",
   		evidence_requested: jwtPayload.evidence_requested,
   	};
 

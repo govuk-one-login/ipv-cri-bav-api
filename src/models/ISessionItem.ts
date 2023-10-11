@@ -1,14 +1,12 @@
 import { EvidenceRequested } from "./IVeriCredential";
 
-export interface IF2fSession {
+export interface IBAVSession {
 	given_names?: string[];
 	family_names?: string[];
 	date_of_birth?: string;
-	document_selected?: string;
-	date_of_expiry?: string;
 }
 
-export interface ISessionItem extends IF2fSession {
+export interface ISessionItem extends IBAVSession {
 	sessionId: string;
 	clientId: string;
 	clientSessionId: string;
@@ -25,7 +23,6 @@ export interface ISessionItem extends IF2fSession {
 	clientIpAddress: string;
 	attemptCount: number;
 	authSessionState: string;
-	yotiSessionId?: string;
 	evidence_requested?: EvidenceRequested;
 }
 

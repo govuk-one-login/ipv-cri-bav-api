@@ -33,8 +33,8 @@ export class BavService {
 		return BavService.instance;
 	}
 
-	async getSessionById(sessionId: string, tableName: string = this.tableName): Promise<ISessionItem | undefined> {
-		this.logger.debug("Table name " + tableName);
+	async getSessionById(sessionId: string): Promise<ISessionItem | undefined> {
+		this.logger.debug("Table name " + this.tableName);
 		const getSessionCommand = new GetCommand({
 			TableName: this.tableName,
 			Key: {

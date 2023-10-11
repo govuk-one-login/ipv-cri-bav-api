@@ -3,7 +3,7 @@ import { Context } from "aws-lambda";
 export const CONTEXT: Context = {
 	awsRequestId: "",
 	callbackWaitsForEmptyEventLoop: false,
-	functionName: "F2F",
+	functionName: "BAV",
 	functionVersion: "",
 	invokedFunctionArn: "",
 	logGroupName: "",

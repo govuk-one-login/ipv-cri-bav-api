@@ -15,7 +15,7 @@ const logger = mock<Logger>();
 
 let bavService: BavService;
 const tableName = "SESSIONTABLE";
-const sessionId = "SESSID";
+const sessionId = "SESSIONID";
 const mockDynamoDbClient = jest.mocked(createDynamoDbClient());
 const SESSION_RECORD = require("../data/db_record.json");
 jest.mock("crypto", () => ({

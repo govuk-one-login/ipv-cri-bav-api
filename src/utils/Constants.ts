@@ -6,7 +6,7 @@ export class Constants {
 
 	static readonly SESSION_LOGGER_SVC_NAME : "SessionHandler";
 
-	static readonly F2F_METRICS_NAMESPACE = "BAV-CRI";
+	static readonly BAV_METRICS_NAMESPACE = "BAV-CRI";
 
 	static readonly DEBUG = "DEBUG";
 
@@ -26,15 +26,9 @@ export class Constants {
 
 	static readonly AUTHORIZATION_CODE = "authorization_code";
 
-	static readonly AUTHORIZATION_CODE_INDEX_NAME = "authCode-updated-index";
-
 	static readonly TOKEN_EXPIRY_SECONDS = 3600;
 
 	static readonly REGEX_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-	static readonly GOV_NOTIFY = "GOV_NOTIFY";
-
-	static readonly ENV_VAR_UNDEFINED = "ENV Variables are undefined";
 
 	static readonly W3_BASE_CONTEXT = "https://www.w3.org/2018/credentials/v1";
 
