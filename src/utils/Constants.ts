@@ -1,5 +1,7 @@
 export class Constants {
 
+	static readonly JWKS_LOGGER_SVC_NAME = "JwksHandler";
+
 	static readonly X_SESSION_ID = "x-govuk-signin-session-id";
 
 	static readonly SESSION_ID = "session-id";
@@ -50,4 +52,6 @@ export const EnvironmentVariables = {
 	ISSUER: "ISSUER",
 	TXMA_QUEUE_URL: "TXMA_QUEUE_URL",
 	PERSON_IDENTITY_TABLE_NAME: "PERSON_IDENTITY_TABLE_NAME",
+	SIGNING_KEY_IDS: "SIGNING_KEY_IDS",
+	JWKS_BUCKET_NAME: "JWKS_BUCKET_NAME",
 };
