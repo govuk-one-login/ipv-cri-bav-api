@@ -6,8 +6,8 @@ info:
   description: >-
     Bank Account Verification CRI - Frontend and Backend API specification
   contact:
-    name: Darren Dunford
-    email: darren.dunford@digital.cabinet-office.gov.uk
+    name: Mudassar Jafer
+    email: mudassar.jafer@digital.cabinet-office.gov.uk
 servers:
   - url: https://www.example.com
 tags:
