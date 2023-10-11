@@ -58,13 +58,13 @@ describe("DequeueHandler", () => {
   it("Returns no batchItemFailures if all events were successfully sent to S3 where property name is user.session_id", async () => {
     process.env.PROPERTY_NAME = "user.session_id";
     const body1 = JSON.stringify({
-      event_name: "F2F_YOTI_START",
+      event_name: "BAV_CRI_START",
       user: {
         session_id: "test_user_id_1",
 			},
     });
     const body2 = JSON.stringify({
-      event_name: "F2F_YOTI_START",
+      event_name: "BAV_CRI_START",
       user: {
         session_id: "test_user_id_2",
 			},
