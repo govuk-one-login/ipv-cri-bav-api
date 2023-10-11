@@ -292,7 +292,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "StartBAVCheckFunction-${AWS::StackName}"
-      Handler: startBAVCheck.handler
+      Handler: startBavCheck.handler
       CodeUri: src/handlers/
       Environment:
         Variables:
