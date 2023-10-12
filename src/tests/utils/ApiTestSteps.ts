@@ -129,29 +129,32 @@ export async function getSessionById(sessionId: string, tableName: string): Prom
  * @param prefix
  * @returns {any} - returns either the body of the SQS message or undefined if no such message found
  */
-export async function getSqsEventList(folder: string, prefix: string, txmaEventSize:number): Promise<any> {
-	let keys: any[];
-	let keyList: any[];
-	let i:any;
+export async function getSqsEventList(folder: string, prefix: string, txmaEventSize: number): Promise<any> {
+	let contents: any[];
+	let keyList: string[];
+
 	do {
+		await new Promise(res => setTimeout(res, 3000));
+
 		const listObjectsResponse = await HARNESS_API_INSTANCE.get("/bucket/", {
 			params: {
 				prefix: folder + prefix,
 			},
 		});
 		const listObjectsParsedResponse = xmlParser.parse(listObjectsResponse.data);
-		if (!listObjectsParsedResponse?.ListBucketResult?.Contents) {
+		contents = listObjectsParsedResponse?.ListBucketResult?.Contents;
+
+		if (!contents) {
 			return undefined;
 		}
-		keys = listObjectsParsedResponse?.ListBucketResult?.Contents;
-		keyList = [];
-		for (i = 0; i < keys.length; i++) {
-			keyList.push(listObjectsParsedResponse?.ListBucketResult?.Contents.at(i).Key);
-		}
-	} while (keys.length < txmaEventSize );
+		
+		console.log(`contents of folder ${folder} with prefix ${prefix}: `, contents);
+		keyList = contents.map(({ Key }) => Key);
+
+	} while (contents.length < txmaEventSize);
+
 	return keyList;
 }
-
 /**
  * Retrieves an object from the bucket with the specified prefix, which is the latest message dequeued from the SQS
  * queue under test
