@@ -221,7 +221,7 @@ Resources:
     Type: "AWS::S3::Bucket"
     DeletionPolicy: Delete
     Properties:
-      BucketName: !Sub ${AWS::StackName}-jwks-f2f-${Environment}
+      BucketName: !Sub ${AWS::StackName}-jwks-bav-${Environment}
       VersioningConfiguration:
         Status: "Enabled"
       PublicAccessBlockConfiguration:

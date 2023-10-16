@@ -27,7 +27,7 @@ export class EnvironmentVariables {
 					!this.SIGNING_KEY_IDS || this.SIGNING_KEY_IDS.trim().length === 0 ||
 					!this.JWKS_BUCKET_NAME || this.JWKS_BUCKET_NAME.trim().length === 0) {
 					logger.error("Environment variable ENCRYPTION_KEY_IDS or SIGNING_KEY_IDS or JWKS_BUCKET_NAME is not configured");
-					throw new AppError(HttpCodesEnum.SERVER_ERROR, "JWKS Service handler incorrectly configured");
+					throw new AppError("JWKS Service handler incorrectly configured", HttpCodesEnum.SERVER_ERROR);
 				}
 				break;
 			}			
