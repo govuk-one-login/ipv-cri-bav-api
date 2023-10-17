@@ -193,6 +193,9 @@ Globals:
         AWS_STACK_NAME: !Sub ${AWS::StackName}
         POWERTOOLS_LOG_LEVEL: DEBUG
         POWERTOOLS_METRICS_NAMESPACE: BAV-CRI
+        TXMA_QUEUE_URL: !Ref TxMASQSQueue
+        PERSON_IDENTITY_TABLE_NAME:
+          Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-name"
         SESSION_TABLE:
           Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
         SECRET_PREFIX: !If [
@@ -382,11 +385,8 @@ Resources:
             !FindInMap [ EnvironmentVariables, !Ref Environment, AUTHSESSIONTTLSECS ]
           POWERTOOLS_SERVICE_NAME: SessionHandler
           ISSUER: !FindInMap [EnvironmentVariables, !Ref Environment, ISSUER]
-          PERSON_IDENTITY_TABLE_NAME:
-            Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-name"
           KMS_KEY_ARN:
             Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
-          TXMA_QUEUE_URL: !Ref TxMASQSQueue
           CLIENT_CONFIG:
             !FindInMap [ EnvironmentVariables, !Ref Environment, CLIENTS ]
           ENCRYPTION_KEY_IDS:

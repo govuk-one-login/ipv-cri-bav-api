@@ -1,5 +1,7 @@
 process.env.REGION = 'eu-west-2'
+process.env.PERSON_IDENTITY_TABLE_NAME = 'PERSONALIDENTITYTABLE'
 process.env.SESSION_TABLE = 'SESSIONTABLE'
+process.env.TXMA_QUEUE_URL = "MYQUEUE"
 process.env.KMS_KEY_ARN = 'MYKMSKEY'
 process.env.AUTH_SESSION_TTL_SECS = '950400'
 process.env.ISSUER = 'https://XXX-c.env.account.gov.uk'

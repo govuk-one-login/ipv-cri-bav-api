@@ -90,11 +90,11 @@ describe("BAV Service", () => {
 		it("Should send event to TxMA with the correct details", async () => {
 			const messageBody = JSON.stringify(txmaEventPayload);
 
-			await bavService.sendToTXMA(txmaEventPayload);
+			await bavService.sendToTXMA("MYQUEUE", txmaEventPayload);
 
 			expect(SendMessageCommand).toHaveBeenCalledWith({
 				MessageBody: messageBody,
-				QueueUrl: process.env.TXMA_QUEUE_URL,
+				QueueUrl: "MYQUEUE",
 			});
 			expect(sqsClient.send).toHaveBeenCalled();
 			expect(bavService.logger.info).toHaveBeenCalledWith("Sent message to TxMA");
@@ -102,7 +102,7 @@ describe("BAV Service", () => {
 
 		it("show log error if failed to send to TXMA queue", async () => {
 			sqsClient.send.mockRejectedValueOnce({});
-			await bavService.sendToTXMA(txmaEventPayload);
+			await bavService.sendToTXMA("MYQUEUE", txmaEventPayload);
 	
 			expect(bavService.logger.error).toHaveBeenCalledWith({
 				message: "Error when sending event BAV_CRI_START to TXMA Queue",
@@ -139,7 +139,12 @@ describe("BAV Service", () => {
 		it("should create and save a PersonIdentity record", async () => {
 			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
 	
-			await bavService.savePersonIdentity(personIdentityInputRecord, "1234");
+			await bavService.savePersonIdentity({
+				sharedClaims: personIdentityInputRecord,
+				sessionId: "1234",
+				tableName: "SESSIONTABLE",
+				authSessionTtlInSecs: "950400",
+			});
 	
 			expect(mockDynamoDbClient.send).toHaveBeenCalledWith(expect.objectContaining({
 				clientCommand: expect.objectContaining({
@@ -156,13 +161,18 @@ describe("BAV Service", () => {
 			const fakeTime = 1684933200.123;
 			jest.setSystemTime(new Date(fakeTime * 1000)); // 2023-05-24T13:00:00.123Z
 	
-			await bavService.savePersonIdentity(personIdentityInputRecord, "1234");
+			await bavService.savePersonIdentity({
+				sharedClaims: personIdentityInputRecord,
+				sessionId: "1234",
+				tableName: "SESSIONTABLE",
+				authSessionTtlInSecs: "950400",
+			});
 	
 			expect(mockDynamoDbClient.send).toHaveBeenCalledWith(expect.objectContaining({
 				clientCommand: expect.objectContaining({
 					input: expect.objectContaining({
 						Item: expect.objectContaining({
-							expiryDate: Math.floor(fakeTime + +process.env.AUTH_SESSION_TTL_SECS!),
+							expiryDate: Math.floor(fakeTime + +"950400"),
 							createdDate: Math.floor(fakeTime),
 						}),
 					}),
@@ -173,7 +183,12 @@ describe("BAV Service", () => {
 
 		it("should handle error when sending message to dynamo", async () => {
 			mockDynamoDbClient.send = jest.fn().mockRejectedValueOnce({});
-			await expect(bavService.savePersonIdentity(personIdentityInputRecord, "1234")).rejects.toThrow(expect.objectContaining({
+			await expect(bavService.savePersonIdentity({
+				sharedClaims: personIdentityInputRecord,
+				sessionId: "1234",
+				tableName: "SESSIONTABLE",
+				authSessionTtlInSecs: "950400",
+			})).rejects.toThrow(expect.objectContaining({
 				statusCode: HttpCodesEnum.SERVER_ERROR,
 				message: "Failed to save personal identity information",
 			}));

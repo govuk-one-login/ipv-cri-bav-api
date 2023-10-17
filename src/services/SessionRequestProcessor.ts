@@ -6,11 +6,11 @@ import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { ISessionItem } from "../models/ISessionItem";
 import { JwtPayload, Jwt } from "../models/IVeriCredential";
-import { AppError } from "../utils/AppError";
 import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
+import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
-import { Response, GenericServerError, UnauthorizedResponse, SECURITY_HEADERS } from "../utils/Response";
+import { Response, UnauthorizedResponse, SECURITY_HEADERS } from "../utils/Response";
 import { buildCoreEventFields } from "../utils/TxmaEvent";
 import { isJwtValid, isPersonDetailsValid } from "../utils/Validations";
 
@@ -25,6 +25,16 @@ export class SessionRequestProcessor {
 
   private readonly logger: Logger;
 
+	private readonly clientConfig: string;
+
+	private readonly authSessionTtlInSecs: string;
+
+	private readonly issuer: string;
+
+	private readonly txmaQueueUrl: string;
+
+	private readonly personIdentityTableName: string;
+
   private readonly metrics: Metrics;
 
   private readonly BavService: BavService;
@@ -37,17 +47,13 @@ export class SessionRequestProcessor {
   	logger.debug("metrics is  " + JSON.stringify(this.metrics));
   	this.metrics.addMetric("Called", MetricUnits.Count, 1);
 
-  	const sessionTableName: string | undefined = process.env.SESSION_TABLE;
-  	const encryptionKeyIds: string | undefined  = process.env.ENCRYPTION_KEY_IDS;
-  	if (!sessionTableName || !encryptionKeyIds) {
-  		this.logger.error({
-  			message: "Missing AUTH_SESSION_TTL_SECS or SESSION_TABLE environment variable",
-  			sessionTableName: !!sessionTableName,
-  			encryptionKeyIds: !!encryptionKeyIds,
-  			messageCode: MessageCodes.MISSING_CONFIGURATION,
-  		});
-  		throw new AppError(HttpCodesEnum.SERVER_ERROR, "Session Service incorrectly configured");
-  	}
+  	const sessionTableName: string = checkEnvironmentVariable("SESSION_TABLE", this.logger);
+  	const encryptionKeyIds: string = checkEnvironmentVariable("ENCRYPTION_KEY_IDS", this.logger);
+  	this.clientConfig = checkEnvironmentVariable("CLIENT_CONFIG", this.logger);
+  	this.authSessionTtlInSecs = checkEnvironmentVariable("AUTH_SESSION_TTL_SECS", this.logger);
+  	this.issuer = checkEnvironmentVariable("ISSUER", this.logger);
+  	this.txmaQueueUrl = checkEnvironmentVariable("TXMA_QUEUE_URL", this.logger);
+  	this.personIdentityTableName = checkEnvironmentVariable("PERSON_IDENTITY_TABLE_NAME", this.logger);
 
   	this.BavService = BavService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
   	this.kmsDecryptor = new KmsJwtAdapter(encryptionKeyIds);
@@ -65,18 +71,9 @@ export class SessionRequestProcessor {
   	const requestBodyClientId = deserialisedRequestBody.client_id;
   	const clientIpAddress = event.requestContext.identity?.sourceIp;
 
-  	const clientConfig: string | undefined  = process.env.CLIENT_CONFIG;
-  	if (!clientConfig) {
-  		this.logger.error({
-  			message: "Missing CLIENT_CONFIG environment variable",
-  			messageCode: MessageCodes.MISSING_CONFIGURATION,
-  		});
-  		return GenericServerError;
-  	}
-
   	let configClient: ClientConfig | undefined;
   	try {
-  		const config = JSON.parse(clientConfig) as ClientConfig[];
+  		const config = JSON.parse(this.clientConfig) as ClientConfig[];
   		configClient = config.find(c => c.clientId === requestBodyClientId);
   	} catch (error: any) {
   		this.logger.error("Invalid or missing client configuration table", {
@@ -163,21 +160,12 @@ export class SessionRequestProcessor {
   		govuk_signin_journey_id: jwtPayload.govuk_signin_journey_id as string,
   	});
 
-  	const authSessionTtlInSecs: string | undefined = process.env.AUTH_SESSION_TTL_SECS;
-  	if (!authSessionTtlInSecs) {
-  		this.logger.error({
-  			message: "Missing AUTH_SESSION_TTL_SECS environment variable",
-  			messageCode: MessageCodes.MISSING_CONFIGURATION,
-  		});
-  		return GenericServerError;
-  	}
-
   	const session: ISessionItem = {
   		sessionId,
   		clientId: jwtPayload.client_id,
   		clientSessionId: jwtPayload.govuk_signin_journey_id as string,
   		redirectUri: jwtPayload.redirect_uri,
-  		expiryDate: absoluteTimeNow() + +authSessionTtlInSecs,
+  		expiryDate: absoluteTimeNow() + +this.authSessionTtlInSecs,
   		createdDate: absoluteTimeNow(),
   		state: jwtPayload.state,
   		subject: jwtPayload.sub ? jwtPayload.sub : "",
@@ -189,24 +177,23 @@ export class SessionRequestProcessor {
   	};
 
   	await this.BavService.createAuthSession(session);
-  	await this.BavService.savePersonIdentity(jwtPayload.shared_claims, sessionId);
+  	await this.BavService.savePersonIdentity({
+  		sharedClaims: jwtPayload.shared_claims,
+  		sessionId,
+  		tableName: this.personIdentityTableName,
+  		authSessionTtlInSecs:
+			this.authSessionTtlInSecs,
+  	});
 
-  	const issuer = process.env.ISSUER;
-  	if (!issuer) {
-  		this.logger.error({
-  			message: "Missing ISSUER environment variable",
-  			messageCode: MessageCodes.MISSING_CONFIGURATION,
-  		});
-  		return GenericServerError;
-  	}
-
-  	const coreEventFields = buildCoreEventFields(session, issuer, clientIpAddress, absoluteTimeNow);
-  	await this.BavService.sendToTXMA({
-  		event_name: "BAV_CRI_START",
-  		...coreEventFields,
-  		user: {
-  			...coreEventFields.user,
-  			govuk_signin_journey_id: session.clientSessionId,
+  	const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress, absoluteTimeNow);
+  	await this.BavService.sendToTXMA(
+  		this.txmaQueueUrl,
+  		{
+  			event_name: "BAV_CRI_START",
+  			...coreEventFields,
+  			user: {
+  				...coreEventFields.user,
+  				govuk_signin_journey_id: session.clientSessionId,
   		},
   	});
 

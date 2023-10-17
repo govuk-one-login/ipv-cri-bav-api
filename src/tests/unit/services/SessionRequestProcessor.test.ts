@@ -93,8 +93,6 @@ describe("SessionRequestProcessor", () => {
 	beforeEach(() => {
 		jest.useFakeTimers();
 		jest.setSystemTime(new Date(1585695600000)); // == 2020-03-31T23:00:00.000Z
-		process.env.AUTH_SESSION_TTL_SECS = "950400";
-		process.env.ISSUER = "https://XXX-c.env.account.gov.uk";
 	});
 
 	afterEach(() => {
@@ -218,25 +216,6 @@ describe("SessionRequestProcessor", () => {
 		);
 	});
 
-	it("throws error if AUTH_SESSION_TTL_SECS is not set", async () => {
-		process.env.AUTH_SESSION_TTL_SECS = "";
-		mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
-		mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
-		mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
-		jest.spyOn(Validations, "isJwtValid").mockReturnValue("");
-		jest.spyOn(Validations, "isPersonDetailsValid").mockReturnValue("");
-
-		const response = await sessionRequestProcessor.processRequest(VALID_SESSION);
-
-		expect(response.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);
-		expect(logger.error).toHaveBeenCalledWith(
-			expect.objectContaining({
-				message: "Missing AUTH_SESSION_TTL_SECS environment variable",
-				messageCode: MessageCodes.MISSING_CONFIGURATION,
-			}),
-		);
-	});
-
 	it("generates a session ID and appends it to the logs", async () => {
 		mockBavService.generateSessionId.mockResolvedValue("mock-session-id");
 		mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
@@ -253,25 +232,6 @@ describe("SessionRequestProcessor", () => {
 		});
 	});
 
-	it("throws error if ISSUER is not set", async () => {
-		process.env.ISSUER = "";
-		mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
-		mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
-		mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
-		jest.spyOn(Validations, "isJwtValid").mockReturnValue("");
-		jest.spyOn(Validations, "isPersonDetailsValid").mockReturnValue("");
-
-		const response = await sessionRequestProcessor.processRequest(VALID_SESSION);
-
-		expect(response.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);
-		expect(logger.error).toHaveBeenCalledWith(
-			expect.objectContaining({
-				message: "Missing ISSUER environment variable",
-				messageCode: MessageCodes.MISSING_CONFIGURATION,
-			}),
-		);
-	});
-
 	it("sends BAV_CRI_START event to txma", async () => {
 		mockBavService.generateSessionId.mockResolvedValue("mock-session-id");
 		mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
@@ -282,19 +242,21 @@ describe("SessionRequestProcessor", () => {
 
 		await sessionRequestProcessor.processRequest(VALID_SESSION);
 
-		expect(mockBavService.sendToTXMA).toHaveBeenCalledWith({
-			event_name: "BAV_CRI_START",
-			client_id: undefined,
-			component_id: "https://XXX-c.env.account.gov.uk",
-			timestamp: 1585695600000 / 1000,
-			user: {
-				govuk_signin_journey_id: "abcdef",
-				ip_address: "",
-				persistent_session_id: undefined,
-				session_id: "mock-session-id",
-				user_id: "",
-			},
-		});
+		expect(mockBavService.sendToTXMA).toHaveBeenCalledWith(
+			process.env.TXMA_QUEUE_URL,
+			{
+				event_name: "BAV_CRI_START",
+				client_id: undefined,
+				component_id: "https://XXX-c.env.account.gov.uk",
+				timestamp: 1585695600000 / 1000,
+				user: {
+					govuk_signin_journey_id: "abcdef",
+					ip_address: "",
+					persistent_session_id: undefined,
+					session_id: "mock-session-id",
+					user_id: "",
+				},
+			});
 	});
 
 	it("successful response is returned if all processing ahs passed", async () => {

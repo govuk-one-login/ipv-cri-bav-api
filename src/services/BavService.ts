@@ -62,12 +62,12 @@ export class BavService {
 		}
 	}
 
-	async sendToTXMA(event: TxmaEvent): Promise<void> {
+	async sendToTXMA(QueueUrl: string, event: TxmaEvent): Promise<void> {
 		try {
 			const messageBody = JSON.stringify(event);
 			const params = {
 				MessageBody: messageBody,
-				QueueUrl: process.env.TXMA_QUEUE_URL,
+				QueueUrl,
 			};
 
 			this.logger.info({ message: "Sending message to TxMA", eventName: event.event_name });
@@ -75,7 +75,6 @@ export class BavService {
 			await sqsClient.send(new SendMessageCommand(params));
 			this.logger.info("Sent message to TxMA");
 		} catch (error) {
-			// highlight in the PR that I changed this
 			this.logger.error({
 				message: `Error when sending event ${event.event_name} to TXMA Queue`,
 				error,
@@ -100,16 +99,8 @@ export class BavService {
 	private createPersonIdentityItem(
 		sharedClaims: SharedClaimsPersonIdentity,
 		sessionId: string,
+		authSessionTtlInSecs: string,
 	): PersonIdentityItem {
-
-		const authSessionTtlInSecs: string | undefined = process.env.AUTH_SESSION_TTL_SECS;
-  	if (!authSessionTtlInSecs) {
-  		this.logger.error({
-  			message: "Missing AUTH_SESSION_TTL_SECS environment variable",
-  			messageCode: MessageCodes.MISSING_CONFIGURATION,
-  		});
-			throw new AppError(HttpCodesEnum.SERVER_ERROR, "Missing configuration" );
-  	}
 
 		return {
 			sessionId,
@@ -121,27 +112,25 @@ export class BavService {
 		};
 	}
 
-	async savePersonIdentity(
-		sharedClaims: SharedClaimsPersonIdentity,
-		sessionId: string,
-	): Promise<void> {
+	async savePersonIdentity({
+		sharedClaims,
+		sessionId,
+		tableName,
+		authSessionTtlInSecs,
+	}: {
+		sharedClaims: SharedClaimsPersonIdentity;
+		sessionId: string;
+		tableName: string;
+		authSessionTtlInSecs: string;
+	}): Promise<void> {
 		const personIdentityItem = this.createPersonIdentityItem(
 			sharedClaims,
 			sessionId,
+			authSessionTtlInSecs,
 		);
 
-
-  	const TableName = process.env.PERSON_IDENTITY_TABLE_NAME;
-  	if (!TableName) {
-  		this.logger.error({
-  			message: "Missing PERSON_IDENTITY_TABLE_NAME environment variable",
-  			messageCode: MessageCodes.MISSING_CONFIGURATION,
-  		});
-			throw new AppError(HttpCodesEnum.SERVER_ERROR, "Missing configuration" );
-  	}
-
 		const putSessionCommand = new PutCommand({
-			TableName,
+			TableName: tableName,
 			Item: personIdentityItem,
 		});
 
