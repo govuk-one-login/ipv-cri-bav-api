@@ -11,7 +11,6 @@ export interface TxmaUser {
 	"session_id": string;
 	"govuk_signin_journey_id"?: string;
 	"ip_address"?: string | undefined;
-	"email"?: string;
 }
 
 export interface BaseTxmaEvent {

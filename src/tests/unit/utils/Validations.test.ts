@@ -1,4 +1,4 @@
-import { isValidStrings, isPersonDetailsValid } from "../../../utils/Validations";
+import { isValidStrings, isPersonNameValid } from "../../../utils/Validations";
 
 describe("Validations", () => {
 	describe("#isValidStrings", () => {
@@ -18,25 +18,27 @@ describe("Validations", () => {
 		});
 	});
 
-	describe("#isPersonDetailsValid", () => {
-		it("returns error message if email is not provided", () => {
-			const result = isPersonDetailsValid("", [{ nameParts: [{ type: "GivenName", value: "Test" }, { type: "FamilyName", value: "Testing" }] }]);
-			expect(result).toBe("Missing emailAddress");
+	describe("#isPersonNameValid", () => {
+		it("returns true if given and family names are valid", () => {
+			const result = isPersonNameValid([{ nameParts: [
+				{ type: "GivenName", value: "Test" },
+				{ type: "FamilyName", value: "Testing" },
+			] }]);
+			expect(result).toBe(true);
 		});
 
-		it("returns error message if given name is not valid", () => {
-			const result = isPersonDetailsValid("test@est.com", [{ nameParts: [{ type: "FamilyName", value: "Testing" }] }]);
-			expect(result).toBe("Missing person's GivenName or FamilyName");
+		it("returns false if given name is missing", () => {
+			const result = isPersonNameValid([{ nameParts: [
+				{ type: "FamilyName", value: "Testing" },
+			] }]);
+			expect(result).toBe(false);
 		});
 
-		it("returns error message if family name is not valid", () => {
-			const result = isPersonDetailsValid("test@est.com", [{ nameParts: [{ type: "GivenName", value: "Test" }] }]);
-			expect(result).toBe("Missing person's GivenName or FamilyName");
-		});
-
-		it("returns empty string if personal details are valid", () => {
-			const result = isPersonDetailsValid("test@est.com", [{ nameParts: [{ type: "GivenName", value: "Test" }, { type: "FamilyName", value: "Testing" }] }]);
-			expect(result).toBe("");
+		it("returns false if family name is missing", () => {
+			const result = isPersonNameValid([{ nameParts: [
+				{ type: "GivenName", value: "Test" },
+			] }]);
+			expect(result).toBe(false);
 		});
 	});
 });

@@ -17,14 +17,12 @@ export const personIdentityInputRecord: SharedClaimsPersonIdentity = {
 	birthDate: [{
 		value: "1900-01-01",
 	}],
-	emailAddress: "hello@example.com",
 };
 
 export const personIdentityOutputRecord = {
 	birthDate: [{
 		value: "1900-01-01",
 	}],
-	emailAddress: "hello@example.com",
 	name: [{
 		nameParts: [
 			{

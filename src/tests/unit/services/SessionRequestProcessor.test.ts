@@ -50,19 +50,6 @@ const decodedJwtFactory = ():Jwt => {
 					   "value":"1960-02-02",
 					},
 				],
-				address: [
-					{
-						addressCountry: "GB",
-						buildingName: "Sherman",
-						subBuildingName: "Flat 5",
-						uprn: 123456789,
-						streetName: "Wallaby Way",
-						postalCode: "F1 1SH",
-						buildingNumber: "32",
-						addressLocality: "Sidney",
-					},
-				],
-				emailAddress:"test.user@digital.cabinet-office.gov.uk",
 			},
 		},
 		signature: "signature",
@@ -198,19 +185,18 @@ describe("SessionRequestProcessor", () => {
 	});
 
 	it("should return unauthorized when person details from shared claims are invalid", async () => {
-		const errorMessage = "Missing emailAddress";
 		mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
 		mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
 		mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
 		jest.spyOn(Validations, "isJwtValid").mockReturnValue("");
-		jest.spyOn(Validations, "isPersonDetailsValid").mockReturnValue(errorMessage);
+		jest.spyOn(Validations, "isPersonNameValid").mockReturnValue(false);
 
 		const response = await sessionRequestProcessor.processRequest(VALID_SESSION);
 
 		expect(response.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledWith(
 			expect.objectContaining({
-				message: `${errorMessage} from shared claims data`,
+				message: "Missing GivenName or FamilyName from shared claims data",
 				messageCode: MessageCodes.INVALID_PERSONAL_DETAILS,
 			}),
 		);
@@ -222,7 +208,7 @@ describe("SessionRequestProcessor", () => {
 		mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
 		mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
 		jest.spyOn(Validations, "isJwtValid").mockReturnValue("");
-		jest.spyOn(Validations, "isPersonDetailsValid").mockReturnValue("");
+		jest.spyOn(Validations, "isPersonNameValid").mockReturnValue(true);
 
 		await sessionRequestProcessor.processRequest(VALID_SESSION);
 
@@ -238,7 +224,7 @@ describe("SessionRequestProcessor", () => {
 		mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
 		mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
 		jest.spyOn(Validations, "isJwtValid").mockReturnValue("");
-		jest.spyOn(Validations, "isPersonDetailsValid").mockReturnValue("");
+		jest.spyOn(Validations, "isPersonNameValid").mockReturnValue(true);
 
 		await sessionRequestProcessor.processRequest(VALID_SESSION);
 
@@ -265,7 +251,7 @@ describe("SessionRequestProcessor", () => {
 		mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
 		mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
 		jest.spyOn(Validations, "isJwtValid").mockReturnValue("");
-		jest.spyOn(Validations, "isPersonDetailsValid").mockReturnValue("");
+		jest.spyOn(Validations, "isPersonNameValid").mockReturnValue(true);
 
 		const response = await sessionRequestProcessor.processRequest(VALID_SESSION);
 

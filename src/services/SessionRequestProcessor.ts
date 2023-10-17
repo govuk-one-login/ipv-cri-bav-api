@@ -12,7 +12,7 @@ import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
 import { Response, UnauthorizedResponse, SECURITY_HEADERS } from "../utils/Response";
 import { buildCoreEventFields } from "../utils/TxmaEvent";
-import { isJwtValid, isPersonDetailsValid } from "../utils/Validations";
+import { isJwtValid, isPersonNameValid } from "../utils/Validations";
 
 interface ClientConfig {
 	jwksEndpoint: string;
@@ -145,10 +145,10 @@ export class SessionRequestProcessor {
   		return UnauthorizedResponse;
   	}
 
-  	const personDetailsError = isPersonDetailsValid(jwtPayload.shared_claims.emailAddress, jwtPayload.shared_claims.name);
-  	if (personDetailsError.length > 0) {
+  	const personDetailsError = isPersonNameValid(jwtPayload.shared_claims.name);
+  	if (!personDetailsError) {
   		this.logger.error({
-  			message: personDetailsError + " from shared claims data",
+  			message: "Missing GivenName or FamilyName from shared claims data",
   			messageCode: MessageCodes.INVALID_PERSONAL_DETAILS,
   		});
   		return UnauthorizedResponse;

@@ -38,7 +38,7 @@ export const isValidStrings = (params: Array<string | undefined>): boolean => {
 	return false;
 };
 
-const isPersonNameValid = (personName: PersonIdentityName[]) : boolean => {
+export const isPersonNameValid = (personName: PersonIdentityName[]) : boolean => {
 	let isValid = true;
 
 	if ( personName.length === 0 ) {
@@ -67,14 +67,4 @@ const isPersonNameValid = (personName: PersonIdentityName[]) : boolean => {
 		}
 	}
 	return isValid;
-};
-
-export const isPersonDetailsValid = (personEmail: string, personName: PersonIdentityName[]): string => {
-	if (!isValidStrings([personEmail])) {
-		return "Missing emailAddress";
-	} else if (!personName || !isPersonNameValid(personName)) {
-		return "Missing person's GivenName or FamilyName";
-	}
-
-	return "";
 };
