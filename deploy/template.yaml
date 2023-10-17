@@ -1,0 +1,680 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: "AWS::Serverless-2016-10-31"
+Description: "Digital Identity IPV CRI BAV API"
+
+Parameters:
+  CodeSigningConfigArn:
+    Type: String
+    Default: "none"
+    Description: >
+      The ARN of the Code Signing Config to use, provided by the deployment pipeline
+  Environment:
+    Description: "The environment type"
+    Type: "String"
+    AllowedValues:
+      - "dev"
+      - "build"
+      - "staging"
+      - "integration"
+      - "production"
+    ConstraintDescription: Ensure environment variable is set to one of dev, build, staging, integration or production.
+  PermissionsBoundary:
+    Description: "The ARN of the permissions boundary to apply when creating IAM roles"
+    Type: String
+    Default: "none"
+  SecretPrefix:
+    Type: String
+    Default: "none"
+    Description: Secrets name prefix
+  VpcStackName:
+    Type: String
+    Default: "vpc-cri"
+    Description: The name of the VPC stack deployed.
+  L2DynamoStackName:
+    Type: String
+    Default: "bav-cri-ddb"
+    Description: The name of the L2 DynamoDB stack deployed.
+  L2KMSStackName:
+    Type: String
+    Default: "bav-cri-kms"
+    Description: The name of the L2 DynamoDB stack deployed.
+  DeployAlarmsInNonProdLikeEnvironment:
+    Description: "Set to the string value `true` to deploy alarms in a DEV environment"
+    Type: String
+    Default: true
+  SupportManualURL:
+    Description: "Link to the BAV support manual"
+    Type: String
+    Default: 'https://govukverify.atlassian.net/wiki/spaces/FTFCRI/pages/3623583745/bav+Support+Documentation'
+  IPVStubStackName:
+    Type: String
+    Default: "bav-ipv-stub"
+    Description: The name of the IPV stub stack deployed.
+  LambdaConcurrency:
+    Description: "Reserved concurrency for Lambdas running in non-DEV environments"
+    Type: Number
+    Default: 20
+  LambdaConcurrencyThreshold:
+    Description: "Threshold for Reserved concurrency running in non-DEV environments"
+    Type: Number
+    Default: 16  #80% of Lambda concurrency
+  ApplyReservedConcurrencyInDev:
+    Description: "Set to true to apply reserved concurrency when deploying in DEV environments"
+    Type: String
+    Default: "false"
+
+Mappings:
+  EnvironmentConfiguration: # This is where you store per-environment settings.
+    dev:
+      logretentionindays: 3
+      apiTracingEnabled: true
+    build:
+      logretentionindays: 3
+      apiTracingEnabled: true
+    staging:
+      logretentionindays: 3
+      apiTracingEnabled: true
+    integration:
+      logretentionindays: 30
+      apiTracingEnabled: false
+    production:
+      logretentionindays: 30
+      apiTracingEnabled: false
+
+  PlatformConfiguration:
+    dev:
+      CSLSEGRESS: arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython
+    build:
+      CSLSEGRESS: arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython
+    staging:
+      CSLSEGRESS: arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython
+    integration:
+      CSLSEGRESS: arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython
+    production:
+      CSLSEGRESS: arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython
+
+  EnvironmentVariables: # This is all the environment specific environment variables that don't belong in globals.
+    dev:
+      # TODO These are probably wrong and need to be filled out for other envs
+      ISSUER: 'https://review-o.dev.account.gov.uk'
+      DNSSUFFIX: review-o.dev.account.gov.uk
+      MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
+      TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
+      RESOURCETTLSECS: 1209600 # Default 14 days
+      CLIENTS: '[{"jwksEndpoint":"https://bav-ipv-stub-ipvstub.review-o.dev.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://bav-ipv-stub-ipvstub.review-o.dev.account.gov.uk/redirect?id=bav"}]'
+      AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
+  TxMAAccounts:
+    # EVENTS is used to egress to TxMA.
+    dev:
+      AUDIT: arn:aws:iam::725018305812:root
+      EVENTS: arn:aws:iam::248098332657:root
+    build:
+      AUDIT: arn:aws:iam::761029721660:root
+      EVENTS: arn:aws:iam::750703655225:root
+    staging:
+      AUDIT: arn:aws:iam::778587367904:root
+      EVENTS: arn:aws:iam::178023842775:root
+    integration:
+      AUDIT: arn:aws:iam::423448613278:root
+      EVENTS: arn:aws:iam::729485541398:root
+    production:
+      AUDIT: arn:aws:iam::348043515437:root
+      EVENTS: arn:aws:iam::451773080033:root
+
+Conditions:
+  CreateDevResources: !Equals
+    - !Ref Environment
+    - dev
+  ApplyReservedConcurrency: !Or
+    - !Not
+      - !Condition CreateDevResources
+    - !Equals [!Ref ApplyReservedConcurrencyInDev, "true"]
+  IsProdLikeEnvironment: !Or
+    - !Equals [!Ref Environment, staging]
+    - !Equals [!Ref Environment, integration]
+    - !Equals [!Ref Environment, production]
+  IsNotProdLikeEnvironment: !Not
+    - !Condition IsProdLikeEnvironment
+  IsPersonalIdentifiableInformationEnvironment: !Or
+    - !Equals [!Ref Environment, integration]
+    - !Equals [!Ref Environment, production]
+  IsOutboundSQSConnected: !Or
+    - !Equals [!Ref Environment, staging]
+    - !Equals [!Ref Environment, integration]
+    - !Equals [!Ref Environment, production]
+  UseCodeSigning:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref CodeSigningConfigArn
+          - "none"
+  UsePermissionsBoundary:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref PermissionsBoundary
+          - "none"
+  UseSecretPrefix:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref SecretPrefix
+          - "none"
+  DeployAlarms: !Or
+    - Condition: IsProdLikeEnvironment
+    - !Equals [!Ref DeployAlarmsInNonProdLikeEnvironment, true]
+  DeployConcurrencyAlarms: !And
+    - Condition: DeployAlarms
+    - Condition: ApplyReservedConcurrency
+
+Globals:
+  Function:
+    Runtime: nodejs18.x
+    VpcConfig:
+      SecurityGroupIds:
+        - !GetAtt LambdaEgressSecurityGroup.GroupId
+      SubnetIds:
+        - Fn::ImportValue:
+            "Fn::Sub": "${VpcStackName}-ProtectedSubnetIdA"
+        - Fn::ImportValue:
+            "Fn::Sub": "${VpcStackName}-ProtectedSubnetIdB"
+    PermissionsBoundary: !If
+      - UsePermissionsBoundary
+      - !Ref PermissionsBoundary
+      - !Ref AWS::NoValue
+    CodeSigningConfigArn: !If
+      - UseCodeSigning
+      - !Ref CodeSigningConfigArn
+      - !Ref AWS::NoValue
+    Timeout: 30 # seconds
+    Tracing: Active
+    MemorySize: 1024
+    Architectures:
+      - arm64
+    Environment:
+      Variables:
+        AWS_STACK_NAME: !Sub ${AWS::StackName}
+        POWERTOOLS_LOG_LEVEL: DEBUG
+        POWERTOOLS_METRICS_NAMESPACE: BAV-CRI
+        SESSION_TABLE:
+          Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+        SECRET_PREFIX: !If [
+          UseSecretPrefix,
+          !Ref SecretPrefix,
+          !Ref AWS::StackName,
+        ]
+    AutoPublishAlias: live
+
+Resources:
+  LambdaEgressSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: >-
+        Permits outbound on port 443 from within the VPC to the internet.
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          Description: Allow to the wider internet on port 443
+          FromPort: 443
+          IpProtocol: tcp
+          ToPort: 443
+      VpcId:
+        Fn::ImportValue: !Sub "${VpcStackName}-VpcId"
+
+  ### Start of API Gateway definition.
+
+  BAVRestApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Environment
+      OpenApiVersion: 3.0.1
+      AccessLogSetting:
+        Format: "$context.requestId $context.httpMethod $context.path"
+        DestinationArn: !GetAtt BAVAPIGatewayAccessLogGroup.Arn
+      EndpointConfiguration:
+        Type: REGIONAL
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: './bav-spec.yaml'
+        OpenApiVersion: 3.0.1
+      MethodSettings:
+        - LoggingLevel: INFO
+          MetricsEnabled: true
+          ThrottlingBurstLimit: 400
+          ThrottlingRateLimit: 200
+          # Disable data trace in production and integration to avoid logging customer sensitive information
+          DataTraceEnabled: !If
+            - IsPersonalIdentifiableInformationEnvironment
+            - false
+            - true
+          HttpMethod: "*"
+          ResourcePath: "/*"
+      TracingEnabled: true
+      Tags:
+        Product: GOV.UK Sign In
+        System: BAV
+        Environment: !Ref Environment
+        Service: backend
+        Name: BavRestApi
+        Source: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
+
+  BAVAPIGatewayAccessLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays:
+        !FindInMap [
+          EnvironmentConfiguration,
+          !Ref Environment,
+          logretentionindays,
+        ]
+      Tags:
+        - Key: Product
+          Value: GOV.UK Sign In
+        - Key: System
+          Value: Dev Platform
+        - Key: Environment
+          Value: Demo
+        - Key: Service
+          Value: backend
+        - Key: Name
+          Value: APIGatewayAccessLogGroup
+
+  ### End of API Gateway definition.
+
+  # WAFv2ACLAssociation:
+  #   Type: AWS::WAFv2::WebACLAssociation
+  #   Properties:
+  #     ResourceArn: !Sub "arn:aws:apigateway:${AWS::Region}::/restapis/${BAVRestApi}/stages/${BAVRestApi.Stage}"
+  #     WebACLArn: !Sub "{{resolve:ssm:/${Environment}/Platform/Security/Block/WafArn}}"
+
+  ### API Gateway Custom Domain definition
+
+  # BAVApiCustomDomainName:
+  #   Type: AWS::ApiGateway::DomainName
+  #   Properties:
+  #     DomainName: !If
+  #       - CreateDevResources
+  #       - !Sub
+  #         - "api-${AWS::StackName}.${DNSSUFFIX}"
+  #         - DNSSUFFIX:
+  #             !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
+  #       - !Sub
+  #         - "api.${DNSSUFFIX}"
+  #         - DNSSUFFIX:
+  #            !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
+
+  #     EndpointConfiguration:
+  #       Types:
+  #         - REGIONAL
+  #     RegionalCertificateArn: !Sub "{{resolve:ssm:/${Environment}/Platform/ACM/PrimaryZoneWildcardCertificateARN}}"
+  #     SecurityPolicy: TLS_1_2
+
+  # BAVApiBasePath:
+  #   Type: AWS::ApiGateway::BasePathMapping
+  #   DependsOn: "BAVApiCustomDomainName"
+  #   Properties:
+  #     DomainName: !Ref BAVApiCustomDomainName
+  #     RestApiId: !Ref BAVRestApi
+  #     Stage: !Sub "${BAVRestApi.Stage}"
+
+  # BAVApiCertificateRecord:
+  #   Type: AWS::Route53::RecordSet
+  #   Properties:
+  #     Name: !Ref BAVApiCustomDomainName
+  #     Type: A
+  #     HostedZoneId: !Sub "{{resolve:ssm:/${Environment}/Platform/Route53/PrimaryZoneID}}"
+  #     AliasTarget:
+  #       DNSName: !GetAtt BAVApiCustomDomainName.RegionalDomainName
+  #       HostedZoneId: !GetAtt BAVApiCustomDomainName.RegionalHostedZoneId
+
+  BAVRestAPIFatalErorMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref BAVAPIGatewayAccessLogGroup
+      FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
+      MetricTransformations:
+        -
+          MetricValue: "1"
+          MetricNamespace: !Sub "${AWS::StackName}/LogMessages"
+          MetricName: "BAVResetAPI-Fatalerror"
+
+  BAVRestAPIFatalErrorAlarm:
+    DependsOn:
+      - "BAVRestAPIFatalErorMetricFilter"
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-BAVRestAPI-FatalErrorAlarm"
+      AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
+      ActionsEnabled: true
+      OKActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      InsufficientDataActions: [ ]
+      MetricName: BAVResetAPI-Fatalerror
+      Namespace: !Sub "${AWS::StackName}/LogMessages"
+      Statistic: Sum
+      Dimensions: [ ]
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  ### End of API Gateway Custom Domain definition
+
+    ### Function Definition
+  ## SessionHandler
+  SessionFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: SessionFunctionLogGroup
+    Properties:
+      FunctionName: !Sub "BAV-Session-${AWS::StackName}"
+      Handler: SessionHandler.lambdaHandler
+      CodeUri: ../src/
+      ReservedConcurrentExecutions: !If
+        - ApplyReservedConcurrency
+        - !Ref LambdaConcurrency
+        - !Ref AWS::NoValue
+      Environment:
+        Variables:
+          AUTH_SESSION_TTL_SECS:
+            !FindInMap [ EnvironmentVariables, !Ref Environment, AUTHSESSIONTTLSECS ]
+          POWERTOOLS_SERVICE_NAME: SessionHandler
+          ISSUER: !FindInMap [EnvironmentVariables, !Ref Environment, ISSUER]
+          KMS_KEY_ARN:
+            Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
+          TXMA_QUEUE_URL: !Ref TxMASQSQueue
+          CLIENT_CONFIG:
+            !FindInMap [ EnvironmentVariables, !Ref Environment, CLIENTS ]
+          ENCRYPTION_KEY_IDS:
+            Fn::ImportValue: !Sub "${L2KMSStackName}-encryption-key"
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSXrayWriteOnlyAccess
+        - DynamoDBWritePolicy:
+            TableName:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+        - DynamoDBReadPolicy:
+            TableName:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+        - KMSDecryptPolicy:
+            KeyId:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-key-id"
+        - Statement:
+            - Sid: KMSPolicy
+              Effect: Allow
+              Action:
+                - kms:*
+              Resource:
+                "*"
+              #Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
+              #Resource: !Sub "arn:aws:kms:eu-west-2:060113405249:key/ff437a51-ec7e-4118-9c95-7b0bb2856836"
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "sqs:SendMessage"
+              Resource: !GetAtt TxMASQSQueue.Arn
+            - Effect: Allow
+              Action:
+                - "kms:Encrypt"
+                - "kms:Decrypt"
+                - "kms:GenerateDataKey"
+              Resource: !GetAtt TxMAKMSEncryptionKey.Arn
+      Events:
+        session:
+          Type: Api
+          Properties:
+            Path: /session
+            Method: post
+            RestApiId: !Ref BAVRestApi
+
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: false
+        EntryPoints:
+          - SessionHandler.ts
+
+  SessionFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/BAV-Session-${AWS::StackName}"
+      RetentionInDays:
+        !FindInMap [
+          EnvironmentConfiguration,
+          !Ref Environment,
+          logretentionindays,
+        ]
+
+  # SessionFunctionLogsSubscriptionFilterCSLS:
+  #   Type: AWS::Logs::SubscriptionFilter
+  #   Properties:
+  #     DestinationArn:
+  #       !FindInMap [ PlatformConfiguration, !Ref Environment, CSLSEGRESS ]
+  #     FilterPattern: ""
+  #     LogGroupName: !Ref SessionFunctionLogGroup
+
+  SessionFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref SessionFunction
+      Principal: apigateway.amazonaws.com
+
+  SessionFunctionFatalErorMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref SessionFunctionLogGroup
+      FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
+      MetricTransformations:
+        -
+          MetricValue: "1"
+          MetricNamespace: !Sub "${AWS::StackName}/LogMessages"
+          MetricName: "SessionFunction-Fatalerror"
+
+  SessionFunctionFatalErrorAlarm:
+    DependsOn:
+      - "SessionFunctionFatalErorMetricFilter"
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-SessionFunction-FatalErrorAlarm"
+      AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
+      ActionsEnabled: true
+      OKActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      InsufficientDataActions: [ ]
+      MetricName: SessionFunction-Fatalerror
+      Namespace: !Sub "${AWS::StackName}/LogMessages"
+      Statistic: Sum
+      Dimensions: [ ]
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  SessionConcurrency80Alarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployConcurrencyAlarms"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: []
+      AlarmDescription: !Sub "Trigger the alarm if over 80% of Session is used. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-SessionFunction-concurrency"
+      MetricName: ConcurrentExecutions
+      Namespace: AWS/Lambda
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref SessionFunction
+      Statistic: Maximum
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: !Ref LambdaConcurrencyThreshold
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+
+  SessionThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: []
+      AlarmDescription: !Sub "Trigger if the ${SessionFunction} lambda throttles. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-SessionFunction-throttles"
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref SessionFunction
+      TreatMissingData: notBreaching
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+
+  ## TXMA SQS Queue
+  TxMASQSQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: !FindInMap [EnvironmentVariables, !Ref Environment, TXMAMESSAGERETENTIONPERIODDAYS]
+      VisibilityTimeout: 60
+      KmsMasterKeyId: !Ref TxMAKeyAlias
+      RedrivePolicy:
+        deadLetterTargetArn:
+          Fn::GetAtt:
+            - "TxMASQSQueueDeadLetterQueue"
+            - "Arn"
+        maxReceiveCount: 5
+
+  TxMASQSQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref TxMASQSQueue
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action:
+              - "sqs:DeleteMessage"
+              - "sqs:GetQueueAttributes"
+              - "sqs:ChangeMessageVisibility"
+              - "sqs:ReceiveMessage"
+            Resource:
+              - !GetAtt TxMASQSQueue.Arn
+            Principal:
+              AWS: !If
+                - IsOutboundSQSConnected
+                - !FindInMap [TxMAAccounts, !Ref Environment, EVENTS]
+                - !Ref AWS::NoValue
+
+  TxMASQSQueueDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 259200 # three days
+      KmsMasterKeyId: !Sub TxMAKMSEncryptionKey
+
+  TxMAKMSEncryptionKey:
+    Type: AWS::KMS::Key
+    # KMS Key manually rotated.
+    # checkov:skip=CKV_AWS_7: KMS Key manually rotated.
+    Properties:
+      Description: A KMS Key for encrypting the SQS Queue for TxMA
+      Enabled: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource:
+              - "*"
+          - Effect: Allow
+            Principal:
+              AWS: !FindInMap [TxMAAccounts, !Ref Environment, EVENTS]
+            Action:
+              - "kms:Encrypt"
+              - "kms:Decrypt"
+              - "kms:GenerateDataKey"
+            Resource:
+              - "*"
+      KeySpec: SYMMETRIC_DEFAULT
+      KeyUsage: ENCRYPT_DECRYPT
+      MultiRegion: false
+      PendingWindowInDays: 7
+      Tags:
+        - Key: KeyType
+          Value: Encryption Key
+        - Key: Environment
+          Value: !Sub ${Environment}
+
+  TxMAKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !If
+        - CreateDevResources
+        - !Sub "alias/TxMAKMSEncryptionKey-${AWS::StackName}"
+        - alias/TxMAKMSEncryptionKey
+      TargetKeyId: !Ref TxMAKMSEncryptionKey
+
+Outputs:
+  BAVApiGatewayId:
+    Description: "API GatewayID of the BAV CRI API"
+    Value: !Sub "${BAVRestApi}"
+    Export:
+      Name: !Sub ${AWS::StackName}-BAVApiGatewayId
+  # BAVBackendURL:
+  #   Description: "BAV Backend URL"
+  #   Value: !Sub
+  #     - "https://${CustomDomainName}"
+  #     - CustomDomainName: !Ref BAVApiCustomDomainName
+  #   Export:
+  #     Name: !Sub ${AWS::StackName}-BAVBackendURL
+  TxMASQSQueue:
+    Description: "Arn of the TxMASQSQueue"
+    Value: !GetAtt TxMASQSQueue.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-TxMASQSQueue-arn
+  TxMAKMSEncryptionKey:
+    Description: "Arn of the TxMAKMSEncryptionKey"
+    Value: !GetAtt TxMAKMSEncryptionKey.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-TxMAKMSEncryptionKey-arn
+  SessionTableName:
+    Description: "Name of the Session DynamoDB table"
+    Value:
+      Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+    Export:
+      Name: !Sub ${AWS::StackName}-SessionTable-name
+  SessionTableARN:
+    Description: "Arn of the Session DynamoDB table"
+    Value:
+      Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-arn"
+    Export:
+      Name: !Sub ${AWS::StackName}-SessionTable-arn
+  SessionTableEcryptionARN:
+    Description: "Arn of the SessionTableEncryptionKey"
+    Value:
+      Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-key-arn"
+    Export:
+      Name: !Sub ${AWS::StackName}-SessionTableEncryptionKey-arn

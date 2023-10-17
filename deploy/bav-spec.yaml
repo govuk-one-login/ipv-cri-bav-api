@@ -1,0 +1,197 @@
+openapi: 3.0.1
+info:
+  title:
+     Fn::Sub: "${AWS::StackName} - BAV Credential Issuer Private API"
+  version: "1.0"
+  description: >-
+    Bank Account Verification CRI - Frontend and Backend API specification
+  contact:
+    name: Mudassar Jafer
+    email: mudassar.jafer@digital.cabinet-office.gov.uk
+servers:
+  - url: https://www.example.com
+tags:
+  - name: Backend - Common CRI Lambda
+    description: Backend endpoints implemented by the Common CRI Lambda functions
+  - name: Backend - BAV CRI specific
+    description: Backend endpoints implementing functions specific to the Claimed Identity CRI
+  - name: Frontend
+    description: Frontend endpoints implementing rendering and routing
+
+paths:
+  /session:
+    post:
+      operationId: postVerifyAuthorizeRequest
+      summary: Verify the incoming JAR request and initiate a Session
+      description: >-
+        Verify Authorization Request - Verify the [JAR request](https://datatracker.ietf.org/doc/rfc9101/)
+        received from calling RP. This service only supports section Passing a Request Object by Value (see
+        section 5.1). If verified, a new session will be created and a `session_id` will be returned to the
+        caller.
+      tags:
+        - Backend - Common CRI Lambda
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionRequest'
+      responses:
+        "201":
+          description: >-
+            Created - OAuth token is valid - Session details have been stored in the backend and a `session_id`
+            is returned.
+          headers:
+            Cache-Control:
+              schema:
+                type: "string"
+            Content-Type:
+              schema:
+                type: "string"
+            Strict-Transport-Security:
+              schema:
+                type: "string"
+            X-Content-Type-Options:
+              schema:
+                type: "string"
+            X-Frame-Options:
+              schema:
+                type: "string"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+        "401":
+          description: Unauthorized
+          headers:
+            Cache-Control:
+              schema:
+                type: "string"
+            Content-Type:
+              schema:
+                type: "string"
+            Strict-Transport-Security:
+              schema:
+                type: "string"
+            X-Content-Type-Options:
+              schema:
+                type: "string"
+            X-Frame-Options:
+              schema:
+                type: "string"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OAuthErrorResponse"
+        "500":
+          description: Internal Server Error
+          headers:
+            Cache-Control:
+              schema:
+                type: "string"
+            Content-Type:
+              schema:
+                type: "string"
+            Strict-Transport-Security:
+              schema:
+                type: "string"
+            X-Content-Type-Options:
+              schema:
+                type: "string"
+            X-Frame-Options:
+              schema:
+                type: "string"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OAuthErrorResponse"
+      x-amazon-apigateway-request-validator: "both"
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SessionFunction.Arn}:live/invocations
+        responses:
+          default:
+            statusCode: "200"
+        passthroughBehavior: "when_no_match"
+        contentHandling: "CONVERT_TO_TEXT"
+        type: "aws_proxy"
+
+components:
+  schemas:
+    SessionRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - client_id
+        - request
+      properties:
+        client_id:
+          type: string
+          example: abcdefgh
+          description: >-
+            the OAuth client identifier which has been registered with BAV
+        request:
+          type: string
+          example: eyJhbGciOiJSU0EtT0FFUC0yNTYiLCJlbmMiOiJBMjU2R0NNIn0.AISIEvimTkm_1gfG9gQA5btB7lHu2riU90KI-UyuH35CABCJk_KKUTsptasmNG5n6Zo6jL8vlMrj3y4A44nDrnTeH_OGLByerCd-EKNx9EZrplcsQ8VM8dip7LCUQy10OGH6ggoMGq9TbiC7lP_8md8UgvcNzd_zm6q6Ade5zd_sUzTWNSX3q6lVfpkpuMdj-2l18zk-yJEvaDArP7U1VBT8531ixxW1lUKflTHlyC-t6B-45R04o3KubhVb-_gVt7KKXo7UQUY-wmHiTUGsxWb3xrROKs6tv4Ug7Oi1MVngesL8CahjyLamvk-tdS1ji2rxn47Xs2Q21FQf3cHPtQ.9bNdWPzw2Cf6uyR_.VVj96Ejcc84yKv3gfHY6Nond9FJrQ-AoQ7pQSlmnzicoJ7hpHwyHUuNiSJNO4q631VKAblNbdprAA11PcYL3f_hcocxwORR8e3tQlDG9TFn6lxg3l9M34ccJrkD51ippIpsChQhIFqS2hU5W9BFyOPdpQhlhtc7R-d0zqbylh-z-snzxRG7Q-hVsBQpOzOLMDWcJNOCHlF8kZjp4dlWYFj3Yl_9HAa-hrY-DpoxdkvXVIrBdJarD77Bwwxo8y1IWEgCuDA8t5ZmrZMY9fxoufQg9jW5D7hB3qysgSo3S-6SFyt3rP_WD5ecezRrTCY-voDeWBtfdwuKo5UUaPidN4ut1n8SXAdoANxgbuEhyABjvMESi3AnWwZRx8yh3xEMVSwZ8kFQ4cVeBW2hrkiSXMjL1Wtz6nhhY9itFcmzBU4JMvoYfdf-ZZP-F4ph_Xh9CRS7rBzmrgUt81LahzYfCY91lS93qT7r3Wrh0OfIb0vvIkVUebDdCZw25PoG2oREty4k59z7j9ho8VqbtSS6_kpJGWx8Sikut1I-bVduk79Vf1MwEGxSRvZ_pyZHxxZDe19GPfamhctFXMcebyJoT2zwWhcW4AWFSUtm2JI36sZhFcsdRIRBfSjJ4MNXdlrHdOyhvo8SwTWpfO5lU9yyF8lANbXxjdnRSV6sR1iaBs_16slbWJX3WC6RmC76x8MlHn1fLBK_lU_IeZChZqLCwqUC3CXbk17OkTkdeCqFyZSS5rlfm-EiPvam6iW51tA-ywxrmUjkCDE_k-zZIZTVVSg.3YAfgcQ4ZkPtYPNvOzWCLQ
+          description: >-
+            an JWT which has been signed with the clients signing private key and encrypted with the BAV public
+            encryption key.
+    SessionResponse:
+      type: object
+      additionalProperties: true
+      required:
+        - session_id
+        - redirect_uri
+        - state
+      properties:
+        session_id:
+          type: string
+          description: Session ID
+          format: uuid
+          example: 11111111-1111-1111-1111-111111111111
+        state:
+          type: string
+          example: abcdefgh
+          description: >-
+            The exact value for `state` as received from the client in the authorization request
+        redirect_uri:
+          type: string
+          example: https://www.example.com/receiveToken
+          description: >-
+            the OAuth client identifier which has been registered with CI CRI
+    OAuthErrorResponse:
+      type: object
+      additionalProperties: true
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          enum:
+            - access_denied
+            - invalid_request
+            - invalid_client
+            - invalid_grant
+            - unauthorized_client
+            - unsupported_grant_type
+            - invalid_scope
+            - server_error
+            - temporarily_unavailable
+            - unsupported_response_type
+            - authorization_pending
+          example: access_denied
+          description: >-
+            A single ASCII [USASCII] error code from the following
+        error_description:
+          type: string
+          example: Access was denied as auth code was not recognised
+          description: >-
+            Human-readable ASCII [USASCII] text providing additional information, used to assist the
+            client developer in understanding the error that occurred.
+        error_uri:
+          type: string
+          example: https://example.com/error1.html
+          description: >-
+            A URI identifying a human-readable web page with information about the error, used to
+            provide the client developer with additional information about the error.
