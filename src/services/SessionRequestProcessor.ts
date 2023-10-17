@@ -43,7 +43,6 @@ export class SessionRequestProcessor {
   		this.logger.error({
   			message: "Missing AUTH_SESSION_TTL_SECS or SESSION_TABLE environment variable",
   			sessionTableName: !!sessionTableName,
-  			// Don't want to log sensitive information
   			encryptionKeyIds: !!encryptionKeyIds,
   			messageCode: MessageCodes.MISSING_CONFIGURATION,
   		});
@@ -158,7 +157,6 @@ export class SessionRequestProcessor {
   		return UnauthorizedResponse;
   	}
 
-  	// TODO highlight in the PR that I changed this
   	const sessionId: string = await this.BavService.generateSessionId();
   	this.logger.appendKeys({
   		sessionId,
@@ -190,26 +188,8 @@ export class SessionRequestProcessor {
   		evidence_requested: jwtPayload.evidence_requested,
   	};
 
-  	// TODO don't understand why these need to be wrapped in try/catches
-  	// try {
-  		await this.BavService.createAuthSession(session);
-  	// } catch (error: any) {
-  	// 	this.logger.error("Failed to create session in session table", {
-  	// 		error,
-  	// 		messageCode: MessageCodes.FAILED_CREATING_SESSION,
-  	// 	});
-  	// 	return GenericServerError;
-  	// }
-
-  	// try {
-  		await this.BavService.savePersonIdentity(jwtPayload.shared_claims, sessionId);
-  	// } catch (error: any) {
-  	// 	this.logger.error("Failed to create session in person identity table", {
-  	// 		error,
-  	// 		messageCode: MessageCodes.FAILED_SAVING_PERSON_IDENTITY,
-  	// 	});
-  	// 	return GenericServerError;
-  	// }
+  	await this.BavService.createAuthSession(session);
+  	await this.BavService.savePersonIdentity(jwtPayload.shared_claims, sessionId);
 
   	const issuer = process.env.ISSUER;
   	if (!issuer) {
