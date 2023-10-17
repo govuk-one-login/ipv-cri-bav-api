@@ -96,8 +96,8 @@ Mappings:
   EnvironmentVariables: # This is all the environment specific environment variables that don't belong in globals.
     dev:
       # TODO These are probably wrong and need to be filled out for other envs
-      ISSUER: 'https://review-o.dev.account.gov.uk'
-      DNSSUFFIX: review-o.dev.account.gov.uk
+      ISSUER: 'https://review-bav.dev.account.gov.uk'
+      DNSSUFFIX: review-bav.dev.account.gov.uk
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       RESOURCETTLSECS: 1209600 # Default 14 days
@@ -330,43 +330,43 @@ Resources:
 
   ### API Gateway Custom Domain definition
 
-  # BAVApiCustomDomainName:
-  #   Type: AWS::ApiGateway::DomainName
-  #   Properties:
-  #     DomainName: !If
-  #       - CreateDevResources
-  #       - !Sub
-  #         - "api-${AWS::StackName}.${DNSSUFFIX}"
-  #         - DNSSUFFIX:
-  #             !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
-  #       - !Sub
-  #         - "api.${DNSSUFFIX}"
-  #         - DNSSUFFIX:
-  #            !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
+  BAVApiCustomDomainName:
+    Type: AWS::ApiGateway::DomainName
+    Properties:
+      DomainName: !If
+        - CreateDevResources
+        - !Sub
+          - "api-${AWS::StackName}.${DNSSUFFIX}"
+          - DNSSUFFIX:
+              !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
+        - !Sub
+          - "api.${DNSSUFFIX}"
+          - DNSSUFFIX:
+             !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
 
-  #     EndpointConfiguration:
-  #       Types:
-  #         - REGIONAL
-  #     RegionalCertificateArn: !Sub "{{resolve:ssm:/${Environment}/Platform/ACM/PrimaryZoneWildcardCertificateARN}}"
-  #     SecurityPolicy: TLS_1_2
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      RegionalCertificateArn: !Sub "{{resolve:ssm:/${Environment}/Platform/ACM/PrimaryZoneWildcardCertificateARN}}"
+      SecurityPolicy: TLS_1_2
 
-  # BAVApiBasePath:
-  #   Type: AWS::ApiGateway::BasePathMapping
-  #   DependsOn: "BAVApiCustomDomainName"
-  #   Properties:
-  #     DomainName: !Ref BAVApiCustomDomainName
-  #     RestApiId: !Ref BAVRestApi
-  #     Stage: !Sub "${BAVRestApi.Stage}"
+  BAVApiBasePath:
+    Type: AWS::ApiGateway::BasePathMapping
+    DependsOn: "BAVApiCustomDomainName"
+    Properties:
+      DomainName: !Ref BAVApiCustomDomainName
+      RestApiId: !Ref BAVRestApi
+      Stage: !Sub "${BAVRestApi.Stage}"
 
-  # BAVApiCertificateRecord:
-  #   Type: AWS::Route53::RecordSet
-  #   Properties:
-  #     Name: !Ref BAVApiCustomDomainName
-  #     Type: A
-  #     HostedZoneId: !Sub "{{resolve:ssm:/${Environment}/Platform/Route53/PrimaryZoneID}}"
-  #     AliasTarget:
-  #       DNSName: !GetAtt BAVApiCustomDomainName.RegionalDomainName
-  #       HostedZoneId: !GetAtt BAVApiCustomDomainName.RegionalHostedZoneId
+  BAVApiCertificateRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Name: !Ref BAVApiCustomDomainName
+      Type: A
+      HostedZoneId: !Sub "{{resolve:ssm:/${Environment}/Platform/Route53/PrimaryZoneID}}"
+      AliasTarget:
+        DNSName: !GetAtt BAVApiCustomDomainName.RegionalDomainName
+        HostedZoneId: !GetAtt BAVApiCustomDomainName.RegionalHostedZoneId
 
   BAVRestAPIFatalErorMetricFilter:
     Type: AWS::Logs::MetricFilter
@@ -833,13 +833,13 @@ Outputs:
     Value: !Sub "${BAVRestApi}"
     Export:
       Name: !Sub ${AWS::StackName}-BAVApiGatewayId
-  # BAVBackendURL:
-  #   Description: "BAV Backend URL"
-  #   Value: !Sub
-  #     - "https://${CustomDomainName}"
-  #     - CustomDomainName: !Ref BAVApiCustomDomainName
-  #   Export:
-  #     Name: !Sub ${AWS::StackName}-BAVBackendURL
+  BAVBackendURL:
+    Description: "BAV Backend URL"
+    Value: !Sub
+      - "https://${CustomDomainName}"
+      - CustomDomainName: !Ref BAVApiCustomDomainName
+    Export:
+      Name: !Sub ${AWS::StackName}-BAVBackendURL
   TxMASQSQueue:
     Description: "Arn of the TxMASQSQueue"
     Value: !GetAtt TxMASQSQueue.Arn
