@@ -130,8 +130,18 @@ export class BavService {
 			sessionId,
 		);
 
+
+  	const TableName = process.env.PERSON_IDENTITY_TABLE_NAME;
+  	if (!TableName) {
+  		this.logger.error({
+  			message: "Missing PERSON_IDENTITY_TABLE_NAME environment variable",
+  			messageCode: MessageCodes.MISSING_CONFIGURATION,
+  		});
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "Missing configuration" );
+  	}
+
 		const putSessionCommand = new PutCommand({
-			TableName: process.env.PERSON_IDENTITY_TABLE_NAME,
+			TableName,
 			Item: personIdentityItem,
 		});
 

@@ -382,6 +382,8 @@ Resources:
             !FindInMap [ EnvironmentVariables, !Ref Environment, AUTHSESSIONTTLSECS ]
           POWERTOOLS_SERVICE_NAME: SessionHandler
           ISSUER: !FindInMap [EnvironmentVariables, !Ref Environment, ISSUER]
+          PERSON_IDENTITY_TABLE_NAME:
+            Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-name"
           KMS_KEY_ARN:
             Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
           TXMA_QUEUE_URL: !Ref TxMASQSQueue
