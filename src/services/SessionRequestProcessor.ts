@@ -148,6 +148,10 @@ export class SessionRequestProcessor {
   		return UnauthorizedResponse;
   	}
 
+  	this.logger.appendKeys({
+  		govuk_signin_journey_id: jwtPayload.govuk_signin_journey_id as string,
+  	});
+
   	const personDetailsError = isPersonNameValid(jwtPayload.shared_claims.name);
   	if (!personDetailsError) {
   		this.logger.error({
@@ -158,10 +162,7 @@ export class SessionRequestProcessor {
   	}
 
   	const sessionId: string = await this.BavService.generateSessionId();
-  	this.logger.appendKeys({
-  		sessionId,
-  		govuk_signin_journey_id: jwtPayload.govuk_signin_journey_id as string,
-  	});
+  	this.logger.appendKeys({ sessionId });
 
   	const session: ISessionItem = {
   		sessionId,

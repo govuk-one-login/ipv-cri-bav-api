@@ -106,7 +106,7 @@ export class BavService {
 			sessionId,
 			birthDate: this.mapBirthDate(sharedClaims.birthDate),
 			name: this.mapNames(sharedClaims.name),
-  		expiryDate: absoluteTimeNow() + +authSessionTtlInSecs,
+			expiryDate: absoluteTimeNow() + +authSessionTtlInSecs,
 			createdDate: absoluteTimeNow(),
 		};
 	}
@@ -137,7 +137,7 @@ export class BavService {
 
 		try {
 			await this.dynamo.send(putSessionCommand);
-			this.logger.info("Successfully created session in dynamodb");
+			this.logger.info("Successfully saved personal identity data in DynamoDB");
 			return putSessionCommand?.input?.Item?.sessionId;
 
 		} catch (error) {
@@ -152,15 +152,15 @@ export class BavService {
 			Item: session,
 		});
 
-		this.logger.info({ message: "Saving session data in DynamoDB" });
+		this.logger.info({ message: "Saving auth session data in DynamoDB" });
 
 		try {
 			await this.dynamo.send(putSessionCommand);
-			this.logger.info("Successfully created session in dynamodb");
+			this.logger.info("Successfully saved auth session data in DynamoDB");
 
 		} catch (error) {
-			this.logger.error({ message: "Failed to save session data", error });
-			throw new AppError(HttpCodesEnum.SERVER_ERROR, "Failed to save session data");
+			this.logger.error({ message: "Failed to save auth session data", error });
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "Failed to save auth session data");
 		}
 	}
 

@@ -212,10 +212,8 @@ describe("SessionRequestProcessor", () => {
 
 		await sessionRequestProcessor.processRequest(VALID_SESSION);
 
-		expect(logger.appendKeys).toHaveBeenCalledWith({
-			sessionId: "mock-session-id",
-			govuk_signin_journey_id: "abcdef",
-		});
+		expect(logger.appendKeys).toHaveBeenCalledWith({ govuk_signin_journey_id: "abcdef" });
+		expect(logger.appendKeys).toHaveBeenCalledWith({ sessionId: "mock-session-id" });
 	});
 
 	it("sends BAV_CRI_START event to txma", async () => {

@@ -130,7 +130,7 @@ describe("BAV Service", () => {
 			mockDynamoDbClient.send = jest.fn().mockRejectedValueOnce({});
 			await expect(bavService.createAuthSession(SESSION_RECORD)).rejects.toThrow(expect.objectContaining({
 				statusCode: HttpCodesEnum.SERVER_ERROR,
-				message: "Failed to save session data",
+				message: "Failed to save auth session data",
 			}));
 		});
 	});
