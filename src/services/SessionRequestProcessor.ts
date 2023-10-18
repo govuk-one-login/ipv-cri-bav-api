@@ -6,6 +6,7 @@ import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { ISessionItem } from "../models/ISessionItem";
 import { JwtPayload, Jwt } from "../models/IVeriCredential";
+import { EnvironmentVariables } from "../utils/Constants";
 import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
@@ -47,13 +48,13 @@ export class SessionRequestProcessor {
   	logger.debug("metrics is  " + JSON.stringify(this.metrics));
   	this.metrics.addMetric("Called", MetricUnits.Count, 1);
 
-  	const sessionTableName: string = checkEnvironmentVariable("SESSION_TABLE", this.logger);
-  	const encryptionKeyIds: string = checkEnvironmentVariable("ENCRYPTION_KEY_IDS", this.logger);
-  	this.clientConfig = checkEnvironmentVariable("CLIENT_CONFIG", this.logger);
-  	this.authSessionTtlInSecs = checkEnvironmentVariable("AUTH_SESSION_TTL_SECS", this.logger);
-  	this.issuer = checkEnvironmentVariable("ISSUER", this.logger);
-  	this.txmaQueueUrl = checkEnvironmentVariable("TXMA_QUEUE_URL", this.logger);
-  	this.personIdentityTableName = checkEnvironmentVariable("PERSON_IDENTITY_TABLE_NAME", this.logger);
+  	const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, this.logger);
+  	const encryptionKeyIds: string = checkEnvironmentVariable(EnvironmentVariables.ENCRYPTION_KEY_IDS, this.logger);
+  	this.clientConfig = checkEnvironmentVariable(EnvironmentVariables.CLIENT_CONFIG, this.logger);
+  	this.authSessionTtlInSecs = checkEnvironmentVariable(EnvironmentVariables.AUTH_SESSION_TTL_SECS, this.logger);
+  	this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, this.logger);
+  	this.txmaQueueUrl = checkEnvironmentVariable(EnvironmentVariables.TXMA_QUEUE_URL, this.logger);
+  	this.personIdentityTableName = checkEnvironmentVariable(EnvironmentVariables.PERSON_IDENTITY_TABLE_NAME, this.logger);
 
   	this.BavService = BavService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
   	this.kmsDecryptor = new KmsJwtAdapter(encryptionKeyIds);
