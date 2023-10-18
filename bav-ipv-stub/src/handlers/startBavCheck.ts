@@ -77,7 +77,6 @@ export const handler = async (
     delete payload.evidence_requested
   }
 
-  console.log("Generate payload is"+JSON.stringify(payload));
   const signedJwt = await sign(payload, config.signingKey);
   const publicEncryptionKey: CryptoKey = await getPublicEncryptionKey(config);
   const request = await encrypt(signedJwt, publicEncryptionKey);
