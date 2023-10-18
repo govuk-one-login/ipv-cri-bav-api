@@ -13,7 +13,6 @@ on:
       - 'infra-l2-dynamo/**'
       - 'infra-l2-kms/**'
       - 'bav-ipv-stub/**'
-      - 'gov-notify-stub/**'
       - 'test-harness/**'
 
   # Allows you to run this workflow manually from the Actions tab
@@ -31,7 +30,6 @@ env: # Only adding the variables in that are required for
   DEV_BAV_EXPIRED_ACCESS_TOKEN: ${{ secrets.DEV_BAV_EXPIRED_ACCESS_TOKEN }}
   DEV_BAV_MISSING_SUB_ACCESS_TOKEN: ${{ secrets.DEV_BAV_MISSING_SUB_ACCESS_TOKEN }}
   DEV_BAV_TEST_HARNESS_URL: ${{ secrets.DEV_TEST_HARNESS_API_ENDPOINT }}
-  DEV_BAV_GOV_NOTIFY_STUB_URL: ${{ secrets.DEV_BAV_GOV_NOTIFY_STUB_URL }}
 
 jobs:
   run-code-check:
