@@ -2,8 +2,10 @@ import { APIGatewayProxyEvent } from "aws-lambda";
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { BavService } from "./BavService";
+import { AuthSessionState } from "../models/enums/AuthSessionState";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../models/enums/MessageCodes";
+import { TxmaEventNames } from "../models/enums/TxmaEvents";
 import { ISessionItem } from "../models/ISessionItem";
 import { JwtPayload, Jwt } from "../models/IVeriCredential";
 import { EnvironmentVariables } from "../utils/Constants";
@@ -173,7 +175,7 @@ export class SessionRequestProcessor {
   		persistentSessionId: jwtPayload.persistent_session_id,
   		clientIpAddress,
   		attemptCount: 0,
-  		authSessionState: "BAV_SESSION_CREATED",
+  		authSessionState: AuthSessionState.BAV_SESSION_CREATED,
   		evidence_requested: jwtPayload.evidence_requested,
   	};
 
@@ -190,7 +192,7 @@ export class SessionRequestProcessor {
   	await this.BavService.sendToTXMA(
   		this.txmaQueueUrl,
   		{
-  			event_name: "BAV_CRI_START",
+  			event_name: TxmaEventNames.BAV_CRI_START,
   			...coreEventFields,
   			user: {
   				...coreEventFields.user,
