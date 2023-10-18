@@ -53,6 +53,7 @@ export  async function tokenPost(authCode?: any, redirectUri?: any): Promise<any
         return postRequest;
     } catch(error: any){
         console.log(`Error response from ${path} endpoint ${error}.`);
+        return error.response;
     }
 }
 
@@ -63,6 +64,7 @@ export async function userInfoPost(accessToken?: any): Promise<any> {
         return postRequest;
     } catch(error: any){
         console.log(`Error rrsponse from ${path} endpoint ${error}.`);
+        return error.response;
     }
     
 }
