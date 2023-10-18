@@ -95,13 +95,20 @@ Mappings:
 
   EnvironmentVariables: # This is all the environment specific environment variables that don't belong in globals.
     dev:
-      # TODO These are probably wrong and need to be filled out for other envs
       ISSUER: 'https://review-bav.dev.account.gov.uk'
       DNSSUFFIX: review-bav.dev.account.gov.uk
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: '[{"jwksEndpoint":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/redirect?id=bav"}]'
+      AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
+    build:
+      ISSUER: 'https://review-bav.build.account.gov.uk'
+      DNSSUFFIX: review-bav.build.account.gov.uk
+      MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
+      TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
+      RESOURCETTLSECS: 1209600 # Default 14 days
+      CLIENTS: '[{"jwksEndpoint":"https://bav-ipv-stub-ipvstub.review-bav.build.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://bav-ipv-stub-ipvstub.review-bav.build.account.gov.uk/redirect?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
   TxMAAccounts:
     # EVENTS is used to egress to TxMA.
