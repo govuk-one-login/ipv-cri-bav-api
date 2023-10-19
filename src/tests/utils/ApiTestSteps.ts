@@ -85,9 +85,8 @@ export async function wellKnownGet():Promise<any>{
 }
 
 export function validateWellKnownResponse(response:any):void {
-    let valid = true;
     const validate = ajv.compile(wellKnownGetSchema);
-    valid = validate(response.data);
+    const valid: boolean = validate(response);
     if (!valid) {
         console.error("Error in Well Known Get Response: " + JSON.stringify(validate.errors));
     }
