@@ -2,6 +2,8 @@ export class Constants {
 
 	static readonly JWKS_LOGGER_SVC_NAME = "JwksHandler";
 
+	static readonly JWKS_LOGGER_SVC_NAME = "JwksHandler";
+
 	static readonly X_SESSION_ID = "x-govuk-signin-session-id";
 
 	static readonly SESSION_ID = "session-id";

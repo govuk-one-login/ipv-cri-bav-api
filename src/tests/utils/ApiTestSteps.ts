@@ -1,11 +1,23 @@
 import axios, { AxiosInstance } from "axios";
+import { aws4Interceptor } from "aws4-axios";
+import { XMLParser } from "fast-xml-parser";
 import Ajv from "ajv";
 import wellKnownGetSchema from "../data/wellKnownJwksResponseSchema.json";
 import { constants } from "./ApiConstants";
+import { ISessionItem } from "../../models/ISessionItem";
 
 const API_INSTANCE = axios.create({ baseURL:constants.DEV_CRI_BAV_API_URL });
 const ajv = new Ajv({ strict: false });
 
+const HARNESS_API_INSTANCE : AxiosInstance = axios.create({ baseURL: constants.DEV_BAV_TEST_HARNESS_URL });
+const awsSigv4Interceptor = aws4Interceptor({
+	options: {
+		region: "eu-west-2",
+		service: "execute-api",
+	},
+});
+HARNESS_API_INSTANCE.interceptors.request.use(awsSigv4Interceptor);
+const xmlParser = new XMLParser();
 
 export async function startStubServiceAndReturnSessionId(bavStubPayload: any): Promise<any> {
 	const stubResponse = await stubStartPost(bavStubPayload);
@@ -91,4 +103,89 @@ export function validateWellKnownResponse(response:any):void {
 		console.error("Error in Well Known Get Response: " + JSON.stringify(validate.errors));
 	}
 	expect(valid).toBeTruthy();
+}
+
+export async function getSessionById(sessionId: string, tableName: string): Promise<ISessionItem | undefined> {
+	interface OriginalValue {
+		N?: string;
+		S?: string;
+	}
+
+	interface OriginalSessionItem {
+		[key: string]: OriginalValue;
+	}
+
+	let session: ISessionItem | undefined;
+	try {
+		const response = await HARNESS_API_INSTANCE.get<{ Item: OriginalSessionItem }>(`getRecordBySessionId/${tableName}/${sessionId}`, {});
+		const originalSession = response.data.Item;
+		session = Object.fromEntries(
+			Object.entries(originalSession).map(([key, value]) => [key, value.N ?? value.S]),
+		) as unknown as ISessionItem;
+	} catch (e: any) {
+		console.error({ message: "getSessionById - failed getting session from Dynamo", e });
+	}
+
+	return session;
+}
+
+/**
+ * Retrieves an object from the bucket with the specified prefix, which is the latest message dequeued from the SQS
+ * queue under test
+ *
+ * @param prefix
+ * @returns {any} - returns either the body of the SQS message or undefined if no such message found
+ */
+export async function getSqsEventList(folder: string, prefix: string, txmaEventSize: number): Promise<any> {
+	let contents: any[];
+	let keyList: string[];
+
+	do {
+		await new Promise(res => setTimeout(res, 3000));
+
+		const listObjectsResponse = await HARNESS_API_INSTANCE.get("/bucket/", {
+			params: {
+				prefix: folder + prefix,
+			},
+		});
+		const listObjectsParsedResponse = xmlParser.parse(listObjectsResponse.data);
+		contents = listObjectsParsedResponse?.ListBucketResult?.Contents;
+
+		if (!contents) {
+			return undefined;
+		}
+		
+		console.log(`contents of folder ${folder} with prefix ${prefix}: `, contents);
+		keyList = contents.map(({ Key }) => Key);
+
+	} while (contents.length < txmaEventSize);
+
+	return keyList;
+}
+/**
+ * Retrieves an object from the bucket with the specified prefix, which is the latest message dequeued from the SQS
+ * queue under test
+ *
+ * @param prefix
+ * @returns {any} - returns either the body of the SQS message or undefined if no such message found
+ */
+export async function getDequeuedSqsMessage(prefix: string): Promise<any> {
+	const listObjectsResponse = await HARNESS_API_INSTANCE.get("/bucket/", {
+		params: {
+			prefix: "txma/" + prefix,
+		},
+	});
+	const listObjectsParsedResponse = xmlParser.parse(listObjectsResponse.data);
+	if (!listObjectsParsedResponse?.ListBucketResult?.Contents) {
+		return undefined;
+	}
+	let key: string;
+	if (Array.isArray(listObjectsParsedResponse?.ListBucketResult?.Contents)) {
+		key = listObjectsParsedResponse.ListBucketResult.Contents.at(-1).Key;
+	} else {
+		key = listObjectsParsedResponse.ListBucketResult.Contents.Key;
+	}
+
+	const getObjectResponse = await HARNESS_API_INSTANCE.get("/object/" + key, {});
+	return getObjectResponse.data;
 }
