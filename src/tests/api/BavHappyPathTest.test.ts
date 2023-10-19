@@ -31,7 +31,7 @@ describe("Test BAV End Points", ()=> {
 });
 
 describe("E2E Happy Path Well Known Endpoint", () => {
-	it.skip("E2E Happy Path Journey - Well Known", async () => {
+	it("E2E Happy Path Journey - Well Known", async () => {
 		// Well Known
 		const wellKnownResponse = await wellKnownGet();
 		validateWellKnownResponse(wellKnownResponse.data);
