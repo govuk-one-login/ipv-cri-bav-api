@@ -95,13 +95,20 @@ Mappings:
 
   EnvironmentVariables: # This is all the environment specific environment variables that don't belong in globals.
     dev:
-      # TODO These are probably wrong and need to be filled out for other envs
-      ISSUER: 'https://review-o.dev.account.gov.uk'
-      DNSSUFFIX: review-o.dev.account.gov.uk
+      ISSUER: 'https://review-bav.dev.account.gov.uk'
+      DNSSUFFIX: review-bav.dev.account.gov.uk
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       RESOURCETTLSECS: 1209600 # Default 14 days
-      CLIENTS: '[{"jwksEndpoint":"https://bav-ipv-stub-ipvstub.review-o.dev.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://bav-ipv-stub-ipvstub.review-o.dev.account.gov.uk/redirect?id=bav"}]'
+      CLIENTS: '[{"jwksEndpoint":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/redirect?id=bav"}]'
+      AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
+    build:
+      ISSUER: 'https://review-bav.build.account.gov.uk'
+      DNSSUFFIX: review-bav.build.account.gov.uk
+      MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
+      TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
+      RESOURCETTLSECS: 1209600 # Default 14 days
+      CLIENTS: '[{"jwksEndpoint":"https://bav-ipv-stub-ipvstub.review-bav.build.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://bav-ipv-stub-ipvstub.review-bav.build.account.gov.uk/redirect?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
   TxMAAccounts:
     # EVENTS is used to egress to TxMA.
@@ -193,6 +200,9 @@ Globals:
         AWS_STACK_NAME: !Sub ${AWS::StackName}
         POWERTOOLS_LOG_LEVEL: DEBUG
         POWERTOOLS_METRICS_NAMESPACE: BAV-CRI
+        TXMA_QUEUE_URL: !Ref TxMASQSQueue
+        PERSON_IDENTITY_TABLE_NAME:
+          Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-name"
         SESSION_TABLE:
           Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
         SECRET_PREFIX: !If [
@@ -279,51 +289,51 @@ Resources:
 
   ### End of API Gateway definition.
 
-  # WAFv2ACLAssociation:
-  #   Type: AWS::WAFv2::WebACLAssociation
-  #   Properties:
-  #     ResourceArn: !Sub "arn:aws:apigateway:${AWS::Region}::/restapis/${BAVRestApi}/stages/${BAVRestApi.Stage}"
-  #     WebACLArn: !Sub "{{resolve:ssm:/${Environment}/Platform/Security/Block/WafArn}}"
+  WAFv2ACLAssociation:
+    Type: AWS::WAFv2::WebACLAssociation
+    Properties:
+      ResourceArn: !Sub "arn:aws:apigateway:${AWS::Region}::/restapis/${BAVRestApi}/stages/${BAVRestApi.Stage}"
+      WebACLArn: !Sub "{{resolve:ssm:/${Environment}/Platform/Security/Block/WafArn}}"
 
-  ### API Gateway Custom Domain definition
+  ## API Gateway Custom Domain definition
 
-  # BAVApiCustomDomainName:
-  #   Type: AWS::ApiGateway::DomainName
-  #   Properties:
-  #     DomainName: !If
-  #       - CreateDevResources
-  #       - !Sub
-  #         - "api-${AWS::StackName}.${DNSSUFFIX}"
-  #         - DNSSUFFIX:
-  #             !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
-  #       - !Sub
-  #         - "api.${DNSSUFFIX}"
-  #         - DNSSUFFIX:
-  #            !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
+  BAVApiCustomDomainName:
+    Type: AWS::ApiGateway::DomainName
+    Properties:
+      DomainName: !If
+        - CreateDevResources
+        - !Sub
+          - "api-${AWS::StackName}.${DNSSUFFIX}"
+          - DNSSUFFIX:
+              !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
+        - !Sub
+          - "api.${DNSSUFFIX}"
+          - DNSSUFFIX:
+             !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
 
-  #     EndpointConfiguration:
-  #       Types:
-  #         - REGIONAL
-  #     RegionalCertificateArn: !Sub "{{resolve:ssm:/${Environment}/Platform/ACM/PrimaryZoneWildcardCertificateARN}}"
-  #     SecurityPolicy: TLS_1_2
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      RegionalCertificateArn: !Sub "{{resolve:ssm:/${Environment}/Platform/ACM/PrimaryZoneWildcardCertificateARN}}"
+      SecurityPolicy: TLS_1_2
 
-  # BAVApiBasePath:
-  #   Type: AWS::ApiGateway::BasePathMapping
-  #   DependsOn: "BAVApiCustomDomainName"
-  #   Properties:
-  #     DomainName: !Ref BAVApiCustomDomainName
-  #     RestApiId: !Ref BAVRestApi
-  #     Stage: !Sub "${BAVRestApi.Stage}"
+  BAVApiBasePath:
+    Type: AWS::ApiGateway::BasePathMapping
+    DependsOn: "BAVApiCustomDomainName"
+    Properties:
+      DomainName: !Ref BAVApiCustomDomainName
+      RestApiId: !Ref BAVRestApi
+      Stage: !Sub "${BAVRestApi.Stage}"
 
-  # BAVApiCertificateRecord:
-  #   Type: AWS::Route53::RecordSet
-  #   Properties:
-  #     Name: !Ref BAVApiCustomDomainName
-  #     Type: A
-  #     HostedZoneId: !Sub "{{resolve:ssm:/${Environment}/Platform/Route53/PrimaryZoneID}}"
-  #     AliasTarget:
-  #       DNSName: !GetAtt BAVApiCustomDomainName.RegionalDomainName
-  #       HostedZoneId: !GetAtt BAVApiCustomDomainName.RegionalHostedZoneId
+  BAVApiCertificateRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Name: !Ref BAVApiCustomDomainName
+      Type: A
+      HostedZoneId: !Sub "{{resolve:ssm:/${Environment}/Platform/Route53/PrimaryZoneID}}"
+      AliasTarget:
+        DNSName: !GetAtt BAVApiCustomDomainName.RegionalDomainName
+        HostedZoneId: !GetAtt BAVApiCustomDomainName.RegionalHostedZoneId
 
   BAVRestAPIFatalErorMetricFilter:
     Type: AWS::Logs::MetricFilter
@@ -363,7 +373,7 @@ Resources:
 
   ### End of API Gateway Custom Domain definition
 
-    ### Function Definition
+  ### Function Definitions
   ## SessionHandler
   SessionFunction:
     Type: AWS::Serverless::Function
@@ -384,7 +394,6 @@ Resources:
           ISSUER: !FindInMap [EnvironmentVariables, !Ref Environment, ISSUER]
           KMS_KEY_ARN:
             Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
-          TXMA_QUEUE_URL: !Ref TxMASQSQueue
           CLIENT_CONFIG:
             !FindInMap [ EnvironmentVariables, !Ref Environment, CLIENTS ]
           ENCRYPTION_KEY_IDS:
@@ -395,6 +404,9 @@ Resources:
         - DynamoDBWritePolicy:
             TableName:
               Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+        - DynamoDBWritePolicy:
+            TableName:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-name"
         - DynamoDBReadPolicy:
             TableName:
               Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
@@ -643,13 +655,13 @@ Outputs:
     Value: !Sub "${BAVRestApi}"
     Export:
       Name: !Sub ${AWS::StackName}-BAVApiGatewayId
-  # BAVBackendURL:
-  #   Description: "BAV Backend URL"
-  #   Value: !Sub
-  #     - "https://${CustomDomainName}"
-  #     - CustomDomainName: !Ref BAVApiCustomDomainName
-  #   Export:
-  #     Name: !Sub ${AWS::StackName}-BAVBackendURL
+  BAVBackendURL:
+    Description: "BAV Backend URL"
+    Value: !Sub
+      - "https://${CustomDomainName}"
+      - CustomDomainName: !Ref BAVApiCustomDomainName
+    Export:
+      Name: !Sub ${AWS::StackName}-BAVBackendURL
   TxMASQSQueue:
     Description: "Arn of the TxMASQSQueue"
     Value: !GetAtt TxMASQSQueue.Arn
