@@ -8,7 +8,7 @@ import { authorizationGet,
     from "../utils/ApiTestSteps";
 
 
-describe("Test BAV End Points", async ()=> {
+describe("Test BAV End Points", ()=> {
     let sessionId: any;
 
     beforeEach( async () =>{
