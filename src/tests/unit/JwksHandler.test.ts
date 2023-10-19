@@ -41,16 +41,18 @@ describe("JwksHandler", () => {
 			process.env.JWKS_BUCKET_NAME = "bav-cri-api-jwks-dev";
 		});
 
-		it("throws error if environment variables are missing", async () => {
-			process.env.SIGNING_KEY_IDS = "";
-			process.env.ENCRYPTION_KEY_IDS = "";
-			process.env.JWKS_BUCKET_NAME = "";
+		it.each([
+			"SIGNING_KEY_IDS",
+			"ENCRYPTION_KEY_IDS",
+			"JWKS_BUCKET_NAME",
+		])("throws error if environment variables are missing", async (envVar) => {
+			process.env[envVar] = "";
 
 			await expect(lambdaHandler()).rejects.toThrow(expect.objectContaining({
 				message: "Service incorrectly configured",
 				statusCode: HttpCodesEnum.SERVER_ERROR,
 			}));
-			expect(logger.error).toHaveBeenCalledWith({ message: "Environment variable SIGNING_KEY_IDS or ENCRYPTION_KEY_IDS or JWKS_BUCKET_NAME is not configured" });
+			expect(logger.error).toHaveBeenCalledWith({ message: `Missing ${envVar} environment variable`, messageCode: "MISSING_CONFIGURATION" });
 		});
 
 		it("uploads keys to s3", async () => {
@@ -180,3 +182,7 @@ describe("JwksHandler", () => {
 		});
 	});
 });
+function async(): (...args: string[]) => any {
+	throw new Error("Function not implemented.");
+}
+
