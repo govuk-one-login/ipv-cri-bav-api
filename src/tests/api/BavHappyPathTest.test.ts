@@ -13,8 +13,7 @@ describe("Test BAV End Points", ()=> {
 
     beforeEach( async () =>{
         //Session Request
-        const stubResponse = await startStubServiceAndReturnSessionId(bavStubPayload);
-        sessionId = stubResponse.data.session_id;
+        sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
         console.log("Session Id: " + sessionId);
 	});
     it("E2E BAV End Points Happy Path Journey", async () =>{
