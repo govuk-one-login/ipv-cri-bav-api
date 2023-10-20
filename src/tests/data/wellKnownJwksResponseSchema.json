@@ -1,0 +1,78 @@
+{
+    "properties": {
+        "keys": {
+            "type": "array",
+            "items": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "kty": {
+                            "type": "string"
+                        },
+                        "x": {
+                            "type": "string"
+                        },
+                        "y": {
+                            "type": "string"
+                        },
+                        "crv": {
+                            "type": "string"
+                        },
+                        "use": {
+                            "type": "string"
+                        },
+                        "kid": {
+                            "type": "string"
+                        },
+                        "alg": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "kty",
+                        "x",
+                        "y",
+                        "crv",
+                        "use",
+                        "kid",
+                        "alg"
+                    ]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kty": {
+                            "type": "string"
+                        },
+                        "n": {
+                            "type": "string"
+                        },
+                        "e": {
+                            "type": "string"
+                        },
+                        "use": {
+                            "type": "string"
+                        },
+                        "kid": {
+                            "type": "string"
+                        },
+                        "alg": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "kty",
+                        "n",
+                        "e",
+                        "use",
+                        "kid",
+                        "alg"
+                    ]
+                }
+            ]
+        }
+    },
+    "required": [
+        "keys"
+    ]
+}

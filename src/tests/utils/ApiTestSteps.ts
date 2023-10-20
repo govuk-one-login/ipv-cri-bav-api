@@ -1,10 +1,14 @@
 import axios, { AxiosInstance } from "axios";
 import { aws4Interceptor } from "aws4-axios";
 import { XMLParser } from "fast-xml-parser";
+import Ajv from "ajv";
+import wellKnownGetSchema from "../data/wellKnownJwksResponseSchema.json";
 import { constants } from "./ApiConstants";
 import { ISessionItem } from "../../models/ISessionItem";
 
-const API_INSTANCE = axios.create({ baseURL:constants.DEV_IPV_BAV_STUB_URL });
+const API_INSTANCE = axios.create({ baseURL:constants.DEV_CRI_BAV_API_URL });
+const ajv = new Ajv({ strict: false });
+
 const HARNESS_API_INSTANCE : AxiosInstance = axios.create({ baseURL: constants.DEV_BAV_TEST_HARNESS_URL });
 const awsSigv4Interceptor = aws4Interceptor({
 	options: {
@@ -93,9 +97,12 @@ export async function wellKnownGet():Promise<any> {
 }
 
 export function validateWellKnownResponse(response:any):void {
-	expect(response.keys).toHaveLength(2);
-	expect(response.keys[0].use).toBe("sig");
-	expect(response.keys[1].use).toBe("enc");
+	const validate = ajv.compile(wellKnownGetSchema);
+	const valid: boolean = validate(response);
+	if (!valid) {
+		console.error("Error in Well Known Get Response: " + JSON.stringify(validate.errors));
+	}
+	expect(valid).toBeTruthy();
 }
 
 export async function getSessionById(sessionId: string, tableName: string): Promise<ISessionItem | undefined> {
