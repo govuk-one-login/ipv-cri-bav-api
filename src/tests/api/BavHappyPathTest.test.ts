@@ -14,7 +14,6 @@ describe("Test BAV End Points", ()=> {
     beforeEach( async () =>{
         //Session Request
         sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
-        console.log("Session Id: " + sessionId);
 	});
     it("E2E BAV End Points Happy Path Journey", async () =>{
         expect(sessionId).toBeTruthy();
