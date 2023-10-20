@@ -21,7 +21,7 @@ const xmlParser = new XMLParser();
 
 export async function startStubServiceAndReturnSessionId(bavStubPayload: any): Promise<any> {
 	const stubResponse = await stubStartPost(bavStubPayload);
-	const postRequest = await sessionPost(stubResponse.data.clientId, stubResponse.request);
+	const postRequest = await sessionPost(stubResponse.data.clientId, stubResponse.data.request);
 	return postRequest;
 }
 
