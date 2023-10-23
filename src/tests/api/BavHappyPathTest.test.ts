@@ -30,6 +30,29 @@ describe("Test BAV End Points", ()=> {
 	});
 });
 
+
+describe("Test BAV End Points 123", ()=> {
+    let sessionId: any;
+
+    beforeEach( async () =>{
+        //Session Request
+        const stubResponse = await startStubServiceAndReturnSessionId(bavStubPayload);
+        sessionId = stubResponse.data.session_id;
+	});
+    it.skip("E2E BAV End Points Happy Path Journey", async () =>{
+        // Authorization
+        expect(sessionId).toBeTruthy();
+        const authResponse = await authorizationGet(sessionId);
+        expect(authResponse.status).toBe(200);
+        // Token
+        const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+        expect(tokenResponse).toBe(200);
+        // User Info
+        const userInfoResponse = await userInfoPost("Bearer " + tokenResponse.data.access_token);
+        expect(userInfoResponse).toBe(202);
+	});
+});
+
 describe("E2E Happy Path Well Known Endpoint", () => {
 	it("E2E Happy Path Journey - Well Known", async () => {
 		// Well Known
