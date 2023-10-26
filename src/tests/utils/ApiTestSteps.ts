@@ -6,10 +6,10 @@ import wellKnownGetSchema from "../data/wellKnownJwksResponseSchema.json";
 import { constants } from "./ApiConstants";
 import { ISessionItem } from "../../models/ISessionItem";
 
-const API_INSTANCE = axios.create({ baseURL:constants.DEV_CRI_BAV_API_URL });
+const API_INSTANCE = axios.create({ baseURL: constants.DEV_CRI_BAV_API_URL });
 const ajv = new Ajv({ strict: false });
 
-const HARNESS_API_INSTANCE : AxiosInstance = axios.create({ baseURL: constants.DEV_BAV_TEST_HARNESS_URL });
+const HARNESS_API_INSTANCE: AxiosInstance = axios.create({ baseURL: constants.DEV_BAV_TEST_HARNESS_URL });
 const awsSigv4Interceptor = aws4Interceptor({
 	options: {
 		region: "eu-west-2",
@@ -34,7 +34,7 @@ export async function stubStartPost(bavStubPayload: any): Promise<any> {
 		return postRequest;
 	} catch (error: any) {
 		console.log(`Error response from ${path} endpoint: ${error}.`);
-		return error.response; 
+		return error.response;
 	}
 }
 
@@ -83,21 +83,21 @@ export async function userInfoPost(accessToken?: any): Promise<any> {
 		console.log(`Error rrsponse from ${path} endpoint ${error}.`);
 		return error.response;
 	}
-    
+
 }
 
-export async function wellKnownGet():Promise<any> {
+export async function wellKnownGet(): Promise<any> {
 	const path = "/.well-known/jwks.json";
 	try {
-		const getRequest = API_INSTANCE.get( "/.well-known/jwks.json");	
+		const getRequest = API_INSTANCE.get("/.well-known/jwks.json");
 		return await getRequest;
 	} catch (error: any) {
 		console.log(`Error response from ${path} endpoint: ${error}`);
 		return error.response;
-	} 
+	}
 }
 
-export function validateWellKnownResponse(response:any):void {
+export function validateWellKnownResponse(response: any): void {
 	const validate = ajv.compile(wellKnownGetSchema);
 	const valid: boolean = validate(response);
 	if (!valid) {
@@ -137,30 +137,27 @@ export async function getSessionById(sessionId: string, tableName: string): Prom
  * @param prefix
  * @returns {any} - returns either the body of the SQS message or undefined if no such message found
  */
-export async function getSqsEventList(folder: string, prefix: string, txmaEventSize: number): Promise<any> {
-	let contents: any[];
-	let keyList: string[];
-
+export async function getSqsEventList(folder: string, prefix: string, txmaEventSize:number): Promise<any> {
+	let keys: any[];
+	let keyList: any[];
+	let i:any;
 	do {
-		await new Promise(res => setTimeout(res, 3000));
-
 		const listObjectsResponse = await HARNESS_API_INSTANCE.get("/bucket/", {
 			params: {
 				prefix: folder + prefix,
 			},
 		});
 		const listObjectsParsedResponse = xmlParser.parse(listObjectsResponse.data);
-		contents = listObjectsParsedResponse?.ListBucketResult?.Contents;
-
-		if (!contents) {
+		console.log(listObjectsParsedResponse);
+		if (!listObjectsParsedResponse?.ListBucketResult?.Contents) {
 			return undefined;
 		}
-		
-		console.log(`contents of folder ${folder} with prefix ${prefix}: `, contents);
-		keyList = contents.map(({ Key }) => Key);
-
-	} while (contents.length < txmaEventSize);
-
+		keys = listObjectsParsedResponse?.ListBucketResult?.Contents;
+		keyList = [];
+		for (i = 0; i < keys.length; i++) {
+			keyList.push(listObjectsParsedResponse?.ListBucketResult?.Contents.at(i).Key);
+		}
+	} while (keys.length < txmaEventSize );
 	return keyList;
 }
 /**
@@ -189,4 +186,27 @@ export async function getDequeuedSqsMessage(prefix: string): Promise<any> {
 
 	const getObjectResponse = await HARNESS_API_INSTANCE.get("/object/" + key, {});
 	return getObjectResponse.data;
+}
+
+export async function validateTxMAEventData(keyList: any): Promise<any> {
+	let i: any;
+	for (i = 0; i < keyList.length; i++) {
+		const getObjectResponse = await HARNESS_API_INSTANCE.get("/object/" + keyList[i], {});
+		console.log(JSON.stringify(getObjectResponse.data, null, 2));
+		let valid = true;
+		import("../data/" + getObjectResponse.data.event_name + "_SCHEMA.json")
+			.then((jsonSchema) => {
+				const validate = ajv.compile(jsonSchema);
+				valid = validate(getObjectResponse.data);
+				if (!valid) {
+					console.error(getObjectResponse.data.event_name + " Event Errors: " + JSON.stringify(validate.errors));
+				}
+			})
+			.catch((err) => {
+				console.log(err.message);
+			})
+			.finally(() => {
+				expect(valid).toBe(true);
+			});
+	}
 }
