@@ -30,11 +30,11 @@ class AuthorizationHandler implements LambdaInterface {
 		try {
 			logger.info("Received authorization request", { requestId: event.requestContext.requestId });
 
-			if (!event.headers) {
-				// TODO shouldn't this be caught by apiggw?
-				logger.error("Empty headers", { messageCode: MessageCodes.MISSING_HEADER });
-				return new Response(HttpCodesEnum.BAD_REQUEST, "Empty headers");
-			}
+			// TODO I think this should be removed as headers are required in the APIGatewayProxyEvent type
+			// if (!event.headers) {
+			// 	logger.error("Empty headers", { messageCode: MessageCodes.MISSING_HEADER });
+			// 	return new Response(HttpCodesEnum.BAD_REQUEST, "Empty headers");
+			// }
 
 			if (!event.headers[Constants.SESSION_ID]) {
 				logger.error("Missing header: session-id is required", { messageCode: MessageCodes.MISSING_HEADER });
@@ -57,7 +57,7 @@ class AuthorizationHandler implements LambdaInterface {
 			if (error instanceof  AppError) {
 				return new Response(error.statusCode, error.message);
 			}
-			return new Response(HttpCodesEnum.SERVER_ERROR, "An error has occurred");
+			return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
 		}
 	}
 

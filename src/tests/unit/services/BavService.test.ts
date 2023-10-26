@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import { SendMessageCommand } from "@aws-sdk/client-sqs";
+import { UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { mock } from "jest-mock-extended";
 import { BavService } from "../../../services/BavService";
 import { createDynamoDbClient } from "../../../utils/DynamoDBFactory";
+import { AuthSessionState } from "../../../models/enums/AuthSessionState";
 import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../../../models/enums/MessageCodes";
 import { sqsClient } from "../../../utils/SqsClient";
@@ -11,19 +13,25 @@ import { TxmaEvent } from "../../../utils/TxmaEvent";
 import { absoluteTimeNow } from "../../../utils/DateTimeUtils";
 import { personIdentityInputRecord, personIdentityOutputRecord } from "../data/personIdentity-records";
 
-const logger = mock<Logger>();
 
 let bavService: BavService;
 const tableName = "SESSIONTABLE";
 const sessionId = "SESSIONID";
-const mockDynamoDbClient = jest.mocked(createDynamoDbClient());
+const fakeTime = 1684933200.123;
 const SESSION_RECORD = require("../data/db_record.json");
+
+const logger = mock<Logger>();
+const mockDynamoDbClient = jest.mocked(createDynamoDbClient());
 jest.mock("crypto", () => ({
 	...jest.requireActual("crypto"),
 	randomUUID: () => "randomId",
 }));
 jest.mock("@aws-sdk/client-sqs", () => ({
 	SendMessageCommand: jest.fn().mockImplementation(() => {}),
+}));
+jest.mock("@aws-sdk/lib-dynamodb", () => ({
+	...jest.requireActual("@aws-sdk/lib-dynamodb"),
+	UpdateCommand: jest.fn().mockImplementation(() => {}),
 }));
 jest.mock("../../../utils/SqsClient", () => ({
 	sqsClient: {
@@ -58,6 +66,12 @@ describe("BAV Service", () => {
 	beforeEach(() => {
 		jest.resetAllMocks();
 		bavService = BavService.getInstance(tableName, logger, mockDynamoDbClient);
+		jest.useFakeTimers();
+		jest.setSystemTime(new Date(fakeTime * 1000)); // 2023-05-24T13:00:00.123Z
+	});
+
+	afterEach(() => {
+		jest.useRealTimers();
 	});
 
 	describe("#getSessionById", () => {
@@ -157,9 +171,6 @@ describe("BAV Service", () => {
 
 		it("should add createdDate and expiryDate to a PersonIdentity record", async () => {
 			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
-			jest.useFakeTimers();
-			const fakeTime = 1684933200.123;
-			jest.setSystemTime(new Date(fakeTime * 1000)); // 2023-05-24T13:00:00.123Z
 	
 			await bavService.savePersonIdentity({
 				sharedClaims: personIdentityInputRecord,
@@ -178,11 +189,11 @@ describe("BAV Service", () => {
 					}),
 				}),
 			}));
-			jest.useRealTimers();
 		});
 
 		it("should handle error when sending message to dynamo", async () => {
 			mockDynamoDbClient.send = jest.fn().mockRejectedValueOnce({});
+
 			await expect(bavService.savePersonIdentity({
 				sharedClaims: personIdentityInputRecord,
 				sessionId: "1234",
@@ -191,6 +202,37 @@ describe("BAV Service", () => {
 			})).rejects.toThrow(expect.objectContaining({
 				statusCode: HttpCodesEnum.SERVER_ERROR,
 				message: "Failed to save personal identity information",
+			}));
+		});
+	});
+
+	describe("#setAuthorizationCode", () => {
+		const authorizationCode = "AUTH_CODE";
+
+		it("saves authorization code information to dynamo", async () => {
+			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+
+			await bavService.setAuthorizationCode(sessionId, authorizationCode);
+
+			expect(UpdateCommand).toHaveBeenCalledWith({
+				TableName: tableName,
+				Key: { sessionId },
+				UpdateExpression:
+				"SET authorizationCode=:authCode, authorizationCodeExpiryDate=:authCodeExpiry, authSessionState = :authSessionState",
+				ExpressionAttributeValues: {
+					":authCode": authorizationCode,
+					":authCodeExpiry": 1684933800123,
+					":authSessionState": AuthSessionState.BAV_AUTH_CODE_ISSUED,
+				},
+			});
+		});
+
+		it("returns an error when authorization code information cannot be saved to dynamo", async () => {
+			mockDynamoDbClient.send = jest.fn().mockRejectedValueOnce({});
+
+			await expect(bavService.setAuthorizationCode(sessionId, authorizationCode)).rejects.toThrow(expect.objectContaining({
+				statusCode: HttpCodesEnum.SERVER_ERROR,
+				message: "Error updating authorizationCode in dynamodb",
 			}));
 		});
 	});

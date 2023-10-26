@@ -9,8 +9,6 @@ export function absoluteTimeNow(): number {
 	return Math.floor(Date.now() / 1000);
 }
 
-// TODO add tests
-// TODO the default shouldn't be here I don't think?
 const DEFAULT_AUTHORIZATION_CODE_TTL_IN_SECS = 600;
 export function getAuthorizationCodeExpirationEpoch(authCodeTtl: string | undefined): number {
 

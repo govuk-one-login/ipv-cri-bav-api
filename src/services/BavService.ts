@@ -165,15 +165,14 @@ export class BavService {
 		}
 	}
 
-	// TODO add tests
-	async setAuthorizationCode(sessionId: string, uuid: string): Promise<void> {
+	async setAuthorizationCode(sessionId: string, authorizationCode: string): Promise<void> {
 		const updateSessionCommand = new UpdateCommand({
 			TableName: this.tableName,
 			Key: { sessionId },
 			UpdateExpression:
 				"SET authorizationCode=:authCode, authorizationCodeExpiryDate=:authCodeExpiry, authSessionState = :authSessionState",
 			ExpressionAttributeValues: {
-				":authCode": uuid,
+				":authCode": authorizationCode,
 				":authCodeExpiry": getAuthorizationCodeExpirationEpoch(
 					process.env.AUTHORIZATION_CODE_TTL,
 				),

@@ -56,10 +56,9 @@ export class AuthorizationRequestProcessor {
 		this.metrics.addMetric("found session", MetricUnits.Count, 1);
 
 		if (session.authSessionState !== AuthSessionState.BAV_DATA_RECEIVED) {
-			this.logger.error(`Session is in the wrong state: ${session.authSessionState}, expected state should be ${AuthSessionState.BAV_DATA_RECEIVED}`, { 
+			this.logger.warn(`Session is in the wrong state: ${session.authSessionState}, expected state should be ${AuthSessionState.BAV_DATA_RECEIVED}`, { 
 				messageCode: MessageCodes.INCORRECT_SESSION_STATE,
 			});
-			// TODO do we def want to throw here?
 			return new Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
 		}
 

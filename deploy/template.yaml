@@ -622,6 +622,7 @@ Resources:
           SESSION_TABLE:
             Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
           TXMA_QUEUE_URL: !Ref TxMASQSQueue
+          ISSUER: !FindInMap [EnvironmentVariables, !Ref Environment, ISSUER]
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
@@ -665,7 +666,7 @@ Resources:
   AuthorizationFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/CIC-Authorization-${AWS::StackName}"
+      LogGroupName: !Sub "/aws/lambda/BAV-Authorization-${AWS::StackName}"
       RetentionInDays:
         !FindInMap [
           EnvironmentConfiguration,
