@@ -8,6 +8,8 @@ export class Constants {
 
 	static readonly SESSION_LOGGER_SVC_NAME : "SessionHandler";
 
+	static readonly AUTHORIZATION_LOGGER_SVC_NAME : "AuthorizationHandler";
+
 	static readonly BAV_METRICS_NAMESPACE = "BAV-CRI";
 
 	static readonly DEBUG = "DEBUG";

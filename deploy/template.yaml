@@ -605,6 +605,126 @@ Resources:
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
 
+  AuthorizationFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: AuthorizationFunctionLogGroup
+    Properties:
+      FunctionName: !Sub "BAV-Authorization-${AWS::StackName}"
+      Handler: AuthorizationCodeHandler.lambdaHandler
+      CodeUri: ../src/
+      ReservedConcurrentExecutions: !If
+        - ApplyReservedConcurrency
+        - !Ref LambdaConcurrency
+        - !Ref AWS::NoValue
+      Environment:
+        Variables:
+          POWERTOOLS_SERVICE_NAME: AuthorizationHandler
+          SESSION_TABLE:
+            Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+          TXMA_QUEUE_URL: !Ref TxMASQSQueue
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSXrayWriteOnlyAccess
+        - DynamoDBWritePolicy:
+            TableName:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+        - DynamoDBReadPolicy:
+            TableName:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+        - KMSDecryptPolicy:
+            KeyId:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-key-id"
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "sqs:SendMessage"
+              Resource: !GetAtt TxMASQSQueue.Arn
+            - Effect: Allow
+              Action:
+                - "kms:Encrypt"
+                - "kms:Decrypt"
+                - "kms:GenerateDataKey"
+              Resource: !GetAtt TxMAKMSEncryptionKey.Arn
+      Events:
+        authorization:
+          Type: Api
+          Properties:
+            Path: /authorization
+            Method: get
+            RestApiId: !Ref BAVRestApi
+
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
+        EntryPoints:
+          - AuthorizationCodeHandler.ts
+
+  AuthorizationFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/CIC-Authorization-${AWS::StackName}"
+      RetentionInDays:
+        !FindInMap [
+          EnvironmentConfiguration,
+          !Ref Environment,
+          logretentionindays,
+        ]
+
+  AuthorizationFunctionLogsSubscriptionFilterCSLS:
+    Type: AWS::Logs::SubscriptionFilter
+    # Condition: IsProdLikeEnvironment
+    Properties:
+      DestinationArn:
+        !FindInMap [PlatformConfiguration, !Ref Environment, CSLSEGRESS]
+      FilterPattern: ""
+      LogGroupName: !Ref AuthorizationFunctionLogGroup
+
+  AuthorizationFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref AuthorizationFunction
+      Principal: apigateway.amazonaws.com
+
+  AuthorizationFunctionFatalErorMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref AuthorizationFunctionLogGroup
+      FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
+      MetricTransformations:
+        -
+          MetricValue: "1"
+          MetricNamespace: !Sub "${AWS::StackName}/LogMessages"
+          MetricName: "AuthorizationFunction-Fatalerror"
+
+  AuthorizationFunctionFatalErrorAlarm:
+    DependsOn:
+      - "AuthorizationFunctionFatalErorMetricFilter"
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-AuthorizationFunction-FatalErrorAlarm"
+      AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
+      ActionsEnabled: true
+      OKActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      InsufficientDataActions: [ ]
+      MetricName: AuthorizationFunction-Fatalerror
+      Namespace: !Sub "${AWS::StackName}/LogMessages"
+      Statistic: Sum
+      Dimensions: [ ]
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
   ## TXMA SQS Queue
   TxMASQSQueue:
     Type: AWS::SQS::Queue
