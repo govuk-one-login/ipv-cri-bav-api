@@ -1,13 +1,14 @@
 import { SendMessageCommand } from "@aws-sdk/client-sqs";
 import { Logger } from "@aws-lambda-powertools/logger";
-import { DynamoDBDocument, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocument, GetCommand, PutCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
+import { AuthSessionState } from "../models/enums/AuthSessionState";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
-import { ISessionItem } from "../models/ISessionItem";
 import { MessageCodes } from "../models/enums/MessageCodes";
+import { ISessionItem } from "../models/ISessionItem";
 import { SharedClaimsPersonIdentity, PersonIdentityItem, PersonIdentityName, PersonIdentityDateOfBirth } from "../models/PersonIdentityItem";
 import { AppError } from "../utils/AppError";
-import { absoluteTimeNow } from "../utils/DateTimeUtils";
+import { absoluteTimeNow, getAuthorizationCodeExpirationEpoch } from "../utils/DateTimeUtils";
 import { sqsClient } from "../utils/SqsClient";
 import { TxmaEvent } from "../utils/TxmaEvent";
 
@@ -161,6 +162,34 @@ export class BavService {
 		} catch (error) {
 			this.logger.error({ message: "Failed to save auth session data", error });
 			throw new AppError(HttpCodesEnum.SERVER_ERROR, "Failed to save auth session data");
+		}
+	}
+
+	// TODO add tests
+	async setAuthorizationCode(sessionId: string, uuid: string): Promise<void> {
+		const updateSessionCommand = new UpdateCommand({
+			TableName: this.tableName,
+			Key: { sessionId },
+			UpdateExpression:
+				"SET authorizationCode=:authCode, authorizationCodeExpiryDate=:authCodeExpiry, authSessionState = :authSessionState",
+			ExpressionAttributeValues: {
+				":authCode": uuid,
+				":authCodeExpiry": getAuthorizationCodeExpirationEpoch(
+					process.env.AUTHORIZATION_CODE_TTL,
+				),
+				":authSessionState": AuthSessionState.BAV_AUTH_CODE_ISSUED,
+			},
+		});
+
+		this.logger.info("Updating authorizationCode dynamodb", { tableName: this.tableName });
+
+		try {
+			await this.dynamo.send(updateSessionCommand);
+			this.logger.info("Updated authorizationCode in dynamodb");
+		} catch (error) {
+			const message = "Error updating authorizationCode in dynamodb";
+			this.logger.error({ message, error, messageCode: MessageCodes.FAILED_SAVING_AUTH_CODE });
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, message);
 		}
 	}
 

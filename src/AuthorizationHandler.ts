@@ -30,24 +30,28 @@ class AuthorizationHandler implements LambdaInterface {
 		try {
 			logger.info("Received authorization request", { requestId: event.requestContext.requestId });
 
-			if (event.headers) {
-				sessionId = event.headers[Constants.SESSION_ID];
-				if (sessionId) {
-					logger.appendKeys({ sessionId });
-
-					if (!Constants.REGEX_UUID.test(sessionId)) {
-						logger.error("Session id not not a valid uuid", { messageCode: MessageCodes.INVALID_SESSION_ID });
-						return new Response(HttpCodesEnum.BAD_REQUEST, "Session id must be a valid uuid");
-					}
-				} else {
-					logger.error("Missing header: session-id is required", { messageCode: MessageCodes.MISSING_HEADER });
-					return new Response(HttpCodesEnum.BAD_REQUEST, "Missing header: session-id is required");
-				}
-			} else {
+			if (!event.headers) {
+				// TODO shouldn't this be caught by apiggw?
 				logger.error("Empty headers", { messageCode: MessageCodes.MISSING_HEADER });
 				return new Response(HttpCodesEnum.BAD_REQUEST, "Empty headers");
 			}
-			return await AuthorizationRequestProcessor.getInstance(logger, metrics).processRequest(event, sessionId);
+
+			if (!event.headers[Constants.SESSION_ID]) {
+				logger.error("Missing header: session-id is required", { messageCode: MessageCodes.MISSING_HEADER });
+				return new Response(HttpCodesEnum.BAD_REQUEST, "Missing header: session-id is required");
+			}
+
+			// TODO shouldn't need this exclamation mark
+			sessionId = event.headers[Constants.SESSION_ID]!;
+			logger.appendKeys({ sessionId });
+
+			if (!Constants.REGEX_UUID.test(sessionId)) {
+				logger.error("Session id not not a valid uuid", { messageCode: MessageCodes.INVALID_SESSION_ID });
+				return new Response(HttpCodesEnum.BAD_REQUEST, "Session id must be a valid uuid");
+			}
+
+			return await AuthorizationRequestProcessor.getInstance(logger, metrics).processRequest(sessionId);
+
 		} catch (error: any) {
 			logger.error({ message: "An error has occurred.", error, messageCode: MessageCodes.SERVER_ERROR });
 			if (error instanceof  AppError) {

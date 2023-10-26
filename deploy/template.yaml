@@ -610,7 +610,7 @@ Resources:
     DependsOn: AuthorizationFunctionLogGroup
     Properties:
       FunctionName: !Sub "BAV-Authorization-${AWS::StackName}"
-      Handler: AuthorizationCodeHandler.lambdaHandler
+      Handler: AuthorizationHandler.lambdaHandler
       CodeUri: ../src/
       ReservedConcurrentExecutions: !If
         - ApplyReservedConcurrency
@@ -660,7 +660,7 @@ Resources:
         Target: "es2020"
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
-          - AuthorizationCodeHandler.ts
+          - AuthorizationHandler.ts
 
   AuthorizationFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -673,14 +673,14 @@ Resources:
           logretentionindays,
         ]
 
-  AuthorizationFunctionLogsSubscriptionFilterCSLS:
-    Type: AWS::Logs::SubscriptionFilter
-    # Condition: IsProdLikeEnvironment
-    Properties:
-      DestinationArn:
-        !FindInMap [PlatformConfiguration, !Ref Environment, CSLSEGRESS]
-      FilterPattern: ""
-      LogGroupName: !Ref AuthorizationFunctionLogGroup
+  # AuthorizationFunctionLogsSubscriptionFilterCSLS:
+  #   Type: AWS::Logs::SubscriptionFilter
+  #   # Condition: IsProdLikeEnvironment
+  #   Properties:
+  #     DestinationArn:
+  #       !FindInMap [PlatformConfiguration, !Ref Environment, CSLSEGRESS]
+  #     FilterPattern: ""
+  #     LogGroupName: !Ref AuthorizationFunctionLogGroup
 
   AuthorizationFunctionPermission:
     Type: AWS::Lambda::Permission

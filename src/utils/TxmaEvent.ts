@@ -3,7 +3,8 @@ import { ISessionItem } from "../models/ISessionItem";
 import { absoluteTimeNow } from "./DateTimeUtils";
 
 export type TxmaEventName =
-	"BAV_CRI_START";
+	"BAV_CRI_START" | 
+	"BAV_CRI_AUTH_CODE_ISSUED";
 
 export interface TxmaUser {
 	"user_id": string;
