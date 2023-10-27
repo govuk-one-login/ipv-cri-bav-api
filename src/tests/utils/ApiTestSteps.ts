@@ -132,15 +132,10 @@ export async function getSessionById(sessionId: string, tableName: string): Prom
 
 export async function getSessionAndVerifyKey(sessionId: any, tableName: string, key: string, expectedValue: string) {
 	const sessionInfo = await getSessionById(sessionId, tableName);
-
 	try {
 		expect(sessionInfo![key as keyof ISessionItem]).toBe(expectedValue);
 	} catch (e: any) {
-		if (e instanceof TypeError) {
-			throw TypeError("getSessionAndVerifyKey - Variable 'sessionInfo' is undefined.\r\n" + e.toString());
-		} else {
-			throw Error("getSessionAndVerifyKey - Unable to compare key value with expectedValue.\r\n" + e.toString());
-		}
+		throw new Error("getSessionAndVerifyKey - Failed to verify " + key + " value: " + e);
 	}
 }
 
