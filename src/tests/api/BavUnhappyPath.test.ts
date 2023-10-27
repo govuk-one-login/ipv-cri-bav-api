@@ -19,16 +19,16 @@ describe("/session Unhappy Path", () => {
     });
 
     it("E2E Unhappy Path Journey - Invalid Request", async () => {
-        const sessionResp = await sessionPost(stubResponse.data.clientId, "");
+        const sessionResponse = await sessionPost(stubResponse.data.clientId, "");
 
-        expect(sessionResp.status).toBe(401);
-        expect(sessionResp.data).toBe("Unauthorized");
+        expect(sessionResponse.status).toBe(401);
+        expect(sessionResponse.data).toBe("Unauthorized");
     });
 
     it("E2E Unhappy Path Journey - Invalid ClientID", async () => {
-        const sessionResp = await sessionPost("", stubResponse.data.request);
+        const sessionResponse = await sessionPost("", stubResponse.data.request);
 
-        expect(sessionResp.status).toBe(400);
-        expect(sessionResp.data).toBe("Bad Request");
+        expect(sessionResponse.status).toBe(400);
+        expect(sessionResponse.data).toBe("Bad Request");
     });
 });
