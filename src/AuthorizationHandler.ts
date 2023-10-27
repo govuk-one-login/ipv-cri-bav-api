@@ -30,18 +30,16 @@ class AuthorizationHandler implements LambdaInterface {
 		try {
 			logger.info("Received authorization request", { requestId: event.requestContext.requestId });
 
-			// TODO I think this should be removed as headers are required in the APIGatewayProxyEvent type
-			// if (!event.headers) {
-			// 	logger.error("Empty headers", { messageCode: MessageCodes.MISSING_HEADER });
-			// 	return new Response(HttpCodesEnum.BAD_REQUEST, "Empty headers");
-			// }
+			if (!event.headers) {
+				logger.error("Empty headers", { messageCode: MessageCodes.MISSING_HEADER });
+				return new Response(HttpCodesEnum.BAD_REQUEST, "Empty headers");
+			}
 
 			if (!event.headers[Constants.SESSION_ID]) {
 				logger.error("Missing header: session-id is required", { messageCode: MessageCodes.MISSING_HEADER });
 				return new Response(HttpCodesEnum.BAD_REQUEST, "Missing header: session-id is required");
 			}
 
-			// TODO shouldn't need this exclamation mark
 			sessionId = event.headers[Constants.SESSION_ID]!;
 			logger.appendKeys({ sessionId });
 
