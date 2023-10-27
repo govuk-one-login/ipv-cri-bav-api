@@ -1,14 +1,19 @@
 import bavStubPayload from "../data/exampleStubPayload.json";
 import { constants } from "../utils/ApiConstants";
 import {
+    getSessionAndVerifyById,
     getSessionById,
     getSqsEventList,
+    sessionPost,
     startStubServiceAndReturnSessionId,
 
-    
+
+    stubStartPost,
+
+
     validateTxMAEventData,
 
-    
+
     validateWellKnownResponse,
     wellKnownGet
 }
@@ -25,14 +30,13 @@ describe("Test BAV End Points", () => {
     it("E2E BAV End Points Happy Path Journey", async () => {
         expect(sessionId).toBeTruthy();
 
-        // AC2
-        const sessionInfo = await getSessionById(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME);
-        expect(sessionInfo?.authSessionState).toBe("BAV_SESSION_CREATED");
+        // Make sure authSession state is as expected - BAV_SESSION_CREATED
+        const expectedValue = "BAV_SESSION_CREATED";
+        await getSessionAndVerifyById(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, expectedValue);
 
-        // AC4
-		const sqsMessage = await getSqsEventList("txma/", sessionId, 1);
-        console.log(sqsMessage);
-		await validateTxMAEventData(sqsMessage);
+        // Make sure txma event is present & valid
+        const sqsMessage = await getSqsEventList("txma/", sessionId, 1);
+        await validateTxMAEventData(sqsMessage);
 
         // Commented out until /authorisation (KIWI-1259), /token (KIWI-1260) and /userInfo (KIWI-1258) endpoints are available
         // // Authorization
@@ -53,5 +57,26 @@ describe("E2E Happy Path Well Known Endpoint", () => {
         const wellKnownResponse = await wellKnownGet();
         validateWellKnownResponse(wellKnownResponse.data);
         expect(wellKnownResponse.status).toBe(200);
+    });
+});
+
+describe("/session Unhappy Path", () => {
+    let stubResponse: any;
+    beforeEach(async () => {
+        stubResponse = await stubStartPost(bavStubPayload);
+    });
+
+    it("E2E Unhappy Path Journey - Invalid Request", async () => {
+        const sessionResp = await sessionPost(stubResponse.data.clientId, "");
+
+        expect(sessionResp.status).toBe(401);
+		expect(sessionResp.data).toBe("Unauthorized");
+    });
+
+    it("E2E Unhappy Path Journey - Invalid ClientID", async () => {
+        const sessionResp = await sessionPost("", stubResponse.data.request);
+
+        expect(sessionResp.status).toBe(400);
+		expect(sessionResp.data).toBe("Bad Request");
     });
 });

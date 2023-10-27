@@ -130,6 +130,11 @@ export async function getSessionById(sessionId: string, tableName: string): Prom
 	return session;
 }
 
+export async function getSessionAndVerifyById(sessionId: any, tableName: string, expectedValue: string) {
+	const sessionInfo = await getSessionById(sessionId, tableName);
+	expect(sessionInfo?.authSessionState).toBe(expectedValue);
+}
+
 /**
  * Retrieves an object from the bucket with the specified prefix, which is the latest message dequeued from the SQS
  * queue under test
@@ -148,12 +153,10 @@ export async function getSqsEventList(folder: string, prefix: string, txmaEventS
 			},
 		});
 		const listObjectsParsedResponse = xmlParser.parse(listObjectsResponse.data);
-		console.log(listObjectsParsedResponse);
 		if (!listObjectsParsedResponse?.ListBucketResult?.Contents) {
 			return undefined;
 		}
 		keys = listObjectsParsedResponse?.ListBucketResult?.Contents;
-		console.log(keys);
 		keyList = [];
 
 		if (txmaEventSize == 1) {
