@@ -180,7 +180,7 @@ export class BavService {
 			},
 		});
 
-		this.logger.info("Updating authorizationCode dynamodb", { tableName: this.tableName });
+		this.logger.info("Updating authorizationCode in dynamodb", { tableName: this.tableName });
 
 		try {
 			await this.dynamo.send(updateSessionCommand);

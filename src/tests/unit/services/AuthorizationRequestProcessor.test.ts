@@ -30,6 +30,13 @@ const session: ISessionItem = {
 	attemptCount: 1,
 	authSessionState: AuthSessionState.BAV_DATA_RECEIVED,
 };
+const authResponse = {
+	authorizationCode: {
+		value: authorizationCode,
+	},
+	redirect_uri: session.redirectUri,
+	state: session.state,
+};
 
 const mockBavService = mock<BavService>();
 const logger = mock<Logger>();
@@ -73,15 +80,31 @@ describe("AuthorizationRequestProcessor", () => {
 		expect(response.body).toBe("Session is in the wrong state: UNKNOWN");
 	});
 
+	it("logs warning and creates a new auth code if authSessionState is BAV_AUTH_CODE_ISSUED", async () => {
+		mockBavService.getSessionById.mockResolvedValue({ ...session, authSessionState: AuthSessionState.BAV_AUTH_CODE_ISSUED });
+
+		const response = await authorizationRequestProcessorTest.processRequest(sessionId);
+
+		expect(authorizationRequestProcessorTest.logger.info).toHaveBeenCalledWith(`Session is in state ${AuthSessionState.BAV_AUTH_CODE_ISSUED}, generating a new auth code`);
+		expect(mockBavService.setAuthorizationCode).toHaveBeenCalledWith(sessionId, authorizationCode);
+		expect(mockBavService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
+			event_name: "BAV_CRI_AUTH_CODE_ISSUED",
+			client_id: session.clientId,
+			component_id: "https://XXX-c.env.account.gov.uk",
+			timestamp: 1585695600,
+			user: {
+			  ip_address: session.clientIpAddress,
+			  persistent_session_id: session.persistentSessionId,
+			  session_id: sessionId,
+			  user_id: session.subject,
+			},
+		});
+		expect(response.statusCode).toEqual(HttpCodesEnum.OK);
+		expect(response.body).toBe(JSON.stringify(authResponse));
+	});
+
 	it("saves auth code, sends message to txma and returns response", async () => {
 		mockBavService.getSessionById.mockResolvedValue(session);
-		const authResponse = {
-			authorizationCode: {
-				value: authorizationCode,
-			},
-			redirect_uri: session.redirectUri,
-			state: session.state,
-		};
 
 		const response = await authorizationRequestProcessorTest.processRequest(sessionId);
 

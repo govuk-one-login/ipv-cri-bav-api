@@ -16,7 +16,7 @@ import { buildCoreEventFields } from "../utils/TxmaEvent";
 export class AuthorizationRequestProcessor {
 	private static instance: AuthorizationRequestProcessor;
 
-	private readonly logger: Logger;
+	readonly logger: Logger;
 
 	private readonly metrics: Metrics;
 
@@ -56,11 +56,17 @@ export class AuthorizationRequestProcessor {
 		this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
 		this.metrics.addMetric("found session", MetricUnits.Count, 1);
 
-		if (session.authSessionState !== AuthSessionState.BAV_DATA_RECEIVED) {
-			this.logger.warn(`Session is in the wrong state: ${session.authSessionState}, expected state should be ${AuthSessionState.BAV_DATA_RECEIVED}`, { 
-				messageCode: MessageCodes.INCORRECT_SESSION_STATE,
-			});
-			return new Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
+		switch (session.authSessionState) {
+			case AuthSessionState.BAV_DATA_RECEIVED:
+				break;
+			case AuthSessionState.BAV_AUTH_CODE_ISSUED:
+				this.logger.info(`Session is in state ${AuthSessionState.BAV_AUTH_CODE_ISSUED}, generating a new auth code`);
+				break;
+			default: 
+				this.logger.warn(`Session is in the wrong state: ${session.authSessionState}, expected state should be ${AuthSessionState.BAV_DATA_RECEIVED}`, { 
+					messageCode: MessageCodes.INCORRECT_SESSION_STATE,
+				});
+				return new Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
 		}
 
 		const authorizationCode = randomUUID();
