@@ -1,18 +1,12 @@
 import bavStubPayload from "../data/exampleStubPayload.json";
 import { constants } from "../utils/ApiConstants";
 import {
-    getSessionAndVerifyById,
+    getSessionAndVerifyKey,
     getSqsEventList,
     sessionPost,
     startStubServiceAndReturnSessionId,
-
-
     stubStartPost,
-
-
     validateTxMAEventData,
-
-
     validateWellKnownResponse,
     wellKnownGet
 }
@@ -30,7 +24,7 @@ describe("Test BAV End Points", () => {
         expect(sessionId).toBeTruthy();
 
         // Make sure authSession state is as expected - BAV_SESSION_CREATED
-        await getSessionAndVerifyById(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_SESSION_CREATED");
+        await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_SESSION_CREATED");
 
         // Make sure txma event is present & valid
         const sqsMessage = await getSqsEventList("txma/", sessionId, 1);

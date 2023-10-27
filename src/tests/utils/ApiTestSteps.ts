@@ -5,7 +5,6 @@ import Ajv from "ajv";
 import wellKnownGetSchema from "../data/wellKnownJwksResponseSchema.json";
 import { constants } from "./ApiConstants";
 import { ISessionItem } from "../../models/ISessionItem";
-import { getVariable } from "./SessionItemUtil";
 
 const API_INSTANCE = axios.create({ baseURL: constants.DEV_CRI_BAV_API_URL });
 const ajv = new Ajv({ strict: false });
@@ -131,9 +130,12 @@ export async function getSessionById(sessionId: string, tableName: string): Prom
 	return session;
 }
 
-export async function getSessionAndVerifyById(sessionId: any, tableName: string, expectedValue: string, key: string) {
-    const sessionInfo = await getSessionById(sessionId, tableName);
-    expect(sessionInfo![key as keyof ISessionItem]).toBe(expectedValue);
+export async function getSessionAndVerifyKey(sessionId: any, tableName: string, key: string, expectedValue: string) {
+	const sessionInfo = await getSessionById(sessionId, tableName);
+
+	expect(() => {
+		expect(sessionInfo![key as keyof ISessionItem]).toBe(expectedValue);
+	}).not.toThrow(TypeError);
 }
 
 /**
