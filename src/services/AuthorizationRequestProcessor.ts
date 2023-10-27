@@ -5,6 +5,7 @@ import { BavService } from "./BavService";
 import { AuthSessionState } from "../models/enums/AuthSessionState";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../models/enums/MessageCodes";
+import { TxmaEventNames } from "../models/enums/TxmaEvents";
 import { EnvironmentVariables } from "../utils/Constants";
 import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
@@ -68,7 +69,7 @@ export class AuthorizationRequestProcessor {
 
 		await this.BavService.sendToTXMA(
 			this.txmaQueueUrl, {
-				event_name: "BAV_CRI_AUTH_CODE_ISSUED",
+				event_name: TxmaEventNames.BAV_CRI_AUTH_CODE_ISSUED,
 				...buildCoreEventFields(session, this.issuer, session.clientIpAddress, absoluteTimeNow),
 			},
 		);

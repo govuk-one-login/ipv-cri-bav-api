@@ -25,7 +25,7 @@ describe("AuthorizationHandler", () => {
 		const response = await lambdaHandler({ ...VALID_AUTH, headers: { [Constants.SESSION_ID]: "test" } }, CONTEXT);
 
 		expect(response.statusCode).toEqual(HttpCodesEnum.BAD_REQUEST);
-		expect(response.body).toBe( "Session id must be a valid uuid");
+		expect(response.body).toBe( "session-id header does not contain a valid uuid");
 	});
 
 	it("return success when SessionRequestProcessor completes successfully", async () => {
