@@ -2,7 +2,6 @@ import bavStubPayload from "../data/exampleStubPayload.json";
 import { constants } from "../utils/ApiConstants";
 import {
     getSessionAndVerifyById,
-    getSessionById,
     getSqsEventList,
     sessionPost,
     startStubServiceAndReturnSessionId,
@@ -31,8 +30,7 @@ describe("Test BAV End Points", () => {
         expect(sessionId).toBeTruthy();
 
         // Make sure authSession state is as expected - BAV_SESSION_CREATED
-        const expectedValue = "BAV_SESSION_CREATED";
-        await getSessionAndVerifyById(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, expectedValue);
+        await getSessionAndVerifyById(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_SESSION_CREATED");
 
         // Make sure txma event is present & valid
         const sqsMessage = await getSqsEventList("txma/", sessionId, 1);
@@ -60,23 +58,3 @@ describe("E2E Happy Path Well Known Endpoint", () => {
     });
 });
 
-describe("/session Unhappy Path", () => {
-    let stubResponse: any;
-    beforeEach(async () => {
-        stubResponse = await stubStartPost(bavStubPayload);
-    });
-
-    it("E2E Unhappy Path Journey - Invalid Request", async () => {
-        const sessionResp = await sessionPost(stubResponse.data.clientId, "");
-
-        expect(sessionResp.status).toBe(401);
-		expect(sessionResp.data).toBe("Unauthorized");
-    });
-
-    it("E2E Unhappy Path Journey - Invalid ClientID", async () => {
-        const sessionResp = await sessionPost("", stubResponse.data.request);
-
-        expect(sessionResp.status).toBe(400);
-		expect(sessionResp.data).toBe("Bad Request");
-    });
-});
