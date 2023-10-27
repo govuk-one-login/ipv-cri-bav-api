@@ -3,9 +3,7 @@ import { constants } from "../utils/ApiConstants";
 import {
     getSessionAndVerifyKey,
     getSqsEventList,
-    sessionPost,
     startStubServiceAndReturnSessionId,
-    stubStartPost,
     validateTxMAEventData,
     validateWellKnownResponse,
     wellKnownGet
@@ -51,4 +49,3 @@ describe("E2E Happy Path Well Known Endpoint", () => {
         expect(wellKnownResponse.status).toBe(200);
     });
 });
-
