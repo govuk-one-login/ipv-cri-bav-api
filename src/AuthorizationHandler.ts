@@ -36,8 +36,9 @@ class AuthorizationHandler implements LambdaInterface {
 			}
 
 			if (!event.headers[Constants.SESSION_ID]) {
-				logger.error(`Missing header: ${Constants.SESSION_ID} is required`, { messageCode: MessageCodes.MISSING_HEADER });
-				return new Response(HttpCodesEnum.BAD_REQUEST, "Missing header: session-id is required");
+				const message = `Missing header: ${Constants.SESSION_ID} is required`;
+				logger.error({ message, messageCode: MessageCodes.MISSING_HEADER });
+				return new Response(HttpCodesEnum.BAD_REQUEST, message);
 			}
 
 			sessionId = event.headers[Constants.SESSION_ID]!;
