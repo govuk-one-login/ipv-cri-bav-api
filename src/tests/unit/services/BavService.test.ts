@@ -120,7 +120,6 @@ describe("BAV Service", () => {
 	
 			expect(bavService.logger.error).toHaveBeenCalledWith({
 				message: "Error when sending event BAV_CRI_START to TXMA Queue",
-				error: {},
 				messageCode: MessageCodes.FAILED_TO_WRITE_TXMA,
 			});
 		});

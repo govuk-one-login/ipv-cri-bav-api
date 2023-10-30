@@ -49,7 +49,6 @@ export class BavService {
 		} catch (error) {
 			this.logger.error({ message: "getSessionById - failed executing get from dynamodb:" }, {
 				messageCode: MessageCodes.FAILED_FETCHING_SESSION,
-				error,
 			});
 			throw new AppError(HttpCodesEnum.SERVER_ERROR, "Error retrieving Session");
 		}
@@ -78,7 +77,6 @@ export class BavService {
 		} catch (error) {
 			this.logger.error({
 				message: `Error when sending event ${event.event_name} to TXMA Queue`,
-				error,
 				messageCode: MessageCodes.FAILED_TO_WRITE_TXMA,
 			});
 		}
