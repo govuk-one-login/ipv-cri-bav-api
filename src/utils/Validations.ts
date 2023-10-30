@@ -1,6 +1,7 @@
 import { absoluteTimeNow } from "./DateTimeUtils";
 import { JwtPayload } from "../models/IVeriCredential";
 import { PersonIdentityName } from "../models/PersonIdentityItem";
+import { Constants } from "./Constants";
 
 export const	isJwtValid = (jwtPayload: JwtPayload,
 	requestBodyClientId: string, expectedRedirectUri: string): string => {
@@ -67,4 +68,8 @@ export const isPersonNameValid = (personName: PersonIdentityName[]) : boolean =>
 		}
 	}
 	return isValid;
+};
+
+export const isValidUUID = (code: string): boolean => {
+	return Constants.REGEX_UUID.test(code);
 };

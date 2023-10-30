@@ -8,6 +8,8 @@ export class Constants {
 
 	static readonly SESSION_LOGGER_SVC_NAME : "SessionHandler";
 
+	static readonly ACCESSTOKEN_LOGGER_SVC_NAME = "AccessTokenHandler";
+
 	static readonly BAV_METRICS_NAMESPACE = "BAV-CRI";
 
 	static readonly DEBUG = "DEBUG";
@@ -41,6 +43,8 @@ export class Constants {
   static readonly IDENTITY_CHECK_CREDENTIAL = "IdentityCheckCredential";
 
   static readonly URN_UUID_PREFIX = "urn:uuid:";
+
+  static readonly AUTHORIZATION_CODE_INDEX_NAME = "authorizationCode-index";
   
 }
 
@@ -54,4 +58,5 @@ export const EnvironmentVariables = {
 	PERSON_IDENTITY_TABLE_NAME: "PERSON_IDENTITY_TABLE_NAME",
 	SIGNING_KEY_IDS: "SIGNING_KEY_IDS",
 	JWKS_BUCKET_NAME: "JWKS_BUCKET_NAME",
+	KMS_KEY_ARN: "KMS_KEY_ARN"
 };
