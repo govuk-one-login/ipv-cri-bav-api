@@ -10,6 +10,7 @@ import { sqsClient } from "../../../utils/SqsClient";
 import { TxmaEvent } from "../../../utils/TxmaEvent";
 import { absoluteTimeNow } from "../../../utils/DateTimeUtils";
 import { personIdentityInputRecord, personIdentityOutputRecord } from "../data/personIdentity-records";
+import { AuthSessionState } from "../../../models/enums/AuthSessionState";
 
 const logger = mock<Logger>();
 
@@ -195,6 +196,38 @@ describe("BAV Service", () => {
 		});
 	});
 
+	describe("#updateSessionWithAccessTokenDetails", () => {
+		it("should throw 500 if request fails during update Session data with access token details", async () => {
+			mockDynamoDbClient.send = jest.fn().mockRejectedValueOnce({});
+	
+			await expect(bavService.updateSessionWithAccessTokenDetails("SESSID", 12345)).rejects.toThrow(expect.objectContaining({
+				statusCode: HttpCodesEnum.SERVER_ERROR,
+			}));
+		});
+
+		// it("should update Session data with access token details", async () => {			
+		// 	mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+		// 	await bavService.updateSessionWithAccessTokenDetails("SESSID", 12345);			
+
+		// 	expect(mockDynamoDbClient.send).toHaveBeenCalledWith(expect.objectContaining({
+		// 		clientCommand: {
+		// 			input: {
+		// 				ExpressionAttributeValues: {
+		// 					":accessTokenExpiryDate": 12345,
+		// 					":authSessionState": AuthSessionState.BAV_ACCESS_TOKEN_ISSUED,
+		// 				},
+		// 				Key: {
+		// 					sessionId: "SESSID",
+		// 				},
+		// 				TableName: tableName,
+		// 				UpdateExpression: "SET authSessionState = :authSessionState, accessTokenExpiryDate = :accessTokenExpiryDate REMOVE authorizationCode",
+		// 			},
+		// 		},
+		// 	}));
+		// });
+
+	});
+
 	describe("#generateSessionId", () => {
 		it("returns a unique sessionId", async () => {
 			mockDynamoDbClient.send = jest.fn().mockResolvedValueOnce({});
@@ -219,5 +252,65 @@ describe("BAV Service", () => {
 			}));
 			expect(bavService.generateSessionId).toHaveBeenCalledTimes(3);
 		});
+	});
+
+	describe("#getSessionByAuthorizationCode", () => {
+		it("should return undefined when session item is not found by authorization code", async () => {
+			mockDynamoDbClient.query = jest.fn().mockResolvedValue({ Items: [] });
+	
+			await expect(bavService.getSessionByAuthorizationCode("1234")).rejects.toThrow("Error retrieving Session by authorization code");
+		});
+	
+		it("should throw error when multiple session items are found by authorization code", async () => {
+			mockDynamoDbClient.query = jest.fn().mockResolvedValue({ Items: [{ sessionId: "SESSID1" }, { sessionId: "SESSID2" }] });
+	
+			await expect(bavService.getSessionByAuthorizationCode("1234")).rejects.toThrow(expect.objectContaining({
+				statusCode: HttpCodesEnum.UNAUTHORIZED,
+			}));
+			expect(mockDynamoDbClient.query).toHaveBeenCalledWith(expect.objectContaining({
+				KeyConditionExpression: "authorizationCode = :authorizationCode",
+				ExpressionAttributeValues: {
+					":authorizationCode": "1234",
+				},
+			}));
+		});
+	
+		it("should throw error when session item has expired by authorization code", async () => {
+			mockDynamoDbClient.query = jest.fn().mockResolvedValue({
+				Items: [{
+					sessionId: "SESSID",
+					expiryDate: absoluteTimeNow() - 500,
+				}],
+			});
+	
+			await expect(bavService.getSessionByAuthorizationCode("1234")).rejects.toThrow(expect.objectContaining({
+				statusCode: HttpCodesEnum.UNAUTHORIZED,
+			}));
+			expect(mockDynamoDbClient.query).toHaveBeenCalledWith(expect.objectContaining({
+				KeyConditionExpression: "authorizationCode = :authorizationCode",
+				ExpressionAttributeValues: {
+					":authorizationCode": "1234",
+				},
+			}));
+		});
+	
+		it("should return session item when session is found by authorization code", async () => {
+			mockDynamoDbClient.query = jest.fn().mockResolvedValue({
+				Items: [{
+					sessionId: "SESSID",
+					expiryDate: absoluteTimeNow() + 500,
+				}],
+			});
+	
+			const result = await bavService.getSessionByAuthorizationCode("1234");
+			expect(result).toEqual({ sessionId: "SESSID", expiryDate: expect.any(Number) });
+			expect(mockDynamoDbClient.query).toHaveBeenCalledWith(expect.objectContaining({
+				KeyConditionExpression: "authorizationCode = :authorizationCode",
+				ExpressionAttributeValues: {
+					":authorizationCode": "1234",
+				},
+			}));
+		});
+
 	});
 });

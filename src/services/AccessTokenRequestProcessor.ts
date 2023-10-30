@@ -86,35 +86,35 @@ export class AccessTokenRequestProcessor {
 
 			//if (session.authSessionState === AuthSessionState.BAV_AUTH_CODE_ISSUED) {
 
-				validateTokenRequestToRecord(session, requestPayload.redirectUri);
-				// Generate access token
-				const jwtPayload = {
-					sub: session.sessionId,
-					aud: this.issuer,
-					iss: this.issuer,
-					exp: absoluteTimeNow() + Constants.TOKEN_EXPIRY_SECONDS,
-				};
-				let accessToken;
-				try {
-					accessToken = await this.kmsJwtAdapter.sign(jwtPayload);
-				} catch (error) {
-					this.logger.error("Failed to sign the accessToken Jwt", { messageCode: MessageCodes.FAILED_SIGNING_JWT });
-					return new Response(HttpCodesEnum.SERVER_ERROR, "Failed to sign the accessToken Jwt");
-				}
+			validateTokenRequestToRecord(session, requestPayload.redirectUri);
+			// Generate access token
+			const jwtPayload = {
+				sub: session.sessionId,
+				aud: this.issuer,
+				iss: this.issuer,
+				exp: absoluteTimeNow() + Constants.TOKEN_EXPIRY_SECONDS,
+			};
+			let accessToken;
+			try {
+				accessToken = await this.kmsJwtAdapter.sign(jwtPayload);
+			} catch (error) {
+				this.logger.error("Failed to sign the accessToken Jwt", { messageCode: MessageCodes.FAILED_SIGNING_JWT });
+				return new Response(HttpCodesEnum.SERVER_ERROR, "Failed to sign the accessToken Jwt");
+			}
 
-				// Update the sessionTable with accessTokenExpiryDate and AuthSessionState.
-				await this.bavService.updateSessionWithAccessTokenDetails(session.sessionId, jwtPayload.exp);
+			// Update the sessionTable with accessTokenExpiryDate and AuthSessionState.
+			await this.bavService.updateSessionWithAccessTokenDetails(session.sessionId, jwtPayload.exp);
 
-				this.logger.info({ message: "Access token generated successfully" });
+			this.logger.info({ message: "Access token generated successfully" });
 
-				return {
-					statusCode: HttpCodesEnum.OK,
-					body: JSON.stringify({
-						access_token: accessToken,
-						token_type: Constants.BEARER,
-						expires_in: Constants.TOKEN_EXPIRY_SECONDS,
-					}),
-				};
+			return {
+				statusCode: HttpCodesEnum.OK,
+				body: JSON.stringify({
+					access_token: accessToken,
+					token_type: Constants.BEARER,
+					expires_in: Constants.TOKEN_EXPIRY_SECONDS,
+				}),
+			};
 			// } else {
 			// 	this.logger.warn(`Session is in the wrong state: ${session.authSessionState}, expected state should be ${AuthSessionState.BAV_AUTH_CODE_ISSUED}`, { messageCode: MessageCodes.INCORRECT_SESSION_STATE });
 			// 	return new Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
