@@ -205,26 +205,26 @@ describe("BAV Service", () => {
 			}));
 		});
 
-		// it("should update Session data with access token details", async () => {			
-		// 	mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
-		// 	await bavService.updateSessionWithAccessTokenDetails("SESSID", 12345);			
+		it("should update Session data with access token details", async () => {			
+			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+			await bavService.updateSessionWithAccessTokenDetails("SESSID", 12345);			
 
-		// 	expect(mockDynamoDbClient.send).toHaveBeenCalledWith(expect.objectContaining({
-		// 		clientCommand: {
-		// 			input: {
-		// 				ExpressionAttributeValues: {
-		// 					":accessTokenExpiryDate": 12345,
-		// 					":authSessionState": AuthSessionState.BAV_ACCESS_TOKEN_ISSUED,
-		// 				},
-		// 				Key: {
-		// 					sessionId: "SESSID",
-		// 				},
-		// 				TableName: tableName,
-		// 				UpdateExpression: "SET authSessionState = :authSessionState, accessTokenExpiryDate = :accessTokenExpiryDate REMOVE authorizationCode",
-		// 			},
-		// 		},
-		// 	}));
-		// });
+			expect(mockDynamoDbClient.send).toHaveBeenCalledWith(expect.objectContaining({
+				clientCommand: expect.objectContaining({
+					input: {
+						ExpressionAttributeValues: {
+							":accessTokenExpiryDate": 12345,
+							":authSessionState": AuthSessionState.BAV_ACCESS_TOKEN_ISSUED,
+						},
+						Key: {
+							sessionId: "SESSID",
+						},
+						TableName: tableName,
+						UpdateExpression: "SET authSessionState = :authSessionState, accessTokenExpiryDate = :accessTokenExpiryDate REMOVE authorizationCode",
+					},
+				}),
+			}));
+		});
 
 	});
 
