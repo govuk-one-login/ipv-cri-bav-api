@@ -12,14 +12,14 @@ describe("/session Unhappy Path", () => {
         stubResponse = await stubStartPost(bavStubPayload);
     });
 
-    it.skip("E2E Unhappy Path Journey - Invalid Request", async () => {
+    it("E2E Unhappy Path Journey - Invalid Request", async () => {
         const sessionResponse = await sessionPost(stubResponse.data.clientId, "");
 
         expect(sessionResponse.status).toBe(401);
         expect(sessionResponse.data).toBe("Unauthorized");
     });
 
-    it.skip("E2E Unhappy Path Journey - Invalid ClientID", async () => {
+    it("E2E Unhappy Path Journey - Invalid ClientID", async () => {
         const sessionResponse = await sessionPost("", stubResponse.data.request);
 
         expect(sessionResponse.status).toBe(400);
@@ -35,7 +35,7 @@ describe("E2E Unhappy Path /authorisation Endpoint", () => {
 		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
 	});
 
-	it.skip("Incorrect session state", async () => {
+	it("Incorrect session state", async () => {
 		const authResponse = await authorizationGet(sessionId);
 		expect(authResponse.status).toBe(401);
 	});
