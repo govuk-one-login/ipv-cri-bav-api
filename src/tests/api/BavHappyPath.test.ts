@@ -19,6 +19,7 @@ describe("Test BAV End Points", () => {
         //Session Request
        sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
     });
+
     it("E2E BAV End Points Happy Path Journey", async () => {
         expect(sessionId).toBeTruthy();
 
@@ -37,15 +38,7 @@ describe("Test BAV End Points", () => {
         // const userInfoResponse = await userInfoPost("Bearer " + tokenResponse.data.access_token);
         // expect(userInfoResponse).toBe(202);
     });
-});
 
-describe("Test BAV End Points", () => {
-    let sessionId: any;
-
-    beforeEach(async () => {
-        //Session Request
-       sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
-    });
     it.skip("E2E BAV End Points Happy Path Journey", async () => {
         expect(sessionId).toBeTruthy();
       
@@ -71,16 +64,7 @@ describe("Test BAV End Points", () => {
         // const userInfoResponse = await userInfoPost("Bearer " + tokenResponse.data.access_token);
         // expect(userInfoResponse).toBe(202);
     });
-});
 
-
-describe("Happy Path Test for Repeat Authorisation", () => {
-    let sessionId: any;
-
-    beforeEach(async () => {
-        //Session Request
-        sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);   
-    });
 
     it.skip("Happy Path /authorisation endpoint - Repeated request made", async () => {
         // verifyAccount endpoint
@@ -91,6 +75,7 @@ describe("Happy Path Test for Repeat Authorisation", () => {
         const authRepeatResponseCode = authRepeatResponse.data.authorizationCode;
         expect(authCode).not.toEqual(authRepeatResponseCode); 
     });
+    
 });
 
 describe("E2E Happy Path Well Known Endpoint", () => {
