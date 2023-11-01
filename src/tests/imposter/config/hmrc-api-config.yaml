@@ -15,8 +15,10 @@ validation:
 resources:
   - path: /oauth/token
     method: POST
-    # queryParams:
-    #   client_id: "success"
+    requestBody:
+      xPath: "/env:Envelope/env:Body/pets:animal/pets:name"
+      value: "success"
     response:
-      file: data/token.json
+      # TODO dockerfile seems to ruin this folder structure
+      file: token.json
       statusCode: 200
