@@ -1,3 +1,4 @@
 export enum TxmaEventNames {
 	BAV_CRI_START = "BAV_CRI_START",
+	BAV_CRI_AUTH_CODE_ISSUED = "BAV_CRI_AUTH_CODE_ISSUED",
 }

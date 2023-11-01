@@ -8,12 +8,6 @@ import { HttpCodesEnum } from "../../models/enums/HttpCodesEnum";
 
 const mockedSessionRequestProcessor = mock<SessionRequestProcessor>();
 
-jest.mock("../../services/SessionRequestProcessor", () => {
-	return {
-		SessionRequestProcessor: jest.fn(() => mockedSessionRequestProcessor),
-	};
-});
-
 describe("SessionHandler", () => {
 	it("return success when SessionRequestProcessor completes successfully", async () => {
 		SessionRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedSessionRequestProcessor);
