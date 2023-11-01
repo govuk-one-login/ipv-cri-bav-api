@@ -139,6 +139,15 @@ export async function getSessionAndVerifyKey(sessionId: any, tableName: string, 
 	}
 }
 
+export async function getSessionAndVerifyKeyExists(sessionId: any, tableName: string, key: string) {
+	const sessionInfo = await getSessionById(sessionId, tableName);
+	try {
+		expect(sessionInfo![key as keyof ISessionItem]).toBeTruthy;
+	} catch (e: any) {
+		throw new Error("getSessionAndVerifyKeyExists - Failed to verify " + key + " exists: " + e);
+	}
+}
+
 /**
  * Retrieves an object from the bucket with the specified prefix, which is the latest message dequeued from the SQS
  * queue under test
