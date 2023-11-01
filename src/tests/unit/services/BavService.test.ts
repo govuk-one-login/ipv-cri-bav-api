@@ -5,7 +5,6 @@ import { Logger } from "@aws-lambda-powertools/logger";
 import { mock } from "jest-mock-extended";
 import { BavService } from "../../../services/BavService";
 import { createDynamoDbClient } from "../../../utils/DynamoDBFactory";
-import { AuthSessionState } from "../../../models/enums/AuthSessionState";
 import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../../../models/enums/MessageCodes";
 import { sqsClient } from "../../../utils/SqsClient";
@@ -237,38 +236,6 @@ describe("BAV Service", () => {
 		});
 	});
 
-	describe("#updateSessionWithAccessTokenDetails", () => {
-		it("should throw 500 if request fails during update Session data with access token details", async () => {
-			mockDynamoDbClient.send = jest.fn().mockRejectedValueOnce({});
-	
-			await expect(bavService.updateSessionWithAccessTokenDetails("SESSID", 12345)).rejects.toThrow(expect.objectContaining({
-				statusCode: HttpCodesEnum.SERVER_ERROR,
-			}));
-		});
-
-		it("should update Session data with access token details", async () => {			
-			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
-			await bavService.updateSessionWithAccessTokenDetails("SESSID", 12345);			
-
-			expect(mockDynamoDbClient.send).toHaveBeenCalledWith(expect.objectContaining({
-				clientCommand: expect.objectContaining({
-					input: {
-						ExpressionAttributeValues: {
-							":accessTokenExpiryDate": 12345,
-							":authSessionState": AuthSessionState.BAV_ACCESS_TOKEN_ISSUED,
-						},
-						Key: {
-							sessionId: "SESSID",
-						},
-						TableName: tableName,
-						UpdateExpression: "SET authSessionState = :authSessionState, accessTokenExpiryDate = :accessTokenExpiryDate REMOVE authorizationCode",
-					},
-				}),
-			}));
-		});
-
-	});
-
 	describe("#generateSessionId", () => {
 		it("returns a unique sessionId", async () => {
 			mockDynamoDbClient.send = jest.fn().mockResolvedValueOnce({});
@@ -354,4 +321,32 @@ describe("BAV Service", () => {
 		});
 
 	});
+
+	describe("#updateSessionWithAccessTokenDetails", () => {
+		it("should throw 500 if request fails during update Session data with access token details", async () => {
+			mockDynamoDbClient.send = jest.fn().mockRejectedValueOnce({});
+	
+			await expect(bavService.updateSessionWithAccessTokenDetails("SESSID", 12345)).rejects.toThrow(expect.objectContaining({
+				statusCode: HttpCodesEnum.SERVER_ERROR,
+			}));
+		});
+
+		it("should update Session data with access token details", async () => {			
+			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+			await bavService.updateSessionWithAccessTokenDetails("SESSID", 12345);			
+
+			expect(UpdateCommand).toHaveBeenCalledWith(expect.objectContaining({
+				ExpressionAttributeValues: {
+					":accessTokenExpiryDate": 12345,
+					":authSessionState": AuthSessionState.BAV_ACCESS_TOKEN_ISSUED,
+				},
+				Key: {
+					sessionId: "SESSID",
+				},
+				TableName: tableName,
+				UpdateExpression: "SET authSessionState = :authSessionState, accessTokenExpiryDate = :accessTokenExpiryDate REMOVE authorizationCode",
+			}));
+		});
+	});
+		
 });
