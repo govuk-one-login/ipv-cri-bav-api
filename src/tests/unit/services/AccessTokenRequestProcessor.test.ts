@@ -127,7 +127,7 @@ describe("AccessTokenRequestProcessor", () => {
 		mockBavService.getSessionByAuthorizationCode.mockResolvedValue(mockSession);
 		const out: Response = await accessTokenRequestProcessorTest.processRequest(request);
 
-		expect(out.body).toBe("AuthSession is in wrong Auth state: Expected state- BAV_AUTH_CODE_ISSUED, actual state- BAV_ACCESS_TOKEN_ISSUED");
+		expect(out.body).toBe("Session is in the wrong state: BAV_ACCESS_TOKEN_ISSUED");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 	});
 
@@ -160,11 +160,11 @@ describe("AccessTokenRequestProcessor", () => {
 	it("Return 401 when getting session from dynamoDB errors", async () => {
 		// @ts-ignore
 		mockBavService.getSessionByAuthorizationCode.mockImplementation(() => {
-			throw new Error("Error while retrieving the session");
+			throw new AppError(HttpCodesEnum.UNAUTHORIZED, "Error retrieving Session by authorization code");
 		});
 		const out: Response = await accessTokenRequestProcessorTest.processRequest(request);
 
-		expect(out.body).toContain("Error while retrieving the session");
+		expect(out.body).toContain("Error retrieving Session by authorization code");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 	});
 

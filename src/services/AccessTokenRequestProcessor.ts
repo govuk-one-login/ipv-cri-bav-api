@@ -13,6 +13,7 @@ import { BavService } from "./BavService";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { isPayloadValid, validateTokenRequestToRecord } from "../utils/AccessTokenRequestValidations";
+import { AuthSessionState } from "../models/enums/AuthSessionState";
 
 export class AccessTokenRequestProcessor {
 	private static instance: AccessTokenRequestProcessor;
@@ -54,14 +55,14 @@ export class AccessTokenRequestProcessor {
 			try {
 				requestPayload = isPayloadValid(event.body);
 			} catch (error) {
-				this.logger.error("Failed validating the Access token request body.", { messageCode: MessageCodes.FAILED_VALIDATING_ACCESS_TOKEN_REQUEST_BODY });
+				this.logger.error("Failed validating the Access token request body.", { error, messageCode: MessageCodes.FAILED_VALIDATING_REQUEST_BODY });
 				if (error instanceof AppError) {
 					return new Response(error.statusCode, error.message);
 				}
 				return new Response(HttpCodesEnum.UNAUTHORIZED, "An error has occurred while validating the Access token request payload.");
 			}
 			let session: ISessionItem | undefined;
-			try {
+			//try {
 				session = await this.bavService.getSessionByAuthorizationCode(requestPayload.code);
 				if (!session) {
 					this.logger.info(`No session found by authorization code: : ${requestPayload.code}`, { messageCode: MessageCodes.SESSION_NOT_FOUND });
@@ -72,53 +73,53 @@ export class AccessTokenRequestProcessor {
 				this.logger.appendKeys({
 					govuk_signin_journey_id: session?.clientSessionId,
 				});
-			} catch (error) {
-				if (error instanceof AppError) {
-					return new Response(error.statusCode, error.message);
+			// } catch (error) {
+			// 	if (error instanceof AppError) {
+			// 		return new Response(error.statusCode, error.message);
+			// 	}
+
+			// 	this.logger.error("Error while retrieving the session", {
+			// 		messageCode: MessageCodes.SESSION_NOT_FOUND,
+			// 		error,
+			// 	});
+			// 	return new Response(HttpCodesEnum.UNAUTHORIZED, "Error while retrieving the session");
+			// }
+
+			if (session.authSessionState === AuthSessionState.BAV_AUTH_CODE_ISSUED) {
+
+				validateTokenRequestToRecord(session, requestPayload.redirectUri);
+				// Generate access token
+				const jwtPayload = {
+					sub: session.sessionId,
+					aud: this.issuer,
+					iss: this.issuer,
+					exp: absoluteTimeNow() + Constants.TOKEN_EXPIRY_SECONDS,
+				};
+				let accessToken;
+				try {
+					accessToken = await this.kmsJwtAdapter.sign(jwtPayload);
+				} catch (error) {
+					this.logger.error("Failed to sign the accessToken Jwt", { messageCode: MessageCodes.FAILED_SIGNING_JWT });
+					return new Response(HttpCodesEnum.SERVER_ERROR, "Failed to sign the accessToken Jwt");
 				}
 
-				this.logger.error("Error while retrieving the session", {
-					messageCode: MessageCodes.SESSION_NOT_FOUND,
-					error,
-				});
-				return new Response(HttpCodesEnum.UNAUTHORIZED, "Error while retrieving the session");
+				// Update the sessionTable with accessTokenExpiryDate and AuthSessionState.
+				await this.bavService.updateSessionWithAccessTokenDetails(session.sessionId, jwtPayload.exp);
+
+				this.logger.info({ message: "Access token generated successfully" });
+
+				return {
+					statusCode: HttpCodesEnum.OK,
+					body: JSON.stringify({
+						access_token: accessToken,
+						token_type: Constants.BEARER,
+						expires_in: Constants.TOKEN_EXPIRY_SECONDS,
+					}),
+				};
+			} else {
+				this.logger.warn(`Session is in the wrong state: ${session.authSessionState}, expected state should be ${AuthSessionState.BAV_AUTH_CODE_ISSUED}`, { messageCode: MessageCodes.INCORRECT_SESSION_STATE });
+				return new Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
 			}
-
-			//if (session.authSessionState === AuthSessionState.BAV_AUTH_CODE_ISSUED) {
-
-			validateTokenRequestToRecord(session, requestPayload.redirectUri);
-			// Generate access token
-			const jwtPayload = {
-				sub: session.sessionId,
-				aud: this.issuer,
-				iss: this.issuer,
-				exp: absoluteTimeNow() + Constants.TOKEN_EXPIRY_SECONDS,
-			};
-			let accessToken;
-			try {
-				accessToken = await this.kmsJwtAdapter.sign(jwtPayload);
-			} catch (error) {
-				this.logger.error("Failed to sign the accessToken Jwt", { messageCode: MessageCodes.FAILED_SIGNING_JWT });
-				return new Response(HttpCodesEnum.SERVER_ERROR, "Failed to sign the accessToken Jwt");
-			}
-
-			// Update the sessionTable with accessTokenExpiryDate and AuthSessionState.
-			await this.bavService.updateSessionWithAccessTokenDetails(session.sessionId, jwtPayload.exp);
-
-			this.logger.info({ message: "Access token generated successfully" });
-
-			return {
-				statusCode: HttpCodesEnum.OK,
-				body: JSON.stringify({
-					access_token: accessToken,
-					token_type: Constants.BEARER,
-					expires_in: Constants.TOKEN_EXPIRY_SECONDS,
-				}),
-			};
-			// } else {
-			// 	this.logger.warn(`Session is in the wrong state: ${session.authSessionState}, expected state should be ${AuthSessionState.BAV_AUTH_CODE_ISSUED}`, { messageCode: MessageCodes.INCORRECT_SESSION_STATE });
-			// 	return new Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
-			// }
 		} catch (err: any) {
 			this.logger.error({ message: "Error processing access token request", err });
 			return new Response(err.statusCode, err.message);

@@ -39,8 +39,4 @@ export const validateTokenRequestToRecord = (sessionItem: ISessionItem, redirect
 		throw new AppError(HttpCodesEnum.UNAUTHORIZED,
 			`Invalid request: redirect uri ${redirectUri} does not match configuration uri ${sessionItem.redirectUri}`);
 	}
-	// Validate if the AuthSessionState is BAV_AUTH_CODE_ISSUED
-	if (sessionItem.authSessionState !== AuthSessionState.BAV_AUTH_CODE_ISSUED) {
-		throw new AppError(HttpCodesEnum.UNAUTHORIZED, `AuthSession is in wrong Auth state: Expected state- ${AuthSessionState.BAV_AUTH_CODE_ISSUED}, actual state- ${sessionItem.authSessionState}`);
-	}
 };
