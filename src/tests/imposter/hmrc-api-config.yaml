@@ -1,0 +1,22 @@
+plugin: openapi
+specFile: ./hmrc-api.yaml
+
+pickFirstIfNoneMatch: false
+
+validation:
+  request: true
+
+# system:
+#   stores:
+#     questions:
+#       # Preload data from this file so it's ready when imposter starts
+#       preloadFile: data/questions.json
+
+resources:
+  - path: /oauth/token
+    method: POST
+    # queryParams:
+    #   client_id: "success"
+    response:
+      file: data/token.json
+      statusCode: 200

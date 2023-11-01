@@ -1,0 +1,62 @@
+openapi: "3.0.1"
+info:
+  title: "HMRC"
+  version: "1.0"
+
+paths:
+  /oauth/token:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRequest'
+      responses:
+        "200":
+          description: "200 response"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenResponse"
+
+components:
+  schemas:
+    TokenRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - grant_type
+        - client_id
+        - client_secret
+      properties: 
+        grant_type:
+          type: "string"
+          example: "client_credentials"
+        client_id:
+          type: "string"
+          example: "OeECJbbLhQjz5t1w7NTb1NCC1uy4"
+        client_secret:
+          type: "string"
+          example: "A2D8988A-9083-4F78-99B2-4D4D34F4A767"
+    TokenResponse:
+      type: object
+      additionalProperties: true
+      required:
+        - "access_token"
+        - "scope"
+        - "expires_in"
+        - "token_type"
+      properties:
+        access_token:
+          type: "string"
+          example: "oVrJP360OW6RicNYlyzwS0YKtPd7PxTB"
+        scope:
+          type: "string"
+          example: "default"
+        expires_in:
+          type: "string"
+          example: "14400"
+        token_type:
+          type: "string"
+          example: "bearer"
