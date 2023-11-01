@@ -29,14 +29,6 @@ describe("Test BAV End Points", () => {
         // Make sure txma event is present & valid
         const sqsMessage = await getSqsEventList("txma/", sessionId, 1);
         await validateTxMAEventData(sqsMessage);
-        
-        // // Commented out until /token (KIWI-1260) and /userInfo (KIWI-1258) endpoints are available
-        // // Token
-        // const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
-        // expect(tokenResponse).toBe(200);
-        // // User Info
-        // const userInfoResponse = await userInfoPost("Bearer " + tokenResponse.data.access_token);
-        // expect(userInfoResponse).toBe(202);
     });
 
     it.skip("BAV CRI /authorization Happy Path", async () => {
@@ -55,14 +47,6 @@ describe("Test BAV End Points", () => {
         // Make sure txma event is present & valid
         const sqsMessage = await getSqsEventList("txma/", sessionId, 2);
         await validateTxMAEventData(sqsMessage);
-        
-        // // Commented out until /token (KIWI-1260) and /userInfo (KIWI-1258) endpoints are available
-        // // Token
-        // const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
-        // expect(tokenResponse).toBe(200);
-        // // User Info
-        // const userInfoResponse = await userInfoPost("Bearer " + tokenResponse.data.access_token);
-        // expect(userInfoResponse).toBe(202);
     });
 
 
