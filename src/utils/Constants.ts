@@ -8,6 +8,8 @@ export class Constants {
 
 	static readonly SESSION_LOGGER_SVC_NAME : "SessionHandler";
 
+	static readonly AUTHORIZATION_LOGGER_SVC_NAME : "AuthorizationHandler";
+
 	static readonly ACCESSTOKEN_LOGGER_SVC_NAME = "AccessTokenHandler";
 
 	static readonly BAV_METRICS_NAMESPACE = "BAV-CRI";
@@ -46,6 +48,7 @@ export class Constants {
 
   static readonly AUTHORIZATION_CODE_INDEX_NAME = "authorizationCode-index";
   
+  
 }
 
 export const EnvironmentVariables = {
@@ -60,3 +63,4 @@ export const EnvironmentVariables = {
 	JWKS_BUCKET_NAME: "JWKS_BUCKET_NAME",
 	KMS_KEY_ARN: "KMS_KEY_ARN",
 };
+
