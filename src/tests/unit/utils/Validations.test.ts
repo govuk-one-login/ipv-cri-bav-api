@@ -1,4 +1,5 @@
-import { isValidStrings, isPersonNameValid } from "../../../utils/Validations";
+import { randomUUID } from "crypto";
+import { isValidStrings, isPersonNameValid, isValidUUID } from "../../../utils/Validations";
 
 describe("Validations", () => {
 	describe("#isValidStrings", () => {
@@ -38,6 +39,18 @@ describe("Validations", () => {
 			const result = isPersonNameValid([{ nameParts: [
 				{ type: "GivenName", value: "Test" },
 			] }]);
+			expect(result).toBe(false);
+		});
+	});
+
+	describe("#isValidUUID", () => {
+		it("returns true UUID is valid", () => {
+			const result = isValidUUID(randomUUID());
+			expect(result).toBe(true);
+		});
+
+		it("returns false if UUID is invalid", () => {
+			const result = isValidUUID(randomUUID().slice(0, -1));
 			expect(result).toBe(false);
 		});
 	});
