@@ -20,7 +20,7 @@ describe("Test BAV End Points", () => {
        sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
     });
 
-    it("E2E BAV End Points Happy Path Journey", async () => {
+    it("BAV CRI /session Happy Path", async () => {
         expect(sessionId).toBeTruthy();
 
         // Make sure authSession state is as expected
@@ -39,7 +39,7 @@ describe("Test BAV End Points", () => {
         // expect(userInfoResponse).toBe(202);
     });
 
-    it.skip("E2E BAV End Points Happy Path Journey", async () => {
+    it.skip("BAV CRI /authorization Happy Path", async () => {
         expect(sessionId).toBeTruthy();
       
         // Authorization
@@ -66,8 +66,7 @@ describe("Test BAV End Points", () => {
     });
 
 
-    it.skip("Happy Path /authorisation endpoint - Repeated request made", async () => {
-        // verifyAccount endpoint
+    it.skip("BAV CRI /authorization - Repeated request made", async () => {
         const origSessionId = sessionId;
         const authResponse = await authorizationGet(sessionId);
         const authCode = authResponse.data.authorizationCode;
