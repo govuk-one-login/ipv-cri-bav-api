@@ -35,7 +35,7 @@ describe("Test BAV End Points", () => {
 
     it.skip("BAV CRI /authorization Happy Path", async () => {
         expect(sessionId).toBeTruthy();
-      
+
         // Authorization
         const authResponse = await authorizationGet(sessionId);
         expect(authResponse.status).toBe(200);
@@ -58,7 +58,7 @@ describe("Test BAV End Points", () => {
         const authCode = authResponse.data.authorizationCode;
         const authRepeatResponse = await authorizationGet(origSessionId);
         const authRepeatResponseCode = authRepeatResponse.data.authorizationCode;
-        expect(authCode).not.toEqual(authRepeatResponseCode); 
+        expect(authCode).not.toEqual(authRepeatResponseCode);
     });
 
     it.skip("BAV CRI /token Happy Path", async () => {
@@ -73,7 +73,7 @@ describe("Test BAV End Points", () => {
 
         // Check session state
         await getSessionAndVerifyKey(sessionId, "session-infra-l2-dynamo-bhavana", "authSessionState", "BAV_ACCESS_TOKEN_ISSUED");
-    
+
         // TODO: Verify TXMA event is returned
         // const sqsMessage = await getSqsEventList("txma/", sessionId, 2);
         // await validateTxMAEventData(sqsMessage);
@@ -83,7 +83,7 @@ describe("Test BAV End Points", () => {
     // // User Info
     // const userInfoResponse = await userInfoPost("Bearer " + tokenResponse.data.access_token);
     // expect(userInfoResponse).toBe(202);
-    });
+});
 
 describe("E2E Happy Path Well Known Endpoint", () => {
     it("E2E Happy Path Journey - Well Known", async () => {
