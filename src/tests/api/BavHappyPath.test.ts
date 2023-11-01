@@ -19,7 +19,7 @@ describe("Test BAV End Points", () => {
 
     beforeEach(async () => {
         //Session Request
-       sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+        sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
     });
 
     it("BAV CRI /session Happy Path", async () => {
@@ -63,8 +63,8 @@ describe("Test BAV End Points", () => {
 
     it.skip("BAV CRI /token Happy Path", async () => {
         const authResponse = await authorizationGet(sessionId);
+
         // Token
-        // TODO: Need to replace the authCode and redirectUri with the authorization response values above
         const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
         expect(tokenResponse.status).toBe(200);
 
