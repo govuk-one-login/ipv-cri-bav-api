@@ -1,6 +1,7 @@
 import bavStubPayload from "../data/exampleStubPayload.json";
 import { constants } from "../utils/ApiConstants";
 import {
+    authorizationGet,
     getSessionAndVerifyKey,
     getSqsEventList,
     startStubServiceAndReturnSessionId,
@@ -16,22 +17,20 @@ describe("Test BAV End Points", () => {
 
     beforeEach(async () => {
         //Session Request
-        sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+       sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
     });
-    it("E2E BAV End Points Happy Path Journey", async () => {
+
+    it("BAV CRI /session Happy Path", async () => {
         expect(sessionId).toBeTruthy();
 
-        // Make sure authSession state is as expected - BAV_SESSION_CREATED
+        // Make sure authSession state is as expected
         await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_SESSION_CREATED");
 
         // Make sure txma event is present & valid
         const sqsMessage = await getSqsEventList("txma/", sessionId, 1);
         await validateTxMAEventData(sqsMessage);
-
-        // Commented out until /authorisation (KIWI-1259), /token (KIWI-1260) and /userInfo (KIWI-1258) endpoints are available
-        // // Authorization
-        // const authResponse = await authorizationGet(sessionId);
-        // expect(authResponse.status).toBe(200);
+        
+        // // Commented out until /token (KIWI-1260) and /userInfo (KIWI-1258) endpoints are available
         // // Token
         // const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
         // expect(tokenResponse).toBe(200);
@@ -39,6 +38,43 @@ describe("Test BAV End Points", () => {
         // const userInfoResponse = await userInfoPost("Bearer " + tokenResponse.data.access_token);
         // expect(userInfoResponse).toBe(202);
     });
+
+    it.skip("BAV CRI /authorization Happy Path", async () => {
+        expect(sessionId).toBeTruthy();
+      
+        // Authorization
+        const authResponse = await authorizationGet(sessionId);
+        expect(authResponse.status).toBe(200);
+        expect(authResponse.data.authorizationCode).toBeTruthy();
+        expect(authResponse.data.redirect_uri).toBeTruthy();
+        expect(authResponse.data.state).toBeTruthy();
+
+        // Make sure authSession state is as expected
+        await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_AUTH_CODE_ISSUED");
+
+        // Make sure txma event is present & valid
+        const sqsMessage = await getSqsEventList("txma/", sessionId, 2);
+        await validateTxMAEventData(sqsMessage);
+        
+        // // Commented out until /token (KIWI-1260) and /userInfo (KIWI-1258) endpoints are available
+        // // Token
+        // const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+        // expect(tokenResponse).toBe(200);
+        // // User Info
+        // const userInfoResponse = await userInfoPost("Bearer " + tokenResponse.data.access_token);
+        // expect(userInfoResponse).toBe(202);
+    });
+
+
+    it.skip("BAV CRI /authorization - Repeated request made", async () => {
+        const origSessionId = sessionId;
+        const authResponse = await authorizationGet(sessionId);
+        const authCode = authResponse.data.authorizationCode;
+        const authRepeatResponse = await authorizationGet(origSessionId);
+        const authRepeatResponseCode = authRepeatResponse.data.authorizationCode;
+        expect(authCode).not.toEqual(authRepeatResponseCode); 
+    });
+    
 });
 
 describe("E2E Happy Path Well Known Endpoint", () => {
