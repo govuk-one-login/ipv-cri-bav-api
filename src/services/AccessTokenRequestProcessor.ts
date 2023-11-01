@@ -61,29 +61,17 @@ export class AccessTokenRequestProcessor {
 				}
 				return new Response(HttpCodesEnum.UNAUTHORIZED, "An error has occurred while validating the Access token request payload.");
 			}
-			let session: ISessionItem | undefined;
-			//try {
-				session = await this.bavService.getSessionByAuthorizationCode(requestPayload.code);
-				if (!session) {
-					this.logger.info(`No session found by authorization code: : ${requestPayload.code}`, { messageCode: MessageCodes.SESSION_NOT_FOUND });
-					return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found by authorization code: ${requestPayload.code}`);
-				}
-				this.logger.appendKeys({ sessionId: session.sessionId });
-				this.logger.info({ message: "Found Session" });
-				this.logger.appendKeys({
-					govuk_signin_journey_id: session?.clientSessionId,
-				});
-			// } catch (error) {
-			// 	if (error instanceof AppError) {
-			// 		return new Response(error.statusCode, error.message);
-			// 	}
-
-			// 	this.logger.error("Error while retrieving the session", {
-			// 		messageCode: MessageCodes.SESSION_NOT_FOUND,
-			// 		error,
-			// 	});
-			// 	return new Response(HttpCodesEnum.UNAUTHORIZED, "Error while retrieving the session");
-			// }
+						
+			const session = await this.bavService.getSessionByAuthorizationCode(requestPayload.code);
+			if (!session) {
+				this.logger.info(`No session found by authorization code: : ${requestPayload.code}`, { messageCode: MessageCodes.SESSION_NOT_FOUND });
+				return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found by authorization code: ${requestPayload.code}`);
+			}
+			this.logger.appendKeys({ sessionId: session.sessionId });
+			this.logger.info({ message: "Found Session" });
+			this.logger.appendKeys({
+				govuk_signin_journey_id: session?.clientSessionId,
+			});
 
 			if (session.authSessionState === AuthSessionState.BAV_AUTH_CODE_ISSUED) {
 
