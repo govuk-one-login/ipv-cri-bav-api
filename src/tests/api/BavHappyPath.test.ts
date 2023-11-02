@@ -69,20 +69,11 @@ describe("Test BAV End Points", () => {
         expect(tokenResponse.status).toBe(200);
 
         // Verify access token expiry date exists
-        await getSessionAndVerifyKeyExists(sessionId, "session-infra-l2-dynamo-bhavana", "accessTokenExpiryDate");
+        await getSessionAndVerifyKeyExists(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "accessTokenExpiryDate");
 
         // Check session state
-        await getSessionAndVerifyKey(sessionId, "session-infra-l2-dynamo-bhavana", "authSessionState", "BAV_ACCESS_TOKEN_ISSUED");
-
-        // TODO: Verify TXMA event is returned
-        // const sqsMessage = await getSqsEventList("txma/", sessionId, 2);
-        // await validateTxMAEventData(sqsMessage);
+        await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_ACCESS_TOKEN_ISSUED");
     });
-
-
-    // // User Info
-    // const userInfoResponse = await userInfoPost("Bearer " + tokenResponse.data.access_token);
-    // expect(userInfoResponse).toBe(202);
 });
 
 describe("E2E Happy Path Well Known Endpoint", () => {
