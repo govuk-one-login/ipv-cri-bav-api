@@ -205,7 +205,7 @@ export class BavService {
 		return sessionId;
 	}
 
-	async getSessionByAuthorizationCode(code: string | undefined): Promise<ISessionItem | undefined> {
+	async getSessionByAuthorizationCode(code: string): Promise<ISessionItem | undefined> {
 		const params: QueryCommandInput = {
 			TableName: this.tableName,
 			IndexName: Constants.AUTHORIZATION_CODE_INDEX_NAME,

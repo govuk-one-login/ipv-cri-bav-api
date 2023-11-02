@@ -2,7 +2,6 @@ import { AccessRequestPayload } from "../type/AccessRequestPayload";
 import { AppError } from "./AppError";
 import { Constants } from "./Constants";
 import { ISessionItem } from "../models/ISessionItem";
-import { AuthSessionState } from "../models/enums/AuthSessionState";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { isValidUUID } from "./Validations";
 
