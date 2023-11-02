@@ -130,7 +130,7 @@ export async function getSessionById(sessionId: string, tableName: string): Prom
 	return session;
 }
 
-export async function getSessionAndVerifyKey(sessionId: any, tableName: string, key: string, expectedValue: string) {
+export async function getSessionAndVerifyKey(sessionId: string, tableName: string, key: string, expectedValue: string): Promise<void> {
 	const sessionInfo = await getSessionById(sessionId, tableName);
 	try {
 		expect(sessionInfo![key as keyof ISessionItem]).toBe(expectedValue);
@@ -139,7 +139,7 @@ export async function getSessionAndVerifyKey(sessionId: any, tableName: string, 
 	}
 }
 
-export async function getSessionAndVerifyKeyExists(sessionId: any, tableName: string, key: string) {
+export async function getSessionAndVerifyKeyExists(sessionId: string, tableName: string, key: string): Promise<void> {
 	const sessionInfo = await getSessionById(sessionId, tableName);
 	try {
 		expect(sessionInfo![key as keyof ISessionItem]).toBeTruthy;
