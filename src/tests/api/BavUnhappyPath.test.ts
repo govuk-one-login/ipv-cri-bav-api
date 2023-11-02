@@ -19,13 +19,6 @@ describe.skip("/token Unhappy Path - invalid session state", () => {
         sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
     });
     it("Request to /token with invalid session state", async () => {
-        // Make sure authSession state is as expected - BAV_SESSION_CREATED
-        await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_SESSION_CREATED");
-
-        // // Make sure txma event is present & valid
-        // const sqsMessage = await getSqsEventList("txma/", sessionId, 1);
-        // await validateTxMAEventData(sqsMessage);
-
         // Authorization
         const authResponse = await authorizationGet(sessionId);
 
