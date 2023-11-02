@@ -1,5 +1,10 @@
 import { EvidenceRequested } from "./IVeriCredential";
 
+export type CopCheckResult =
+	"FULL_MATCH" | 
+	"PARTIAL_MATCH" | 
+	"NO_MATCH";
+
 export interface IBAVSession {
 	given_names?: string[];
 	family_names?: string[];
@@ -24,5 +29,8 @@ export interface ISessionItem extends IBAVSession {
 	attemptCount: number;
 	authSessionState: string;
 	evidence_requested?: EvidenceRequested;
+	copCheckResult?: CopCheckResult;
+	sortCode?: string;
+	accountNumber?: string;
 }
 

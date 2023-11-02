@@ -63,6 +63,31 @@ export class BavService {
 		}
 	}
 
+	async getPersonIdentityBySessionId(sessionId: string, tableName: string = this.tableName): Promise<PersonIdentityItem | undefined> {
+		this.logger.debug("Table name " + tableName);
+		const getPersonIdentityCommand = new GetCommand({
+			TableName: tableName,
+			Key: {
+				sessionId,
+			},
+		});
+
+		let personIdentity;
+		try {
+			personIdentity = await this.dynamo.send(getPersonIdentityCommand);
+		} catch (error) {
+			this.logger.error({ message: "getPersonIdentityBySessionId - failed executing get from dynamodb:" }, {
+				messageCode: MessageCodes.FAILED_FETCHING_SESSION,
+				error,
+			});
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "Error retrieving Session");
+		}
+
+		if (personIdentity.Item) {
+			return personIdentity.Item as PersonIdentityItem;
+		}
+	}
+
 	async sendToTXMA(QueueUrl: string, event: TxmaEvent): Promise<void> {
 		try {
 			const messageBody = JSON.stringify(event);

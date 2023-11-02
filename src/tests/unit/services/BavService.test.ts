@@ -19,6 +19,7 @@ const tableName = "SESSIONTABLE";
 const sessionId = "SESSIONID";
 const fakeTime = 1684933200.123;
 const SESSION_RECORD = require("../data/db_record.json");
+const PERSON_IDENTITY_RECORD = require("../data/person_identity_record.json");
 
 const logger = mock<Logger>();
 const mockDynamoDbClient = jest.mocked(createDynamoDbClient());
@@ -97,6 +98,19 @@ describe("BAV Service", () => {
 				message: "Session with session id: 1234 has expired",
 			}));
 			expect(logger.error).toHaveBeenCalledWith({ message: "Session with session id: 1234 has expired" }, { messageCode: "EXPIRED_SESSION" });
+		});
+	});
+
+	describe("#getPersonIdentityBySessionId", () => {
+		it("Should return a person identity item when passed a valid session Id", async () => {
+			mockDynamoDbClient.send = jest.fn().mockResolvedValue({ Item: PERSON_IDENTITY_RECORD });
+			const result = await bavService.getPersonIdentityBySessionId(sessionId);
+			expect(result).toEqual(PERSON_IDENTITY_RECORD);
+		});
+	
+		it("Should return undefined when session doesn't exist", async () => {
+			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+			await expect(bavService.getPersonIdentityBySessionId("1234")).resolves.toBeUndefined();
 		});
 	});
 
