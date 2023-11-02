@@ -1,9 +1,6 @@
 import bavStubPayload from "../data/exampleStubPayload.json";
-import { constants } from "../utils/ApiConstants";
 import {
     authorizationGet,
-    getSessionAndVerifyKey,
-    getSessionAndVerifyKeyExists,
     sessionPost,
     startStubServiceAndReturnSessionId,
     stubStartPost,
