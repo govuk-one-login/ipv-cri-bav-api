@@ -3,8 +3,30 @@ import {
     authorizationGet,
     sessionPost,
     startStubServiceAndReturnSessionId,
-    stubStartPost
+    stubStartPost,
+    tokenPost
 } from "../utils/ApiTestSteps";
+
+
+describe.skip("/token Unhappy Path - invalid session state", () => {
+    let sessionId: any;
+
+    beforeEach(async () => {
+        //Session Request
+        sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+    });
+    it("Request to /token with invalid session state", async () => {
+        // Authorization
+        const authResponse = await authorizationGet(sessionId);
+
+        // Token
+        await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+
+        // Request to /token endpoing again (which now has an invalid session state)
+        const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+        expect(tokenResponse.status).toBe(401);
+    });
+});
 
 describe("/session Unhappy Path", () => {
     let stubResponse: any;
