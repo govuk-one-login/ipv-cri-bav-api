@@ -16,8 +16,7 @@ describe.skip("/token Unhappy Path - invalid session state", () => {
 
     beforeEach(async () => {
         //Session Request
-        //sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
-        sessionId = "d2eb1636-e1e2-4c92-9834-7e21dbafca86";
+        sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
     });
     it("Request to /token with invalid session state", async () => {
         // Make sure authSession state is as expected - BAV_SESSION_CREATED
