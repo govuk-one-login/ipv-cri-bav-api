@@ -1,8 +1,7 @@
 import { SendMessageCommand } from "@aws-sdk/client-sqs";
 import { Logger } from "@aws-lambda-powertools/logger";
-import { DynamoDBDocument, GetCommand, PutCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocument, GetCommand, PutCommand, QueryCommandInput, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
-import { AuthSessionState } from "../models/enums/AuthSessionState";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { ISessionItem } from "../models/ISessionItem";
@@ -11,6 +10,8 @@ import { AppError } from "../utils/AppError";
 import { absoluteTimeNow, getAuthorizationCodeExpirationEpoch } from "../utils/DateTimeUtils";
 import { sqsClient } from "../utils/SqsClient";
 import { TxmaEvent } from "../utils/TxmaEvent";
+import { Constants } from "../utils/Constants";
+import { AuthSessionState } from "../models/enums/AuthSessionState";
 
 export class BavService {
 	readonly tableName: string;
@@ -202,5 +203,55 @@ export class BavService {
 			throw new AppError(HttpCodesEnum.SERVER_ERROR, "Failed to generate unique sessionId");
 		}
 		return sessionId;
+	}
+
+	async getSessionByAuthorizationCode(code: string): Promise<ISessionItem | undefined> {
+		const params: QueryCommandInput = {
+			TableName: this.tableName,
+			IndexName: Constants.AUTHORIZATION_CODE_INDEX_NAME,
+			KeyConditionExpression: "authorizationCode = :authorizationCode",
+			ExpressionAttributeValues: {
+				":authorizationCode": code,
+			},
+		};
+
+		const sessionItem = await this.dynamo.query(params);
+
+		if (!sessionItem?.Items || sessionItem?.Items?.length !== 1) {
+			this.logger.error("Error retrieving Session by authorization code", {
+				messageCode: MessageCodes.FAILED_FETCHING_SESSION_BY_AUTH_CODE,
+			});
+			throw new AppError(HttpCodesEnum.UNAUTHORIZED, "Error retrieving Session by authorization code");
+		}
+
+		if (sessionItem.Items[0].expiryDate < absoluteTimeNow()) {
+			this.logger.error(`Session with session id: ${sessionItem.Items[0].sessionId} has expired`, {
+				messageCode: MessageCodes.EXPIRED_SESSION,
+			});
+			throw new AppError(HttpCodesEnum.UNAUTHORIZED, `Session with session id: ${sessionItem.Items[0].sessionId} has expired`);
+		}
+
+		return sessionItem.Items[0] as ISessionItem;
+	}
+
+	async updateSessionWithAccessTokenDetails(sessionId: string, accessTokenExpiryDate: number): Promise<void> {
+		const updateAccessTokenDetailsCommand = new UpdateCommand({
+			TableName: this.tableName,
+			Key: { sessionId },
+			UpdateExpression: "SET authSessionState = :authSessionState, accessTokenExpiryDate = :accessTokenExpiryDate REMOVE authorizationCode",
+			ExpressionAttributeValues: {
+				":authSessionState": AuthSessionState.BAV_ACCESS_TOKEN_ISSUED,
+				":accessTokenExpiryDate": accessTokenExpiryDate,
+			},
+		});
+
+		this.logger.info({ message: "updating Access token details in dynamodb" }, { tableName: this.tableName });
+		try {
+			await this.dynamo.send(updateAccessTokenDetailsCommand);
+			this.logger.info({ message: "updated Access token details in dynamodb" });
+		} catch (error) {
+			this.logger.error({ message: "got error updating Access token details", error }, { messageCode: MessageCodes.FAILED_UPDATING_SESSION });
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "updateItem - failed: got error updating Access token details");
+		}
 	}
 }

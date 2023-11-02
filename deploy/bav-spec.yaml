@@ -291,6 +291,103 @@ paths:
         contentHandling: "CONVERT_TO_TEXT"
         type: "aws"
 
+  /token:
+    post:
+      operationId: postToken
+      summary: Exchange an Authorization Code for an Access Token
+      description: >-
+        Issue Access Token. OAuth2 standard endpoint which exchanges the authorization_code supplied and
+        returns a signed access_token which can be used directly in API calls as a Bearer token. Note
+        the service will only issue an access token once for any given session.
+      tags:
+        - Backend - Common CRI Lambda
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/IssueTokenRequest'
+      responses:
+        "200":
+          description: >-
+            Created - OAuth token is valid - Session details have been stored in the backend and a `session_id`
+            is returned.
+          headers:
+            Cache-Control:
+              schema:
+                type: "string"
+            Content-Type:
+              schema:
+                type: "string"
+            Strict-Transport-Security:
+              schema:
+                type: "string"
+            X-Content-Type-Options:
+              schema:
+                type: "string"
+            X-Frame-Options:
+              schema:
+                type: "string"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssueTokenResponse"
+        "401":
+          description: Unauthorized
+          headers:
+            Cache-Control:
+              schema:
+                type: "string"
+            Content-Type:
+              schema:
+                type: "string"
+            Strict-Transport-Security:
+              schema:
+                type: "string"
+            X-Content-Type-Options:
+              schema:
+                type: "string"
+            X-Frame-Options:
+              schema:
+                type: "string"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OAuthErrorResponse"
+        "500":
+          description: Internal Server Error
+          headers:
+            Cache-Control:
+              schema:
+                type: "string"
+            Content-Type:
+              schema:
+                type: "string"
+            Strict-Transport-Security:
+              schema:
+                type: "string"
+            X-Content-Type-Options:
+              schema:
+                type: "string"
+            X-Frame-Options:
+              schema:
+                type: "string"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OAuthErrorResponse"
+      x-amazon-apigateway-request-validator: "both"
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:Access-Token-${AWS::StackName}:live/invocations
+        responses:
+          default:
+            statusCode: "200"
+        passthroughBehavior: "when_no_match"
+        contentHandling: "CONVERT_TO_TEXT"
+        type: "aws_proxy"
+
 components:
   schemas:
     SessionRequest:
@@ -334,6 +431,66 @@ components:
           example: https://www.example.com/receiveToken
           description: >-
             the OAuth client identifier which has been registered with CI CRI
+    IssueTokenRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - grant_type
+        - code
+        - redirect_uri
+      properties:
+        grant_type:
+          type: string
+          example: authorization_code
+          description: >-
+            OAuth grant type. At present the only supported grant type is `authorization_code`.
+          enum:
+            - authorization_code
+        code:
+          type: string
+          format: uuid
+          example: 33333333-3333-3333-3333-333333333333
+          description: >-
+            `authorization_code` as issued by POST /authorizationCode.
+        redirect_uri:
+          type: string
+          example: https://www.example.com/receiveToken
+          description: >-
+            the OAuth client identifier which has been registered with CRI
+        client_assertion:
+          type: string
+          example: abcdefgh
+          description: >-
+            Client assertion (use for client credentials flow, not supported here)
+        client_assertion_type:
+          type: string
+          example: jwt_bearer
+          description: >-
+            Client assertion type (use for client credentials flow, not supported here)
+    IssueTokenResponse:
+      type: object
+      additionalProperties: true
+      required:
+        - access_token
+        - token_type
+        - expires_in
+      properties:
+        access_token:
+          type: string
+          description: >-
+            The actual issued access token. Note this is a short-lived bearer token and needs to be
+            protected as a secret.
+          example: ABCDABCDABCDABCDABCDABCDABCD
+        token_type:
+          type: string
+          example: bearer
+          description: >-
+            Token type - usually `bearer`.
+        expires_in:
+          type: number
+          description: >-
+            The lifetime in seconds of the issued access token
+          example: 3600
     OAuthErrorResponse:
       type: object
       additionalProperties: true

@@ -3,8 +3,10 @@ import { constants } from "../utils/ApiConstants";
 import {
     authorizationGet,
     getSessionAndVerifyKey,
+    getSessionAndVerifyKeyExists,
     getSqsEventList,
     startStubServiceAndReturnSessionId,
+    tokenPost,
     validateTxMAEventData,
     validateWellKnownResponse,
     wellKnownGet
@@ -17,7 +19,7 @@ describe("Test BAV End Points", () => {
 
     beforeEach(async () => {
         //Session Request
-       sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+        sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
     });
 
     it("BAV CRI /session Happy Path", async () => {
@@ -33,7 +35,7 @@ describe("Test BAV End Points", () => {
 
     it.skip("BAV CRI /authorization Happy Path", async () => {
         expect(sessionId).toBeTruthy();
-      
+
         // Authorization
         const authResponse = await authorizationGet(sessionId);
         expect(authResponse.status).toBe(200);
@@ -56,9 +58,22 @@ describe("Test BAV End Points", () => {
         const authCode = authResponse.data.authorizationCode;
         const authRepeatResponse = await authorizationGet(origSessionId);
         const authRepeatResponseCode = authRepeatResponse.data.authorizationCode;
-        expect(authCode).not.toEqual(authRepeatResponseCode); 
+        expect(authCode).not.toEqual(authRepeatResponseCode);
     });
-    
+
+    it.skip("BAV CRI /token Happy Path", async () => {
+        const authResponse = await authorizationGet(sessionId);
+
+        // Token
+        const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+        expect(tokenResponse.status).toBe(200);
+
+        // Verify access token expiry date exists
+        await getSessionAndVerifyKeyExists(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "accessTokenExpiryDate");
+
+        // Check session state
+        await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_ACCESS_TOKEN_ISSUED");
+    });
 });
 
 describe("E2E Happy Path Well Known Endpoint", () => {

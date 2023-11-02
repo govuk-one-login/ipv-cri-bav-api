@@ -130,12 +130,21 @@ export async function getSessionById(sessionId: string, tableName: string): Prom
 	return session;
 }
 
-export async function getSessionAndVerifyKey(sessionId: any, tableName: string, key: string, expectedValue: string) {
+export async function getSessionAndVerifyKey(sessionId: string, tableName: string, key: string, expectedValue: string): Promise<void> {
 	const sessionInfo = await getSessionById(sessionId, tableName);
 	try {
 		expect(sessionInfo![key as keyof ISessionItem]).toBe(expectedValue);
 	} catch (e: any) {
 		throw new Error("getSessionAndVerifyKey - Failed to verify " + key + " value: " + e);
+	}
+}
+
+export async function getSessionAndVerifyKeyExists(sessionId: string, tableName: string, key: string): Promise<void> {
+	const sessionInfo = await getSessionById(sessionId, tableName);
+	try {
+		expect(sessionInfo![key as keyof ISessionItem]).toBeTruthy;
+	} catch (e: any) {
+		throw new Error("getSessionAndVerifyKeyExists - Failed to verify " + key + " exists: " + e);
 	}
 }
 
