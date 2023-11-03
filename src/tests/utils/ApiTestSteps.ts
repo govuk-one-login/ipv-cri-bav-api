@@ -1,3 +1,4 @@
+import { fromNodeProviderChain } from "@aws-sdk/credential-providers"; 
 import axios, { AxiosInstance } from "axios";
 import { aws4Interceptor } from "aws4-axios";
 import { XMLParser } from "fast-xml-parser";
@@ -9,14 +10,24 @@ import { ISessionItem } from "../../models/ISessionItem";
 const API_INSTANCE = axios.create({ baseURL: constants.DEV_CRI_BAV_API_URL });
 const ajv = new Ajv({ strict: false });
 
-const HARNESS_API_INSTANCE: AxiosInstance = axios.create({ baseURL: constants.DEV_BAV_TEST_HARNESS_URL });
+const HARNESS_API_INSTANCE : AxiosInstance = axios.create({ baseURL: constants.DEV_BAV_TEST_HARNESS_URL });
+
+const customCredentialsProvider = {
+	getCredentials: fromNodeProviderChain({
+		timeout: 1000,
+		maxRetries: 0,
+	}),
+};
 const awsSigv4Interceptor = aws4Interceptor({
 	options: {
 		region: "eu-west-2",
 		service: "execute-api",
 	},
+	credentials: customCredentialsProvider,
 });
+
 HARNESS_API_INSTANCE.interceptors.request.use(awsSigv4Interceptor);
+
 const xmlParser = new XMLParser();
 
 export async function startStubServiceAndReturnSessionId(bavStubPayload: any): Promise<any> {
