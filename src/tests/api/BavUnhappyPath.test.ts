@@ -1,52 +1,52 @@
 import bavStubPayload from "../data/exampleStubPayload.json";
 import {
-    authorizationGet,
-    sessionPost,
-    startStubServiceAndReturnSessionId,
-    stubStartPost,
-    tokenPost
+	authorizationGet,
+	sessionPost,
+	startStubServiceAndReturnSessionId,
+	stubStartPost,
+	tokenPost,
 } from "../utils/ApiTestSteps";
 
-
+// eslint-disable-next-line @typescript-eslint/tslint/config
 describe.skip("/token Unhappy Path - invalid session state", () => {
-    let sessionId: any;
+	let sessionId: any;
 
-    beforeEach(async () => {
-        //Session Request
-        sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
-    });
-    it("Request to /token with invalid session state", async () => {
-        // Authorization
-        const authResponse = await authorizationGet(sessionId);
+	beforeEach(async () => {
+		//Session Request
+		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+	});
+	it("Request to /token with invalid session state", async () => {
+		// Authorization
+		const authResponse = await authorizationGet(sessionId);
 
-        // Token
-        await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+		// Token
+		await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
 
-        // Request to /token endpoing again (which now has an invalid session state)
-        const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
-        expect(tokenResponse.status).toBe(401);
-    });
+		// Request to /token endpoing again (which now has an invalid session state)
+		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+		expect(tokenResponse.status).toBe(401);
+	});
 });
 
 describe("/session Unhappy Path", () => {
-    let stubResponse: any;
-    beforeEach(async () => {
-        stubResponse = await stubStartPost(bavStubPayload);
-    });
+	let stubResponse: any;
+	beforeEach(async () => {
+		stubResponse = await stubStartPost(bavStubPayload);
+	});
 
-    it("E2E Unhappy Path Journey - Invalid Request", async () => {
-        const sessionResponse = await sessionPost(stubResponse.data.clientId, "");
+	it("E2E Unhappy Path Journey - Invalid Request", async () => {
+		const sessionResponse = await sessionPost(stubResponse.data.clientId, "");
 
-        expect(sessionResponse.status).toBe(401);
-        expect(sessionResponse.data).toBe("Unauthorized");
-    });
+		expect(sessionResponse.status).toBe(401);
+		expect(sessionResponse.data).toBe("Unauthorized");
+	});
 
-    it("E2E Unhappy Path Journey - Invalid ClientID", async () => {
-        const sessionResponse = await sessionPost("", stubResponse.data.request);
+	it("E2E Unhappy Path Journey - Invalid ClientID", async () => {
+		const sessionResponse = await sessionPost("", stubResponse.data.request);
 
-        expect(sessionResponse.status).toBe(400);
-        expect(sessionResponse.data).toBe("Bad Request");
-    });
+		expect(sessionResponse.status).toBe(400);
+		expect(sessionResponse.data).toBe("Bad Request");
+	});
 
 
 });

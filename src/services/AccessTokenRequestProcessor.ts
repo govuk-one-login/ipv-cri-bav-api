@@ -4,7 +4,6 @@ import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { Response } from "../utils/Response";
-import { ISessionItem } from "../models/ISessionItem";
 import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { Constants, EnvironmentVariables } from "../utils/Constants";
 import { MessageCodes } from "../models/enums/MessageCodes";
@@ -49,7 +48,7 @@ export class AccessTokenRequestProcessor {
 		return AccessTokenRequestProcessor.instance;
 	}
 
-	async processRequest(event: APIGatewayProxyEvent): Promise<Response> {		
+	async processRequest(event: APIGatewayProxyEvent): Promise<Response> {
 		try {
 			let requestPayload;
 			try {
