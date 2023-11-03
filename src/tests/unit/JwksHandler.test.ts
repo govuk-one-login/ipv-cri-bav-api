@@ -182,7 +182,3 @@ describe("JwksHandler", () => {
 		});
 	});
 });
-function async(): (...args: string[]) => any {
-	throw new Error("Function not implemented.");
-}
-
