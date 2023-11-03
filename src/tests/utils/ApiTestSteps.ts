@@ -172,14 +172,14 @@ export async function getSqsEventList(folder: string, prefix: string, txmaEventS
 		keys = listObjectsParsedResponse?.ListBucketResult?.Contents;
 		keyList = [];
 
-		if (txmaEventSize == 1) {
+		if (txmaEventSize === 1) {
 			keyList.push(listObjectsParsedResponse.ListBucketResult.Contents.Key);
 		} else {
-			for (i = 0; i < keys.length; i++) {
+			for (i = 0; i < keys?.length; i++) {
 				keyList.push(listObjectsParsedResponse?.ListBucketResult?.Contents.at(i).Key);
 			}
 		}
-	} while (keys.length < txmaEventSize);
+	} while (keys?.length < txmaEventSize);
 	return keyList;
 }
 /**
