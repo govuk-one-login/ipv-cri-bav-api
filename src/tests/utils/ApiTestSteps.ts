@@ -26,6 +26,14 @@ const awsSigv4Interceptor = aws4Interceptor({
 	credentials: customCredentialsProvider,
 });
 
+const getCreds = async (): Promise<void> => {
+	const credentials = await customCredentialsProvider.getCredentials();
+	console.log("customCredentialsProvider", credentials);
+};
+
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
+getCreds();
+
 HARNESS_API_INSTANCE.interceptors.request.use(awsSigv4Interceptor);
 
 const xmlParser = new XMLParser();
