@@ -15,6 +15,7 @@ describe.skip("/token Unhappy Path - invalid session state", () => {
 		//Session Request
 		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
 	});
+
 	it("Request to /token with invalid session state", async () => {
 		// Authorization
 		const authResponse = await authorizationGet(sessionId);
