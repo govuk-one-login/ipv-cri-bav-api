@@ -94,7 +94,6 @@ export async function userInfoPost(accessToken?: any): Promise<any> {
 		console.log(`Error rrsponse from ${path} endpoint ${error}.`);
 		return error.response;
 	}
-
 }
 
 export async function wellKnownGet(): Promise<any> {
@@ -243,3 +242,24 @@ export async function validateTxMAEventData(keyList: any): Promise<any> {
 			});
 	}
 }
+
+export async function initiateUserInfo(sessionId: string): Promise<void> {
+	expect(sessionId).toBeTruthy();
+
+	// const documentSelectionResponse = await postDocumentSelection(docSelectionData, sessionId);
+	// expect(documentSelectionResponse.status).toBe(200);
+	// expect(documentSelectionResponse.data).toBe("Instructions PDF Generated");
+
+
+	// const authResponse = await authorizationGet(sessionId);
+	// expect(authResponse.status).toBe(200);
+
+	// const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri );
+	// expect(tokenResponse.status).toBe(200);
+
+	// const userInfoResponse = await userInfoPost("Bearer " + tokenResponse.data.access_token);
+	const userInfoResponse = await userInfoPost("Bearer eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImYzODA1Y2UyLWQzNjYtNDY3ZC1iYzhkLWMzMTc4MGFmNTQyYyJ9.eyJzdWIiOiIxNzJjNDhmYi1jYTI1LTQyY2MtOWQxYy1jMDU0YTQ1ZDZhNDYiLCJhdWQiOiJodHRwczovL3Jldmlldy1iYXYuZGV2LmFjY291bnQuZ292LnVrIiwiaXNzIjoiaHR0cHM6Ly9yZXZpZXctYmF2LmRldi5hY2NvdW50Lmdvdi51ayIsImV4cCI6MTY5OTM2NzQ0MX0.F79bAfPtqfwyDm5ec4RqZjxJ8J2_hSDryC198ECkFMxCC_Z_tE-hD2V6YsLOObidJhvnlLZAF2OBlDV-_ENUwg");
+	console.log(userInfoResponse);
+	expect(userInfoResponse.status).toBe(202);
+
+} 

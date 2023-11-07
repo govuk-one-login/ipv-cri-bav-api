@@ -51,7 +51,6 @@ describe("Test BAV End Points", () => {
 		await validateTxMAEventData(sqsMessage);
 	});
 
-	// eslint-disable-next-line @typescript-eslint/tslint/config
 	it.skip("BAV CRI /authorization - Repeated request made", async () => {
 		const origSessionId = sessionId;
 		const authResponse = await authorizationGet(sessionId);
@@ -61,7 +60,6 @@ describe("Test BAV End Points", () => {
 		expect(authCode).not.toEqual(authRepeatResponseCode);
 	});
 
-	// eslint-disable-next-line @typescript-eslint/tslint/config
 	it.skip("BAV CRI /token Happy Path", async () => {
 		const authResponse = await authorizationGet(sessionId);
 
