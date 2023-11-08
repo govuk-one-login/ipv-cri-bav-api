@@ -103,6 +103,7 @@ Mappings:
       CLIENTS: '[{"jwksEndpoint":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/redirect?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
       TESTHARNESSURL: "https://bav-test-harness-testharness.review-bav.dev.account.gov.uk"
+      HMRCBASEURL: "https://test-api.service.hmrc.gov.uk"
     build:
       ISSUER: 'https://review-bav.build.account.gov.uk'
       DNSSUFFIX: review-bav.build.account.gov.uk
@@ -112,6 +113,7 @@ Mappings:
       CLIENTS: '[{"jwksEndpoint":"https://bav-ipv-stub-ipvstub.review-bav.build.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://bav-ipv-stub-ipvstub.review-bav.build.account.gov.uk/redirect?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
       TESTHARNESSURL: "https://bav-test-harness-testharness.review-bav.build.account.gov.uk"
+      HMRCBASEURL: "https://test-api.service.hmrc.gov.uk"
   TxMAAccounts:
     # EVENTS is used to egress to TxMA.
     dev:
@@ -1119,6 +1121,151 @@ Resources:
       Dimensions:
         - Name: FunctionName
           Value: !Ref JsonWebKeysFunction
+      TreatMissingData: notBreaching
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+  
+  HmrcTokenFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - "HmrcTokenLogGroup"
+    Properties:
+      FunctionName: !Sub "HmrcToken-${AWS::StackName}"
+      CodeUri: ../src/
+      Handler: HmrcTokenHandler.lambdaHandler
+      ReservedConcurrentExecutions: !If
+        - ApplyReservedConcurrency
+        - !Ref LambdaConcurrency
+        - !Ref AWS::NoValue
+      Events:
+        InvocationLevel:
+          Type: Schedule
+          Properties:
+            #Schedule: cron(0 0/3 * * * *)
+            Schedule: cron(0 * * * ? *)
+      Environment:
+        Variables:
+          HMRC_CLIENT_ID_SSM_PATH: !Sub "/${Environment}/HMRC/CLIENT_ID"
+          HMRC_CLIENT_SECRET_SSM_PATH: !Sub "/${Environment}/HMRC/CLIENT_SECRET"
+          HMRC_BASE_URL: !FindInMap [ EnvironmentVariables, !Ref Environment, HMRCBASEURL ]
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSXrayWriteOnlyAccess
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub "${Environment}/HMRC/CLIENT_ID"
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub "${Environment}/HMRC/CLIENT_SECRET"
+        - Statement:
+            - Sid: SSMParameterWritePolicy
+              Effect: Allow
+              Action:
+                - ssm:PutParameter
+              Resource:
+                - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${Environment}/HMRC/TOKEN"
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - HmrcTokenHandler.ts
+
+  HmrcTokenLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/HmrcToken-${AWS::StackName}"
+      RetentionInDays: !FindInMap [ EnvironmentConfiguration, !Ref Environment, logretentionindays ]
+
+  HmrcTokenFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt HmrcTokenFunction.Arn
+      Principal: events.amazonaws.com
+
+  HmrcTokenFunctionFatalErorMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref HmrcTokenLogGroup
+      FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
+      MetricTransformations:
+        -
+          MetricValue: "1"
+          MetricNamespace: !Sub "${AWS::StackName}/LogMessages"
+          MetricName: "HmrcTokenFunction-Fatalerror"
+
+  HmrcTokenFunctionFatalErrorAlarm:
+    DependsOn:
+      - "HmrcTokenFunctionFatalErorMetricFilter"
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-HmrcTokenFunction-FatalErrorAlarm"
+      AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
+      ActionsEnabled: true
+      OKActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      InsufficientDataActions: [ ]
+      MetricName: HmrcTokenFunction-Fatalerror
+      Namespace: !Sub "${AWS::StackName}/LogMessages"
+      Statistic: Sum
+      Dimensions: [ ]
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  HmrcTokenConcurrency80Alarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployConcurrencyAlarms"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: []
+      AlarmDescription: !Sub "Trigger the alarm if over 80% of HmrcToken concurrency is used. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-HmrcTokenFunction-concurrency"
+      MetricName: ConcurrentExecutions
+      Namespace: AWS/Lambda
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref HmrcTokenFunction
+      Statistic: Maximum
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: !Ref LambdaConcurrencyThreshold
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+
+  HmrcTokenThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: []
+      AlarmDescription: !Sub "Trigger if the ${HmrcTokenFunction} lambda throttles. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-HmrcTokenFunction-throttles"
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref HmrcTokenFunction
       TreatMissingData: notBreaching
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1

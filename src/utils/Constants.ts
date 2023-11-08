@@ -10,6 +10,8 @@ export class Constants {
 
 	static readonly AUTHORIZATION_LOGGER_SVC_NAME : "AuthorizationHandler";
 
+	static readonly HMRC_TOKEN_LOGGER_SVC_NAME : "HmrcTokenHandler";
+
 	static readonly ACCESSTOKEN_LOGGER_SVC_NAME = "AccessTokenHandler";
 
 	static readonly BAV_METRICS_NAMESPACE = "BAV-CRI";
@@ -47,6 +49,8 @@ export class Constants {
   static readonly URN_UUID_PREFIX = "urn:uuid:";
 
   static readonly AUTHORIZATION_CODE_INDEX_NAME = "authorizationCode-index";
+
+  static readonly HMRC_TOKEN_ENDPOINT_PATH = "/oauth/token";
   
   
 }
@@ -62,5 +66,8 @@ export const EnvironmentVariables = {
 	SIGNING_KEY_IDS: "SIGNING_KEY_IDS",
 	JWKS_BUCKET_NAME: "JWKS_BUCKET_NAME",
 	KMS_KEY_ARN: "KMS_KEY_ARN",
+	HMRC_BASE_URL: "HMRC_BASE_URL",
+	HMRC_CLIENT_ID_SSM_PATH: "HMRC_CLIENT_ID_SSM_PATH",
+	HMRC_CLIENT_SECRET_SSM_PATH: "HMRC_CLIENT_SECRET_SSM_PATH",
 };
 
