@@ -21,7 +21,6 @@ let mockSession: ISessionItem;
 let mockPerson: PersonIdentityItem;
 const passingKmsJwtAdapterFactory = (_signingKeys: string) => new MockKmsJwtAdapter(true);
 const failingKmsJwtAdapterFactory = (_signingKeys: string) => new MockKmsJwtAdapter(false);
-const failingKmsJwtSigningAdapterFactory = (_signingKeys: string) => new MockFailingKmsSigningJwtAdapter();
 
 
 const logger = mock<Logger>();
@@ -312,7 +311,7 @@ describe("UserInfoRequestProcessor", () => {
 		expect(logger.error).toHaveBeenCalledWith(
 			expect.anything(),
 			expect.objectContaining({
-				messageCode: "STATE_MISMATCH",
+				messageCode: "INCORRECT_SESSION_STATE",
 			}),
 		);
 	});

@@ -1,21 +1,7 @@
-import { UserInfoRequestProcessor } from "../../../services/UserInfoRequestProcessor";
-import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "jest-mock-extended";
 import { Logger } from "@aws-lambda-powertools/logger";
-import { BavService } from "../../../services/BavService";
-import { Response } from "../../../utils/Response";
-import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
 import { ISessionItem } from "../../../models/ISessionItem";
-import { PersonIdentityItem } from "../../../models/PersonIdentityItem";
-import { absoluteTimeNow } from "../../../utils/DateTimeUtils";
-import {
-	MockKmsJwtAdapterForVc,
-} from "../utils/MockJwtVerifierSigner";
-import { VALID_VC } from "../data/verified_credential";
-import { VALID_USERINFO } from "../data/userInfo-events";
-import { Constants } from "../../../utils/Constants";
-import { isValidUUID } from "../../../utils/Validations";
-import { VerifiableCredentialService } from "../../../utils/VerifiableCredentialService";
+import { VerifiableCredentialService } from "../../../services/VerifiableCredentialService";
 import { KmsJwtAdapter } from "../../../utils/KmsJwtAdapter";
 import { CopCheckResult } from "../../../models/enums/CopCheckResult";
 import { MessageCodes } from "../../../models/enums/MessageCodes";
@@ -50,26 +36,24 @@ function getMockSessionItem(): ISessionItem {
 }
 
 describe("VerifiableCredentialService", () => {
-	const mockTableName = "mockTableName";
 	const mockIssuer = "mockIssuer";
-	// const mockLogger = new Logger();
 	let service: VerifiableCredentialService;
 
 	beforeEach(() => {
 		jest.clearAllMocks();
-		service = new VerifiableCredentialService(mockTableName, mockKmsJwtAdapter, mockIssuer, mockLogger);
+		service = new VerifiableCredentialService( mockKmsJwtAdapter, mockIssuer, mockLogger);
 	});
 
 	// Singleton pattern tests
 	describe("getInstance", () => {
 		it("should create a new instance if not already created", () => {
-			const newInstance = VerifiableCredentialService.getInstance(mockTableName, mockKmsJwtAdapter, mockIssuer, mockLogger);
+			const newInstance = VerifiableCredentialService.getInstance( mockKmsJwtAdapter, mockIssuer, mockLogger);
 			expect(newInstance).toBeDefined();
 		});
 
 		it("should return the same instance of VerifiableCredentialService when called multiple times", () => {
-			const firstInstance = VerifiableCredentialService.getInstance(mockTableName, mockKmsJwtAdapter, mockIssuer, mockLogger);
-			const secondInstance = VerifiableCredentialService.getInstance(mockTableName, mockKmsJwtAdapter, mockIssuer, mockLogger);
+			const firstInstance = VerifiableCredentialService.getInstance( mockKmsJwtAdapter, mockIssuer, mockLogger);
+			const secondInstance = VerifiableCredentialService.getInstance( mockKmsJwtAdapter, mockIssuer, mockLogger);
 			expect(firstInstance).toBe(secondInstance);
 		});
 	});

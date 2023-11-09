@@ -14,10 +14,10 @@ import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
 import { Response } from "../utils/Response";
 import { buildCoreEventFields } from "../utils/TxmaEvent";
-import {  eventToSubjectIdentifier } from "../utils/Validations";
+import { eventToSubjectIdentifier } from "../utils/Validations";
 import { AppError } from "../utils/AppError";
 import { PersonIdentityItem } from "../models/PersonIdentityItem";
-import { VerifiableCredentialService } from "../utils/VerifiableCredentialService";
+import { VerifiableCredentialService } from "./VerifiableCredentialService";
 
 export class UserInfoRequestProcessor {
   private static instance: UserInfoRequestProcessor;
@@ -52,7 +52,7 @@ export class UserInfoRequestProcessor {
 
   	this.BavService = BavService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
   	this.kmsDecryptor = new KmsJwtAdapter(signinKeyIds);
-		this.verifiableCredentialService = VerifiableCredentialService.getInstance(sessionTableName, this.kmsDecryptor, this.issuer, this.logger);
+		this.verifiableCredentialService = VerifiableCredentialService.getInstance(this.kmsDecryptor, this.issuer, this.logger);
 	}
 
 	static getInstance(logger: Logger, metrics: Metrics): UserInfoRequestProcessor {
@@ -131,7 +131,7 @@ export class UserInfoRequestProcessor {
 				session: {
 					authSessionState: session.authSessionState,
 				},
-				messageCode: MessageCodes.STATE_MISMATCH,
+				messageCode: MessageCodes.INCORRECT_SESSION_STATE,
 			});
 			return new Response(HttpCodesEnum.UNAUTHORIZED, "Unauthorized");
 		}

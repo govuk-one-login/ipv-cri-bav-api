@@ -7,12 +7,6 @@ import { CONTEXT } from "./data/context";
 
 const mockedUserInfoRequestProcessor = mock<UserInfoRequestProcessor>();
 
-jest.mock("../../services/UserInfoRequestProcessor", () => {
-	return {
-		UserInfoRequestProcessor: jest.fn(() => mockedUserInfoRequestProcessor),
-	};
-});
-
 describe("UserInfoHandler", () => {
 	it("return success when UserInfoRequestProcessor completes successfully", async () => {
 		UserInfoRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedUserInfoRequestProcessor);

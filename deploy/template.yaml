@@ -621,14 +621,10 @@ Resources:
         - !Ref AWS::NoValue
       Environment:
         Variables:
-          AUTH_SESSION_TTL_SECS:
-            !FindInMap [ EnvironmentVariables, !Ref Environment, AUTHSESSIONTTLSECS ]
           POWERTOOLS_SERVICE_NAME: UserInfoHandler
           ISSUER: !FindInMap [EnvironmentVariables, !Ref Environment, ISSUER]
           KMS_KEY_ARN:
             Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
-          CLIENT_CONFIG:
-            !FindInMap [ EnvironmentVariables, !Ref Environment, CLIENTS ]
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess

@@ -1,18 +1,16 @@
 import { Logger } from "@aws-lambda-powertools/logger";
 import { BankAccountInfo, VerifiedCredential, VerifiedCredentialEvidence } from "../models/IVeriCredential";
-import { KmsJwtAdapter } from "./KmsJwtAdapter";
+import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
 import { ISessionItem } from "../models/ISessionItem";
 import { PersonIdentityNamePart } from "../models/PersonIdentityItem";
-import { AppError } from "./AppError";
+import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
-import { Constants } from "./Constants";
+import { Constants } from "../utils/Constants";
 import { randomUUID } from "crypto";
 import { CopCheckResult } from "../models/enums/CopCheckResult";
 import { MessageCodes } from "../models/enums/MessageCodes";
 
 export class VerifiableCredentialService {
-	readonly tableName: string;
-
 	readonly logger: Logger;
 
 	readonly issuer: string;
@@ -21,16 +19,15 @@ export class VerifiableCredentialService {
 
 	private static instance: VerifiableCredentialService;
 
-	constructor(tableName: any, kmsJwtAdapter: KmsJwtAdapter, issuer: any, logger: Logger) {
+	constructor(kmsJwtAdapter: KmsJwtAdapter, issuer: any, logger: Logger) {
 		this.issuer = issuer;
-		this.tableName = tableName;
 		this.logger = logger;
 		this.kmsJwtAdapter = kmsJwtAdapter;
 	}
 
-	static getInstance(tableName: string, kmsJwtAdapter: KmsJwtAdapter, issuer: string, logger: Logger): VerifiableCredentialService {
+	static getInstance(kmsJwtAdapter: KmsJwtAdapter, issuer: string, logger: Logger): VerifiableCredentialService {
 		if (!VerifiableCredentialService.instance) {
-			VerifiableCredentialService.instance = new VerifiableCredentialService(tableName, kmsJwtAdapter, issuer, logger);
+			VerifiableCredentialService.instance = new VerifiableCredentialService(kmsJwtAdapter, issuer, logger);
 		}
 		return VerifiableCredentialService.instance;
 	}

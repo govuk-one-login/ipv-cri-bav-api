@@ -741,6 +741,6 @@ components:
       example: bearer abcdefghijklmnopqrstuvwxyz
       required: true
       description: >-
-        OAuth Bearer token - this it the `authorizationCode` returned by `POST /claimedIdentity`
+        OAuth Bearer token - this it the `authorizationCode` returned by `POST /authorization`
       schema:
         type: string
