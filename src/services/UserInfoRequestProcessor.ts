@@ -151,6 +151,8 @@ export class UserInfoRequestProcessor {
 			// Add metric and send TXMA event to the sqsqueue
 			this.metrics.addMetric("Generated signed verifiable credential jwt", MetricUnits.Count, 1);
 
+			this.BavService.updateSessionAuthState(session.sessionId, AuthSessionState.BAV_CRI_VC_ISSUED)
+
 			const txmaCoreFields = buildCoreEventFields(session, this.issuer, session.clientIpAddress, absoluteTimeNow);
 			
 			await this.BavService.sendToTXMA(

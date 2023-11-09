@@ -9,7 +9,7 @@ import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
 import { ISessionItem } from "../../../models/ISessionItem";
 import { PersonIdentityItem } from "../../../models/PersonIdentityItem";
 import { absoluteTimeNow } from "../../../utils/DateTimeUtils";
-import { MockFailingKmsSigningJwtAdapter, MockKmsJwtAdapter } from "../utils/MockJwtVerifierSigner";
+import { MockKmsJwtAdapter } from "../utils/MockJwtVerifierSigner";
 import * as Validations from "../../../utils/Validations";
 
 /* eslint @typescript-eslint/unbound-method: 0 */
@@ -102,6 +102,8 @@ describe("UserInfoRequestProcessor", () => {
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 		expect(mockBavService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(mockBavService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
+		expect(mockBavService.updateSessionAuthState).toHaveBeenCalledTimes(1);
+		expect(mockBavService.updateSessionAuthState).toHaveBeenCalledWith("sdfsdg", "BAV_CRI_VC_ISSUED");
 		expect(mockBavService.sendToTXMA).toHaveBeenCalledTimes(2);
 		expect(mockBavService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
 			"client_id":"ipv-core-stub",

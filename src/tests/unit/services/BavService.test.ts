@@ -361,6 +361,23 @@ describe("BAV Service", () => {
 				UpdateExpression: "SET authSessionState = :authSessionState, accessTokenExpiryDate = :accessTokenExpiryDate REMOVE authorizationCode",
 			}));
 		});
+
+		it("should update session auth state", async () => {
+			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+			await bavService.updateSessionAuthState("SESSID", "AUTH_STATE");			
+
+			expect(UpdateCommand).toHaveBeenCalledWith(expect.objectContaining({
+				ExpressionAttributeValues: {
+					":authSessionState": "AUTH_STATE",
+				},
+				Key: {
+					sessionId: "SESSID",
+				},
+				TableName: tableName,
+				UpdateExpression: "SET authSessionState = :authSessionState",
+			}));
+		});
+			
 	});
-		
+
 });

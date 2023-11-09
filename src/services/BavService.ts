@@ -279,4 +279,24 @@ export class BavService {
 			throw new AppError(HttpCodesEnum.SERVER_ERROR, "updateItem - failed: got error updating Access token details");
 		}
 	}
+
+	async updateSessionAuthState(sessionId: string, authSessionState: string, tableName: string = this.tableName): Promise<void> {
+		const updateStateCommand = new UpdateCommand({
+			TableName: tableName,
+			Key: { sessionId },
+			UpdateExpression: "SET authSessionState = :authSessionState",
+			ExpressionAttributeValues: {
+				":authSessionState": authSessionState,
+			},
+		});
+
+		this.logger.info({ message: "Updating session table with auth state details", updateStateCommand });
+		try {
+			await this.dynamo.send(updateStateCommand);
+			this.logger.info({ message: "Updated auth state details in dynamodb" });
+		} catch (error) {
+			this.logger.error({ message: "Got error saving auth state details", error });
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "updateItem - failed: got error saving auth state details");
+		}
+	}
 }
