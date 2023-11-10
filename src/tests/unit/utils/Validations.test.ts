@@ -141,16 +141,16 @@ describe("Validations", () => {
 	describe("#getSessionIdHeaderErrors", () => {
 		it("returns error if session ID header isn't present", () => {
 			const result = getSessionIdHeaderErrors({ "content-type": "application/json" });
-			expect(result).toBe(`Missing header: ${Constants.SESSION_ID} is required`);
+			expect(result).toBe(`Missing header: ${Constants.X_SESSION_ID} is required`);
 		});
 
 		it("returns error if session ID header isn't a valid is", () => {
-			const result = getSessionIdHeaderErrors({ [Constants.SESSION_ID]: "abc" });
-			expect(result).toBe(`${Constants.SESSION_ID} header does not contain a valid uuid`);
+			const result = getSessionIdHeaderErrors({ [Constants.X_SESSION_ID]: "abc" });
+			expect(result).toBe(`${Constants.X_SESSION_ID} header does not contain a valid uuid`);
 		});
 
 		it("returns undefined if session ID header if valid", () => {
-			const result = getSessionIdHeaderErrors({ [Constants.SESSION_ID]: "732075c8-08e6-4b25-ad5b-d6cb865a18e5" });
+			const result = getSessionIdHeaderErrors({ [Constants.X_SESSION_ID]: "732075c8-08e6-4b25-ad5b-d6cb865a18e5" });
 			expect(result).toBeUndefined();
 		});
 	});
