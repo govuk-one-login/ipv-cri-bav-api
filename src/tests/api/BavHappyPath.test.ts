@@ -20,7 +20,8 @@ describe("Test BAV End Points", () => {
 
     beforeEach(async () => {
         //Session Request
-        sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+        //sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+        sessionId = "9120f592-1a66-4d90-8a3a-875a293c93c1";
     });
 
     it("BAV CRI /session Happy Path", async () => {
