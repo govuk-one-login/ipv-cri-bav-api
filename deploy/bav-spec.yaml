@@ -716,8 +716,7 @@ components:
           description: 6 digit sort code
         account_number:
           type: string
-          # TODO
-          # pattern: ^[0-9]{6}$
+          pattern: ^[0-9]{6,8}$
           example: "12345678"
           description: bank account number
           # TODO name
