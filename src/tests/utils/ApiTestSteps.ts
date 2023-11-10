@@ -6,6 +6,7 @@ import Ajv from "ajv";
 import wellKnownGetSchema from "../data/wellKnownJwksResponseSchema.json";
 import { constants } from "./ApiConstants";
 import { ISessionItem } from "../../models/ISessionItem";
+import { jwtUtils } from "../../utils/JwtUtils";
 
 const API_INSTANCE = axios.create({ baseURL: constants.DEV_CRI_BAV_API_URL });
 const ajv = new Ajv({ strict: false });
@@ -86,7 +87,7 @@ export async function tokenPost(authCode?: any, redirectUri?: any): Promise<any>
 }
 
 export async function userInfoPost(accessToken?: any): Promise<any> {
-	const path = "/userInfo";
+	const path = "/userinfo";
 	try {
 		const postRequest = await API_INSTANCE.post(path, null, { headers: { "Authorization": `${accessToken}` } });
 		return postRequest;
@@ -243,23 +244,33 @@ export async function validateTxMAEventData(keyList: any): Promise<any> {
 	}
 }
 
-export async function initiateUserInfo(sessionId: string): Promise<void> {
-	expect(sessionId).toBeTruthy();
+export function validateJwtToken(jwtToken: any): void {
+	const [rawHead, rawBody, signature] = jwtToken.split(".");
 
-	// const documentSelectionResponse = await postDocumentSelection(docSelectionData, sessionId);
-	// expect(documentSelectionResponse.status).toBe(200);
-	// expect(documentSelectionResponse.data).toBe("Instructions PDF Generated");
+	validateRawHead(rawHead);
+	validateRawBody(rawBody);
+}
 
+function validateRawHead(rawHead:any): void {
+	const decodeRawHead = JSON.parse(jwtUtils.base64DecodeToString(rawHead.replace(/\W/g, "")));
+	expect(decodeRawHead.alg).toBe("ES256");
+	expect(decodeRawHead.typ).toBe("JWT");
+}
 
-	// const authResponse = await authorizationGet(sessionId);
-	// expect(authResponse.status).toBe(200);
+function validateRawBody(rawBody:any): void {
+	const decodedBody = JSON.parse(jwtUtils.base64DecodeToString(rawBody.replace(/\W/g, "")));
+	console.log(decodedBody);
+	expect(decodedBody.jti).toBeTruthy();
 
-	// const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri );
-	// expect(tokenResponse.status).toBe(200);
+	// Strength Score
+	expect(decodedBody.vc.evidence[0].strengthScore).toBe(3);
 
-	// const userInfoResponse = await userInfoPost("Bearer " + tokenResponse.data.access_token);
-	const userInfoResponse = await userInfoPost("Bearer eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImYzODA1Y2UyLWQzNjYtNDY3ZC1iYzhkLWMzMTc4MGFmNTQyYyJ9.eyJzdWIiOiIxNzJjNDhmYi1jYTI1LTQyY2MtOWQxYy1jMDU0YTQ1ZDZhNDYiLCJhdWQiOiJodHRwczovL3Jldmlldy1iYXYuZGV2LmFjY291bnQuZ292LnVrIiwiaXNzIjoiaHR0cHM6Ly9yZXZpZXctYmF2LmRldi5hY2NvdW50Lmdvdi51ayIsImV4cCI6MTY5OTM2NzQ0MX0.F79bAfPtqfwyDm5ec4RqZjxJ8J2_hSDryC198ECkFMxCC_Z_tE-hD2V6YsLOObidJhvnlLZAF2OBlDV-_ENUwg");
-	console.log(userInfoResponse);
-	expect(userInfoResponse.status).toBe(202);
+	// Validity Score
+	expect(decodedBody.vc.evidence[0].validityScore).toBe(2);
 
-} 
+	// Given Name
+	//expect(decodedBody.vc.credentialSuject.name.nameParts[0].value).toBe("Frederick");
+
+	// Last Name
+	//expect(decodedBody.vc.credentialSuject.name.nameParts[2].value).toBe("Flintstone");
+}
