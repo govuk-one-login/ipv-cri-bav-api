@@ -14,7 +14,7 @@ import { getPayloadValidationErrors } from "./utils/VerifyAccountRequestValidati
 
 const { POWERTOOLS_METRICS_NAMESPACE = Constants.BAV_METRICS_NAMESPACE, POWERTOOLS_LOG_LEVEL = "DEBUG", POWERTOOLS_SERVICE_NAME = Constants.ACCESSTOKEN_LOGGER_SVC_NAME } = process.env;
 
-const logger = new Logger({
+export const logger = new Logger({
 	logLevel: POWERTOOLS_LOG_LEVEL,
 	serviceName: POWERTOOLS_SERVICE_NAME,
 });
@@ -25,7 +25,7 @@ export class VerifyAccount implements LambdaInterface {
 
 	@metrics.logMetrics({ throwOnEmptyMetrics: false, captureColdStartMetric: true })
 
-	async handler(event: APIGatewayProxyEvent, context: any): Promise<Response | void> {
+	async handler(event: APIGatewayProxyEvent, context: any): Promise<Response> {
 		logger.setPersistentLogAttributes({});
 		logger.addContext(context);
 
@@ -35,7 +35,7 @@ export class VerifyAccount implements LambdaInterface {
 			logger.appendKeys({ sessionId });
 			logger.info("Starting VerifyAccountRequestProcessor");
 
-			await VerifyAccountRequestProcessor.getInstance(logger, metrics).processRequest(sessionId, body);
+			return await VerifyAccountRequestProcessor.getInstance(logger, metrics).processRequest(sessionId, body);
 		} catch (error: any) {
 			logger.error({ message: "An error has occurred.", error, messageCode: MessageCodes.SERVER_ERROR });
 			if (error instanceof AppError) {
@@ -62,7 +62,7 @@ export class VerifyAccount implements LambdaInterface {
 
 		if (!event.body) {
 			const message = "Invalid request: missing body";
-			logger.error({ message, messageCode: MessageCodes.INVALID_SESSION_ID });
+			logger.error({ message, messageCode: MessageCodes.INVALID_REQUEST_PAYLOAD });
 			throw new AppError(HttpCodesEnum.BAD_REQUEST, message);
 		}
 
