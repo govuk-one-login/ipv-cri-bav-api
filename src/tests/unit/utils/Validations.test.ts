@@ -1,9 +1,11 @@
+/* eslint-disable max-lines-per-function */
 import { randomUUID } from "crypto";
-import { isValidStrings, isPersonNameValid, isValidUUID, eventToSubjectIdentifier } from "../../../utils/Validations";
+import { isValidStrings, isPersonNameValid, isValidUUID, eventToSubjectIdentifier, getSessionIdHeaderErrors } from "../../../utils/Validations";
 import { KmsJwtAdapter } from "../../../utils/KmsJwtAdapter";
 import { AppError } from "../../../utils/AppError";
 import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
 import { VALID_USERINFO, MISSING_AUTH_HEADER_USERINFO } from "../data/userInfo-events";
+import { Constants } from "../../../utils/Constants";
 
 jest.mock("../../../utils/KmsJwtAdapter");
 
@@ -136,4 +138,25 @@ describe("Validations", () => {
 		});
 	});
 
+	describe("#getSessionIdHeaderErrors", () => {
+		it("returns error if headers are empty", () => {
+			const result = getSessionIdHeaderErrors(null);
+			expect(result).toBe("Empty headers");
+		});
+
+		it("returns error if session ID header isn't present", () => {
+			const result = getSessionIdHeaderErrors({ "content-type": "application/json" });
+			expect(result).toBe(`Missing header: ${Constants.SESSION_ID} is required`);
+		});
+
+		it("returns error if session ID header isn't a valid is", () => {
+			const result = getSessionIdHeaderErrors({ [Constants.SESSION_ID]: "abc" });
+			expect(result).toBe(`${Constants.SESSION_ID} header does not contain a valid uuid`);
+		});
+
+		it("returns undefined if session ID header if valid", () => {
+			const result = getSessionIdHeaderErrors({ [Constants.SESSION_ID]: "732075c8-08e6-4b25-ad5b-d6cb865a18e5" });
+			expect(result).toBeUndefined();
+		});
+	});
 });

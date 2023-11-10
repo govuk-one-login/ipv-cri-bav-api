@@ -30,6 +30,7 @@ class AuthorizationHandler implements LambdaInterface {
 		try {
 			logger.info("Received authorization request", { requestId: event.requestContext.requestId });
 
+			// TODO implement getSessionIdHeaderErrors
 			if (!event.headers) {
 				logger.error("Empty headers", { messageCode: MessageCodes.MISSING_HEADER });
 				return new Response(HttpCodesEnum.BAD_REQUEST, "Empty headers");
