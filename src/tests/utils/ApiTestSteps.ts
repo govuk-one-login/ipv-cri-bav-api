@@ -259,7 +259,6 @@ function validateRawHead(rawHead:any): void {
 
 function validateRawBody(rawBody:any): void {
 	const decodedBody = JSON.parse(jwtUtils.base64DecodeToString(rawBody.replace(/\W/g, "")));
-	console.log(decodedBody);
 	expect(decodedBody.jti).toBeTruthy();
 
 	// Strength Score
@@ -267,10 +266,4 @@ function validateRawBody(rawBody:any): void {
 
 	// Validity Score
 	expect(decodedBody.vc.evidence[0].validityScore).toBe(2);
-
-	// Given Name
-	//expect(decodedBody.vc.credentialSuject.name.nameParts[0].value).toBe("Frederick");
-
-	// Last Name
-	//expect(decodedBody.vc.credentialSuject.name.nameParts[2].value).toBe("Flintstone");
 }

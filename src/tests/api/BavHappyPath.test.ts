@@ -81,23 +81,20 @@ describe("Test BAV End Points", () => {
         // const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri );
 
         // const userInfoResponse = await userInfoPost("Bearer " + tokenResponse.data.access_token);
-        // const userInfoResponse = await userInfoPost("Bearer eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImYzODA1Y2UyLWQzNjYtNDY3ZC1iYzhkLWMzMTc4MGFmNTQyYyJ9.eyJzdWIiOiI0OTgyNGNlYS0yNzk0LTQyMTUtYjMwYy1hMTNiMThmM2JlN2QiLCJhdWQiOiJodHRwczovL3Jldmlldy1iYXYuZGV2LmFjY291bnQuZ292LnVrIiwiaXNzIjoiaHR0cHM6Ly9yZXZpZXctYmF2LmRldi5hY2NvdW50Lmdvdi51ayIsImV4cCI6MTY5OTUzNDQ1NH0.UXhKNSAEGkWuFKRaF_3ZFn5RtPnkv3XftW5Cn6Xci1HtjhALPpXDzSPgdouYNm8ExSNMouBOKJ3PjbgPVsFxpw");
-        const userInfoResponse = await userInfoPost("Bearer eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImYzODA1Y2UyLWQzNjYtNDY3ZC1iYzhkLWMzMTc4MGFmNTQyYyJ9.eyJzdWIiOiJhZjgzZDUxOC04NjVkLTQ5ZDEtODM0Yy04M2E1YmE5YmRmZjMiLCJhdWQiOiJodHRwczovL3Jldmlldy1iYXYuZGV2LmFjY291bnQuZ292LnVrIiwiaXNzIjoiaHR0cHM6Ly9yZXZpZXctYmF2LmRldi5hY2NvdW50Lmdvdi51ayIsImV4cCI6MTY5OTYyMDMzOH0.3EqpR71HCS1c1ByGdhO889QHW5w51LNJA4BXpFMeh8Dwq0w85IqyYLO64QMEJpiOlhDDHiuJxNWsWbXe3w9fyw");
+        const userInfoResponse = await userInfoPost("Bearer eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImYzODA1Y2UyLWQzNjYtNDY3ZC1iYzhkLWMzMTc4MGFmNTQyYyJ9.eyJzdWIiOiIzZjUyYzczYi05OGM2LTQxZjMtOTA5Zi1hMTAwOTFjODI3YzgiLCJhdWQiOiJodHRwczovL3Jldmlldy1iYXYuZGV2LmFjY291bnQuZ292LnVrIiwiaXNzIjoiaHR0cHM6Ly9yZXZpZXctYmF2LmRldi5hY2NvdW50Lmdvdi51ayIsImV4cCI6MTY5OTYzMjUxMH0.hlPhPY50RL2nNJt4HU9T3j8I99leRYwpy0EtlqIrJRy-GcWFhR0DxMsWw6uH3RxioVyu9iGJOw2WNuqaOmXJyg");
         expect(userInfoResponse.status).toBe(200);
 
-        // Check to make sure VC JWT is present in the response
+        // Check to make sure VC JWT is present in the response and validate its contentss
         const jwtToken = userInfoResponse.data['https://vocab.account.gov.uk/v1/credentialJWT'][0];
         await validateJwtToken(jwtToken);
 
         // Verify authSessionState
-        // await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_CRI_VC_ISSUED");
+        await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_CRI_VC_ISSUED");
 
-        // Verify TxMA
         // Make sure txma event is present & valid
         const sqsMessage = await getSqsEventList("txma/", sessionId, 3);
-        //await validateTxMAEventData(sqsMessage);
+        await validateTxMAEventData(sqsMessage);
     });
-
 });
 
 describe("E2E Happy Path Well Known Endpoint", () => {
