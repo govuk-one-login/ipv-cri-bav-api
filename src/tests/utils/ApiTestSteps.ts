@@ -1,4 +1,5 @@
-import { fromNodeProviderChain } from "@aws-sdk/credential-providers"; 
+/* eslint-disable @typescript-eslint/unbound-method */
+import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import axios, { AxiosInstance } from "axios";
 import { aws4Interceptor } from "aws4-axios";
 import { XMLParser } from "fast-xml-parser";
@@ -153,6 +154,7 @@ export async function getSessionAndVerifyKey(sessionId: string, tableName: strin
 export async function getSessionAndVerifyKeyExists(sessionId: string, tableName: string, key: string): Promise<void> {
 	const sessionInfo = await getSessionById(sessionId, tableName);
 	try {
+		// eslint-disable-next-line jest/valid-expect, no-unused-expressions, @typescript-eslint/no-unused-expressions
 		expect(sessionInfo![key as keyof ISessionItem]).toBeTruthy;
 	} catch (e: any) {
 		throw new Error("getSessionAndVerifyKeyExists - Failed to verify " + key + " exists: " + e);
