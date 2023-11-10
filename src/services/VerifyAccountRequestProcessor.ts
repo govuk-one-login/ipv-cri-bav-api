@@ -2,10 +2,15 @@ import { APIGatewayProxyEvent } from "aws-lambda";
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { BavService } from "./BavService";
+import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
+import { MessageCodes } from "../models/enums/MessageCodes";
+import { AppError } from "../utils/AppError";
 import { EnvironmentVariables } from "../utils/Constants";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
+import { Response } from "../utils/Response";
+import { isPayloadValid } from "../utils/VerifyAccountRequestValidation";
 
 export class VerifyAccountRequestProcessor {
   private static instance: VerifyAccountRequestProcessor;
@@ -41,7 +46,20 @@ export class VerifyAccountRequestProcessor {
   	return VerifyAccountRequestProcessor.instance;
   }
 
-  processRequest(event: APIGatewayProxyEvent): void {
-  	console.log("processing request");
+  processRequest(event: APIGatewayProxyEvent): Response | void {
+  	// let sort_code;
+  	// let account_number;
+
+  	// try {
+  	// 	({ sort_code, account_number } = isPayloadValid(event.body));
+  	// } catch (error) {
+  	// 	this.logger.error("Failed validating the Access token request body.", { error, messageCode: MessageCodes.FAILED_VALIDATING_REQUEST_BODY });
+  	// 	if (error instanceof AppError) {
+  	// 		return new Response(error.statusCode, error.message);
+  	// 	}
+  	// 	return new Response(HttpCodesEnum.UNAUTHORIZED, "An error has occurred while validating the Access token request payload.");
+  	// }
+
+  	console.log(sort_code);
   }
 }

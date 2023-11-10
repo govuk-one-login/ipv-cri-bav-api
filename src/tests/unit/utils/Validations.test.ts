@@ -1,5 +1,7 @@
+/* eslint-disable max-lines-per-function */
 import { randomUUID } from "crypto";
-import { isValidStrings, isPersonNameValid, isValidUUID } from "../../../utils/Validations";
+import { isValidStrings, isPersonNameValid, isValidUUID, getSessionIdHeaderErrors } from "../../../utils/Validations";
+import { Constants } from "../../../utils/Constants";
 
 describe("Validations", () => {
 	describe("#isValidStrings", () => {
@@ -52,6 +54,28 @@ describe("Validations", () => {
 		it("returns false if UUID is invalid", () => {
 			const result = isValidUUID(randomUUID().slice(0, -1));
 			expect(result).toBe(false);
+		});
+	});
+
+	describe("#getSessionIdHeaderErrors", () => {
+		it("returns error if headers are empty", () => {
+			const result = getSessionIdHeaderErrors(null);
+			expect(result).toBe("Empty headers");
+		});
+
+		it("returns error if session ID header isn't present", () => {
+			const result = getSessionIdHeaderErrors({ "content-type": "application/json" });
+			expect(result).toBe(`Missing header: ${Constants.SESSION_ID} is required`);
+		});
+
+		it("returns error if session ID header isn't a valid is", () => {
+			const result = getSessionIdHeaderErrors({ [Constants.SESSION_ID]: "abc" });
+			expect(result).toBe(`${Constants.SESSION_ID} header does not contain a valid uuid`);
+		});
+
+		it("returns undefined if session ID header if valid", () => {
+			const result = getSessionIdHeaderErrors({ [Constants.SESSION_ID]: "732075c8-08e6-4b25-ad5b-d6cb865a18e5" });
+			expect(result).toBeUndefined();
 		});
 	});
 });

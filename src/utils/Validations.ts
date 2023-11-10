@@ -1,3 +1,4 @@
+import { APIGatewayProxyEventHeaders } from "aws-lambda";
 import { absoluteTimeNow } from "./DateTimeUtils";
 import { JwtPayload } from "../models/IVeriCredential";
 import { PersonIdentityName } from "../models/PersonIdentityItem";
@@ -72,4 +73,19 @@ export const isPersonNameValid = (personName: PersonIdentityName[]) : boolean =>
 
 export const isValidUUID = (code: string): boolean => {
 	return Constants.REGEX_UUID.test(code);
+};
+
+export const getSessionIdHeaderErrors = (headers: APIGatewayProxyEventHeaders | null): string | void => {
+	if (!headers) {
+		return "Empty headers";
+	}
+
+	const sessionId = headers[Constants.SESSION_ID];
+	if (!sessionId) {
+		return `Missing header: ${Constants.SESSION_ID} is required`;
+	}
+
+	if (!Constants.REGEX_UUID.test(sessionId)) {
+		return `${Constants.SESSION_ID} header does not contain a valid uuid`;
+	}
 };
