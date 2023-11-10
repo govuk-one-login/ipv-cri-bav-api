@@ -209,6 +209,109 @@ paths:
         contentHandling: "CONVERT_TO_TEXT"
         type: "aws_proxy"
 
+  /verify-account:
+    post:
+      operationId: postVerifyAccount
+      summary: xxxx
+      description: >-
+        xxx
+      tags:
+        - Backend - Common CRI Lambda
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyAccountRequest'
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      responses:
+        "201":
+          description: >-
+            xxx
+          headers:
+            Cache-Control:
+              schema:
+                type: "string"
+            Content-Type:
+              schema:
+                type: "string"
+            Strict-Transport-Security:
+              schema:
+                type: "string"
+            X-Content-Type-Options:
+              schema:
+                type: "string"
+            X-Frame-Options:
+              schema:
+                type: "string"
+        "400":
+          description: >-
+            Bad Request - verify account data failed validation and has not been persisted
+          headers:
+            Cache-Control:
+              schema:
+                type: "string"
+            Content-Type:
+              schema:
+                type: "string"
+            Strict-Transport-Security:
+              schema:
+                type: "string"
+            X-Content-Type-Options:
+              schema:
+                type: "string"
+            X-Frame-Options:
+              schema:
+                type: "string"
+        "401":
+          description: Unauthorized
+          headers:
+            Cache-Control:
+              schema:
+                type: "string"
+            Content-Type:
+              schema:
+                type: "string"
+            Strict-Transport-Security:
+              schema:
+                type: "string"
+            X-Content-Type-Options:
+              schema:
+                type: "string"
+            X-Frame-Options:
+              schema:
+                type: "string"
+        "500":
+          description: Internal Server Error
+          headers:
+            Cache-Control:
+              schema:
+                type: "string"
+            Content-Type:
+              schema:
+                type: "string"
+            Strict-Transport-Security:
+              schema:
+                type: "string"
+            X-Content-Type-Options:
+              schema:
+                type: "string"
+            X-Frame-Options:
+              schema:
+                type: "string"
+      x-amazon-apigateway-request-validator: "both"
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${VerifyAccountFunction.Arn}:live/invocations
+        responses:
+          default:
+            statusCode: "200"
+        passthroughBehavior: "when_no_match"
+        contentHandling: "CONVERT_TO_TEXT"
+        type: "aws_proxy"
+
   /.well-known/jwks.json:
     get:
       operationId: getWellKnownJwksJson
@@ -491,6 +594,25 @@ components:
           description: >-
             The lifetime in seconds of the issued access token
           example: 3600
+    VerifyAccountRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - sort_code
+        - account_number
+      properties:
+        sort_code:
+          type: string
+          pattern: ^[0-9]{6}$
+          example: "000000"
+          description: 6 digit sort code
+        account_number:
+          type: string
+          # TODO
+          # pattern: ^[0-9]{6}$
+          example: "12345678"
+          description: bank account number
+          # TODO name
     OAuthErrorResponse:
       type: object
       additionalProperties: true
@@ -627,3 +749,13 @@ components:
       required: true
       schema:
         type: string
+    SessionId:
+      in: header
+      name: x-govuk-signin-session-id
+      schema:
+        type: string
+        format: uuid
+      example: 44444444-4444-4444-4444-444444444444
+      description: >-
+        `sessionId` as returned by `POST /session` endpoint
+      required: true
