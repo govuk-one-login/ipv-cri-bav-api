@@ -34,7 +34,7 @@
     "compile": "./node_modules/.bin/tsc",
     "lint": "eslint **/**.ts **/**.test.ts",
     "test:infra": "./node_modules/.bin/jest --testMatch '**/infra/?(*.)test.ts' ",
-    "api": "JEST_JUNIT_OUTPUT_NAME=api-report.xml ./node_modules/.bin/jest --runInBand --testPathPattern=tests/api/BavHappyPath.test.ts",
+    "api": "JEST_JUNIT_OUTPUT_NAME=api-report.xml ./node_modules/.bin/jest --runInBand --testPathPattern=tests/api/",
     "test:api": "npm run compile && npm run api"
   },
   "devDependencies": {
