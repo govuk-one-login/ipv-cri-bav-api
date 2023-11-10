@@ -58,7 +58,7 @@ export class VerifyAccount implements LambdaInterface {
 			throw new AppError(HttpCodesEnum.BAD_REQUEST, sessionIdError);
 		}
 
-		const sessionId = event.headers[Constants.SESSION_ID]!;
+		const sessionId = event.headers[Constants.X_SESSION_ID]!;
 
 		if (!event.body) {
 			const message = "Invalid request: missing body";
