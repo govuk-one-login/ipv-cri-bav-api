@@ -14,7 +14,6 @@ describe("AccessTokenHandler", () => {
 
 		await lambdaHandler(VALID_ACCESSTOKEN, CONTEXT);
 
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockedAccessTokenRequestProcessor.processRequest).toHaveBeenCalledTimes(1);
 	});
 
