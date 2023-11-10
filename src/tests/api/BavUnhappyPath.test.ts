@@ -67,14 +67,14 @@ describe("/userinfo Unhappy Path - ", () => {
 });
 
 describe("E2E Unhappy Path /authorisation Endpoint", () => {
-	let sessionId: any;
-	beforeEach(async () => {
-		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
-	});
+    let sessionId: any;
+    beforeEach(async () => {
+        sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+    });
 
-	it("Incorrect session state", async () => {
-		const authResponse = await authorizationGet(sessionId);
-		expect(authResponse.status).toBe(401);
-	});
+    it("Incorrect session state", async () => {
+        const authResponse = await authorizationGet(sessionId);
+        expect(authResponse.status).toBe(401);
+    });
 
 });
