@@ -41,7 +41,7 @@ export class VerifyAccountRequestProcessor {
   	return VerifyAccountRequestProcessor.instance;
   }
 
-	processRequest(event: APIGatewayProxyEvent): void {
-	console.log("processing request")
+  processRequest(event: APIGatewayProxyEvent): void {
+  	console.log("processing request");
   }
 }
