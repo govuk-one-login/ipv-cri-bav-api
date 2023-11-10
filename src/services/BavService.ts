@@ -36,7 +36,7 @@ export class BavService {
 	}
 
 	async getSessionById(sessionId: string): Promise<ISessionItem | undefined> {
-		this.logger.debug("Table name " + this.tableName);
+		this.logger.debug("Fetching session from table " + this.tableName);
 		const getSessionCommand = new GetCommand({
 			TableName: this.tableName,
 			Key: {

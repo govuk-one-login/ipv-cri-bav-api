@@ -2,7 +2,6 @@ import { APIGatewayProxyEvent } from "aws-lambda";
 import { LambdaInterface } from "@aws-lambda-powertools/commons";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
-
 import { MessageCodes } from "./models/enums/MessageCodes";
 import { HttpCodesEnum } from "./models/enums/HttpCodesEnum";
 import { VerifyAccountRequestProcessor } from "./services/VerifyAccountRequestProcessor";
@@ -24,10 +23,9 @@ const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE, serviceNa
 
 export class VerifyAccount implements LambdaInterface {
 
-	// TODO
-	// @metrics.logMetrics({ throwOnEmptyMetrics: false, captureColdStartMetric: true })
+	@metrics.logMetrics({ throwOnEmptyMetrics: false, captureColdStartMetric: true })
 
-	handler(event: APIGatewayProxyEvent, context: any): Response | void {
+	async handler(event: APIGatewayProxyEvent, context: any): Promise<Response | void> {
 		logger.setPersistentLogAttributes({});
 		logger.addContext(context);
 
@@ -37,7 +35,7 @@ export class VerifyAccount implements LambdaInterface {
 			logger.appendKeys({ sessionId });
 			logger.info("Starting VerifyAccountRequestProcessor");
 
-			VerifyAccountRequestProcessor.getInstance(logger, metrics).processRequest(sessionId, body);
+			await VerifyAccountRequestProcessor.getInstance(logger, metrics).processRequest(sessionId, body);
 		} catch (error: any) {
 			logger.error({ message: "An error has occurred.", error, messageCode: MessageCodes.SERVER_ERROR });
 			if (error instanceof AppError) {

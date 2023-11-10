@@ -1,4 +1,3 @@
-import { APIGatewayProxyEvent } from "aws-lambda";
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { BavService } from "./BavService";
@@ -46,20 +45,17 @@ export class VerifyAccountRequestProcessor {
   	return VerifyAccountRequestProcessor.instance;
   }
 
-  processRequest(sessionId: string, body: VerifyAccountPayload): Response | void {
-  	// let sort_code;
-  	// let account_number;
+  async processRequest(sessionId: string, body: VerifyAccountPayload): Promise<Response> {
+  	const session = await this.BavService.getSessionById(sessionId);
 
-  	// try {
-  	// 	({ sort_code, account_number } = isPayloadValid(event.body));
-  	// } catch (error) {
-  	// 	this.logger.error("Failed validating the Access token request body.", { error, messageCode: MessageCodes.FAILED_VALIDATING_REQUEST_BODY });
-  	// 	if (error instanceof AppError) {
-  	// 		return new Response(error.statusCode, error.message);
-  	// 	}
-  	// 	return new Response(HttpCodesEnum.UNAUTHORIZED, "An error has occurred while validating the Access token request payload.");
-  	// }
+  	if (!session) {
+  		this.logger.error("No session found for session id", {
+  			messageCode: MessageCodes.SESSION_NOT_FOUND,
+  		});
+  		return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
+  	}
 
-  	// console.log(sort_code);
+  	this.logger.info("found the session yay");
+  	return new Response(HttpCodesEnum.OK, "Success");
   }
 }
