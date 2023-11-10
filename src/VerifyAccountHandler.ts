@@ -2,13 +2,14 @@ import { APIGatewayProxyEvent } from "aws-lambda";
 import { LambdaInterface } from "@aws-lambda-powertools/commons";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
-import { Constants } from "./utils/Constants";
-import { Response } from "./utils/Response";
+
 import { MessageCodes } from "./models/enums/MessageCodes";
 import { HttpCodesEnum } from "./models/enums/HttpCodesEnum";
 import { VerifyAccountRequestProcessor } from "./services/VerifyAccountRequestProcessor";
 import { VerifyAccountPayload } from "./type/VerifyAccountPayload";
 import { AppError } from "./utils/AppError";
+import { Constants } from "./utils/Constants";
+import { Response } from "./utils/Response";
 import { getSessionIdHeaderErrors } from "./utils/Validations";
 import { getPayloadValidationErrors } from "./utils/VerifyAccountRequestValidation";
 
@@ -27,33 +28,16 @@ export class VerifyAccount implements LambdaInterface {
 	// @metrics.logMetrics({ throwOnEmptyMetrics: false, captureColdStartMetric: true })
 
 	handler(event: APIGatewayProxyEvent, context: any): Response | void {
-
 		logger.setPersistentLogAttributes({});
 		logger.addContext(context);
 
-		const sessionIdError = getSessionIdHeaderErrors(event.headers);
-		if (sessionIdError) {
-			logger.error({ message: sessionIdError, messageCode: MessageCodes.INVALID_SESSION_ID });
-			return new Response(HttpCodesEnum.BAD_REQUEST, sessionIdError);
-		}
-
-		if (!event.body) {
-			const message = "Invalid request: missing body";
-			logger.error({ message, messageCode: MessageCodes.INVALID_SESSION_ID });
-			return new Response(HttpCodesEnum.UNAUTHORIZED, message);
-		}
-
-		const deserialisedRequestBody: VerifyAccountPayload = JSON.parse(event.body) as VerifyAccountPayload;
-		const payloadError = getPayloadValidationErrors(deserialisedRequestBody);
-
-		if (payloadError) {
-			logger.error({ message: payloadError, messageCode: MessageCodes.INVALID_REQUEST_PAYLOAD });
-			return new Response(HttpCodesEnum.UNAUTHORIZED, payloadError);
-		}
-
 		try {
+			const { sessionId, body } = this.validateEvent(event);
+
+			logger.appendKeys({ sessionId });
 			logger.info("Starting VerifyAccountRequestProcessor");
-			VerifyAccountRequestProcessor.getInstance(logger, metrics).processRequest(event);
+
+			VerifyAccountRequestProcessor.getInstance(logger, metrics).processRequest(sessionId, body);
 		} catch (error: any) {
 			logger.error({ message: "An error has occurred.", error, messageCode: MessageCodes.SERVER_ERROR });
 			if (error instanceof AppError) {
@@ -61,6 +45,41 @@ export class VerifyAccount implements LambdaInterface {
 			}
 			return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
 		}
+	}
+
+	validateEvent(event: APIGatewayProxyEvent): { sessionId: string; body: VerifyAccountPayload } {
+		if (!event.headers) {
+			const message = "Invalid request: missing headers";
+			logger.error({ message, messageCode: MessageCodes.MISSING_HEADER });
+			throw new AppError(HttpCodesEnum.BAD_REQUEST, message);
+		}
+
+		const sessionIdError = getSessionIdHeaderErrors(event.headers);
+		if (sessionIdError) {
+			logger.error({ message: sessionIdError, messageCode: MessageCodes.INVALID_SESSION_ID });
+			throw new AppError(HttpCodesEnum.BAD_REQUEST, sessionIdError);
+		}
+
+		const sessionId = event.headers[Constants.SESSION_ID]!;
+
+		if (!event.body) {
+			const message = "Invalid request: missing body";
+			logger.error({ message, messageCode: MessageCodes.INVALID_SESSION_ID });
+			throw new AppError(HttpCodesEnum.BAD_REQUEST, message);
+		}
+
+		const deserialisedRequestBody: VerifyAccountPayload = JSON.parse(event.body) as VerifyAccountPayload;
+		const payloadError = getPayloadValidationErrors(deserialisedRequestBody);
+
+		if (payloadError) {
+			logger.error({ message: payloadError, messageCode: MessageCodes.INVALID_REQUEST_PAYLOAD });
+			throw new AppError(HttpCodesEnum.BAD_REQUEST, payloadError);
+		}
+
+		return {
+			sessionId,
+			body: deserialisedRequestBody,
+		};
 	}
 }
 

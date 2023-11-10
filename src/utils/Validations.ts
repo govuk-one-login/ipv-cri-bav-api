@@ -110,11 +110,7 @@ export const eventToSubjectIdentifier = async (jwtAdapter: KmsJwtAdapter, event:
 	return jwt.payload.sub;
 };
 
-export const getSessionIdHeaderErrors = (headers: APIGatewayProxyEventHeaders | null): string | void => {
-	if (!headers) {
-		return "Empty headers";
-	}
-
+export const getSessionIdHeaderErrors = (headers: APIGatewayProxyEventHeaders): string | void => {
 	const sessionId = headers[Constants.SESSION_ID];
 	if (!sessionId) {
 		return `Missing header: ${Constants.SESSION_ID} is required`;
