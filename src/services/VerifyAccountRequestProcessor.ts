@@ -10,7 +10,7 @@ import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
 import { Response } from "../utils/Response";
-import { isPayloadValid } from "../utils/VerifyAccountRequestValidation";
+import { VerifyAccountPayload } from "../type/VerifyAccountPayload";
 
 export class VerifyAccountRequestProcessor {
   private static instance: VerifyAccountRequestProcessor;
@@ -46,7 +46,7 @@ export class VerifyAccountRequestProcessor {
   	return VerifyAccountRequestProcessor.instance;
   }
 
-  processRequest(event: APIGatewayProxyEvent): Response | void {
+  processRequest(sessionId: string, body: VerifyAccountPayload): Response | void {
   	// let sort_code;
   	// let account_number;
 
@@ -60,6 +60,6 @@ export class VerifyAccountRequestProcessor {
   	// 	return new Response(HttpCodesEnum.UNAUTHORIZED, "An error has occurred while validating the Access token request payload.");
   	// }
 
-  	console.log(sort_code);
+  	// console.log(sort_code);
   }
 }

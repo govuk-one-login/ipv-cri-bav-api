@@ -75,11 +75,7 @@ export const isValidUUID = (code: string): boolean => {
 	return Constants.REGEX_UUID.test(code);
 };
 
-export const getSessionIdHeaderErrors = (headers: APIGatewayProxyEventHeaders | null): string | void => {
-	if (!headers) {
-		return "Empty headers";
-	}
-
+export const getSessionIdHeaderErrors = (headers: APIGatewayProxyEventHeaders): string | void => {
 	const sessionId = headers[Constants.SESSION_ID];
 	if (!sessionId) {
 		return `Missing header: ${Constants.SESSION_ID} is required`;

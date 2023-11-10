@@ -36,6 +36,10 @@ export class Constants {
 
 	static readonly REGEX_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+	static readonly SORT_CODE_REGEX = /^[0-9]{6}$/i;
+
+	static readonly ACCOUNT_NUMBER_REGEX = /^[0-9]{6,8}$/i;
+
 	static readonly W3_BASE_CONTEXT = "https://www.w3.org/2018/credentials/v1";
 
   static readonly DI_CONTEXT = "https://vocab.account.gov.uk/contexts/identity-v1.jsonld";

@@ -58,11 +58,6 @@ describe("Validations", () => {
 	});
 
 	describe("#getSessionIdHeaderErrors", () => {
-		it("returns error if headers are empty", () => {
-			const result = getSessionIdHeaderErrors(null);
-			expect(result).toBe("Empty headers");
-		});
-
 		it("returns error if session ID header isn't present", () => {
 			const result = getSessionIdHeaderErrors({ "content-type": "application/json" });
 			expect(result).toBe(`Missing header: ${Constants.SESSION_ID} is required`);
