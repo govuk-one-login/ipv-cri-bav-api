@@ -63,6 +63,26 @@ export class BavService {
 		}
 	}
 
+	async updateSessionAuthState(sessionId: string, authSessionState: string): Promise<void> {
+		const updateStateCommand = new UpdateCommand({
+			TableName: this.tableName,
+			Key: { sessionId },
+			UpdateExpression: "SET authSessionState = :authSessionState",
+			ExpressionAttributeValues: {
+				":authSessionState": authSessionState,
+			},
+		});
+
+		this.logger.info({ message: "Updating session table with auth state details", updateStateCommand });
+		try {
+			await this.dynamo.send(updateStateCommand);
+			this.logger.info({ message: "Updated auth state details in dynamodb" });
+		} catch (error) {
+			this.logger.error({ message: "Got error saving auth state details", error });
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "updateSessionAuthState failed: got error saving auth state details");
+		}
+	}
+
 	async sendToTXMA(QueueUrl: string, event: TxmaEvent): Promise<void> {
 		try {
 			const messageBody = JSON.stringify(event);
@@ -143,6 +163,59 @@ export class BavService {
 		} catch (error) {
 			this.logger.error({ message: "Failed to save personal identity information", error });
 			throw new AppError(HttpCodesEnum.SERVER_ERROR, "Failed to save personal identity information" );
+		}
+	}
+
+	async getPersonIdentityById(sessionId: string, tableName: string = this.tableName): Promise<PersonIdentityItem | undefined> {
+		this.logger.debug(`Fetchching person identity from table ${tableName}`);
+
+		const getPersonIdentityCommand = new GetCommand({
+			TableName: tableName,
+			Key: { sessionId },
+		});
+
+		let personInfo;
+		try {
+			personInfo = await this.dynamo.send(getPersonIdentityCommand);
+
+		} catch (error: any) {
+			this.logger.error({
+				message: "getPersonIdentityById - failed executing get from dynamodb",
+				messageCode: MessageCodes.FAILED_FETCHING_PERSON_IDENTITY,
+				error,
+			});
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "Error retrieving record");
+		}
+
+		if (personInfo.Item) {
+			if (personInfo.Item.expiryDate < absoluteTimeNow()) {
+				const message = `Session with session id: ${sessionId} has expired`;
+				this.logger.error({ message, messageCode: MessageCodes.EXPIRED_SESSION });
+				throw new AppError(HttpCodesEnum.UNAUTHORIZED, message);
+			}
+			return personInfo.Item as PersonIdentityItem;
+		}
+	}
+
+	async updateAccountDetails(sessionId: string, accountNumber: string, sortCode: string, tableName = this.tableName): Promise<void> {
+		this.logger.info({ message: `Updating ${tableName} with account details` });
+
+		const updateStateCommand = new UpdateCommand({
+			TableName: tableName,
+			Key: { sessionId },
+			UpdateExpression: "SET accountNumber = :accountNumber, sortCode = :sortCode",
+			ExpressionAttributeValues: {
+				":accountNumber": accountNumber,
+				":sortCode": sortCode,
+			},
+		});
+
+		try {
+			await this.dynamo.send(updateStateCommand);
+			this.logger.info({ message: "Updated account details" });
+		} catch (error) {
+			this.logger.error({ message: "Error updating record with account details", messageCode: MessageCodes.FAILED_UPDATING_PERSON_IDENTITY, error });
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "Error updating record");
 		}
 	}
 

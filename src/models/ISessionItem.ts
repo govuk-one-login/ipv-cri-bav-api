@@ -6,6 +6,8 @@ export interface IBAVSession {
 	date_of_birth?: string;
 }
 
+export type CopCheckResult = "FULL_MATCH" | "PARTIAL_MATCH" | "NO_MATCH"; 
+
 export interface ISessionItem extends IBAVSession {
 	sessionId: string;
 	clientId: string;
@@ -24,5 +26,6 @@ export interface ISessionItem extends IBAVSession {
 	attemptCount: number;
 	authSessionState: string;
 	evidence_requested?: EvidenceRequested;
+	CopCheckResult?: CopCheckResult;
 }
 

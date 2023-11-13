@@ -8,6 +8,7 @@ import { EnvironmentVariables } from "../utils/Constants";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
+import { getFullName } from "../utils/PersonIdentityUtils";
 import { Response } from "../utils/Response";
 import { VerifyAccountPayload } from "../type/VerifyAccountPayload";
 
@@ -17,6 +18,8 @@ export class VerifyAccountRequestProcessor {
   private readonly logger: Logger;
 
 	private readonly issuer: string;
+
+	private readonly personIdentityTableName: string;
 
   private readonly metrics: Metrics;
 
@@ -33,6 +36,7 @@ export class VerifyAccountRequestProcessor {
   	this.metrics.addMetric("Called", MetricUnits.Count, 1);
 
   	const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, this.logger);
+  	this.personIdentityTableName = checkEnvironmentVariable(EnvironmentVariables.PERSON_IDENTITY_TABLE_NAME, this.logger);
   	const encryptionKeyIds: string = checkEnvironmentVariable(EnvironmentVariables.ENCRYPTION_KEY_IDS, this.logger);
   	this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, this.logger);
   	const hmrcBaseUrl = checkEnvironmentVariable(EnvironmentVariables.HMRC_BASE_URL, this.logger);
@@ -53,12 +57,21 @@ export class VerifyAccountRequestProcessor {
 
   async processRequest(sessionId: string, body: VerifyAccountPayload): Promise<Response> {
   	const { account_number: accountNumber, sort_code: sortCode } = body;
-  	// Update the personal details table
-  	// Call verify
-  	// Update session state
-  	// Respond appropriately
+  	const person  = await this.BavService.getPersonIdentityById(sessionId, this.personIdentityTableName);
 
-  	const verifyResponse = await this.HmrcService.verify({ accountNumber, sortCode, name: "TODO" });
+  	if (!person) {
+  		this.logger.error("No person found for session id", {
+  			messageCode: MessageCodes.SESSION_NOT_FOUND,
+  		});
+  		return new Response(HttpCodesEnum.UNAUTHORIZED, `No person found with the session id: ${sessionId}`);
+  	}
+
+  	await this.BavService.updateAccountDetails(sessionId, accountNumber, sortCode, this.personIdentityTableName);
+
+  	const name = getFullName(person.name);
+  	const verifyResponse = await this.HmrcService.verify({ accountNumber, sortCode, name });
+  	// Save cop result to session table
+  	// Update session state
 
   	const session = await this.BavService.getSessionById(sessionId);
 
@@ -70,6 +83,8 @@ export class VerifyAccountRequestProcessor {
   	}
 
   	this.logger.info("found the session yay");
+
+  	// Respond appropriately
   	return new Response(HttpCodesEnum.OK, "Success");
   }
 }
