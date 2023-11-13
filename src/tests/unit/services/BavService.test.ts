@@ -277,6 +277,36 @@ describe("BAV Service", () => {
 		});
 	});
 
+	describe("#saveCopCheckResult", () => {
+		const copCheckResult = "FULL_MATCH";
+
+		it("saves account information to dynamo", async () => {
+			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+
+			await bavService.saveCopCheckResult(sessionId, copCheckResult);
+
+			expect(UpdateCommand).toHaveBeenCalledWith({
+				TableName: tableName,
+				Key: { sessionId },
+				UpdateExpression: "SET copCheckResult = :copCheckResult, authSessionState = :authSessionState",
+				ExpressionAttributeValues: {
+					":copCheckResult": copCheckResult,
+					":authSessionState": AuthSessionState.BAV_DATA_RECEIVED,
+				},
+			});
+		});
+
+		it("returns an error when account information cannot be saved to dynamo", async () => {
+			mockDynamoDbClient.send = jest.fn().mockRejectedValueOnce("Error!");
+
+			await expect(bavService.saveCopCheckResult(sessionId, copCheckResult)).rejects.toThrow(expect.objectContaining({
+				statusCode: HttpCodesEnum.SERVER_ERROR,
+				message: "setCopCheckResult failed: got error saving copCheckResult",
+			}));
+			expect(logger.error).toHaveBeenCalledWith({ message: "Got error saving copCheckResult", messageCode: MessageCodes.FAILED_UPDATING_SESSION, error: "Error!" });
+		});
+	});
+
 	describe("#setAuthorizationCode", () => {
 		const authorizationCode = "AUTH_CODE";
 
