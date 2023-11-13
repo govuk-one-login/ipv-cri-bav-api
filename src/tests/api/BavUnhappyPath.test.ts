@@ -62,7 +62,16 @@ describe("/userinfo Unhappy Path - ", () => {
         // Hardcoded expired Bearer Token
         const userInfoResponse = await userInfoPost("Bearer eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImYzODA1Y2UyLWQzNjYtNDY3ZC1iYzhkLWMzMTc4MGFmNTQyYyJ9.eyJzdWIiOiJhNzhjYTE2Yi1mNTQyLTQzNzgtOWNkMC1kMGFhMTc1OTYxY2QiLCJhdWQiOiJodHRwczovL3Jldmlldy1iYXYuZGV2LmFjY291bnQuZ292LnVrIiwiaXNzIjoiaHR0cHM6Ly9yZXZpZXctYmF2LmRldi5hY2NvdW50Lmdvdi51ayIsImV4cCI6MTY5OTM3MjIwN30.aD-ANk6ITSjD4wQ8t9a9Qq8TgW5zXg2pxRYF5qPGK3kCqfWrHo9g_sU35rX8XFeST2BenBHoYkMZ-C7t4k1oiw");
         expect(userInfoResponse.status).toBe(401);
+    });
+    
+    it.skip("E2E Unhappy Path Journey - Missing subject field", async () => {
+        const userInfoResponse = await userInfoPost("Bearer eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImYzODA1Y2UyLWQzNjYtNDY3ZC1iYzhkLWMzMTc4MGFmNTQyYyJ9.eyJzdWIiOiIwNmZmN2QxOS1iN2Y1LTRiZjctYmJhNi00NjRjY2FlZTdiMWQiLCJhdWQiOiJodHRwczovL3Jldmlldy1iYXYuZGV2LmFjY291bnQuZ292LnVrIiwiaXNzIjoiaHR0cHM6Ly9yZXZpZXctYmF2LmRldi5hY2NvdW50Lmdvdi51ayIsImV4cCI6MTY5OTQ2MDk3N30.-DgJu1RIgFgDMvTq5m2ICvzXBEvm_ICMkiWg8C7daqee9wCYZ9oRIgELoRIphxTkTQxsggVuIIvP2lCbJumGJA");
+        expect(userInfoResponse.status).toBe(400);
+    });
 
+    it.skip("E2E Unhappy Path Journey - Missing client session id field", async () => {
+        const userInfoResponse = await userInfoPost("Bearer eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImYzODA1Y2UyLWQzNjYtNDY3ZC1iYzhkLWMzMTc4MGFmNTQyYyJ9.eyJzdWIiOiI0OTgyNGNlYS0yNzk0LTQyMTUtYjMwYy1hMTNiMThmM2JlN2QiLCJhdWQiOiJodHRwczovL3Jldmlldy1iYXYuZGV2LmFjY291bnQuZ292LnVrIiwiaXNzIjoiaHR0cHM6Ly9yZXZpZXctYmF2LmRldi5hY2NvdW50Lmdvdi51ayIsImV4cCI6MTY5OTUzNDQ1NH0.UXhKNSAEGkWuFKRaF_3ZFn5RtPnkv3XftW5Cn6Xci1HtjhALPpXDzSPgdouYNm8ExSNMouBOKJ3PjbgPVsFxpw");
+        expect(userInfoResponse.status).toBe(400);
     });
 });
 
