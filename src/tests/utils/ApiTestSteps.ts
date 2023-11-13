@@ -244,7 +244,7 @@ export async function validateTxMAEventData(keyList: any): Promise<any> {
 	}
 }
 
-export async function validateJwtToken(jwtToken: any): void {
+export async function validateJwtToken(jwtToken: any): Promise<void> {
 	const [rawHead, rawBody, signature] = jwtToken.split(".");
 
 	validateRawHead(rawHead);
