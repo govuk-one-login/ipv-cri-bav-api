@@ -1,9 +1,9 @@
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { BavService } from "./BavService";
+import { HmrcService } from "./HmrcService";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../models/enums/MessageCodes";
-import { AppError } from "../utils/AppError";
 import { EnvironmentVariables } from "../utils/Constants";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
@@ -21,6 +21,8 @@ export class VerifyAccountRequestProcessor {
   private readonly metrics: Metrics;
 
   private readonly BavService: BavService;
+	
+  private readonly HmrcService: HmrcService;
 
   private readonly kmsDecryptor: KmsJwtAdapter;
 
@@ -33,8 +35,12 @@ export class VerifyAccountRequestProcessor {
   	const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, this.logger);
   	const encryptionKeyIds: string = checkEnvironmentVariable(EnvironmentVariables.ENCRYPTION_KEY_IDS, this.logger);
   	this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, this.logger);
+  	const hmrcBaseUrl = checkEnvironmentVariable(EnvironmentVariables.HMRC_BASE_URL, this.logger);
+  	const hmrcClientId = checkEnvironmentVariable(EnvironmentVariables.HMRC_CLIENT_ID, this.logger);
+  	const hmrcClientSecret = checkEnvironmentVariable(EnvironmentVariables.HMRC_CLIENT_SECRET, this.logger);
 
   	this.BavService = BavService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
+  	this.HmrcService = HmrcService.getInstance(this.logger, hmrcBaseUrl, hmrcClientId, hmrcClientSecret);
   	this.kmsDecryptor = new KmsJwtAdapter(encryptionKeyIds);
   }
 
@@ -46,6 +52,14 @@ export class VerifyAccountRequestProcessor {
   }
 
   async processRequest(sessionId: string, body: VerifyAccountPayload): Promise<Response> {
+  	const { account_number: accountNumber, sort_code: sortCode } = body;
+  	// Update the personal details table
+  	// Call verify
+  	// Update session state
+  	// Respond appropriately
+
+  	const verifyResponse = await this.HmrcService.verify({ accountNumber, sortCode, name: "TODO" });
+
   	const session = await this.BavService.getSessionById(sessionId);
 
   	if (!session) {
