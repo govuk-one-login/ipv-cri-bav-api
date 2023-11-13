@@ -1,4 +1,4 @@
-import { fromNodeProviderChain } from "@aws-sdk/credential-providers"; 
+import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import axios, { AxiosInstance } from "axios";
 import { aws4Interceptor } from "aws4-axios";
 import { XMLParser } from "fast-xml-parser";
@@ -11,7 +11,7 @@ import { jwtUtils } from "../../utils/JwtUtils";
 const API_INSTANCE = axios.create({ baseURL: constants.DEV_CRI_BAV_API_URL });
 const ajv = new Ajv({ strict: false });
 
-const HARNESS_API_INSTANCE : AxiosInstance = axios.create({ baseURL: constants.DEV_BAV_TEST_HARNESS_URL });
+const HARNESS_API_INSTANCE: AxiosInstance = axios.create({ baseURL: constants.DEV_BAV_TEST_HARNESS_URL });
 
 const customCredentialsProvider = {
 	getCredentials: fromNodeProviderChain({
@@ -251,13 +251,13 @@ export function validateJwtToken(jwtToken: any): void {
 	validateRawBody(rawBody);
 }
 
-function validateRawHead(rawHead:any): void {
+function validateRawHead(rawHead: any): void {
 	const decodeRawHead = JSON.parse(jwtUtils.base64DecodeToString(rawHead.replace(/\W/g, "")));
 	expect(decodeRawHead.alg).toBe("ES256");
 	expect(decodeRawHead.typ).toBe("JWT");
 }
 
-function validateRawBody(rawBody:any): void {
+function validateRawBody(rawBody: any): void {
 	const decodedBody = JSON.parse(jwtUtils.base64DecodeToString(rawBody.replace(/\W/g, "")));
 	expect(decodedBody.jti).toBeTruthy();
 

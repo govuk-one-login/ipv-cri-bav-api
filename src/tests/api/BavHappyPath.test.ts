@@ -75,7 +75,7 @@ describe("Test BAV End Points", () => {
         // Check session state
         await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_ACCESS_TOKEN_ISSUED");
     });
-    
+
     it.skip("BAV CRI /userinfo Happy Path", async () => {
         const authResponse = await authorizationGet(sessionId);
 
