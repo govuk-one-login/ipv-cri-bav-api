@@ -5,7 +5,7 @@ import { DynamoDBDocument, GetCommand, PutCommand, QueryCommandInput, UpdateComm
 import { randomUUID } from "crypto";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../models/enums/MessageCodes";
-import { ISessionItem } from "../models/ISessionItem";
+import { ISessionItem, CopCheckResult } from "../models/ISessionItem";
 import { SharedClaimsPersonIdentity, PersonIdentityItem, PersonIdentityName, PersonIdentityDateOfBirth } from "../models/PersonIdentityItem";
 import { AppError } from "../utils/AppError";
 import { absoluteTimeNow, getAuthorizationCodeExpirationEpoch } from "../utils/DateTimeUtils";
@@ -242,6 +242,28 @@ export class BavService {
 		} catch (error) {
 			this.logger.error({ message: "Error updating record with account details", messageCode: MessageCodes.FAILED_UPDATING_PERSON_IDENTITY, error });
 			throw new AppError(HttpCodesEnum.SERVER_ERROR, "Error updating record");
+		}
+	}
+
+	async saveCopCheckResult(sessionId: string, copCheckResult: CopCheckResult): Promise<void> {
+		this.logger.info({ message: "Saving session table with copCheckResult", copCheckResult });
+
+		const updateStateCommand = new UpdateCommand({
+			TableName: this.tableName,
+			Key: { sessionId },
+			UpdateExpression: "SET copCheckResult = :copCheckResult, authSessionState = :authSessionState",
+			ExpressionAttributeValues: {
+				":copCheckResult": copCheckResult,
+				":authSessionState": AuthSessionState.BAV_DATA_RECEIVED,
+			},
+		});
+
+		try {
+			await this.dynamo.send(updateStateCommand);
+			this.logger.info({ message: "Saved copCheckResult in dynamodb" });
+		} catch (error) {
+			this.logger.error({ message: "Got error saving copCheckResult", messageCode: MessageCodes.FAILED_UPDATING_SESSION, error });
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "setCopCheckResult failed: got error saving copCheckResult");
 		}
 	}
 
