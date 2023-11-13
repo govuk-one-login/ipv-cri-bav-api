@@ -45,10 +45,10 @@ export class HmrcService {
     	};
 
     	try {
-    		this.logger.info("Sending verify request to HMRC");
+    		this.logger.info("Sending COP verify request to HMRC");
     		const response: HmrcVerifyResponse = await axios.post(`${this.HMRC_BASE_URL}/${Constants.HMRC_VERIFY_ENDPOINT_PATH}`, params);
     		this.logger.debug({
-    			message: "Recieved reponse from HMRC verify request",
+    			message: "Recieved reponse from HMRC COP verify request",
     			accountNumberIsWellFormatted: response.accountNumberIsWellFormatted,
     			accountExists: response.accountExists,
     			nameMatches: response.nameMatches,
@@ -60,7 +60,7 @@ export class HmrcService {
 
     		return response;
     	} catch (error: any) {
-    		const message = "Error sending verify request to HMRC";
+    		const message = "Error sending COP verify request to HMRC";
     		this.logger.error({ message, messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT });
     		throw new AppError(HttpCodesEnum.UNAUTHORIZED, message);
     	}

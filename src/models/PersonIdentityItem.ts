@@ -14,6 +14,7 @@ export interface PersonIdentityDateOfBirth {
 export interface PersonIdentityItem {
 	sessionId: string;
 	name: PersonIdentityName[];
+	// TODO htink this can be removed
 	birthDate: PersonIdentityDateOfBirth[];
 	expiryDate: number;
 	createdDate: number;

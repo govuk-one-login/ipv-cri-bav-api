@@ -41,7 +41,7 @@ describe("HMRC Service", () => {
 
 			const response = await hmrcServiceTest.verify({ accountNumber, sortCode, name });
 
-			expect(logger.info).toHaveBeenCalledWith("Sending verify request to HMRC");
+			expect(logger.info).toHaveBeenCalledWith("Sending COP verify request to HMRC");
 			expect(axios.post).toHaveBeenCalledWith(
 				`${hmrcServiceTest.HMRC_BASE_URL}/${Constants.HMRC_VERIFY_ENDPOINT_PATH}`,
 				{
@@ -50,7 +50,7 @@ describe("HMRC Service", () => {
 				},
 			);
 			expect(logger.debug).toHaveBeenCalledWith({
-				message: "Recieved reponse from HMRC verify request",
+				message: "Recieved reponse from HMRC COP verify request",
 				accountNumberIsWellFormatted: hmrcMockResponse.accountNumberIsWellFormatted,
 				accountExists: hmrcMockResponse.accountExists,
 				nameMatches: hmrcMockResponse.nameMatches,
@@ -68,9 +68,9 @@ describe("HMRC Service", () => {
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 			await expect(hmrcServiceTest.verify({ accountNumber, sortCode, name })).rejects.toThrow(expect.objectContaining({
 				statusCode: HttpCodesEnum.UNAUTHORIZED,
-				message: "Error sending verify request to HMRC",
+				message: "Error sending COP verify request to HMRC",
 			}));
-			expect(logger.error).toHaveBeenCalledWith({ message: "Error sending verify request to HMRC", messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT });
+			expect(logger.error).toHaveBeenCalledWith({ message: "Error sending verif COP request to HMRC", messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT });
 		});
 	});
 });

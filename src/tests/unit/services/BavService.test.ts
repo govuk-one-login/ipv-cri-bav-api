@@ -1,3 +1,5 @@
+/* eslint-disable max-lines */
+/* eslint-disable max-lines-per-function */
 /* eslint-disable @typescript-eslint/unbound-method */
 import { SendMessageCommand } from "@aws-sdk/client-sqs";
 import { UpdateCommand } from "@aws-sdk/lib-dynamodb";
@@ -12,14 +14,15 @@ import { TxmaEvent } from "../../../utils/TxmaEvent";
 import { absoluteTimeNow } from "../../../utils/DateTimeUtils";
 import { personIdentityInputRecord, personIdentityOutputRecord } from "../data/personIdentity-records";
 import { AuthSessionState } from "../../../models/enums/AuthSessionState";
-
+import { ISessionItem } from "../../../models/ISessionItem";
+import { PersonIdentityItem } from "../../../models/PersonIdentityItem";
 
 let bavService: BavService;
 const tableName = "SESSIONTABLE";
 const sessionId = "SESSIONID";
 const fakeTime = 1684933200.123;
-const SESSION_RECORD = require("../data/db_record.json");
-const PERSON_IDENTITY_RECORD = require("../data/person_identity_record.json");
+const SESSION_RECORD = require("../data/db_record.json") as ISessionItem;
+const PERSON_IDENTITY_RECORD = require("../data/person_identity_record.json") as PersonIdentityItem;
 
 const logger = mock<Logger>();
 const mockDynamoDbClient = jest.mocked(createDynamoDbClient());
@@ -219,6 +222,76 @@ describe("BAV Service", () => {
 		});
 	});
 
+	describe("#getPersonIdentityById", () => {
+		it("Should return a person identity item when passed a valid session Id", async () => {
+			mockDynamoDbClient.send = jest.fn().mockResolvedValue({ Item: personIdentityOutputRecord });
+			const result = await bavService.getPersonIdentityById(sessionId);
+			expect(result).toEqual(personIdentityOutputRecord);
+		});
+	
+		it("Should return undefined when person identity doesn't exist", async () => {
+			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+			await expect(bavService.getPersonIdentityById(sessionId)).resolves.toBeUndefined();
+		});
+
+		it("Should throw an error when person identity expiry date has passed", async () => {
+			const expiredSession = {
+				...personIdentityOutputRecord,
+				expiryDate: absoluteTimeNow() - 500,
+			};
+			mockDynamoDbClient.send = jest.fn().mockResolvedValue({ Item: expiredSession });
+			await expect(bavService.getPersonIdentityById(sessionId)).rejects.toThrow(expect.objectContaining({
+				statusCode: HttpCodesEnum.UNAUTHORIZED,
+				message: `Session with session id: ${sessionId} has expired`,
+			}));
+			expect(logger.error).toHaveBeenCalledWith({ message: `Session with session id: ${sessionId} has expired`, messageCode: MessageCodes.EXPIRED_SESSION });
+		});
+
+		it("Should throw an error when DB call fails", async () => {
+			mockDynamoDbClient.send = jest.fn().mockRejectedValue("Error!");
+			await expect(bavService.getPersonIdentityById(sessionId)).rejects.toThrow(expect.objectContaining({
+				statusCode: HttpCodesEnum.SERVER_ERROR,
+				message: "Error retrieving record",
+			}));
+			expect(logger.error).toHaveBeenCalledWith({
+				message: "getPersonIdentityById - failed executing get from dynamodb",
+				messageCode: MessageCodes.FAILED_FETCHING_PERSON_IDENTITY,
+				error: "Error!",
+			});
+		});
+	});
+
+	describe("#updateAccountDetails", () => {
+		const accountNumber = "12345678";
+		const sortCode = "123456";
+
+		it("saves account information to dynamo", async () => {
+			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+
+			await bavService.updateAccountDetails(sessionId, accountNumber, sortCode);
+
+			expect(UpdateCommand).toHaveBeenCalledWith({
+				TableName: tableName,
+				Key: { sessionId },
+				UpdateExpression: "SET accountNumber = :accountNumber, sortCode = :sortCode",
+				ExpressionAttributeValues: {
+					":accountNumber": accountNumber,
+					":sortCode": sortCode,
+				},
+			});
+		});
+
+		it("returns an error when account information cannot be saved to dynamo", async () => {
+			mockDynamoDbClient.send = jest.fn().mockRejectedValueOnce("Error!");
+
+			await expect(bavService.updateAccountDetails(sessionId, accountNumber, sortCode)).rejects.toThrow(expect.objectContaining({
+				statusCode: HttpCodesEnum.SERVER_ERROR,
+				message: "Error updating record",
+			}));
+			expect(logger.error).toHaveBeenCalledWith({ message: "Error updating record with account details", messageCode: MessageCodes.FAILED_UPDATING_PERSON_IDENTITY, error: "Error!" });
+		});
+	});
+
 	describe("#setAuthorizationCode", () => {
 		const authorizationCode = "AUTH_CODE";
 
@@ -333,7 +406,6 @@ describe("BAV Service", () => {
 				},
 			}));
 		});
-
 	});
 
 	describe("#updateSessionWithAccessTokenDetails", () => {
@@ -379,5 +451,4 @@ describe("BAV Service", () => {
 		});
 			
 	});
-
 });
