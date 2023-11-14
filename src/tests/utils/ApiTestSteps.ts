@@ -260,10 +260,6 @@ function validateRawHead(rawHead: any): void {
 function validateRawBody(rawBody: any): void {
 	const decodedBody = JSON.parse(jwtUtils.base64DecodeToString(rawBody.replace(/\W/g, "")));
 	expect(decodedBody.jti).toBeTruthy();
-
-	// Strength Score
 	expect(decodedBody.vc.evidence[0].strengthScore).toBe(3);
-
-	// Validity Score
 	expect(decodedBody.vc.evidence[0].validityScore).toBe(2);
 }

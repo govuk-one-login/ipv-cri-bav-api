@@ -15,15 +15,14 @@ import {
 }
     from "../utils/ApiTestSteps";
 
-describe("Test BAV End Points", () => {
-    let sessionId: any;
-
+describe("BAV CRI: /session Endpoint Happy Path Tests", () => {
+    let sessionId: string;
     beforeEach(async () => {
-        //Session Request
+        // Session Request
         sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
     });
 
-    it("BAV CRI /session Happy Path", async () => {
+    it("Successful Request Test", async () => {
         expect(sessionId).toBeTruthy();
 
         // Make sure authSession state is as expected
@@ -33,12 +32,19 @@ describe("Test BAV End Points", () => {
         const sqsMessage = await getSqsEventList("txma/", sessionId, 1);
         await validateTxMAEventData(sqsMessage);
     });
+});
 
+describe.skip("BAV CRI: /authorization Endpoint Happy Path Tests", () => {
+    let sessionId: string;
+    beforeEach(async () => {
+        // Session Request
+        sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+    });
 
-    it.skip("BAV CRI /authorization Happy Path", async () => {
+    it("Successful Request Test", async () => {
         expect(sessionId).toBeTruthy();
 
-        // Authorization
+        // Authorization request
         const authResponse = await authorizationGet(sessionId);
         expect(authResponse.status).toBe(200);
         expect(authResponse.data.authorizationCode).toBeTruthy();
@@ -52,35 +58,41 @@ describe("Test BAV End Points", () => {
         const sqsMessage = await getSqsEventList("txma/", sessionId, 2);
         await validateTxMAEventData(sqsMessage);
     });
+});
 
-    it.skip("BAV CRI /authorization - Repeated request made", async () => {
-        const origSessionId = sessionId;
-        const authResponse = await authorizationGet(sessionId);
-        const authCode = authResponse.data.authorizationCode;
-        const authRepeatResponse = await authorizationGet(origSessionId);
-        const authRepeatResponseCode = authRepeatResponse.data.authorizationCode;
-        expect(authCode).not.toEqual(authRepeatResponseCode);
+describe.skip("BAV CRI: /token Endpoint Happy Path Tests", () => {
+    let sessionId: string;
+    beforeEach(async () => {
+        // Session Request
+        sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
     });
 
-    it.skip("BAV CRI /token Happy Path", async () => {
+    it("Successful Request Test", async () => {
         const authResponse = await authorizationGet(sessionId);
 
-        // Token
+        // Token request
         const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
         expect(tokenResponse.status).toBe(200);
 
         // Verify access token expiry date exists
         await getSessionAndVerifyKeyExists(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "accessTokenExpiryDate");
 
-        // Check session state
+        // Make sure authSession state is as expected
         await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_ACCESS_TOKEN_ISSUED");
     });
+});
 
-    it.skip("BAV CRI /userinfo Happy Path", async () => {
+
+describe.skip("BAV CRI: /userinfo Endpoint Happy Path Tests", () => {
+    let sessionId: string;
+    beforeEach(async () => {
+        // Session Request
+        sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+    });
+
+    it("Successful Request Test", async () => {
         const authResponse = await authorizationGet(sessionId);
-
         const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
-
         const userInfoResponse = await userInfoPost("Bearer " + tokenResponse.data.access_token);
         expect(userInfoResponse.status).toBe(200);
 
