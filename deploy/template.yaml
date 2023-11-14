@@ -1102,6 +1102,9 @@ Resources:
         - DynamoDBWritePolicy:
             TableName:
               Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+        - DynamoDBWritePolicy:
+            TableName:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-name"
         - DynamoDBReadPolicy:
             TableName:
               Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
@@ -1117,17 +1120,18 @@ Resources:
                 "*"
               #Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
               #Resource: !Sub "arn:aws:kms:eu-west-2:060113405249:key/ff437a51-ec7e-4118-9c95-7b0bb2856836"
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "sqs:SendMessage"
-              Resource: !GetAtt TxMASQSQueue.Arn
-            - Effect: Allow
-              Action:
-                - "kms:Encrypt"
-                - "kms:Decrypt"
-                - "kms:GenerateDataKey"
-              Resource: !GetAtt TxMAKMSEncryptionKey.Arn
+        #  TODO
+        # - Statement:
+        #     - Effect: Allow
+        #       Action:
+        #         - "sqs:SendMessage"
+        #       Resource: !GetAtt TxMASQSQueue.Arn
+        #     - Effect: Allow
+        #       Action:
+        #         - "kms:Encrypt"
+        #         - "kms:Decrypt"
+        #         - "kms:GenerateDataKey"
+        #       Resource: !GetAtt TxMAKMSEncryptionKey.Arn
       Events:
         verifyAccount:
           Type: Api

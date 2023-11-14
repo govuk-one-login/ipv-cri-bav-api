@@ -38,7 +38,7 @@ export class HmrcService {
 
     async verify(
     	{ accountNumber, sortCode, name }: { accountNumber: string; sortCode: string; name: string },
-    ): Promise<HmrcVerifyResponse | void> {
+    ): Promise<HmrcVerifyResponse> {
     	const params = {
     		account: { accountNumber, sortCode },
     		subject: { name },
