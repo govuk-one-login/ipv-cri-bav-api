@@ -65,27 +65,3 @@ describe("Validations", () => {
 		});
 	});
 });
-
-// describe('eventToSubjectIdentifier', () => {
-//   let jwtAdapter: KmsJwtAdapter;
-//   let event: APIGatewayProxyEvent;
-//   beforeEach(() => {
-//     jwtAdapter = new KmsJwtAdapter(); // or your mock instance
-//     event = { headers: {} } as APIGatewayProxyEvent; // Create a base mock event
-//   });
-//   it('throws unauthorized error when authorization header is missing', async () => {
-//     await expect(eventToSubjectIdentifier(jwtAdapter, event)).rejects.toThrow(AppError);
-//   });
-//   it('throws unauthorized error when authorization header does not start with Bearer', async () => {
-//     event.headers.Authorization = 'Basic token';
-//     await expect(eventToSubjectIdentifier(jwtAdapter, event)).rejects.toThrow(AppError);
-//   });
-//   // Add more tests here for different error cases
-//   it('returns the subject identifier when JWT is valid', async () => {
-//     event.headers.Authorization = 'Bearer valid.token.here';
-//     // Mock the jwtAdapter.verify and decode functions to return true and a valid payload respectively
-//     const sub = await eventToSubjectIdentifier(jwtAdapter, event);
-//     expect(sub).toBeDefined();
-//   });
-//   // You should also test edge cases like an expired token, or a token without a 'sub' claim
-// });

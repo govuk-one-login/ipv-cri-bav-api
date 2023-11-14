@@ -140,12 +140,12 @@ export class UserInfoRequestProcessor {
 		const names = personInfo.name[0].nameParts;
 
 		// Validate the User Info data presence required to generate the VC
-		if (names && names.length > 0 && session.sortCode && session.accountNumber) {
+		if (names && names.length > 0 && personInfo.sortCode && personInfo.accountNumber) {
 
 			//Generate VC and create a signedVC as response back to IPV Core.
 			const signedJWT = await this.verifiableCredentialService.generateSignedVerifiableCredentialJwt(session, names, {
-				sortCode: session.sortCode,
-				accountNumber: session.accountNumber,
+				sortCode: personInfo.sortCode,
+				accountNumber: personInfo.accountNumber,
 			}, absoluteTimeNow);
 
 			// Add metric and send TXMA event to the sqsqueue
@@ -183,6 +183,10 @@ export class UserInfoRequestProcessor {
 		} else {
 			this.logger.error("Missing required fields to generate BAV VC", {
 				messageCode: MessageCodes.MISSING_PERSONAL_DETAILS,
+			}, {
+				names: names.length === 0 ? false : !!names,
+				sortCode: !!personInfo.sortCode,
+				accountNumber: !!personInfo.accountNumber
 			});
 			return new Response(HttpCodesEnum.BAD_REQUEST, "Bad Request");
 		}

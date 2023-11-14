@@ -29,8 +29,6 @@ function getMockSessionItem(): ISessionItem {
 		attemptCount: 1,
 		authSessionState: "BAV_ACCESS_TOKEN_ISSUED",
 		copCheckResult: "FULL_MATCH",
-		sortCode: "111111",
-		accountNumber: "10199283",
 	};
 	return sess;
 }

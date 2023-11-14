@@ -45,8 +45,6 @@ function getMockSessionItem(): ISessionItem {
 		attemptCount: 1,
 		authSessionState: "BAV_ACCESS_TOKEN_ISSUED",
 		copCheckResult: "FULL_MATCH",
-		sortCode: "111111",
-		accountNumber: "10199283",
 	};
 	return sess;
 }
@@ -54,6 +52,8 @@ function getMockSessionItem(): ISessionItem {
 function getMockPersonItem(): PersonIdentityItem {
 	const person: PersonIdentityItem = {
 		sessionId: "sdfsdg",
+		sortCode: "111111",
+		accountNumber: "10199283",
 		name: [{
 			nameParts: [
 				{ type: "GivenName", value: "FRED" },
@@ -287,10 +287,15 @@ describe("UserInfoRequestProcessor", () => {
 			sessionId: "sessionId",
 		});
 		expect(logger.error).toHaveBeenCalledWith(
-			expect.anything(),
-			expect.objectContaining({
+			"Missing required fields to generate BAV VC",
+			{
 				messageCode: "MISSING_PERSONAL_DETAILS",
-			}),
+			},
+			{
+				accountNumber: true,
+				names: false,
+				sortCode: true
+			}
 		);
 	});
 

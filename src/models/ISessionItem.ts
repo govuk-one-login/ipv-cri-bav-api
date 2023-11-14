@@ -30,7 +30,5 @@ export interface ISessionItem extends IBAVSession {
 	authSessionState: string;
 	evidence_requested?: EvidenceRequested;
 	copCheckResult?: CopCheckResult;
-	sortCode?: string;
-	accountNumber?: string;
 }
 
