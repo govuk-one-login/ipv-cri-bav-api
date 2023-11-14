@@ -51,20 +51,14 @@ export class HmrcService {
             };
             this.logger.debug("Token input params ", {tokenParams: params});
             
-			// const { data } = await axios.post(
-			// 	// `${this.HMRC_BASE_URL}${Constants.HMRC_TOKEN_ENDPOINT_PATH}`,
-            //     "https://test-api.service.hmrc.gov.uk/oauth/token",
-			// 	params,
-            //     config
-            // );
+			const { data } = await axios.post(
+				`${this.HMRC_BASE_URL}${Constants.HMRC_TOKEN_ENDPOINT_PATH}`,
+				params,
+                config
+            );
 
-			//this.logger.info("Received response from HMRC token endpoint", {TokenResponse: data});
-			return {
-                "access_token": "41b992dc45b1eff016d4010171ec7578",
-                "scope": "default",
-                "expires_in": 14400,
-                "token_type": "bearer",
-            };
+			this.logger.info("Received response from HMRC token endpoint", {TokenResponse: data});
+            return data;
 		} catch (error: any) {
 			this.logger.error({ message: "An error occurred when generating HMRC token", hmrcErrorMessage: error.message, hmrcErrorCode: error.code, messageCode: MessageCodes.FAILED_GENERATING_HMRC_TOKEN });
 			throw new AppError(HttpCodesEnum.SERVER_ERROR, "Error generating HMRC token");

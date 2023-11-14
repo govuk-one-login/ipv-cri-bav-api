@@ -103,7 +103,7 @@ Mappings:
       CLIENTS: '[{"jwksEndpoint":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/redirect?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
       TESTHARNESSURL: "https://bav-test-harness-testharness.review-bav.dev.account.gov.uk"
-      HMRCBASEURL: "https://test-api.service.hmrc.gov.uk"
+      HMRCBASEURL: "https://api.isc.externaltest.tax.service.gov.uk"
     build:
       ISSUER: 'https://review-bav.build.account.gov.uk'
       DNSSUFFIX: review-bav.build.account.gov.uk
@@ -113,7 +113,7 @@ Mappings:
       CLIENTS: '[{"jwksEndpoint":"https://bav-ipv-stub-ipvstub.review-bav.build.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://bav-ipv-stub-ipvstub.review-bav.build.account.gov.uk/redirect?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
       TESTHARNESSURL: "https://bav-test-harness-testharness.review-bav.build.account.gov.uk"
-      HMRCBASEURL: "https://test-api.service.hmrc.gov.uk"
+      HMRCBASEURL: "https://api.isc.externaltest.tax.service.gov.uk"
   TxMAAccounts:
     # EVENTS is used to egress to TxMA.
     dev:
@@ -1144,8 +1144,7 @@ Resources:
         InvocationLevel:
           Type: Schedule
           Properties:
-            #Schedule: cron(0 0/3 * * * *)
-            Schedule: cron(0 * * * ? *)
+            Schedule: cron(0 0/3 * * ? *)
       Environment:
         Variables:
           HMRC_CLIENT_ID_SSM_PATH: !Sub "/${Environment}/HMRC/CLIENT_ID"
