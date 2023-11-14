@@ -3,6 +3,7 @@
 import { Logger } from "@aws-lambda-powertools/logger";
 import axios from "axios";
 import { mock } from "jest-mock-extended";
+import { hmrcVerifyResponse } from "../data/hmrcEvents";
 import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../../../models/enums/MessageCodes";
 import { HmrcService } from "../../../services/HmrcService";
@@ -25,19 +26,7 @@ describe("HMRC Service", () => {
 		const name = "Test Testing";
 
 		it("calls HMRC verify endpoint with correct params", async () => {
-			const hmrcMockResponse = {
-				"accountNumberIsWellFormatted": "no",
-				"nonStandardAccountDetailsRequiredForBacs": "inapplicable",
-				"sortCodeBankName": "THE ROYAL BANK OF SCOTLAND PLC",
-				"sortCodeIsPresentOnEISCD": "yes",
-				"sortCodeSupportsDirectDebit": "no",
-				"sortCodeSupportsDirectCredit": "no",
-				"iban": "GB25NWBK60080600724890",
-				"accountExists": "indeterminate",
-				"nameMatches": "no",
-				"accountName": "Mr Peter Smith",
-			};
-			jest.spyOn(axios, "post").mockResolvedValueOnce(hmrcMockResponse);
+			jest.spyOn(axios, "post").mockResolvedValueOnce(hmrcVerifyResponse);
 
 			const response = await hmrcServiceTest.verify({ accountNumber, sortCode, name });
 
@@ -51,15 +40,15 @@ describe("HMRC Service", () => {
 			);
 			expect(logger.debug).toHaveBeenCalledWith({
 				message: "Recieved reponse from HMRC COP verify request",
-				accountNumberIsWellFormatted: hmrcMockResponse.accountNumberIsWellFormatted,
-				accountExists: hmrcMockResponse.accountExists,
-				nameMatches: hmrcMockResponse.nameMatches,
-				nonStandardAccountDetailsRequiredForBacs: hmrcMockResponse.nonStandardAccountDetailsRequiredForBacs,
-				sortCodeIsPresentOnEISCD: hmrcMockResponse.sortCodeIsPresentOnEISCD,
-				sortCodeSupportsDirectDebit: hmrcMockResponse.sortCodeSupportsDirectDebit,
-				sortCodeSupportsDirectCredit: hmrcMockResponse.sortCodeSupportsDirectCredit,
+				accountNumberIsWellFormatted: hmrcVerifyResponse.accountNumberIsWellFormatted,
+				accountExists: hmrcVerifyResponse.accountExists,
+				nameMatches: hmrcVerifyResponse.nameMatches,
+				nonStandardAccountDetailsRequiredForBacs: hmrcVerifyResponse.nonStandardAccountDetailsRequiredForBacs,
+				sortCodeIsPresentOnEISCD: hmrcVerifyResponse.sortCodeIsPresentOnEISCD,
+				sortCodeSupportsDirectDebit: hmrcVerifyResponse.sortCodeSupportsDirectDebit,
+				sortCodeSupportsDirectCredit: hmrcVerifyResponse.sortCodeSupportsDirectCredit,
 			});
-			expect(response).toEqual(hmrcMockResponse);
+			expect(response).toEqual(hmrcVerifyResponse);
 		});
 
 		it("returns error if HMRC verify call fails", async () => {
