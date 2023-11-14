@@ -22,6 +22,7 @@ let HMRC_CLIENT_SECRET: string;
 
 class HmrcTokenHandler implements LambdaInterface {
 	private readonly HMRC_CLIENT_ID_SSM_PATH = checkEnvironmentVariable(EnvironmentVariables.HMRC_CLIENT_ID_SSM_PATH, logger);
+
 	private readonly HMRC_CLIENT_SECRET_SSM_PATH = checkEnvironmentVariable(EnvironmentVariables.HMRC_CLIENT_SECRET_SSM_PATH, logger);
 
 	async handler(): Promise<void> {

@@ -7,3 +7,6 @@ process.env.AUTH_SESSION_TTL_SECS = '950400'
 process.env.ISSUER = 'https://XXX-c.env.account.gov.uk'
 process.env.ENCRYPTION_KEY_IDS = 'EncryptionKeyArn'
 process.env.CLIENT_CONFIG = '[{"jwksEndpoint":"https://api.identity.account.gov.uk/.well-known/jwks.json","clientId":"ipv-core-stub","redirectUri":"http://localhost:8085/callback"}]'
+process.env.HMRC_CLIENT_ID_SSM_PATH = '/dev/HMRC/CLIENT_ID'
+process.env.HMRC_CLIENT_SECRET_SSM_PATH = '/dev/HMRC/CLIENT_SECRET'
+process.env.HMRC_BASE_URL = "https://api.isc.externaltest.tax.service.gov.uk"

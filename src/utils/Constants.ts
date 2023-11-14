@@ -51,6 +51,10 @@ export class Constants {
   static readonly AUTHORIZATION_CODE_INDEX_NAME = "authorizationCode-index";
 
   static readonly HMRC_TOKEN_ENDPOINT_PATH = "/oauth/token";
+
+  static readonly HMRC_TOKEN_SSM_PATH = "/dev/HMRC/TOKEN";
+
+  static readonly HMRC_EXPECTED_TOKEN_EXPIRES_IN = 14400;
   
   
 }

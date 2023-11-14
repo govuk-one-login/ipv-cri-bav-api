@@ -10,16 +10,15 @@ export async function getParameter(path: string): Promise<string> {
 	return response.Parameter.Value;
 }
 
-export async function putParameter(parameterName: string, parameterValue: string, type: string, description: string): Promise<PutParameterCommandOutput>{
+export async function putParameter(parameterName: string, parameterValue: string, type: string, description: string): Promise<void | undefined> {
 	const client = new SSMClient({ region: process.env.REGION });
 	const input = { 
 		Name: parameterName, 
 		Type: type,
 		Description: description,
 		Value: parameterValue,
-		Overwrite: true
+		Overwrite: true,
 	  };
 	  const command = new PutParameterCommand(input);
-	  const response = await client.send(command);
-	  return response;
+	  await client.send(command);
 }

@@ -1,6 +1,6 @@
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
-import { EnvironmentVariables } from "../utils/Constants";
+import { Constants, EnvironmentVariables } from "../utils/Constants";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 import { HmrcService } from "./HmrcService";
 import { AppError } from "../utils/AppError";
@@ -33,19 +33,25 @@ export class HmrcTokenRequestProcessor {
 	}
 
 	async processRequest(): Promise<void> {		
-		this.logger.info("Generating a new hmrc token ");
-		try{
+		this.logger.info("Generating a new hmrc access token ");
+		try {
 			const data = await this.hmrcService.generateToken();
-			if(!data){
-				throw new AppError(HttpCodesEnum.SERVER_ERROR, "Failed generating hmrc token");
+			console.log("token: " + JSON.stringify(data));
+			if (!data) {
+				throw new AppError(HttpCodesEnum.SERVER_ERROR, "Failed generating hmrc access token");
 			}
 
-			this.logger.info("Storing the HMRC token to SSM");
-			await putParameter("/dev/HMRC/TOKEN", data.access_token, "String", "HMRC token");
+			// Validating expires_in 
+			if (data.expires_in !== Constants.HMRC_EXPECTED_TOKEN_EXPIRES_IN) {
+				this.logger.error(`expires_in doesnt match the expected value, received ${data.expires_in} instead of ${Constants.HMRC_EXPECTED_TOKEN_EXPIRES_IN}`);
+			}
+
+			this.logger.info("Storing the HMRC access token to SSM");
+			await putParameter(Constants.HMRC_TOKEN_SSM_PATH, data.access_token, "String", "HMRC Access token");
 			this.logger.info("Successfully Stored the HMRC token to SSM");
-		} catch(error){
-			this.logger.error("Server Error", {error});
-			throw new AppError(HttpCodesEnum.SERVER_ERROR, "Error storing the SSM Parameter");
+		} catch (error) {
+			this.logger.error("Server Error", { error });
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "Error generating HMRC access token");
 		}
 		
 	}
