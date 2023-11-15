@@ -2,6 +2,7 @@ import { Logger } from "@aws-lambda-powertools/logger";
 import { Constants } from "../utils/Constants";
 import axios from "axios";
 import { AppError } from "../utils/AppError";
+import { getParameter } from "../utils/Config";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { HmrcVerifyResponse } from "../models/IHmrcResponse";
@@ -13,11 +14,11 @@ export class HmrcService {
 
     readonly HMRC_BASE_URL: string;
 
-    readonly HMRC_CLIENT_ID: string;
+    readonly HMRC_CLIENT_ID: string | undefined;
 
-    readonly HMRC_CLIENT_SECRET: string;
+    readonly HMRC_CLIENT_SECRET: string | undefined;
 
-    constructor(logger: Logger, HMRC_CLIENT_ID: string, HMRC_CLIENT_SECRET: string, HMRC_BASE_URL: string) {
+    constructor(logger: Logger, HMRC_BASE_URL: string, HMRC_CLIENT_ID?: string, HMRC_CLIENT_SECRET?: string) {
     	this.logger = logger;
     	this.HMRC_BASE_URL = HMRC_BASE_URL;
     	this.HMRC_CLIENT_ID = HMRC_CLIENT_ID;
@@ -26,39 +27,46 @@ export class HmrcService {
 
     static getInstance(
     	logger: Logger,
-    	HMRC_CLIENT_ID: string,
-    	HMRC_CLIENT_SECRET:string,
     	HMRC_BASE_URL: string,
+    	HMRC_CLIENT_ID?: string,
+    	HMRC_CLIENT_SECRET?: string,
     ): HmrcService {
     	if (!HmrcService.instance) {
-    		HmrcService.instance = new HmrcService(logger, HMRC_CLIENT_ID, HMRC_CLIENT_SECRET, HMRC_BASE_URL);
+    		HmrcService.instance = new HmrcService(logger, HMRC_BASE_URL, HMRC_CLIENT_ID, HMRC_CLIENT_SECRET);
     	}
     	return HmrcService.instance;
     }
 
+    // eslint-disable-next-line max-lines-per-function
     async verify(
-    	{ accountNumber, sortCode, name }: { accountNumber: string; sortCode: string; name: string },
+    	{ accountNumber, sortCode, name }: { accountNumber: string; sortCode: string; name: string }, hmrcTokenSsmPath: string,
     ): Promise<HmrcVerifyResponse> {
+    	const token = await getParameter(hmrcTokenSsmPath);
     	const params = {
     		account: { accountNumber, sortCode },
     		subject: { name },
     	};
+    	const headers = {
+    		"User-Agent": Constants.HMRC_USER_AGENT,
+    		"Authorization": `Bearer ${token}`,
+    	};
 
     	try {
     		this.logger.info("Sending COP verify request to HMRC");
-    		const response: HmrcVerifyResponse = await axios.post(`${this.HMRC_BASE_URL}/${Constants.HMRC_VERIFY_ENDPOINT_PATH}`, params);
+    		const { data }: { data: HmrcVerifyResponse } = await axios.post(`${this.HMRC_BASE_URL}/${Constants.HMRC_VERIFY_ENDPOINT_PATH}`, params, { headers });
+
     		this.logger.debug({
     			message: "Recieved reponse from HMRC COP verify request",
-    			accountNumberIsWellFormatted: response.accountNumberIsWellFormatted,
-    			accountExists: response.accountExists,
-    			nameMatches: response.nameMatches,
-    			nonStandardAccountDetailsRequiredForBacs: response.nonStandardAccountDetailsRequiredForBacs,
-    			sortCodeIsPresentOnEISCD: response.sortCodeIsPresentOnEISCD,
-    			sortCodeSupportsDirectDebit: response.sortCodeSupportsDirectDebit,
-    			sortCodeSupportsDirectCredit: response.sortCodeSupportsDirectCredit,
+    			accountNumberIsWellFormatted: data.accountNumberIsWellFormatted,
+    			accountExists: data.accountExists,
+    			nameMatches: data.nameMatches,
+    			nonStandardAccountDetailsRequiredForBacs: data.nonStandardAccountDetailsRequiredForBacs,
+    			sortCodeIsPresentOnEISCD: data.sortCodeIsPresentOnEISCD,
+    			sortCodeSupportsDirectDebit: data.sortCodeSupportsDirectDebit,
+    			sortCodeSupportsDirectCredit: data.sortCodeSupportsDirectCredit,
     		});
 
-    		return response;
+    		return data;
     	} catch (error: any) {
     		const message = "Error sending COP verify request to HMRC";
     		this.logger.error({ message, messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT });

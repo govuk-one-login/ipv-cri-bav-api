@@ -24,11 +24,12 @@ describe("HMRC Service", () => {
 		const accountNumber = "12345678";
 		const sortCode = "123456";
 		const name = "Test Testing";
+		const hmrcTokenSsmPath = "dev/HMRC/TOKEN";
 
-		it("calls HMRC verify endpoint with correct params", async () => {
-			jest.spyOn(axios, "post").mockResolvedValueOnce(hmrcVerifyResponse);
+		it("calls HMRC verify endpoint with correct params and headers", async () => {
+			jest.spyOn(axios, "post").mockResolvedValueOnce({ data: hmrcVerifyResponse });
 
-			const response = await hmrcServiceTest.verify({ accountNumber, sortCode, name });
+			const response = await hmrcServiceTest.verify({ accountNumber, sortCode, name }, hmrcTokenSsmPath);
 
 			expect(logger.info).toHaveBeenCalledWith("Sending COP verify request to HMRC");
 			expect(axios.post).toHaveBeenCalledWith(
@@ -36,6 +37,11 @@ describe("HMRC Service", () => {
 				{
 					account: { accountNumber, sortCode },
 					subject: { name },
+				},
+				{ 
+					headers: {
+						"User-Agent": Constants.HMRC_USER_AGENT,
+					},
 				},
 			);
 			expect(logger.debug).toHaveBeenCalledWith({
@@ -55,11 +61,12 @@ describe("HMRC Service", () => {
 			jest.spyOn(axios, "post").mockRejectedValueOnce("Error!");
 
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-			await expect(hmrcServiceTest.verify({ accountNumber, sortCode, name })).rejects.toThrow(expect.objectContaining({
-				statusCode: HttpCodesEnum.UNAUTHORIZED,
-				message: "Error sending COP verify request to HMRC",
-			}));
-			expect(logger.error).toHaveBeenCalledWith({ message: "Error sending verif COP request to HMRC", messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT });
+			await expect(hmrcServiceTest.verify({ accountNumber, sortCode, name }, hmrcTokenSsmPath))
+				.rejects.toThrow(expect.objectContaining({
+					statusCode: HttpCodesEnum.UNAUTHORIZED,
+					message: "Error sending COP verify request to HMRC",
+				}));
+			expect(logger.error).toHaveBeenCalledWith({ message: "Error sending COP verify request to HMRC", messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT });
 		});
 	});
 });

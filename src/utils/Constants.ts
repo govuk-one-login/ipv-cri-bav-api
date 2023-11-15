@@ -53,6 +53,8 @@ export class Constants {
   static readonly AUTHORIZATION_CODE_INDEX_NAME = "authorizationCode-index";
   
   static readonly HMRC_VERIFY_ENDPOINT_PATH = "verify/personal";
+
+	static readonly HMRC_USER_AGENT = "one-login-bav-cri";
 }
 
 export const EnvironmentVariables = {
@@ -69,5 +71,6 @@ export const EnvironmentVariables = {
 	HMRC_BASE_URL: "HMRC_BASE_URL",
 	HMRC_CLIENT_ID: "HMRC_CLIENT_ID",
 	HMRC_CLIENT_SECRET: "HMRC_CLIENT_SECRET",
+	HMRC_TOKEN_SSM_PATH: "HMRC_TOKEN_SSM_PATH",
 };
 

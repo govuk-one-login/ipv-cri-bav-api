@@ -103,6 +103,7 @@ Mappings:
       CLIENTS: '[{"jwksEndpoint":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/redirect?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
       TESTHARNESSURL: "https://bav-test-harness-testharness.review-bav.dev.account.gov.uk"
+      HMRCVERIFYBASEURL: "https://api.isc.externaltest.tax.service.gov.uk/misc/bank-account"
     build:
       ISSUER: 'https://review-bav.build.account.gov.uk'
       DNSSUFFIX: review-bav.build.account.gov.uk
@@ -112,6 +113,7 @@ Mappings:
       CLIENTS: '[{"jwksEndpoint":"https://bav-ipv-stub-ipvstub.review-bav.build.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://bav-ipv-stub-ipvstub.review-bav.build.account.gov.uk/redirect?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
       TESTHARNESSURL: "https://bav-test-harness-testharness.review-bav.build.account.gov.uk"
+      HMRCVERIFYBASEURL: "https://api.isc.externaltest.tax.service.gov.uk/misc/bank-account"
   TxMAAccounts:
     # EVENTS is used to egress to TxMA.
     dev:
@@ -907,14 +909,17 @@ Resources:
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: verifyAccountHandler
-          ISSUER: !FindInMap [EnvironmentVariables, !Ref Environment, ISSUER]
           KMS_KEY_ARN:
             Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
           ENCRYPTION_KEY_IDS:
             Fn::ImportValue: !Sub "${L2KMSStackName}-encryption-key"
+          HMRC_TOKEN_SSM_PATH: !Sub "/${Environment}/HMRC/TOKEN"
+          HMRC_BASE_URL: !FindInMap [ EnvironmentVariables, !Ref Environment, HMRCVERIFYBASEURL ]
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub "${Environment}/HMRC/TOKEN"
         - DynamoDBWritePolicy:
             TableName:
               Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
@@ -924,6 +929,9 @@ Resources:
         - DynamoDBReadPolicy:
             TableName:
               Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+        - DynamoDBReadPolicy:
+            TableName:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-name"
         - KMSDecryptPolicy:
             KeyId:
               Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-key-id"
