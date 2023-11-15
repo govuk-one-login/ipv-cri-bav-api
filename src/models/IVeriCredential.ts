@@ -1,6 +1,5 @@
 export interface CredentialSubject {
 	name: object[];
-	birthDate: object[];
 }
 export interface VerifiedCredential {
 	"@context": string[];
@@ -102,7 +101,6 @@ export type VerifiedCredentialEvidence = Array<{
 
 export interface VerifiedCredentialSubject {
 	name?: Name[];
-	birthDate?: BirthDate[];
 }
 
 export interface Name {
@@ -112,8 +110,4 @@ export interface Name {
 export interface NamePart {
 	value: string;
 	type: string;
-}
-
-export interface BirthDate {
-	value: string;
 }

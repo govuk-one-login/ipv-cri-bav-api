@@ -24,7 +24,6 @@ export interface BaseTxmaEvent {
 export interface RestrictedObject {
 	"user"?: VerifiedCredentialSubject;
 	"name"?: object[];
-	"birthDate"?: object[];
 }
 
 export type VerifiedCredentialEvidenceTxMA = Array<{

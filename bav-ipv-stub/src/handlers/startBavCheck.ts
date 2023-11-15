@@ -43,11 +43,6 @@ export const handler = async (
         ],
       },
     ],
-    birthDate: [
-      {
-        value: "1960-02-02",
-      },
-    ],
   };
 
   const iat = Math.floor(Date.now() / 1000);

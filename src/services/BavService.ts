@@ -103,10 +103,6 @@ export class BavService {
 		}
 	}
 
-	private mapBirthDate(birthDate: PersonIdentityDateOfBirth[]): PersonIdentityDateOfBirth[] {
-		return birthDate?.map((bd) => ({ value: bd.value }));
-	}
-
 	private mapNames(name: PersonIdentityName[]): PersonIdentityName[] {
 		return name?.map((index) => ({
 			nameParts: index?.nameParts?.map((namePart) => ({
@@ -124,7 +120,6 @@ export class BavService {
 
 		return {
 			sessionId,
-			birthDate: this.mapBirthDate(sharedClaims.birthDate),
 			name: this.mapNames(sharedClaims.name),
 			expiryDate: absoluteTimeNow() + +authSessionTtlInSecs,
 			createdDate: absoluteTimeNow(),

@@ -5,9 +5,10 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { HttpCodesEnum } from "./models/enums/HttpCodesEnum";
 import { MessageCodes } from "./models/enums/MessageCodes";
 import { AuthorizationRequestProcessor } from "./services/AuthorizationRequestProcessor";
-import { Response } from "./utils/Response";
 import { AppError } from "./utils/AppError";
 import { Constants } from "./utils/Constants";
+import { Response } from "./utils/Response";
+import { getSessionIdHeaderErrors } from "./utils/Validations";
 
 const { POWERTOOLS_METRICS_NAMESPACE = Constants.BAV_METRICS_NAMESPACE, POWERTOOLS_LOG_LEVEL = "DEBUG", POWERTOOLS_SERVICE_NAME = Constants.AUTHORIZATION_LOGGER_SVC_NAME } = process.env;
 
@@ -26,30 +27,16 @@ class AuthorizationHandler implements LambdaInterface {
 		logger.setPersistentLogAttributes({});
 		logger.addContext(context);
 				
-		let sessionId: string;
 		try {
 			logger.info("Received authorization request", { requestId: event.requestContext.requestId });
 
-			// TODO implement getSessionIdHeaderErrors
-			if (!event.headers) {
-				logger.error("Empty headers", { messageCode: MessageCodes.MISSING_HEADER });
-				return new Response(HttpCodesEnum.BAD_REQUEST, "Empty headers");
+			const sessionIdError = getSessionIdHeaderErrors(event.headers);
+			if (sessionIdError) {
+				logger.error({ message: sessionIdError, messageCode: MessageCodes.INVALID_SESSION_ID });
+				throw new AppError(HttpCodesEnum.BAD_REQUEST, sessionIdError);
 			}
-
-			if (!event.headers[Constants.SESSION_ID]) {
-				const message = `Missing header: ${Constants.SESSION_ID} is required`;
-				logger.error({ message, messageCode: MessageCodes.MISSING_HEADER });
-				return new Response(HttpCodesEnum.BAD_REQUEST, message);
-			}
-
-			sessionId = event.headers[Constants.SESSION_ID]!;
-			logger.appendKeys({ sessionId });
-
-			if (!Constants.REGEX_UUID.test(sessionId)) {
-				const message = `${Constants.SESSION_ID} header does not contain a valid uuid`;
-				logger.error({ message, messageCode: MessageCodes.INVALID_SESSION_ID });
-				return new Response(HttpCodesEnum.BAD_REQUEST, message);
-			}
+	
+			const sessionId = event.headers[Constants.X_SESSION_ID]!;
 
 			return await AuthorizationRequestProcessor.getInstance(logger, metrics).processRequest(sessionId);
 
