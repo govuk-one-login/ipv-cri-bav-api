@@ -719,7 +719,6 @@ components:
           pattern: ^[0-9]{6,8}$
           example: "12345678"
           description: bank account number
-          # TODO name
     OAuthErrorResponse:
       type: object
       additionalProperties: true
