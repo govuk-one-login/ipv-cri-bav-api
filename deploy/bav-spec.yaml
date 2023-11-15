@@ -212,9 +212,9 @@ paths:
   /verify-account:
     post:
       operationId: postVerifyAccount
-      summary: xxxx
+      summary: verify bank account details for a user
       description: >-
-        xxx
+        verify name, account number and sort code against the HMRC bank account verification service
       tags:
         - Backend - Common CRI Lambda
       requestBody:
@@ -228,7 +228,7 @@ paths:
       responses:
         "201":
           description: >-
-            xxx
+            Success response for either a full or partial bank account match
           headers:
             Cache-Control:
               schema:
@@ -611,7 +611,6 @@ components:
           pattern: ^[0-9]{6,8}$
           example: "12345678"
           description: bank account number
-          # TODO name
     OAuthErrorResponse:
       type: object
       additionalProperties: true
