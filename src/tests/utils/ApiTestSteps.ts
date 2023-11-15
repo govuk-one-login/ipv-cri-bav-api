@@ -1,4 +1,4 @@
-import { fromNodeProviderChain } from "@aws-sdk/credential-providers"; 
+import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import axios, { AxiosInstance } from "axios";
 import { aws4Interceptor } from "aws4-axios";
 import { XMLParser } from "fast-xml-parser";
@@ -6,11 +6,12 @@ import Ajv from "ajv";
 import wellKnownGetSchema from "../data/wellKnownJwksResponseSchema.json";
 import { constants } from "./ApiConstants";
 import { ISessionItem } from "../../models/ISessionItem";
+import { jwtUtils } from "../../utils/JwtUtils";
 
 const API_INSTANCE = axios.create({ baseURL: constants.DEV_CRI_BAV_API_URL });
 const ajv = new Ajv({ strict: false });
 
-const HARNESS_API_INSTANCE : AxiosInstance = axios.create({ baseURL: constants.DEV_BAV_TEST_HARNESS_URL });
+const HARNESS_API_INSTANCE: AxiosInstance = axios.create({ baseURL: constants.DEV_BAV_TEST_HARNESS_URL });
 
 const customCredentialsProvider = {
 	getCredentials: fromNodeProviderChain({
@@ -86,7 +87,7 @@ export async function tokenPost(authCode?: any, redirectUri?: any): Promise<any>
 }
 
 export async function userInfoPost(accessToken?: any): Promise<any> {
-	const path = "/userInfo";
+	const path = "/userinfo";
 	try {
 		const postRequest = await API_INSTANCE.post(path, null, { headers: { "Authorization": `${accessToken}` } });
 		return postRequest;
@@ -94,7 +95,6 @@ export async function userInfoPost(accessToken?: any): Promise<any> {
 		console.log(`Error rrsponse from ${path} endpoint ${error}.`);
 		return error.response;
 	}
-
 }
 
 export async function wellKnownGet(): Promise<any> {
@@ -242,4 +242,24 @@ export async function validateTxMAEventData(keyList: any): Promise<any> {
 				expect(valid).toBe(true);
 			});
 	}
+}
+
+export async function validateJwtToken(jwtToken: any): Promise<void> {
+	const [rawHead, rawBody, signature] = jwtToken.split(".");
+
+	validateRawHead(rawHead);
+	validateRawBody(rawBody);
+}
+
+function validateRawHead(rawHead: any): void {
+	const decodeRawHead = JSON.parse(jwtUtils.base64DecodeToString(rawHead.replace(/\W/g, "")));
+	expect(decodeRawHead.alg).toBe("ES256");
+	expect(decodeRawHead.typ).toBe("JWT");
+}
+
+function validateRawBody(rawBody: any): void {
+	const decodedBody = JSON.parse(jwtUtils.base64DecodeToString(rawBody.replace(/\W/g, "")));
+	expect(decodedBody.jti).toBeTruthy();
+	expect(decodedBody.vc.evidence[0].strengthScore).toBe(3);
+	expect(decodedBody.vc.evidence[0].validityScore).toBe(2);
 }
