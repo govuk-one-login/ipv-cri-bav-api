@@ -37,7 +37,6 @@ const person: PersonIdentityItem = {
 			type: "FamilyName",
 		}],
 	}],
-	birthDate: [{ value: "01/01/1990" }],
 	expiryDate: 123456789,
 	createdDate: 123456789,
 };
@@ -87,7 +86,7 @@ describe("VerifyAccountRequestProcessor", () => {
 
 			await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
 
-			expect(mockHmrcService.verify).toHaveBeenCalledWith({ accountNumber: body.account_number, sortCode: body.sort_code, name: "Frederick Joseph Flintstone" });
+			expect(mockHmrcService.verify).toHaveBeenCalledWith({ accountNumber: body.account_number, sortCode: body.sort_code, name: "Frederick Joseph Flintstone" }, "dev/HMRC/TOKEN" );
 		});
 
 		it("saves saveCopCheckResult and returns success where there has been a match", async () => {

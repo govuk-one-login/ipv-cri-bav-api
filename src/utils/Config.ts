@@ -1,12 +1,11 @@
 import { GetParameterCommand, SSMClient } from "@aws-sdk/client-ssm";
 
-// TODO add tests
-export async function getParameter(path: string): Promise<string> {
+export const getParameter = async (path: string): Promise<string | void> => {
 	const client = new SSMClient({ region: process.env.REGION });
 	const command = new GetParameterCommand({ Name: path });
 	const response = await client.send(command);
 
-	if (response.Parameter == null) { throw new Error("Parameter not found"); }
-	if (response.Parameter.Value == null) { throw new Error("Parameter is null"); }
-	return response.Parameter.Value;
-}
+	if (!response.Parameter) throw new Error("Parameter not found");
+	if (!response.Parameter?.Value) throw new Error("Parameter value is empty");
+	return response.Parameter?.Value;
+};
