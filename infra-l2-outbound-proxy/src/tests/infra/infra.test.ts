@@ -17,12 +17,11 @@ describe("Outbound Proxy Api Gateway Integration URLs", () => {
     ${"production"}  | ${"https://api.isc.externaltest.tax.service.gov.uk"} | ${"proxy.review-bav.account.gov.uk"}
   `(
     `HTTP proxy integration with proxied URIs for $ENVIRONMENT have correct values`,
-    ({ ENVIRONMENT, POSTOFFICEURL, YOTIURL, PRETTYPROXYURL }) => {
+    ({ ENVIRONMENT, HMRCURL, PRETTYPROXYURL }) => {
       const mappings = helper
         .getTemplate()
         .findMappings("EnvironmentVariables");
-      expect(mappings.EnvironmentVariables[ENVIRONMENT].POSTOFFICEURL).toBe(POSTOFFICEURL)
-      expect(mappings.EnvironmentVariables[ENVIRONMENT].YOTIURL).toBe(YOTIURL)
+      expect(mappings.EnvironmentVariables[ENVIRONMENT].HMRCURL).toBe(HMRCURL)
       expect(mappings.EnvironmentVariables[ENVIRONMENT].PRETTYPROXYURL).toBe(PRETTYPROXYURL)
     }
   );
@@ -32,12 +31,8 @@ it("The Outbound Proxy Api Gateway integration type http proxy", () => {
   expect_proxy(helper.getTemplate());
 })
 
-it("The Outbound Proxy Api Gateway route any method under /postoffice - proxy", () => {
-  expect_route_postoffice(helper.getTemplate());
-})
-
-it("The Outbound Proxy Api Gateway route any method under /yoti - proxy", () => {
-  expect_route_yoti(helper.getTemplate());
+it("The Outbound Proxy Api Gateway route any method under /hmrc - proxy", () => {
+  expect_route_hmrc(helper.getTemplate());
 })
 
 it("The Outbound Proxy API should contain default stage with this specification", () => {
@@ -55,27 +50,14 @@ const expect_proxy = (template: Template) => {
   });
 }
 
-const expect_route_postoffice = (template: Template) => {
+const expect_route_hmrc = (template: Template) => {
   template.hasResourceProperties("AWS::ApiGatewayV2::Route", {
     ApiId: { Ref: "OutboundProxyApiGatewayAPI" },
-    RouteKey: "ANY /postoffice/{proxy+}",
+    RouteKey: "ANY /hmrc/{proxy+}",
     Target: Match.objectLike({
       "Fn::Join": [
         "/",
         ["integrations", { Ref: "PostOfficeProxyApiGatewayIntegration" }],
-      ],
-    }),
-  });
-}
-
-const expect_route_yoti = (template: Template) => {
-  template.hasResourceProperties("AWS::ApiGatewayV2::Route", {
-    ApiId: { Ref: "OutboundProxyApiGatewayAPI" },
-    RouteKey: "ANY /yoti/{proxy+}",
-    Target: Match.objectLike({
-      "Fn::Join": [
-        "/",
-        ["integrations", { Ref: "YotiProxyApiGatewayIntegration" }],
       ],
     }),
   });

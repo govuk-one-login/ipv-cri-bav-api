@@ -9,7 +9,7 @@ BAV Outbound Proxy API Gateway definition
 
 ## Developing an HTTP API as a proxy for outbound services integrated with BAV
 
-This HTTP proxy integration will enable us to connect an API route to outbound integrated services within F2F - currently these are Yoti, Gov.Notify and the Post Office.
+This HTTP proxy integration will enable us to connect an API route to outbound integrated services within BAV - currently these are Yoti, Gov.Notify and the Post Office.
 
 1. The client submits a request to the new endpoint, routed to the new API Gateway.
 

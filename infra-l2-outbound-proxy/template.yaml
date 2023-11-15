@@ -52,51 +52,28 @@ Resources:
       Description: !Sub "BAV Outbound Proxy API. ${AWS::StackName}"
       ProtocolType: HTTP
 
-  PostOfficeProxyApiGatewayIntegration:
+  HMRCProxyApiGatewayIntegration:
     Type: 'AWS::ApiGatewayV2::Integration'
     Properties:
       ApiId: !Ref OutboundProxyApiGatewayAPI
-      Description: HTTP proxy integration with Post Office endpoints
+      Description: HTTP proxy integration with HMRC endpoints
       IntegrationType: HTTP_PROXY
       IntegrationMethod: ANY
       IntegrationUri: !Sub
         - "${URL}/{proxy}"
         - URL:
-            !FindInMap [ EnvironmentVariables, !Ref Environment, POSTOFFICEURL ]
+            !FindInMap [ EnvironmentVariables, !Ref Environment, HMRCURL ]
       PayloadFormatVersion: '1.0'
 
-  PostOfficeProxyApiGatewayRoute:
+  HMRCProxyApiGatewayRoute:
     Type: 'AWS::ApiGatewayV2::Route'
     Properties:
       ApiId: !Ref OutboundProxyApiGatewayAPI
-      RouteKey: 'ANY /postoffice/{proxy+}'
+      RouteKey: 'ANY /hmrc/{proxy+}'
       Target: !Join
         - /
         - - integrations
-          - !Ref PostOfficeProxyApiGatewayIntegration
-
-  YotiProxyApiGatewayIntegration:
-    Type: 'AWS::ApiGatewayV2::Integration'
-    Properties:
-      ApiId: !Ref OutboundProxyApiGatewayAPI
-      Description: HTTP proxy integration with Yoti endpoints
-      IntegrationType: HTTP_PROXY
-      IntegrationMethod: ANY
-      IntegrationUri: !Sub
-        - "${URL}/{proxy}"
-        - URL:
-            !FindInMap [ EnvironmentVariables, !Ref Environment, YOTIURL ]
-      PayloadFormatVersion: '1.0'
-
-  YotiProxyApiGatewayRoute:
-    Type: 'AWS::ApiGatewayV2::Route'
-    Properties:
-      ApiId: !Ref OutboundProxyApiGatewayAPI
-      RouteKey: 'ANY /yoti/{proxy+}'
-      Target: !Join
-        - /
-        - - integrations
-          - !Ref YotiProxyApiGatewayIntegration
+          - !Ref HMRCProxyApiGatewayIntegration
 
   OutboundProxyApiGatewayStageDefault:
     Type: 'AWS::ApiGatewayV2::Stage'
