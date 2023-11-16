@@ -31,6 +31,7 @@ describe("BAV CRI: /session Endpoint Unhappy Path Tests", () => {
 	});
 });
 
+// eslint-disable-next-line @typescript-eslint/tslint/config
 describe.skip("BAV CRI: /authorization Endpoint Unhappy Path Tests", () => {
 	let sessionId: string;
 	beforeEach(async () => {
@@ -54,6 +55,7 @@ describe.skip("BAV CRI: /authorization Endpoint Unhappy Path Tests", () => {
 	});
 });
 
+// eslint-disable-next-line @typescript-eslint/tslint/config
 describe.skip("BAV CRI: /token Endpoint Unhappy Path Tests", () => {
 	let sessionId: string;
 	beforeEach(async () => {
@@ -74,6 +76,7 @@ describe.skip("BAV CRI: /token Endpoint Unhappy Path Tests", () => {
 	});
 });
 
+// eslint-disable-next-line @typescript-eslint/tslint/config
 describe.skip("BAV CRI: /userinfo Endpoint Unhappy Path Tests", () => {
 	it("Non-bearer Type Authentication Test", async () => {
 		//Session Request

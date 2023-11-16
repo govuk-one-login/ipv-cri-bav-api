@@ -73,7 +73,7 @@ export class UserInfoRequestProcessor {
 					error,
 					messageCode: MessageCodes.INVALID_AUTH_CODE,
 				});
-				return new Response(HttpCodesEnum.UNAUTHORIZED, "Unauthorized");
+				return new Response(HttpCodesEnum.UNAUTHORIZED, "Error Validating Token");
 			}
 			this.logger.error("Unexpected error occurred", {
 				error,
@@ -90,7 +90,7 @@ export class UserInfoRequestProcessor {
 			this.logger.error("No session found", {
 				messageCode: MessageCodes.SESSION_NOT_FOUND,
 			});
-			return new Response(HttpCodesEnum.UNAUTHORIZED, "Unauthorized");
+			return new Response(HttpCodesEnum.UNAUTHORIZED, "No Session Found");
 		}
 
 		// add govuk_signin_journey_id to all subsequent log messages
@@ -116,7 +116,7 @@ export class UserInfoRequestProcessor {
 			this.logger.error("No person found with this session ID", {
 				messageCode: MessageCodes.PERSON_NOT_FOUND,
 			});
-			return new Response(HttpCodesEnum.UNAUTHORIZED, "Unauthorized");
+			return new Response(HttpCodesEnum.UNAUTHORIZED, "Missing Person Identity");
 		}
 
 		this.logger.info("Found person Identity data");
@@ -133,7 +133,7 @@ export class UserInfoRequestProcessor {
 				},
 				messageCode: MessageCodes.INCORRECT_SESSION_STATE,
 			});
-			return new Response(HttpCodesEnum.UNAUTHORIZED, "Unauthorized");
+			return new Response(HttpCodesEnum.UNAUTHORIZED, "Invalid Session State");
 		}
 
 		// Person info required for VC

@@ -167,7 +167,7 @@ describe("UserInfoRequestProcessor", () => {
 		const out: Response = await userInforequestProcessorTest.processRequest(MISSING_AUTH_HEADER_USERINFO);
 
 		// @ts-ignore
-		expect(out.body).toBe("Unauthorized");
+		expect(out.body).toBe("Error Validating Token");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledTimes(1);
 		expect(logger.error).toHaveBeenCalledWith(
@@ -184,7 +184,7 @@ describe("UserInfoRequestProcessor", () => {
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
 		// @ts-ignore
-		expect(out.body).toBe("Unauthorized");
+		expect(out.body).toBe("Error Validating Token");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledTimes(1);
 		expect(logger.error).toHaveBeenCalledWith(
@@ -201,7 +201,7 @@ describe("UserInfoRequestProcessor", () => {
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
 		// @ts-ignore
-		expect(out.body).toBe("Unauthorized");
+		expect(out.body).toBe("Error Validating Token");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledTimes(1);
 		expect(logger.error).toHaveBeenCalledWith(
@@ -218,7 +218,7 @@ describe("UserInfoRequestProcessor", () => {
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
 		// @ts-ignore
-		expect(out.body).toBe("Unauthorized");
+		expect(out.body).toBe("Error Validating Token");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledTimes(1);
 		expect(logger.error).toHaveBeenCalledWith(
@@ -236,7 +236,7 @@ describe("UserInfoRequestProcessor", () => {
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
 		expect(mockBavService.getSessionById).toHaveBeenCalledTimes(1);
-		expect(out.body).toContain("Unauthorized");
+		expect(out.body).toContain("No Session Found");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledTimes(1);
 		expect(logger.error).toHaveBeenCalledWith(
@@ -255,7 +255,7 @@ describe("UserInfoRequestProcessor", () => {
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
 		expect(mockBavService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
-		expect(out.body).toContain("Unauthorized");
+		expect(out.body).toContain("Missing Person Identity");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledTimes(1);
 		expect(logger.error).toHaveBeenCalledWith(
@@ -306,7 +306,7 @@ describe("UserInfoRequestProcessor", () => {
 		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
 		expect(mockBavService.getSessionById).toHaveBeenCalledTimes(1);
-		expect(out.body).toContain("Unauthorized");
+		expect(out.body).toContain("Invalid Session State");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledTimes(1);
 		expect(logger.appendKeys).toHaveBeenCalledWith({

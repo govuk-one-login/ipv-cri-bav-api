@@ -34,6 +34,7 @@ describe("BAV CRI: /session Endpoint Happy Path Tests", () => {
 	});
 });
 
+// eslint-disable-next-line @typescript-eslint/tslint/config
 describe.skip("BAV CRI: /authorization Endpoint Happy Path Tests", () => {
 	let sessionId: string;
 	beforeEach(async () => {
@@ -60,6 +61,7 @@ describe.skip("BAV CRI: /authorization Endpoint Happy Path Tests", () => {
 	});
 });
 
+// eslint-disable-next-line @typescript-eslint/tslint/config
 describe.skip("BAV CRI: /token Endpoint Happy Path Tests", () => {
 	let sessionId: string;
 	beforeEach(async () => {
@@ -82,7 +84,7 @@ describe.skip("BAV CRI: /token Endpoint Happy Path Tests", () => {
 	});
 });
 
-
+// eslint-disable-next-line @typescript-eslint/tslint/config
 describe.skip("BAV CRI: /userinfo Endpoint Happy Path Tests", () => {
 	let sessionId: string;
 	beforeEach(async () => {

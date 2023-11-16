@@ -239,10 +239,10 @@ const CODE_STYLING_RULES = {
         ban: [
           true,
           {
-            // name: [
-            //   'it',
-            //   'skip'
-            // ]
+            name: [
+              'it',
+              'skip'
+            ]
           },
           {
             name: [
@@ -265,10 +265,10 @@ const CODE_STYLING_RULES = {
             ]
           },
           {
-            // name: [
-            //   'describe',
-            //   'skip'
-            // ]
+            name: [
+              'describe',
+              'skip'
+            ]
           },
           {
             name: [
