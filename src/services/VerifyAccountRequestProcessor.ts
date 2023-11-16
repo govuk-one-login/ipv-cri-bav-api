@@ -74,9 +74,6 @@ export class VerifyAccountRequestProcessor {
 
   	await this.BavService.saveCopCheckResult(sessionId, copCheckResult);
 
-  	if (copCheckResult === CopCheckResults.NO_MATCH) {
-  		return new Response(HttpCodesEnum.SERVER_ERROR, "Verification failed");
-  	}
   	return new Response(HttpCodesEnum.OK, "Success");
 	}
 

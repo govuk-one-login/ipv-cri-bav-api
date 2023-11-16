@@ -113,17 +113,6 @@ describe("VerifyAccountRequestProcessor", () => {
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
 			expect(response.body).toBe("Success");
 		});
-
-		it("returns error where there has been no match", async () => {
-			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
-			mockHmrcService.verify.mockResolvedValueOnce({ ...hmrcVerifyResponse, nameMatches: "no", accountExists: "no" });
-
-			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
-
-			expect(mockBavService.saveCopCheckResult).toHaveBeenCalledWith(sessionId, CopCheckResults.NO_MATCH);
-			expect(response.statusCode).toEqual(HttpCodesEnum.SERVER_ERROR);
-			expect(response.body).toBe("Verification failed");
-		});
 	});
 
 	describe("#calculateCopCheckResult", () => {
