@@ -89,6 +89,20 @@ describe("VerifyAccountRequestProcessor", () => {
 			expect(mockHmrcService.verify).toHaveBeenCalledWith({ accountNumber: body.account_number, sortCode: body.sort_code, name: "Frederick Joseph Flintstone" }, "dev/HMRC/TOKEN" );
 		});
 
+		it("pads account number if it's too short", async () => {
+			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
+			mockHmrcService.verify.mockResolvedValueOnce(hmrcVerifyResponse);
+
+			await verifyAccountRequestProcessorTest.processRequest(sessionId, { ...body, account_number: "123456" });
+			expect(mockBavService.updateAccountDetails).toHaveBeenCalledWith(
+				sessionId,
+				"00123456",
+				body.sort_code,
+				process.env.PERSON_IDENTITY_TABLE_NAME,
+			);
+			expect(mockHmrcService.verify).toHaveBeenCalledWith({ accountNumber: "00123456", sortCode: body.sort_code, name: "Frederick Joseph Flintstone" }, "dev/HMRC/TOKEN" );
+		});
+
 		it("saves saveCopCheckResult and returns success where there has been a match", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
 			mockHmrcService.verify.mockResolvedValueOnce(hmrcVerifyResponse);

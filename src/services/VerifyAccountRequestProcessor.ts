@@ -54,6 +54,7 @@ export class VerifyAccountRequestProcessor {
 
 	async processRequest(sessionId: string, body: VerifyAccountPayload): Promise<Response> {
   	const { account_number: accountNumber, sort_code: sortCode } = body;
+		const paddedAccountNumber = accountNumber.padStart(8, "0");
   	const person: PersonIdentityItem | undefined = await this.BavService.getPersonIdentityById(sessionId, this.personIdentityTableName);
 
   	if (!person) {
@@ -63,10 +64,10 @@ export class VerifyAccountRequestProcessor {
   		return new Response(HttpCodesEnum.UNAUTHORIZED, `No person found with the session id: ${sessionId}`);
   	}
 
-  	await this.BavService.updateAccountDetails(sessionId, accountNumber, sortCode, this.personIdentityTableName);
+  	await this.BavService.updateAccountDetails(sessionId, paddedAccountNumber, sortCode, this.personIdentityTableName);
 
   	const name = getFullName(person.name);
-  	const verifyResponse = await this.HmrcService.verify({ accountNumber, sortCode, name }, this.hmrcTokenSsmPath);
+  	const verifyResponse = await this.HmrcService.verify({ accountNumber: paddedAccountNumber, sortCode, name }, this.hmrcTokenSsmPath);
 
   	const copCheckResult = this.calculateCopCheckResult(verifyResponse);
   	this.logger.debug(`copCheckResult is ${copCheckResult}`);
