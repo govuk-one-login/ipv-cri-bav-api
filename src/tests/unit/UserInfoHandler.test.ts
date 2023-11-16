@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { lambdaHandler } from "../../UserInfoHandler";
 import { mock } from "jest-mock-extended";
 import { VALID_USERINFO } from "./data/userInfo-events";

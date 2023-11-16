@@ -19,7 +19,7 @@ export class VerifiableCredentialService {
 
 	private static instance: VerifiableCredentialService;
 
-	constructor(kmsJwtAdapter: KmsJwtAdapter, issuer: any, logger: Logger) {
+	constructor(kmsJwtAdapter: KmsJwtAdapter, issuer: string, logger: Logger) {
 		this.issuer = issuer;
 		this.logger = logger;
 		this.kmsJwtAdapter = kmsJwtAdapter;
@@ -69,8 +69,7 @@ export class VerifiableCredentialService {
 	async generateSignedVerifiableCredentialJwt(sessionItem: ISessionItem, nameParts: PersonIdentityNamePart[], bankAccountInfo: BankAccountInfo, getNow: () => number): Promise<string> {
 		const now = getNow();
 		const subject = sessionItem.subject;
-		let evidenceInfo;
-		evidenceInfo = sessionItem.copCheckResult === CopCheckResult.FULL_MATCH ?
+		const evidenceInfo = sessionItem.copCheckResult === CopCheckResult.FULL_MATCH ?
 			this.getSuccessEvidenceBlock(sessionItem.clientSessionId) : this.getFailureEvidenceBlock(sessionItem.clientSessionId);
 		const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, bankAccountInfo, evidenceInfo)
 			.build();

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { mock } from "jest-mock-extended";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { ISessionItem } from "../../../models/ISessionItem";

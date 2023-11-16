@@ -151,7 +151,7 @@ export class UserInfoRequestProcessor {
 			// Add metric and send TXMA event to the sqsqueue
 			this.metrics.addMetric("Generated signed verifiable credential jwt", MetricUnits.Count, 1);
 
-			this.BavService.updateSessionAuthState(session.sessionId, AuthSessionState.BAV_CRI_VC_ISSUED)
+			await this.BavService.updateSessionAuthState(session.sessionId, AuthSessionState.BAV_CRI_VC_ISSUED);
 
 			const txmaCoreFields = buildCoreEventFields(session, this.issuer, session.clientIpAddress, absoluteTimeNow);
 			
@@ -186,7 +186,7 @@ export class UserInfoRequestProcessor {
 			}, {
 				names: names.length === 0 ? false : !!names,
 				sortCode: !!personInfo.sortCode,
-				accountNumber: !!personInfo.accountNumber
+				accountNumber: !!personInfo.accountNumber,
 			});
 			return new Response(HttpCodesEnum.BAD_REQUEST, "Bad Request");
 		}

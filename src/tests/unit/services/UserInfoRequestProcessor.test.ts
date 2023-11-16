@@ -294,8 +294,8 @@ describe("UserInfoRequestProcessor", () => {
 			{
 				accountNumber: true,
 				names: false,
-				sortCode: true
-			}
+				sortCode: true,
+			},
 		);
 	});
 

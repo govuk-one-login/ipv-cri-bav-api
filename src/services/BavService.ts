@@ -64,7 +64,7 @@ export class BavService {
 	}
 
 	async getPersonIdentityBySessionId(sessionId: string, tableName: string = this.tableName): Promise<PersonIdentityItem | undefined> {
-		this.logger.debug("Table name " + tableName);
+		this.logger.debug(`Getting person identity from table ${tableName}`);
 		const getPersonIdentityCommand = new GetCommand({
 			TableName: tableName,
 			Key: {
@@ -80,7 +80,7 @@ export class BavService {
 				messageCode: MessageCodes.FAILED_FETCHING_SESSION,
 				error,
 			});
-			throw new AppError(HttpCodesEnum.SERVER_ERROR, "Error retrieving Session");
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "Error retrieving person identity?");
 		}
 
 		if (personIdentity.Item) {
