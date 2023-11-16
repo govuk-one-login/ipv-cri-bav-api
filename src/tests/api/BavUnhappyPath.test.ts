@@ -1,4 +1,5 @@
 import bavStubPayload from "../data/exampleStubPayload.json";
+import verifyAccountYesPayload from "../data/bankDetailsYes.json";
 import {
     authorizationGet,
     sessionPost,
