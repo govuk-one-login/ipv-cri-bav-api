@@ -1150,12 +1150,13 @@ Resources:
         - ApplyReservedConcurrency
         - !Ref LambdaConcurrency
         - !Ref AWS::NoValue
-      Events:
+      Events:        
         InvocationLevel:
+          Fn::If:
+            - NotLocalTestStack
           Type: Schedule
           Properties:
-            Schedule: cron(0/5 * * * ? *)
-          Condition: NotLocalTestStack
+            Schedule: cron(0/5 * * * ? *)          
       Environment:
         Variables:
           HMRC_CLIENT_ID_SSM_PATH: !Sub "/${Environment}/HMRC/CLIENT_ID"

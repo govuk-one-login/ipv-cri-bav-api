@@ -36,7 +36,7 @@ export class HmrcTokenRequestProcessor {
 		this.logger.info("Generating a new hmrc access token ");
 		try {
 			const data = await this.hmrcService.generateToken();
-			console.log("token: " + JSON.stringify(data));
+			
 			if (!data) {
 				throw new AppError(HttpCodesEnum.SERVER_ERROR, "Failed generating hmrc access token");
 			}
