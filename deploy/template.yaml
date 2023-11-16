@@ -900,7 +900,7 @@ Resources:
     DependsOn: VerifyAccountFunctionLogGroup
     Properties:
       FunctionName: !Sub "BAV-verify-account-${AWS::StackName}"
-      Handler: verifyAccountHandler.lambdaHandler
+      Handler: VerifyAccountHandler.lambdaHandler
       CodeUri: ../src/
       ReservedConcurrentExecutions: !If
         - ApplyReservedConcurrency
