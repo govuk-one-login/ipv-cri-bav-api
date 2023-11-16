@@ -14,9 +14,6 @@ const HMRC_CLIENT_ID = process.env.HMRC_CLIENT_ID!;
 const HMRC_CLIENT_SECRET = process.env.HMRC_CLIENT_SECRET!;
 let hmrcServiceTest: HmrcService;
 const logger = mock<Logger>();
-jest.mock("../../../utils/Config", () => ({
-	getParameter: (parameter: string) => parameter,
-}));
 
 describe("HMRC Service", () => {
 	beforeAll(() => {

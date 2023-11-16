@@ -2,7 +2,6 @@ import { Logger } from "@aws-lambda-powertools/logger";
 import { Constants } from "../utils/Constants";
 import axios from "axios";
 import { AppError } from "../utils/AppError";
-import { getParameter } from "../utils/Config";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { HmrcVerifyResponse } from "../models/IHmrcResponse";
@@ -39,9 +38,8 @@ export class HmrcService {
 
     // eslint-disable-next-line max-lines-per-function
     async verify(
-    	{ accountNumber, sortCode, name }: { accountNumber: string; sortCode: string; name: string }, hmrcTokenSsmPath: string,
+    	{ accountNumber, sortCode, name }: { accountNumber: string; sortCode: string; name: string }, token: string,
     ): Promise<HmrcVerifyResponse> {
-    	const token = await getParameter(hmrcTokenSsmPath);
     	const params = {
     		account: { accountNumber, sortCode },
     		subject: { name },

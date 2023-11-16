@@ -28,9 +28,9 @@ export class VerifyAccountRequestProcessor {
 	
   private readonly HmrcService: HmrcService;
 
-	private readonly hmrcTokenSsmPath: string;
+	private readonly hmrcToken: string;
 
-	constructor(logger: Logger, metrics: Metrics) {
+	constructor(logger: Logger, metrics: Metrics, HMRC_TOKEN: string) {
   	this.logger = logger;
   	this.metrics = metrics;
   	logger.debug("metrics is  " + JSON.stringify(this.metrics));
@@ -39,22 +39,22 @@ export class VerifyAccountRequestProcessor {
   	const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, this.logger);
   	this.personIdentityTableName = checkEnvironmentVariable(EnvironmentVariables.PERSON_IDENTITY_TABLE_NAME, this.logger);
   	const hmrcBaseUrl = checkEnvironmentVariable(EnvironmentVariables.HMRC_BASE_URL, this.logger);
-  	this.hmrcTokenSsmPath = checkEnvironmentVariable(EnvironmentVariables.HMRC_TOKEN_SSM_PATH, this.logger);
+  	this.hmrcToken = HMRC_TOKEN;
 
   	this.BavService = BavService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
   	this.HmrcService = HmrcService.getInstance(this.logger, hmrcBaseUrl);
 	}
 
-	static getInstance(logger: Logger, metrics: Metrics): VerifyAccountRequestProcessor {
+	static getInstance(logger: Logger, metrics: Metrics, HMRC_TOKEN: string): VerifyAccountRequestProcessor {
   	if (!VerifyAccountRequestProcessor.instance) {
-  		VerifyAccountRequestProcessor.instance = new VerifyAccountRequestProcessor(logger, metrics);
+  		VerifyAccountRequestProcessor.instance = new VerifyAccountRequestProcessor(logger, metrics, HMRC_TOKEN);
   	}
   	return VerifyAccountRequestProcessor.instance;
 	}
 
 	async processRequest(sessionId: string, body: VerifyAccountPayload): Promise<Response> {
   	const { account_number: accountNumber, sort_code: sortCode } = body;
-		const paddedAccountNumber = accountNumber.padStart(8, "0");
+  	const paddedAccountNumber = accountNumber.padStart(8, "0");
   	const person: PersonIdentityItem | undefined = await this.BavService.getPersonIdentityById(sessionId, this.personIdentityTableName);
 
   	if (!person) {
@@ -67,7 +67,7 @@ export class VerifyAccountRequestProcessor {
   	await this.BavService.updateAccountDetails(sessionId, paddedAccountNumber, sortCode, this.personIdentityTableName);
 
   	const name = getFullName(person.name);
-  	const verifyResponse = await this.HmrcService.verify({ accountNumber: paddedAccountNumber, sortCode, name }, this.hmrcTokenSsmPath);
+  	const verifyResponse = await this.HmrcService.verify({ accountNumber: paddedAccountNumber, sortCode, name }, this.hmrcToken);
 
   	const copCheckResult = this.calculateCopCheckResult(verifyResponse);
   	this.logger.debug(`copCheckResult is ${copCheckResult}`);

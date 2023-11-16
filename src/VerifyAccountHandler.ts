@@ -7,7 +7,9 @@ import { HttpCodesEnum } from "./models/enums/HttpCodesEnum";
 import { VerifyAccountRequestProcessor } from "./services/VerifyAccountRequestProcessor";
 import { VerifyAccountPayload } from "./type/VerifyAccountPayload";
 import { AppError } from "./utils/AppError";
-import { Constants } from "./utils/Constants";
+import { getParameter } from "./utils/Config";
+import { Constants, EnvironmentVariables } from "./utils/Constants";
+import { checkEnvironmentVariable } from "./utils/EnvironmentVariables";
 import { Response } from "./utils/Response";
 import { getSessionIdHeaderErrors } from "./utils/Validations";
 import { getPayloadValidationErrors } from "./utils/VerifyAccountRequestValidation";
@@ -21,6 +23,7 @@ export const logger = new Logger({
 
 const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE, serviceName: POWERTOOLS_SERVICE_NAME });
 
+let HMRC_TOKEN: string;
 export class VerifyAccountHandler implements LambdaInterface {
 
 	@metrics.logMetrics({ throwOnEmptyMetrics: false, captureColdStartMetric: true })
@@ -31,11 +34,13 @@ export class VerifyAccountHandler implements LambdaInterface {
 
 		try {
 			const { sessionId, body } = this.validateEvent(event);
+			const hmrcTokenSsmPath = checkEnvironmentVariable(EnvironmentVariables.HMRC_TOKEN_SSM_PATH, logger);
+    	HMRC_TOKEN = await getParameter(hmrcTokenSsmPath);
 
 			logger.appendKeys({ sessionId });
 			logger.info("Starting VerifyAccountRequestProcessor");
 
-			return await VerifyAccountRequestProcessor.getInstance(logger, metrics).processRequest(sessionId, body);
+			return await VerifyAccountRequestProcessor.getInstance(logger, metrics, HMRC_TOKEN).processRequest(sessionId, body);
 		} catch (error: any) {
 			logger.error({ message: "An error has occurred.", error, messageCode: MessageCodes.SERVER_ERROR });
 			if (error instanceof AppError) {

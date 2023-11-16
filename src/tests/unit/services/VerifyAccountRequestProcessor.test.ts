@@ -16,6 +16,7 @@ const mockBavService = mock<BavService>();
 const mockHmrcService = mock<HmrcService>();
 const logger = mock<Logger>();
 const metrics = new Metrics({ namespace: "BAV" });
+const TOKEN_SSM_PARAM = "dfsgadfgadg";
 const sessionId = "sessionId";
 const body = {
 	sort_code: "123456",
@@ -46,7 +47,7 @@ let verifyAccountRequestProcessorTest: VerifyAccountRequestProcessor;
 
 describe("VerifyAccountRequestProcessor", () => {
 	beforeAll(() => {
-		verifyAccountRequestProcessorTest = new VerifyAccountRequestProcessor(logger, metrics);
+		verifyAccountRequestProcessorTest = new VerifyAccountRequestProcessor(logger, metrics, TOKEN_SSM_PARAM);
 		// @ts-ignore
 		verifyAccountRequestProcessorTest.BavService = mockBavService;
 		// @ts-ignore
@@ -86,7 +87,7 @@ describe("VerifyAccountRequestProcessor", () => {
 
 			await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
 
-			expect(mockHmrcService.verify).toHaveBeenCalledWith({ accountNumber: body.account_number, sortCode: body.sort_code, name: "Frederick Joseph Flintstone" }, "dev/HMRC/TOKEN" );
+			expect(mockHmrcService.verify).toHaveBeenCalledWith({ accountNumber: body.account_number, sortCode: body.sort_code, name: "Frederick Joseph Flintstone" }, TOKEN_SSM_PARAM );
 		});
 
 		it("pads account number if it's too short", async () => {
@@ -100,7 +101,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				body.sort_code,
 				process.env.PERSON_IDENTITY_TABLE_NAME,
 			);
-			expect(mockHmrcService.verify).toHaveBeenCalledWith({ accountNumber: "00123456", sortCode: body.sort_code, name: "Frederick Joseph Flintstone" }, "dev/HMRC/TOKEN" );
+			expect(mockHmrcService.verify).toHaveBeenCalledWith({ accountNumber: "00123456", sortCode: body.sort_code, name: "Frederick Joseph Flintstone" }, TOKEN_SSM_PARAM );
 		});
 
 		it("saves saveCopCheckResult and returns success where there has been a match", async () => {

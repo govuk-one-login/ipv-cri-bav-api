@@ -10,6 +10,9 @@ import { VerifyAccountRequestProcessor } from "../../services/VerifyAccountReque
 import { lambdaHandler, logger } from "../../VerifyAccountHandler";
 
 const mockedVerifyAccountRequestProcessor = mock<VerifyAccountRequestProcessor>();
+jest.mock("../../utils/Config", () => ({
+	getParameter: (parameter: string) => parameter,
+}));
 
 describe("VerifyAccountHandler", () => {
 	let loggerSpy: jest.SpyInstance;
