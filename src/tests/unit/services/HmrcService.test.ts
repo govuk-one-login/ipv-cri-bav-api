@@ -28,12 +28,13 @@ describe("HMRC Service", () => {
 
 		it("calls HMRC verify endpoint with correct params and headers", async () => {
 			jest.spyOn(axios, "post").mockResolvedValueOnce({ data: hmrcVerifyResponse });
+			const endpoint = `${hmrcServiceTest.HMRC_BASE_URL}/${Constants.HMRC_VERIFY_ENDPOINT_PATH}`;
 
 			const response = await hmrcServiceTest.verify({ accountNumber, sortCode, name }, hmrcTokenSsmPath);
 
-			expect(logger.info).toHaveBeenCalledWith("Sending COP verify request to HMRC");
+			expect(logger.info).toHaveBeenCalledWith("Sending COP verify request to HMRC", { endpoint });
 			expect(axios.post).toHaveBeenCalledWith(
-				`${hmrcServiceTest.HMRC_BASE_URL}/${Constants.HMRC_VERIFY_ENDPOINT_PATH}`,
+				endpoint,
 				{
 					account: { accountNumber, sortCode },
 					subject: { name },

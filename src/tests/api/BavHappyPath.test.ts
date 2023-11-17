@@ -99,7 +99,7 @@ describe.skip("BAV CRI: /userinfo Endpoint Happy Path Tests", () => {
 		expect(userInfoResponse.status).toBe(200);
 
 		// Check to make sure VC JWT is present in the response and validate its contentss
-		await validateJwtToken(userInfoResponse.data["https://vocab.account.gov.uk/v1/credentialJWT"][0]);
+		validateJwtToken(userInfoResponse.data["https://vocab.account.gov.uk/v1/credentialJWT"][0]);
 
 		// Verify authSessionState
 		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_CRI_VC_ISSUED");

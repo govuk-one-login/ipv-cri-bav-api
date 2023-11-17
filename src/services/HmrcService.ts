@@ -40,6 +40,7 @@ export class HmrcService {
     async verify(
     	{ accountNumber, sortCode, name }: { accountNumber: string; sortCode: string; name: string }, token: string,
     ): Promise<HmrcVerifyResponse> {
+
     	const params = {
     		account: { accountNumber, sortCode },
     		subject: { name },
@@ -50,8 +51,9 @@ export class HmrcService {
     	};
 
     	try {
-    		this.logger.info("Sending COP verify request to HMRC");
-    		const { data }: { data: HmrcVerifyResponse } = await axios.post(`${this.HMRC_BASE_URL}/${Constants.HMRC_VERIFY_ENDPOINT_PATH}`, params, { headers });
+    		const endpoint = `${this.HMRC_BASE_URL}/${Constants.HMRC_VERIFY_ENDPOINT_PATH}`;
+    		this.logger.info("Sending COP verify request to HMRC", { endpoint });
+    		const { data }: { data: HmrcVerifyResponse } = await axios.post(endpoint, params, { headers });
 
     		this.logger.debug({
     			message: "Recieved reponse from HMRC COP verify request",
