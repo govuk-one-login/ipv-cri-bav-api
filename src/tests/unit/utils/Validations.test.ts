@@ -1,5 +1,11 @@
 import { randomUUID } from "crypto";
-import { isValidStrings, isPersonNameValid, isValidUUID } from "../../../utils/Validations";
+import { isValidStrings, isPersonNameValid, isValidUUID, eventToSubjectIdentifier } from "../../../utils/Validations";
+import { KmsJwtAdapter } from "../../../utils/KmsJwtAdapter";
+import { AppError } from "../../../utils/AppError";
+import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
+import { VALID_USERINFO, MISSING_AUTH_HEADER_USERINFO } from "../data/userInfo-events";
+
+jest.mock("../../../utils/KmsJwtAdapter");
 
 describe("Validations", () => {
 	describe("#isValidStrings", () => {
@@ -54,4 +60,80 @@ describe("Validations", () => {
 			expect(result).toBe(false);
 		});
 	});
+
+	describe("#eventToSubjectIdentifier", () => {
+		let jwtAdapter: KmsJwtAdapter;
+
+		beforeEach(() => {
+			jwtAdapter = new KmsJwtAdapter("keys");
+		});
+
+		it("throws an error if Authorization header is missing", async () => {
+			await expect(eventToSubjectIdentifier(jwtAdapter, MISSING_AUTH_HEADER_USERINFO))
+				.rejects.toThrow(new AppError(HttpCodesEnum.UNAUTHORIZED, "Missing header: Authorization header value is missing or invalid auth_scheme"));
+		});
+
+		it("throws an error if Authorization header is not Bearer type", async () => {
+			const invalidHeaderEvent = VALID_USERINFO;
+			invalidHeaderEvent.headers.Authorization = "Basic abcdefg";
+			await expect(eventToSubjectIdentifier(jwtAdapter, invalidHeaderEvent))
+				.rejects.toThrow(new AppError(HttpCodesEnum.UNAUTHORIZED, "Missing header: Authorization header is not of Bearer type access_token"));
+		});
+
+		it("throws an error if JWT verification fails", async () => {
+			const invalidHeaderEvent = VALID_USERINFO;
+			invalidHeaderEvent.headers.Authorization = "Bearer invalid-token";
+			jest.spyOn(jwtAdapter, "verify").mockResolvedValue(false);
+			await expect(eventToSubjectIdentifier(jwtAdapter, invalidHeaderEvent))
+				.rejects.toThrow(new AppError(HttpCodesEnum.UNAUTHORIZED, "Failed to verify signature"));
+		});
+
+		it("throws an error if JWT expiration is invalid or expired", async () => {
+			jest.spyOn(jwtAdapter, "verify").mockResolvedValue(true);
+			jest.spyOn(jwtAdapter, "decode").mockReturnValue({
+				payload: {
+					sub: "SESSIONID",
+					exp: 123,
+				},
+				header: {
+					alg: "ALG",
+				},
+				signature: "",
+			});
+			await expect(eventToSubjectIdentifier(jwtAdapter, VALID_USERINFO))
+				.rejects.toThrow(new AppError(HttpCodesEnum.UNAUTHORIZED, "Verification of exp failed"));
+		});
+
+		it("throws an error if sub is missing in JWT", async () => {
+			jest.spyOn(jwtAdapter, "verify").mockResolvedValue(true);
+			jest.spyOn(jwtAdapter, "decode").mockReturnValue({
+				payload: {
+					exp: 2646908639,
+				},
+				header: {
+					alg: "ALG",
+				},
+				signature: "",
+			});
+			await expect(eventToSubjectIdentifier(jwtAdapter, VALID_USERINFO))
+				.rejects.toThrow(new AppError(HttpCodesEnum.UNAUTHORIZED, "sub missing"));
+		});
+
+		it("returns sub if JWT is valid", async () => {
+			jest.spyOn(jwtAdapter, "verify").mockResolvedValue(true);
+			jest.spyOn(jwtAdapter, "decode").mockReturnValue({
+				payload: {
+					sub: "SESSIONID",
+					exp: 2646908639,
+				},
+				header: {
+					alg: "ALG",
+				},
+				signature: "",
+			});
+			const result = await eventToSubjectIdentifier(jwtAdapter, VALID_USERINFO);
+			expect(result).toBe("SESSIONID");
+		});
+	});
+
 });

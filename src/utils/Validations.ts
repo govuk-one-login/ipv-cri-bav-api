@@ -1,6 +1,10 @@
 import { absoluteTimeNow } from "./DateTimeUtils";
 import { JwtPayload } from "../models/IVeriCredential";
 import { PersonIdentityName } from "../models/PersonIdentityItem";
+import { KmsJwtAdapter } from "./KmsJwtAdapter";
+import { APIGatewayProxyEvent } from "aws-lambda";
+import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
+import { AppError } from "./AppError";
 import { Constants } from "./Constants";
 
 export const	isJwtValid = (jwtPayload: JwtPayload,
@@ -72,4 +76,36 @@ export const isPersonNameValid = (personName: PersonIdentityName[]) : boolean =>
 
 export const isValidUUID = (code: string): boolean => {
 	return Constants.REGEX_UUID.test(code);
+};
+export const eventToSubjectIdentifier = async (jwtAdapter: KmsJwtAdapter, event: APIGatewayProxyEvent): Promise<string> => {
+	const headerValue = event.headers.authorization || event.headers.Authorization;
+	if (!headerValue) {
+		throw new AppError(HttpCodesEnum.UNAUTHORIZED, "Missing header: Authorization header value is missing or invalid auth_scheme");
+	}
+	
+	if (!headerValue.startsWith(Constants.BEARER)) {
+		throw new AppError(HttpCodesEnum.UNAUTHORIZED, "Missing header: Authorization header is not of Bearer type access_token");
+	}
+
+	const token = headerValue.replace(/^Bearer\s+/, "");
+
+	try {
+		if (!await jwtAdapter.verify(token)) {
+			throw new AppError(HttpCodesEnum.UNAUTHORIZED, "Verification of JWT failed");
+		}
+	} catch (err) {
+		throw new AppError(HttpCodesEnum.UNAUTHORIZED, "Failed to verify signature");
+	}
+
+	const jwt = jwtAdapter.decode(token);
+
+	if (!jwt?.payload?.exp || jwt.payload.exp < absoluteTimeNow()) {
+		throw new AppError(HttpCodesEnum.UNAUTHORIZED, "Verification of exp failed");
+	}
+
+	if (!jwt?.payload?.sub) {
+		throw new AppError(HttpCodesEnum.UNAUTHORIZED, "sub missing");
+	}
+
+	return jwt.payload.sub;
 };

@@ -1,0 +1,14 @@
+{
+	"name": [{
+		"nameParts": [
+			{
+				"type": "givenName",
+				"value": "Frederick"
+			},
+			{
+				"type": "familyName",
+				"value": "Flintstone"
+			}
+		]
+	}]
+}

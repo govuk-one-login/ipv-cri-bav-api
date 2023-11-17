@@ -20,9 +20,11 @@ export default {
   setupFiles: [
     './jest.setup.ts'
   ],
-  collectCoverageFrom: [
+	collectCoverageFrom: [
     './**/*.ts',
     '!./**/tests/**/*.ts',
+    '!./models/**/*.ts',
+    '!./type/**/*.ts',
     '!./tests/**/*.ts',
     '!./jest.config.ts'
   ],
