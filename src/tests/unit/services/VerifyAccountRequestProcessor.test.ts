@@ -7,6 +7,7 @@ import { hmrcVerifyResponse } from "../data/hmrcEvents";
 import { CopCheckResults } from "../../../models/enums/Hmrc";
 import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../../../models/enums/MessageCodes";
+import { ISessionItem } from "../../../models/ISessionItem";
 import { PersonIdentityItem } from "../../../models/PersonIdentityItem";
 import { BavService } from "../../../services/BavService";
 import { VerifyAccountRequestProcessor } from "../../../services/VerifyAccountRequestProcessor";
@@ -41,8 +42,7 @@ const person: PersonIdentityItem = {
 	expiryDate: 123456789,
 	createdDate: 123456789,
 };
-
-
+const session = require("../data/db_record.json") as ISessionItem;
 let verifyAccountRequestProcessorTest: VerifyAccountRequestProcessor;
 
 describe("VerifyAccountRequestProcessor", () => {
@@ -63,16 +63,31 @@ describe("VerifyAccountRequestProcessor", () => {
 			expect(response.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 			expect(response.body).toBe(`No person found with the session id: ${sessionId}`);
 			expect(logger.error).toHaveBeenCalledWith("No person found for session id", {
+				messageCode: MessageCodes.PERSON_NOT_FOUND,
+			});
+		});
+
+		it("returns error response if session cannot be found", async () => {
+			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
+			mockBavService.getSessionById.mockResolvedValueOnce(undefined);
+
+			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
+
+			expect(response.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
+			expect(response.body).toBe(`No session found with the session id: ${sessionId}`);
+			expect(logger.error).toHaveBeenCalledWith("No session found for session id", {
 				messageCode: MessageCodes.SESSION_NOT_FOUND,
 			});
 		});
 
 		it("saves account details to person identity table", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
+			mockBavService.getSessionById.mockResolvedValueOnce(session);
 			mockHmrcService.verify.mockResolvedValueOnce(hmrcVerifyResponse);
 
 			await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
 
+			expect(logger.appendKeys).toHaveBeenCalledWith({ govuk_signin_journey_id: session.clientSessionId });
 			expect(mockBavService.updateAccountDetails).toHaveBeenCalledWith(
 				sessionId,
 				body.account_number,
@@ -83,6 +98,7 @@ describe("VerifyAccountRequestProcessor", () => {
 
 		it("verifies the account details given", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
+			mockBavService.getSessionById.mockResolvedValueOnce(session);
 			mockHmrcService.verify.mockResolvedValueOnce(hmrcVerifyResponse);
 
 			await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
@@ -92,6 +108,7 @@ describe("VerifyAccountRequestProcessor", () => {
 
 		it("pads account number if it's too short", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
+			mockBavService.getSessionById.mockResolvedValueOnce(session);
 			mockHmrcService.verify.mockResolvedValueOnce(hmrcVerifyResponse);
 
 			await verifyAccountRequestProcessorTest.processRequest(sessionId, { ...body, account_number: "123456" });
@@ -106,6 +123,7 @@ describe("VerifyAccountRequestProcessor", () => {
 
 		it("saves saveCopCheckResult and returns success where there has been a match", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
+			mockBavService.getSessionById.mockResolvedValueOnce(session);
 			mockHmrcService.verify.mockResolvedValueOnce(hmrcVerifyResponse);
 
 			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
