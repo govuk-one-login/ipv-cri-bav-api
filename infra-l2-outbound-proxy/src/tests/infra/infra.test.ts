@@ -57,7 +57,7 @@ const expect_route_hmrc = (template: Template) => {
     Target: Match.objectLike({
       "Fn::Join": [
         "/",
-        ["integrations", { Ref: "PostOfficeProxyApiGatewayIntegration" }],
+        ["integrations", { Ref: "HMRCProxyApiGatewayIntegration" }],
       ],
     }),
   });
