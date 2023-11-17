@@ -67,10 +67,10 @@ describe("BAV CRI: /token Endpoint Unhappy Path Tests", () => {
 		// Verify-account request
 		await verifyAccountPost(verifyAccountYesPayload, sessionId);
 		
-        // Authorization
+        // Authorization request
         const authResponse = await authorizationGet(sessionId);
 
-        // Token
+        // Token request
         await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
 
         // Request to /token endpoint again (which now has an incorrect session state)

@@ -2,157 +2,168 @@ import bavStubPayload from "../data/exampleStubPayload.json";
 import verifyAccountYesPayload from "../data/bankDetailsYes.json";
 import { constants } from "../utils/ApiConstants";
 import {
-	authorizationGet,
-	getSessionAndVerifyKey,
-	getSessionAndVerifyKeyExists,
-	getSqsEventList,
-	startStubServiceAndReturnSessionId,
-	verifyAccountPost,
-	tokenPost,
-	userInfoPost,
-	validateJwtToken,
-	validateTxMAEventData,
-	validateWellKnownResponse,
-	wellKnownGet,
+    authorizationGet,
+    getSessionAndVerifyKey,
+    getSessionAndVerifyKeyExists,
+    getSqsEventList,
+    startStubServiceAndReturnSessionId,
+    verifyAccountPost,
+    tokenPost,
+    userInfoPost,
+    validateJwtToken,
+    validateTxMAEventData,
+    validateWellKnownResponse,
+    wellKnownGet,
 }
-	from "../utils/ApiTestSteps";
+    from "../utils/ApiTestSteps";
 
 describe("BAV CRI: /session Endpoint Happy Path Tests", () => {
-	let sessionId: string;
-	beforeEach(async () => {
-		// Session Request
-		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
-	});
+    let sessionId: string;
+    beforeEach(async () => {
+        // Session Request
+        sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+    });
 
-	it("Successful Request Test", async () => {
-		expect(sessionId).toBeTruthy();
+    it("Successful Request Test", async () => {
+        expect(sessionId).toBeTruthy();
 
-		// Make sure authSession state is as expected
-		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_SESSION_CREATED");
+        // Make sure authSession state is as expected
+        await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_SESSION_CREATED");
 
-		// Make sure txma event is present & valid
-		const sqsMessage = await getSqsEventList("txma/", sessionId, 1);
-		await validateTxMAEventData(sqsMessage);
-	});
+        // Make sure txma event is present & valid
+        const sqsMessage = await getSqsEventList("txma/", sessionId, 1);
+        await validateTxMAEventData(sqsMessage);
+    });
 });
 
 describe("BAV CRI: /verify-account Endpoint Happy Path Tests", () => {
-	let sessionId: string;
-	beforeEach(async () => {
-		// Session Request
-		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
-	});
+    let sessionId: string;
+    beforeEach(async () => {
+        // Session Request
+        sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+    });
 
-	it("Successful Request Test", async () => {
-		expect(sessionId).toBeTruthy();
+    it.each([
+        "86473611",
+        "8647361",
+        "864736"
+    ])("Successful Request Test", async (accountNumber: string) => {
+        expect(sessionId).toBeTruthy();
 
-		// Verify-account request
-		const verifyAccountResponse = await verifyAccountPost(verifyAccountYesPayload, sessionId);
-		expect(verifyAccountResponse.status).toBe(200);
+        // Assign a new valid account number to the payload
+        verifyAccountYesPayload.account_number = accountNumber;
 
-		// Make sure authSession state is as expected
-		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_DATA_RECEIVED");
-	});
+        // Verify-account request
+        const verifyAccountResponse = await verifyAccountPost(verifyAccountYesPayload, sessionId);
+        expect(verifyAccountResponse.status).toBe(200);
+
+        // Make sure authSession state is as expected
+        await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_DATA_RECEIVED");
+
+        // Verify that the accountNumber and sortCode exist and have the correct value
+        // await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_PERSONAL_IDENTITY_TABLE_NAME, "accountNumber", verifyAccountYesPayload.account_number);
+        // await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_PERSONAL_IDENTITY_TABLE_NAME, "sortCode", verifyAccountYesPayload.sort_code);
+    });
 });
 
 describe("BAV CRI: /authorization Endpoint Happy Path Tests", () => {
-	let sessionId: string;
-	beforeEach(async () => {
-		// Session Request
-		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
-	});
+    let sessionId: string;
+    beforeEach(async () => {
+        // Session Request
+        sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+    });
 
-	it("Successful Request Test", async () => {
-		expect(sessionId).toBeTruthy();
+    it("Successful Request Test", async () => {
+        expect(sessionId).toBeTruthy();
 
-		// Verify-account request
-		await verifyAccountPost(verifyAccountYesPayload, sessionId);
+        // Verify-account request
+        await verifyAccountPost(verifyAccountYesPayload, sessionId);
 
-		// Authorization request
-		const authResponse = await authorizationGet(sessionId);
-		expect(authResponse.status).toBe(200);
-		expect(authResponse.data.authorizationCode).toBeTruthy();
-		expect(authResponse.data.redirect_uri).toBeTruthy();
-		expect(authResponse.data.state).toBeTruthy();
+        // Authorization request
+        const authResponse = await authorizationGet(sessionId);
+        expect(authResponse.status).toBe(200);
+        expect(authResponse.data.authorizationCode).toBeTruthy();
+        expect(authResponse.data.redirect_uri).toBeTruthy();
+        expect(authResponse.data.state).toBeTruthy();
 
-		// Make sure authSession state is as expected
-		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_AUTH_CODE_ISSUED");
+        // Make sure authSession state is as expected
+        await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_AUTH_CODE_ISSUED");
 
-		// Make sure txma event is present & valid
-		const sqsMessage = await getSqsEventList("txma/", sessionId, 2);
-		await validateTxMAEventData(sqsMessage);
-	});
+        // Make sure txma event is present & valid
+        const sqsMessage = await getSqsEventList("txma/", sessionId, 2);
+        await validateTxMAEventData(sqsMessage);
+    });
 });
 
 describe("BAV CRI: /token Endpoint Happy Path Tests", () => {
-	let sessionId: string;
-	beforeEach(async () => {
-		// Session Request
-		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
-	});
+    let sessionId: string;
+    beforeEach(async () => {
+        // Session Request
+        sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+    });
 
-	it("Successful Request Test", async () => {
-		expect(sessionId).toBeTruthy();
+    it("Successful Request Test", async () => {
+        expect(sessionId).toBeTruthy();
 
-		// Verify-account request
-		await verifyAccountPost(verifyAccountYesPayload, sessionId);
+        // Verify Account request
+        await verifyAccountPost(verifyAccountYesPayload, sessionId);
 
-		// Authorization request
-		const authResponse = await authorizationGet(sessionId);
-		console.log(authResponse);
+        // Authorization request
+        const authResponse = await authorizationGet(sessionId);
 
-		// Token request
-		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
-		console.log(tokenResponse);
-		expect(tokenResponse.status).toBe(200);
+        // Token request
+        const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+        expect(tokenResponse.status).toBe(200);
 
-		// Verify access token expiry date exists
-		await getSessionAndVerifyKeyExists(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "accessTokenExpiryDate");
+        // Verify access token expiry date exists
+        await getSessionAndVerifyKeyExists(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "accessTokenExpiryDate");
 
-		// Make sure authSession state is as expected
-		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_ACCESS_TOKEN_ISSUED");
-	});
+        // Make sure authSession state is as expected
+        await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_ACCESS_TOKEN_ISSUED");
+    });
 });
 
 
-describe.skip("BAV CRI: /userinfo Endpoint Happy Path Tests", () => {
-	let sessionId: string;
-	beforeEach(async () => {
-		// Session Request
-		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
-	});
+describe("BAV CRI: /userinfo Endpoint Happy Path Tests", () => {
+    let sessionId: string;
+    beforeEach(async () => {
+        // Session Request
+        sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+    });
 
-	it("Successful Request Test", async () => {
-		expect(sessionId).toBeTruthy();
+    it("Successful Request Test", async () => {
+        expect(sessionId).toBeTruthy();
 
-		// Verify-account request
-		await verifyAccountPost(verifyAccountYesPayload, sessionId);
+        // Verify Account request
+        await verifyAccountPost(verifyAccountYesPayload, sessionId);
 
-		// Authorization request
-		const authResponse = await authorizationGet(sessionId);
-		
-		// Token request
-		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
-		const userInfoResponse = await userInfoPost("Bearer " + tokenResponse.data.access_token);
-		expect(userInfoResponse.status).toBe(200);
+        // Authorization request
+        const authResponse = await authorizationGet(sessionId);
 
-		// Check to make sure VC JWT is present in the response and validate its contentss
-		await validateJwtToken(userInfoResponse.data['https://vocab.account.gov.uk/v1/credentialJWT'][0]);
+        // Token request
+        const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+        
+        // User Info request
+        const userInfoResponse = await userInfoPost("Bearer " + tokenResponse.data.access_token);
+        expect(userInfoResponse.status).toBe(200);
 
-		// Verify authSessionState
-		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_CRI_VC_ISSUED");
+        // Check to make sure VC JWT is present in the response and validate its contentss
+        await validateJwtToken(userInfoResponse.data['https://vocab.account.gov.uk/v1/credentialJWT'][0]);
 
-		// Make sure txma event is present & valid
-		const sqsMessage = await getSqsEventList("txma/", sessionId, 3);
-		await validateTxMAEventData(sqsMessage);
-	});
+        // Verify authSessionState
+        await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_CRI_VC_ISSUED");
+
+        // Make sure txma event is present & valid
+        const sqsMessage = await getSqsEventList("txma/", sessionId, 3);
+        await validateTxMAEventData(sqsMessage);
+    });
 });
 
 describe("E2E Happy Path Well Known Endpoint", () => {
-	it("E2E Happy Path Journey - Well Known", async () => {
-		// Well Known
-		const wellKnownResponse = await wellKnownGet();
-		validateWellKnownResponse(wellKnownResponse.data);
-		expect(wellKnownResponse.status).toBe(200);
-	});
+    it("E2E Happy Path Journey - Well Known", async () => {
+        // Well Known
+        const wellKnownResponse = await wellKnownGet();
+        validateWellKnownResponse(wellKnownResponse.data);
+        expect(wellKnownResponse.status).toBe(200);
+    });
 });
