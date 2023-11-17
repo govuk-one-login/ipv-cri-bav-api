@@ -1530,6 +1530,18 @@ Outputs:
       Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-key-arn"
     Export:
       Name: !Sub ${AWS::StackName}-SessionTableEncryptionKey-arn
+  PersonIdentityTableEcryptionARN:
+    Description: "Arn of the PersonIdentityTableEncryptionKey"
+    Value:
+      Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-key-arn"
+    Export:
+      Name: !Sub ${AWS::StackName}-PersonIdentityTableEncryptionKey-arn
+  PersonIdentityTableARN:
+    Description: "Arn of the Session DynamoDB table"
+    Value:
+      Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-arn"
+    Export:
+      Name: !Sub ${AWS::StackName}-PersonIdentityTable-arn
   BAVIPVStubExecuteURL:
     Condition: IsNotProdLikeEnvironment
     Description: "BAV IPV Stub"
