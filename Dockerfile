@@ -16,6 +16,11 @@ RUN unzip awscliv2.zip
 RUN ./aws/install
 
 COPY . /
+
+# Add in dynatrace layer
+COPY --from=khw46367.live.dynatrace.com/linux/oneagent-codemodules-musl:nodejs / /
+ENV LD_PRELOAD /opt/dynatrace/oneagent/agent/lib64/liboneagentproc.so
+
 WORKDIR /
 RUN chmod +x run-tests.sh
 
