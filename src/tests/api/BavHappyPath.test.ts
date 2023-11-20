@@ -47,7 +47,7 @@ describe("BAV CRI: /verify-account Endpoint Happy Path Tests", () => {
         "86473611",
         "8647361",
         "864736"
-    ])("Successful Request Test", async (accountNumber: string) => {
+    ])("Successful Request Tests", async (accountNumber: string) => {
         expect(sessionId).toBeTruthy();
 
         // Assign a new valid account number to the payload
@@ -61,8 +61,8 @@ describe("BAV CRI: /verify-account Endpoint Happy Path Tests", () => {
         await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_DATA_RECEIVED");
 
         // Verify that the accountNumber and sortCode exist and have the correct value
-        // await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_PERSONAL_IDENTITY_TABLE_NAME, "accountNumber", verifyAccountYesPayload.account_number);
-        // await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_PERSONAL_IDENTITY_TABLE_NAME, "sortCode", verifyAccountYesPayload.sort_code);
+        await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_PERSONAL_IDENTITY_TABLE_NAME, "accountNumber", verifyAccountYesPayload.account_number.padStart(8, "0"));
+        await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_PERSONAL_IDENTITY_TABLE_NAME, "sortCode", verifyAccountYesPayload.sort_code);
     });
 });
 
