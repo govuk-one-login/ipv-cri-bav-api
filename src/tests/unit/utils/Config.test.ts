@@ -14,16 +14,16 @@ describe("Config utils", () => {
 
 		it("returns successfully if putParameter stores the value to SSM Parameter", async () => {
 			await putParameter(path, "token", "String", "HMRC Token");
-			expect(sendMock).toHaveBeenCalledWith({ Name: path, Value: "token", Type: "String", Overwrite: true, Description: "HMRC Token"  });
+			expect(sendMock).toHaveBeenCalledWith({ Name: path, Value: "token", Type: "String", Overwrite: true, Description: "HMRC Token" });
 		});
 
-        it("throws error if putParameter fails to write to SSM parameter", async () => {
-			sendMock.mockRejectedValueOnce(new Error("Failed to write SSM Parameter"))
+		it("throws error if putParameter fails to write to SSM parameter", async () => {
+			sendMock.mockRejectedValueOnce(new Error("Failed to write SSM Parameter"));
 			await expect(putParameter(path, "token", "String", "HMRC Token")).rejects.toThrow(expect.objectContaining({
 				message: "Failed to write SSM Parameter",
 			}));
-			expect(sendMock).toHaveBeenCalledWith({ Name: path, Value: "token", Type: "String", Overwrite: true, Description: "HMRC Token"  });
+			expect(sendMock).toHaveBeenCalledWith({ Name: path, Value: "token", Type: "String", Overwrite: true, Description: "HMRC Token" });
 		});
 
-    });
+	});
 });
