@@ -1333,12 +1333,7 @@ Resources:
       ReservedConcurrentExecutions: !If
         - ApplyReservedConcurrency
         - !Ref LambdaConcurrency
-        - !Ref AWS::NoValue
-      # Events:        
-      #   InvocationLevel:
-      #     Type: Schedule
-      #     Properties:
-      #       Schedule: cron(0/5 * * * ? *)          
+        - !Ref AWS::NoValue         
       Environment:
         Variables:
           HMRC_CLIENT_ID_SSM_PATH: !Sub "/${Environment}/HMRC/CLIENT_ID"
@@ -1372,7 +1367,7 @@ Resources:
     Condition: NotLocalTestStack
     Properties: 
       Description: "ScheduledRule"
-      ScheduleExpression: cron(0/5 * * * ? *)
+      ScheduleExpression: cron(0 0/3 * * ? *)
       State: "ENABLED"
       Targets: 
         - 
@@ -1381,16 +1376,6 @@ Resources:
               - "HmrcTokenFunction"
               - "Arn"
           Id: "HmrcTokenFunction"
-  # PermissionForEventsToInvokeLambda: 
-  #   Type: AWS::Lambda::Permission
-  #   Properties: 
-  #     FunctionName: !GetAtt HmrcTokenFunction.Arn
-  #     Action: lambda:InvokeFunction
-  #     Principal: events.amazonaws.com
-  #     SourceArn: 
-  #       Fn::GetAtt: 
-  #         - "HmrcTokenScheduledRule"
-  #         - "Arn"
 
   HmrcTokenLogGroup:
     Type: AWS::Logs::LogGroup
