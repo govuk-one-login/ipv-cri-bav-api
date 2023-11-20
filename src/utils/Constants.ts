@@ -13,6 +13,8 @@ export class Constants {
 	static readonly HMRC_TOKEN_LOGGER_SVC_NAME : "HmrcTokenHandler";
 
 	static readonly ACCESSTOKEN_LOGGER_SVC_NAME = "AccessTokenHandler";
+	
+	static readonly USERINFO_LOGGER_SVC_NAME : "UserInfoHandler";
 
 	static readonly BAV_METRICS_NAMESPACE = "BAV-CRI";
 
@@ -45,6 +47,8 @@ export class Constants {
   static readonly VERIFIABLE_CREDENTIAL = "VerifiableCredential";
 
   static readonly IDENTITY_CHECK_CREDENTIAL = "IdentityCheckCredential";
+
+	static readonly IDENTITY_CHECK = "IdentityCheck";
 
   static readonly URN_UUID_PREFIX = "urn:uuid:";
 

@@ -17,6 +17,8 @@ export interface PersonIdentityItem {
 	birthDate: PersonIdentityDateOfBirth[];
 	expiryDate: number;
 	createdDate: number;
+	sortCode?: string;
+	accountNumber?: string;
 }
 
 export interface SharedClaimsPersonIdentity {

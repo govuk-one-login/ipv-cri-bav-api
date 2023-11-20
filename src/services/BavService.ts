@@ -63,6 +63,31 @@ export class BavService {
 		}
 	}
 
+	async getPersonIdentityBySessionId(sessionId: string, tableName: string = this.tableName): Promise<PersonIdentityItem | undefined> {
+		this.logger.debug(`Getting person identity from table ${tableName}`);
+		const getPersonIdentityCommand = new GetCommand({
+			TableName: tableName,
+			Key: {
+				sessionId,
+			},
+		});
+
+		let personIdentity;
+		try {
+			personIdentity = await this.dynamo.send(getPersonIdentityCommand);
+		} catch (error) {
+			this.logger.error({ message: "getPersonIdentityBySessionId - failed executing get from dynamodb:" }, {
+				messageCode: MessageCodes.FAILED_FETCHING_SESSION,
+				error,
+			});
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "Error retrieving person identity?");
+		}
+
+		if (personIdentity.Item) {
+			return personIdentity.Item as PersonIdentityItem;
+		}
+	}
+
 	async sendToTXMA(QueueUrl: string, event: TxmaEvent): Promise<void> {
 		try {
 			const messageBody = JSON.stringify(event);
@@ -252,6 +277,26 @@ export class BavService {
 		} catch (error) {
 			this.logger.error({ message: "got error updating Access token details", error }, { messageCode: MessageCodes.FAILED_UPDATING_SESSION });
 			throw new AppError(HttpCodesEnum.SERVER_ERROR, "updateItem - failed: got error updating Access token details");
+		}
+	}
+
+	async updateSessionAuthState(sessionId: string, authSessionState: string, tableName: string = this.tableName): Promise<void> {
+		const updateStateCommand = new UpdateCommand({
+			TableName: tableName,
+			Key: { sessionId },
+			UpdateExpression: "SET authSessionState = :authSessionState",
+			ExpressionAttributeValues: {
+				":authSessionState": authSessionState,
+			},
+		});
+
+		this.logger.info({ message: "Updating session table with auth state details", updateStateCommand });
+		try {
+			await this.dynamo.send(updateStateCommand);
+			this.logger.info({ message: "Updated auth state details in dynamodb" });
+		} catch (error) {
+			this.logger.error({ message: "Got error saving auth state details", error });
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "updateItem - failed: got error saving auth state details");
 		}
 	}
 }

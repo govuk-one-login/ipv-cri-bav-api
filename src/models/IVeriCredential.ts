@@ -6,7 +6,7 @@ export interface VerifiedCredential {
 	"@context": string[];
 	type: string[];
 	credentialSubject: VerifiedCredentialSubject;
-	evidence: VerifiedCredentialEvidence;
+	evidence: VerifiedCredentialEvidence[];
 }
 // limit to supported algs https://datatracker.ietf.org/doc/html/rfc7518
 export type Algorithm =
@@ -91,18 +91,29 @@ export class JsonWebTokenError extends Error {
 	}
 }
 
-export type VerifiedCredentialEvidence = Array<{
+export type CheckDetails = {
+	checkMethod: string;
+	identityCheckPolicy: string;
+};
+
+export type VerifiedCredentialEvidence = {
 	type: string;
 	txn: string;
 	strengthScore: number;
 	validityScore: number;
-	verificationScore: number;
+	checkDetails?: CheckDetails[];
+	failedCheckDetails?: CheckDetails[];
 	ci?: string[];
-}>;
+};
+
+export type BankAccountInfo = {
+	sortCode: string;
+	accountNumber: string;
+};
 
 export interface VerifiedCredentialSubject {
-	name?: Name[];
-	birthDate?: BirthDate[];
+	name: Name[];
+	bankAccount: BankAccountInfo[];
 }
 
 export interface Name {
