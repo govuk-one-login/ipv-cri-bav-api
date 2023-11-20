@@ -1,0 +1,56 @@
+import { Constants } from "../../../utils/Constants";
+
+const body = {
+	sort_code: "123456",
+	account_number: "12345678",
+};
+
+export const VALID_VERFIY_ACCOUNT = {
+	body: JSON.stringify(body),
+	httpMethod: "POST",
+	headers: { [Constants.X_SESSION_ID]: "732075c8-08e6-4b25-ad5b-d6cb865a18e5" },
+	isBase64Encoded: false,
+	multiValueHeaders: {},
+	multiValueQueryStringParameters: {},
+	pathParameters: {},
+	queryStringParameters: {},
+	path: "/token",
+	requestContext:{
+		accountId: "",
+		apiId: "",
+		authorizer: {},
+		httpMethod: "post",
+		identity: {
+			accessKey: "",
+			accountId: "",
+			apiKey: "",
+			apiKeyId: "",
+			caller: "",
+			clientCert: {
+				clientCertPem: "",
+				issuerDN: "",
+				serialNumber: "",
+				subjectDN: "",
+				validity: { notAfter: "", notBefore: "" },
+			},
+			cognitoAuthenticationProvider: "",
+			cognitoAuthenticationType: "",
+			cognitoIdentityId: "",
+			cognitoIdentityPoolId: "",
+			principalOrgId: "",
+			sourceIp: "",
+			user: "",
+			userAgent: "",
+			userArn: "",
+		},
+		path: "/verify-account",
+		protocol: "HTTP/1.1",
+		requestId: "ba9b369a-ab98-11ed-afa1-0242ac120002",
+		requestTimeEpoch: 1428582896000,
+		resourceId: "123456",
+		resourcePath: "/verify-account",
+		stage: "dev",
+	},
+	resource: "/verify-account",
+	stageVariables: {},
+};

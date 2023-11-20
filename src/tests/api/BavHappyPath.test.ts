@@ -15,25 +15,25 @@ import {
     validateWellKnownResponse,
     wellKnownGet,
 }
-    from "../utils/ApiTestSteps";
+	from "../utils/ApiTestSteps";
 
 describe("BAV CRI: /session Endpoint Happy Path Tests", () => {
-    let sessionId: string;
-    beforeEach(async () => {
-        // Session Request
-        sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
-    });
+	let sessionId: string;
+	beforeEach(async () => {
+		// Session Request
+		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+	});
 
-    it("Successful Request Test", async () => {
-        expect(sessionId).toBeTruthy();
+	it("Successful Request Test", async () => {
+		expect(sessionId).toBeTruthy();
 
-        // Make sure authSession state is as expected
-        await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_SESSION_CREATED");
+		// Make sure authSession state is as expected
+		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_SESSION_CREATED");
 
-        // Make sure txma event is present & valid
-        const sqsMessage = await getSqsEventList("txma/", sessionId, 1);
-        await validateTxMAEventData(sqsMessage);
-    });
+		// Make sure txma event is present & valid
+		const sqsMessage = await getSqsEventList("txma/", sessionId, 1);
+		await validateTxMAEventData(sqsMessage);
+	});
 });
 
 describe("BAV CRI: /verify-account Endpoint Happy Path Tests", () => {
@@ -120,9 +120,8 @@ describe("BAV CRI: /token Endpoint Happy Path Tests", () => {
 
         // Make sure authSession state is as expected
         await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_ACCESS_TOKEN_ISSUED");
-    });
+	  });
 });
-
 
 describe("BAV CRI: /userinfo Endpoint Happy Path Tests", () => {
     let sessionId: string;
@@ -160,10 +159,10 @@ describe("BAV CRI: /userinfo Endpoint Happy Path Tests", () => {
 });
 
 describe("E2E Happy Path Well Known Endpoint", () => {
-    it("E2E Happy Path Journey - Well Known", async () => {
+	  it("E2E Happy Path Journey - Well Known", async () => {
         // Well Known
         const wellKnownResponse = await wellKnownGet();
         validateWellKnownResponse(wellKnownResponse.data);
         expect(wellKnownResponse.status).toBe(200);
-    });
+	  });
 });

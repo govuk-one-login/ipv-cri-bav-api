@@ -103,6 +103,7 @@ Mappings:
       CLIENTS: '[{"jwksEndpoint":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/redirect?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
       TESTHARNESSURL: "https://bav-test-harness-testharness.review-bav.dev.account.gov.uk"
+      HMRCVERIFYBASEURL: "https://api.isc.externaltest.tax.service.gov.uk/misc/bank-account"
     build:
       ISSUER: 'https://review-bav.build.account.gov.uk'
       DNSSUFFIX: review-bav.build.account.gov.uk
@@ -112,6 +113,7 @@ Mappings:
       CLIENTS: '[{"jwksEndpoint":"https://bav-ipv-stub-ipvstub.review-bav.build.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://bav-ipv-stub-ipvstub.review-bav.build.account.gov.uk/redirect?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
       TESTHARNESSURL: "https://bav-test-harness-testharness.review-bav.build.account.gov.uk"
+      HMRCVERIFYBASEURL: "https://api.isc.externaltest.tax.service.gov.uk/misc/bank-account"
   TxMAAccounts:
     # EVENTS is used to egress to TxMA.
     dev:
@@ -607,6 +609,190 @@ Resources:
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
   
+  ## UserInfoHandler
+  UserInfoFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: UserInfoFunctionLogGroup
+    Properties:
+      FunctionName: !Sub "BAV-UserInfo-${AWS::StackName}"
+      Handler: UserInfoHandler.lambdaHandler
+      CodeUri: ../src/
+      ReservedConcurrentExecutions: !If
+        - ApplyReservedConcurrency
+        - !Ref LambdaConcurrency
+        - !Ref AWS::NoValue
+      Environment:
+        Variables:
+          POWERTOOLS_SERVICE_NAME: UserInfoHandler
+          ISSUER: !FindInMap [EnvironmentVariables, !Ref Environment, ISSUER]
+          KMS_KEY_ARN:
+            Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSXrayWriteOnlyAccess
+        - DynamoDBWritePolicy:
+            TableName:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+        - DynamoDBReadPolicy:
+            TableName:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+        - DynamoDBReadPolicy:
+            TableName:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-name"
+        - KMSDecryptPolicy:
+            KeyId:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-key-id"
+        - KMSDecryptPolicy:
+            KeyId:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-key-id"
+        - Statement:
+            - Sid: KMSPolicy
+              Effect: Allow
+              Action:
+                - kms:Verify
+                - kms:Sign
+              Resource:
+                Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "sqs:SendMessage"
+              Resource: !GetAtt TxMASQSQueue.Arn
+            - Effect: Allow
+              Action:
+                - "kms:Encrypt"
+                - "kms:Decrypt"
+                - "kms:GenerateDataKey"
+              Resource: !GetAtt TxMAKMSEncryptionKey.Arn
+      Events:
+        session:
+          Type: Api
+          Properties:
+            Path: /userinfo
+            Method: post
+            RestApiId: !Ref BAVRestApi
+
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: false
+        EntryPoints:
+          - UserInfoHandler.ts
+
+  UserInfoFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/BAV-UserInfo-${AWS::StackName}"
+      RetentionInDays:
+        !FindInMap [
+          EnvironmentConfiguration,
+          !Ref Environment,
+          logretentionindays,
+        ]
+
+  # UserInfoFunctionLogsSubscriptionFilterCSLS:
+  #   Type: AWS::Logs::SubscriptionFilter
+  #   Properties:
+  #     DestinationArn:
+  #       !FindInMap [ PlatformConfiguration, !Ref Environment, CSLSEGRESS ]
+  #     FilterPattern: ""
+  #     LogGroupName: !Ref UserInfoFunctionLogGroup
+
+  UserInfoFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref UserInfoFunction
+      Principal: apigateway.amazonaws.com
+
+  UserInfoFunctionFatalErorMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref UserInfoFunctionLogGroup
+      FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
+      MetricTransformations:
+        -
+          MetricValue: "1"
+          MetricNamespace: !Sub "${AWS::StackName}/LogMessages"
+          MetricName: "UserInfoFunction-Fatalerror"
+
+  UserInfoFunctionFatalErrorAlarm:
+    DependsOn:
+      - "UserInfoFunctionFatalErorMetricFilter"
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-UserInfoFunction-FatalErrorAlarm"
+      AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
+      ActionsEnabled: true
+      OKActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      InsufficientDataActions: [ ]
+      MetricName: UserInfoFunction-Fatalerror
+      Namespace: !Sub "${AWS::StackName}/LogMessages"
+      Statistic: Sum
+      Dimensions: [ ]
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  UserInfoConcurrency80Alarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployConcurrencyAlarms"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: []
+      AlarmDescription: !Sub "Trigger the alarm if over 80% of UserInfo is used. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-UserInfoFunction-concurrency"
+      MetricName: ConcurrentExecutions
+      Namespace: AWS/Lambda
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref UserInfoFunction
+      Statistic: Maximum
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: !Ref LambdaConcurrencyThreshold
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+
+  UserInfoThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: []
+      AlarmDescription: !Sub "Trigger if the ${UserInfoFunction} lambda throttles. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-UserInfoFunction-throttles"
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref UserInfoFunction
+      TreatMissingData: notBreaching
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+
   ## AccessToken
   TokenFunction:
     Type: AWS::Serverless::Function
@@ -892,6 +1078,183 @@ Resources:
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
 
+  ## VerifyAccountHandler
+  VerifyAccountFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: VerifyAccountFunctionLogGroup
+    Properties:
+      FunctionName: !Sub "BAV-verify-account-${AWS::StackName}"
+      Handler: VerifyAccountHandler.lambdaHandler
+      CodeUri: ../src/
+      ReservedConcurrentExecutions: !If
+        - ApplyReservedConcurrency
+        - !Ref LambdaConcurrency
+        - !Ref AWS::NoValue
+      Environment:
+        Variables:
+          POWERTOOLS_SERVICE_NAME: verifyAccountHandler
+          KMS_KEY_ARN:
+            Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
+          ENCRYPTION_KEY_IDS:
+            Fn::ImportValue: !Sub "${L2KMSStackName}-encryption-key"
+          HMRC_TOKEN_SSM_PATH: !Sub "/${Environment}/HMRC/TOKEN"
+          HMRC_BASE_URL: !FindInMap [ EnvironmentVariables, !Ref Environment, HMRCVERIFYBASEURL ]
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSXrayWriteOnlyAccess
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub "${Environment}/HMRC/TOKEN"
+        - DynamoDBWritePolicy:
+            TableName:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+        - DynamoDBWritePolicy:
+            TableName:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-name"
+        - DynamoDBReadPolicy:
+            TableName:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+        - DynamoDBReadPolicy:
+            TableName:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-name"
+        - KMSDecryptPolicy:
+            KeyId:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-key-id"
+        - Statement:
+            - Sid: KMSPolicy
+              Effect: Allow
+              Action:
+                - kms:*
+              Resource:
+                "*"
+      Events:
+        verifyAccount:
+          Type: Api
+          Properties:
+            Path: /verify-account
+            Method: post
+            RestApiId: !Ref BAVRestApi
+
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: false
+        EntryPoints:
+          - VerifyAccountHandler.ts
+
+  VerifyAccountFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/BAV-verify-account-${AWS::StackName}"
+      RetentionInDays:
+        !FindInMap [
+          EnvironmentConfiguration,
+          !Ref Environment,
+          logretentionindays,
+        ]
+
+  # VerifyAccountFunctionLogsSubscriptionFilterCSLS:
+  #   Type: AWS::Logs::SubscriptionFilter
+  #   Properties:
+  #     DestinationArn:
+  #       !FindInMap [ PlatformConfiguration, !Ref Environment, CSLSEGRESS ]
+  #     FilterPattern: ""
+  #     LogGroupName: !Ref VerifyAccountFunctionLogGroup
+
+  VerifyAccountFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref VerifyAccountFunction
+      Principal: apigateway.amazonaws.com
+
+  VerifyAccountFunctionFatalErorMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref VerifyAccountFunctionLogGroup
+      FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
+      MetricTransformations:
+        -
+          MetricValue: "1"
+          MetricNamespace: !Sub "${AWS::StackName}/LogMessages"
+          MetricName: "VerifyAccountFunction-Fatalerror"
+
+  VerifyAccountFunctionFatalErrorAlarm:
+    DependsOn:
+      - "VerifyAccountFunctionFatalErorMetricFilter"
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-VerifyAccountFunction-FatalErrorAlarm"
+      AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
+      ActionsEnabled: true
+      OKActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      InsufficientDataActions: [ ]
+      MetricName: VerifyAccountFunction-Fatalerror
+      Namespace: !Sub "${AWS::StackName}/LogMessages"
+      Statistic: Sum
+      Dimensions: [ ]
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  VerifyAccountConcurrency80Alarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployConcurrencyAlarms"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: []
+      AlarmDescription: !Sub "Trigger the alarm if over 80% of VerifyAccount is used. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-VerifyAccountFunction-concurrency"
+      MetricName: ConcurrentExecutions
+      Namespace: AWS/Lambda
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref VerifyAccountFunction
+      Statistic: Maximum
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: !Ref LambdaConcurrencyThreshold
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+
+  VerifyAccountThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: []
+      AlarmDescription: !Sub "Trigger if the ${VerifyAccountFunction} lambda throttles. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-VerifyAccountFunction-throttles"
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref VerifyAccountFunction
+      TreatMissingData: notBreaching
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+
   ## TXMA SQS Queue
   TxMASQSQueue:
     Type: AWS::SQS::Queue
@@ -1167,6 +1530,18 @@ Outputs:
       Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-key-arn"
     Export:
       Name: !Sub ${AWS::StackName}-SessionTableEncryptionKey-arn
+  PersonIdentityTableEcryptionARN:
+    Description: "Arn of the PersonIdentityTableEncryptionKey"
+    Value:
+      Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-key-arn"
+    Export:
+      Name: !Sub ${AWS::StackName}-PersonIdentityTableEncryptionKey-arn
+  PersonIdentityTableARN:
+    Description: "Arn of the Session DynamoDB table"
+    Value:
+      Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-arn"
+    Export:
+      Name: !Sub ${AWS::StackName}-PersonIdentityTable-arn
   BAVIPVStubExecuteURL:
     Condition: IsNotProdLikeEnvironment
     Description: "BAV IPV Stub"

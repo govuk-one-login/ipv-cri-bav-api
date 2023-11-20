@@ -6,31 +6,31 @@ import {
     startStubServiceAndReturnSessionId,
     stubStartPost,
     userInfoPost,
-	verifyAccountPost,
+	  verifyAccountPost,
     tokenPost,
 } from "../utils/ApiTestSteps";
 
 describe("BAV CRI: /session Endpoint Unhappy Path Tests", () => {
-    let stubResponse: any;
-    beforeEach(async () => {
-        stubResponse = await stubStartPost(bavStubPayload);
-    });
+	let stubResponse: any;
+	beforeEach(async () => {
+		stubResponse = await stubStartPost(bavStubPayload);
+	});
 
-    it("Invalid Request Test", async () => {
-        // Purposefully empty request
-        const sessionResponse = await sessionPost(stubResponse.data.clientId, "");
+	it("Invalid Request Test", async () => {
+		// Purposefully empty request
+		const sessionResponse = await sessionPost(stubResponse.data.clientId, "");
 
-        expect(sessionResponse.status).toBe(401);
-        expect(sessionResponse.data).toBe("Unauthorized");
-    });
+		expect(sessionResponse.status).toBe(401);
+		expect(sessionResponse.data).toBe("Unauthorized");
+	});
 
-    it("Invalid ClientID Test", async () => {
-        // Purposefully empty client ID
-        const sessionResponse = await sessionPost("", stubResponse.data.request);
+	it("Invalid ClientID Test", async () => {
+		// Purposefully empty client ID
+		const sessionResponse = await sessionPost("", stubResponse.data.request);
 
-        expect(sessionResponse.status).toBe(400);
-        expect(sessionResponse.data).toBe("Bad Request");
-    });
+		expect(sessionResponse.status).toBe(400);
+		expect(sessionResponse.data).toBe("Bad Request");
+	});
 });
 
 describe("BAV CRI: /authorization Endpoint Unhappy Path Tests", () => {
@@ -79,7 +79,8 @@ describe("BAV CRI: /token Endpoint Unhappy Path Tests", () => {
     });
 });
 
-describe.skip("BAV CRI: /userinfo Endpoint Unhappy Path Tests", () => {
+// eslint-disable-next-line @typescript-eslint/tslint/config
+describe("BAV CRI: /userinfo Endpoint Unhappy Path Tests", () => {
     it("Non-bearer Type Authentication Test", async () => {
         //Session Request
         const sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);

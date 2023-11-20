@@ -21,6 +21,6 @@
     "multiValueQueryStringParameters": null,
     "pathParameters": null,
     "stageVariables": null,
-    "body": "{\"target\":\"test.com\",\"shared_claims\":{\"name\":[{\"nameParts\":[{\"value\":\"Jenny\",\"type\":\"GivenName\"},{\"value\":\"Jane\",\"type\":\"GivenName\"},{\"value\":\"Jonah\",\"type\":\"FamilyName\"}]}],\"birthDate\":[{\"value\":\"1989-05-02\"}],\"email\":\"jjj@testemail.com\"}}",
+    "body": "{\"target\":\"test.com\",\"shared_claims\":{\"name\":[{\"nameParts\":[{\"value\":\"Jenny\",\"type\":\"GivenName\"},{\"value\":\"Jane\",\"type\":\"GivenName\"},{\"value\":\"Jonah\",\"type\":\"FamilyName\"}]}],\"email\":\"jjj@testemail.com\"}}",
     "isBase64Encoded": false
 }
