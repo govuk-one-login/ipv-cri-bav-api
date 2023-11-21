@@ -3,7 +3,7 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   infra-l2-outbound-proxy
 
-  An HTTP API as a proxy for the BAV outbound integrations to Yoti, Post Office and Gov Notify
+  An HTTP API as a proxy for the BAV outbound integrations to HMRC
 
 Conditions:
   IsNotDevelopment: !Or
