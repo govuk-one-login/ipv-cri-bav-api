@@ -27,7 +27,7 @@ Mappings:
       HMRCURL: "https://api.isc.externaltest.tax.service.gov.uk"
       PRETTYPROXYURL: "proxy.review-bav.integration.account.gov.uk"
     production:
-      HMRCURL: "https://api.isc.externaltest.tax.service.gov.uk"
+      HMRCURL: "https://api.isc.production.tax.service.gov.uk"
       PRETTYPROXYURL: "proxy.review-bav.account.gov.uk"
 
 Parameters:

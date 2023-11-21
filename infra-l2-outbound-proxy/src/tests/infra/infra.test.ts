@@ -14,7 +14,7 @@ describe("Outbound Proxy Api Gateway Integration URLs", () => {
     ${"build"}       | ${"https://api.isc.externaltest.tax.service.gov.uk"} | ${"proxy.review-bav.build.account.gov.uk"}
     ${"staging"}     | ${"https://api.isc.externaltest.tax.service.gov.uk"} | ${"proxy.review-bav.staging.account.gov.uk"}
     ${"integration"} | ${"https://api.isc.externaltest.tax.service.gov.uk"} | ${"proxy.review-bav.integration.account.gov.uk"}
-    ${"production"}  | ${"https://api.isc.externaltest.tax.service.gov.uk"} | ${"proxy.review-bav.account.gov.uk"}
+    ${"production"}  | ${"https://api.isc.production.tax.service.gov.uk"} | ${"proxy.review-bav.account.gov.uk"}
   `(
     `HTTP proxy integration with proxied URIs for $ENVIRONMENT have correct values`,
     ({ ENVIRONMENT, HMRCURL, PRETTYPROXYURL }) => {
