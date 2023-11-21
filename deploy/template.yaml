@@ -112,6 +112,14 @@ Mappings:
       CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-bav.build.account.gov.uk/.well-known/jwks.json","clientId":"BD7B2A5D","redirectUri":"https://ipvstub.review-bav.build.account.gov.uk/redirect?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
       TESTHARNESSURL: "https://testharness.review-bav.build.account.gov.uk"
+    staging:
+      ISSUER: 'https://review-bav.staging.account.gov.uk'
+      DNSSUFFIX: review-bav.staging.account.gov.uk
+      MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
+      TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
+      RESOURCETTLSECS: 1209600 # Default 14 days
+      CLIENTS: '[{"jwksEndpoint":"https://api.identity.staging.account.gov.uk/.well-known/jwks.json","clientId":"03A5A659-17AA-453F-B905-95D2804823D1","redirectUri":"https://identity.staging.account.gov.uk/credential-issuer/callback?id=bav"}]'
+      AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
   TxMAAccounts:
     # EVENTS is used to egress to TxMA.
     dev:
