@@ -111,7 +111,7 @@ Mappings:
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-bav.build.account.gov.uk/.well-known/jwks.json","clientId":"BD7B2A5D","redirectUri":"https://ipvstub.review-bav.build.account.gov.uk/redirect?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
-      TESTHARNESSURL: "https://bav-test-harness-testharness.review-bav.build.account.gov.uk"
+      TESTHARNESSURL: "https://testharness.review-bav.build.account.gov.uk"
   TxMAAccounts:
     # EVENTS is used to egress to TxMA.
     dev:
