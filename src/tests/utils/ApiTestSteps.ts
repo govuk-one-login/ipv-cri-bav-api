@@ -63,6 +63,17 @@ export async function sessionPost(clientId: any, request: any): Promise<any> {
 	}
 }
 
+export async function verifyAccountPost(bankDetails: any, sessionId: any): Promise<any> {
+    const path = "/verify-account";
+    try {
+        const postRequest = await API_INSTANCE.post(path, bankDetails, { headers: { "x-govuk-signin-session-id": sessionId } });
+        return postRequest;
+    } catch (error: any) {
+        console.log(`Error response from ${path} endpoint: ${error}`);
+        return error.response;
+    }
+}
+
 
 export async function authorizationGet(sessionId: any): Promise<any> {
 	const path = "/authorization";
@@ -263,5 +274,5 @@ function validateRawBody(rawBody: any): void {
 	const decodedBody = JSON.parse(jwtUtils.base64DecodeToString(rawBody.replace(/\W/g, "")));
 	expect(decodedBody.jti).toBeTruthy();
 	expect(decodedBody.vc.evidence[0].strengthScore).toBe(3);
-	expect(decodedBody.vc.evidence[0].validityScore).toBe(2);
+	expect(decodedBody.vc.evidence[0].validityScore).toBe(0);
 }
