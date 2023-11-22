@@ -22,7 +22,7 @@ export class HmrcTokenRequestProcessor {
 		this.logger = logger;
 		this.metrics = metrics;
 		this.hmrcBaseUrl = checkEnvironmentVariable(EnvironmentVariables.HMRC_BASE_URL, logger);
-		this.hmrcService = HmrcService.getInstance(this.logger, HMRC_CLIENT_ID, HMRC_CLIENT_SECRET, this.hmrcBaseUrl);
+		this.hmrcService = HmrcService.getInstance(this.logger, this.hmrcBaseUrl, HMRC_CLIENT_ID, HMRC_CLIENT_SECRET);
 	}
 
 	static getInstance(logger: Logger, metrics: Metrics, HMRC_CLIENT_ID: string, HMRC_CLIENT_SECRET: string): HmrcTokenRequestProcessor {
