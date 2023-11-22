@@ -1,13 +1,13 @@
 import bavStubPayload from "../data/exampleStubPayload.json";
 import verifyAccountYesPayload from "../data/bankDetailsYes.json";
 import {
-    authorizationGet,
-    sessionPost,
-    startStubServiceAndReturnSessionId,
-    stubStartPost,
-    userInfoPost,
+	authorizationGet,
+	sessionPost,
+	startStubServiceAndReturnSessionId,
+	stubStartPost,
+	userInfoPost,
 	  verifyAccountPost,
-    tokenPost,
+	tokenPost,
 } from "../utils/ApiTestSteps";
 
 describe("BAV CRI: /session Endpoint Unhappy Path Tests", () => {
@@ -34,84 +34,84 @@ describe("BAV CRI: /session Endpoint Unhappy Path Tests", () => {
 });
 
 describe("BAV CRI: /authorization Endpoint Unhappy Path Tests", () => {
-    let sessionId: string;
-    beforeEach(async () => {
-        sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
-    });
+	let sessionId: string;
+	beforeEach(async () => {
+		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+	});
 
-    it("Incorrect Session State Test", async () => {
-        // Authorization
-        const authResponse = await authorizationGet(sessionId);
-        expect(authResponse.status).toBe(401);
-    });
+	it("Incorrect Session State Test", async () => {
+		// Authorization
+		const authResponse = await authorizationGet(sessionId);
+		expect(authResponse.status).toBe(401);
+	});
 
-    it("Repeated Request Made Test", async () => {
-        const origSessionId = sessionId;
+	it("Repeated Request Made Test", async () => {
+		const origSessionId = sessionId;
 		await verifyAccountPost(verifyAccountYesPayload, sessionId);
-        const authResponse = await authorizationGet(sessionId);
-        const authCode = authResponse.data.authorizationCode;
-        const authRepeatResponse = await authorizationGet(origSessionId);
-        const authRepeatResponseCode = authRepeatResponse.data.authorizationCode;
-        expect(authCode).not.toEqual(authRepeatResponseCode);
-    });
+		const authResponse = await authorizationGet(sessionId);
+		const authCode = authResponse.data.authorizationCode;
+		const authRepeatResponse = await authorizationGet(origSessionId);
+		const authRepeatResponseCode = authRepeatResponse.data.authorizationCode;
+		expect(authCode).not.toEqual(authRepeatResponseCode);
+	});
 });
 
 describe("BAV CRI: /token Endpoint Unhappy Path Tests", () => {
-    let sessionId: string;
-    beforeEach(async () => {
-        //Session Request
-        sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
-    });
+	let sessionId: string;
+	beforeEach(async () => {
+		//Session Request
+		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+	});
 
-    it("Invalid Session State Test", async () => {
+	it("Invalid Session State Test", async () => {
 		// Verify-account request
 		await verifyAccountPost(verifyAccountYesPayload, sessionId);
 		
-        // Authorization request
-        const authResponse = await authorizationGet(sessionId);
+		// Authorization request
+		const authResponse = await authorizationGet(sessionId);
 
-        // Token request
-        await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+		// Token request
+		await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
 
-        // Request to /token endpoint again (which now has an incorrect session state)
-        const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
-        expect(tokenResponse.status).toBe(401);
-    });
+		// Request to /token endpoint again (which now has an incorrect session state)
+		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+		expect(tokenResponse.status).toBe(401);
+	});
 });
 
 // eslint-disable-next-line @typescript-eslint/tslint/config
 describe("BAV CRI: /userinfo Endpoint Unhappy Path Tests", () => {
-    it("Non-bearer Type Authentication Test", async () => {
-        //Session Request
-        const sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+	it("Non-bearer Type Authentication Test", async () => {
+		//Session Request
+		const sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
 
 		// Verify-account request
 		await verifyAccountPost(verifyAccountYesPayload, sessionId);
 		
-        // Authorization
-        const authResponse = await authorizationGet(sessionId);
+		// Authorization
+		const authResponse = await authorizationGet(sessionId);
 
 		// Token
-        const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
 
-        // Make the request using a 'basic' token type
-        const userInfoResponse = await userInfoPost("Basic " + tokenResponse.data.access_token);
-        expect(userInfoResponse.status).toBe(401);
-    });
+		// Make the request using a 'basic' token type
+		const userInfoResponse = await userInfoPost("Basic " + tokenResponse.data.access_token);
+		expect(userInfoResponse.status).toBe(401);
+	});
 
-    // it.skip("E2E Unhappy Path Journey - Expired bearer token", async () => {
-    //     // Hardcoded expired Bearer Token
-    //     const userInfoResponse = await userInfoPost("Bearer " + constants.DEV_IPV_BAV_EXPIRED_TOKEN);
-    //     expect(userInfoResponse.status).toBe(401);
-    // });
+	// it.skip("E2E Unhappy Path Journey - Expired bearer token", async () => {
+	//     // Hardcoded expired Bearer Token
+	//     const userInfoResponse = await userInfoPost("Bearer " + constants.DEV_IPV_BAV_EXPIRED_TOKEN);
+	//     expect(userInfoResponse.status).toBe(401);
+	// });
 
-    // it.skip("E2E Unhappy Path Journey - Missing subject field", async () => {
-    //     const userInfoResponse = await userInfoPost("Bearer " + constants.DEV_IPV_BAV_MISSING_SUBJECT_TOKEN);
-    //     expect(userInfoResponse.status).toBe(400);
-    // });
+	// it.skip("E2E Unhappy Path Journey - Missing subject field", async () => {
+	//     const userInfoResponse = await userInfoPost("Bearer " + constants.DEV_IPV_BAV_MISSING_SUBJECT_TOKEN);
+	//     expect(userInfoResponse.status).toBe(400);
+	// });
 
-    // it.skip("E2E Unhappy Path Journey - Missing client session id field", async () => {
-    //     const userInfoResponse = await userInfoPost("Bearer " + constants.DEV_IPV_BAV_MISSING_CLIENT_ID_TOKEN);
-    //     expect(userInfoResponse.status).toBe(400);
-    // });
+	// it.skip("E2E Unhappy Path Journey - Missing client session id field", async () => {
+	//     const userInfoResponse = await userInfoPost("Bearer " + constants.DEV_IPV_BAV_MISSING_CLIENT_ID_TOKEN);
+	//     expect(userInfoResponse.status).toBe(400);
+	// });
 });

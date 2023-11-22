@@ -64,14 +64,14 @@ export async function sessionPost(clientId: any, request: any): Promise<any> {
 }
 
 export async function verifyAccountPost(bankDetails: any, sessionId: any): Promise<any> {
-    const path = "/verify-account";
-    try {
-        const postRequest = await API_INSTANCE.post(path, bankDetails, { headers: { "x-govuk-signin-session-id": sessionId } });
-        return postRequest;
-    } catch (error: any) {
-        console.log(`Error response from ${path} endpoint: ${error}`);
-        return error.response;
-    }
+	const path = "/verify-account";
+	try {
+		const postRequest = await API_INSTANCE.post(path, bankDetails, { headers: { "x-govuk-signin-session-id": sessionId } });
+		return postRequest;
+	} catch (error: any) {
+		console.log(`Error response from ${path} endpoint: ${error}`);
+		return error.response;
+	}
 }
 
 
