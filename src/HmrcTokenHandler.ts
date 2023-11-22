@@ -7,6 +7,7 @@ import { AppError } from "./utils/AppError";
 import { HmrcTokenRequestProcessor } from "./services/HmrcTokenRequestProcessor";
 import { getParameter } from "./utils/Config";
 import { checkEnvironmentVariable } from "./utils/EnvironmentVariables";
+import { HttpCodesEnum } from "./models/enums/HttpCodesEnum";
 
 const { POWERTOOLS_METRICS_NAMESPACE = Constants.BAV_METRICS_NAMESPACE, POWERTOOLS_LOG_LEVEL = "DEBUG", POWERTOOLS_SERVICE_NAME = Constants.HMRC_TOKEN_LOGGER_SVC_NAME } = process.env;
 export const logger = new Logger({
@@ -31,28 +32,10 @@ class HmrcTokenHandler implements LambdaInterface {
 		try {
 			logger.info("Generating a new HMRC token");
 			if (!HMRC_CLIENT_ID) {
-				logger.debug({ message: "Fetching HMRC client_id key from SSM" });
-				try {
-					HMRC_CLIENT_ID = await getParameter(this.HMRC_CLIENT_ID_SSM_PATH);
-				} catch (error) {
-					logger.error(`failed to get param from ssm at ${this.HMRC_CLIENT_ID_SSM_PATH}`, {
-						messageCode: MessageCodes.MISSING_CONFIGURATION,
-						error,
-					});
-					throw new Error("An error has occurred while fetching SSM parameter.");
-				}
+				HMRC_CLIENT_ID = await this.fetchSSMParam(this.HMRC_CLIENT_ID_SSM_PATH);				
 			}
 			if (!HMRC_CLIENT_SECRET) {
-				logger.debug({ message: "Fetching HMRC client_secret key from SSM" });
-				try {
-					HMRC_CLIENT_SECRET = await getParameter(this.HMRC_CLIENT_SECRET_SSM_PATH);
-				} catch (error) {
-					logger.error(`failed to get param from ssm at ${this.HMRC_CLIENT_SECRET_SSM_PATH}`, {
-						messageCode: MessageCodes.MISSING_CONFIGURATION,
-						error,
-					});
-					throw new Error("An error has occurred while fetching SSM parameter.");
-				}
+				HMRC_CLIENT_SECRET = await this.fetchSSMParam(this.HMRC_CLIENT_SECRET_SSM_PATH);
 			}
 			await HmrcTokenRequestProcessor.getInstance(logger, metrics, HMRC_CLIENT_ID, HMRC_CLIENT_SECRET).processRequest();
 
@@ -63,8 +46,25 @@ class HmrcTokenHandler implements LambdaInterface {
 			}
 			throw new Error("Server Error");
 		}
+	}
+
+	async fetchSSMParam(path: string): Promise<string> {
+		logger.debug({ message: `Fetching param from ssm at ${path}` });
+		try {
+			return await getParameter(path);
+		} catch (error) {
+			logger.error(`failed to get param from ssm at ${path}`, {
+				messageCode: MessageCodes.MISSING_CONFIGURATION,
+				error,
+			});
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "An error has occurred while fetching SSM parameter.");
+		}
+				
 	}	
 }
 
 export const handlerClass = new HmrcTokenHandler();
 export const lambdaHandler = handlerClass.handler.bind(handlerClass);
+
+
+

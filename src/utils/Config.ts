@@ -10,7 +10,7 @@ export const getParameter = async (path: string): Promise<string> => {
 	return response.Parameter?.Value;
 };
 
-export async function putParameter(parameterName: string, parameterValue: string, type: string, description: string): Promise<void | undefined> {
+export const  putParameter = async (parameterName: string, parameterValue: string, type: string, description: string): Promise<void | undefined> => {
 	const client = new SSMClient({ region: process.env.REGION });
 	const input = { 
 		Name: parameterName, 
@@ -21,4 +21,4 @@ export async function putParameter(parameterName: string, parameterValue: string
 	  };
 	  const command = new PutParameterCommand(input);
 	  await client.send(command);
-}
+};
