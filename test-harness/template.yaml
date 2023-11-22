@@ -262,6 +262,40 @@ Resources:
             - kms:Decrypt
             Resource:
               Fn::ImportValue: !Sub "${BackendStack}-SessionTableEncryptionKey-arn"
+      - PolicyName: PersonIdentityTableReadAccess
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+          - Effect: Allow
+            Action: 
+            - dynamodb:GetItem
+            Resource:
+              Fn::ImportValue: !Sub "${BackendStack}-PersonIdentityTable-arn"
+          - Effect: Allow
+            Action: 
+            - dynamodb:Query
+            Resource:
+              "Fn::Sub": [
+                "${tableName}/index/*",
+                {
+                  "tableName": {
+                    Fn::ImportValue: !Sub "${BackendStack}-PersonIdentityTable-arn"
+                  }
+                }
+              ]
+      - PolicyName: PersonIdentityTableDecryptPolicy
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+          - Effect: Allow
+            Action: 
+            - kms:Decrypt
+            Resource:
+              Fn::ImportValue: !Sub "${BackendStack}-PersonIdentityTableEncryptionKey-arn"
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary

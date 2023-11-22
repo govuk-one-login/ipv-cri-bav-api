@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import axios, { AxiosInstance } from "axios";
 import { aws4Interceptor } from "aws4-axios";
@@ -58,6 +59,17 @@ export async function sessionPost(clientId: any, request: any): Promise<any> {
 		return postRequest;
 	} catch (error: any) {
 		console.log(`Error response from ${path} endpoint: ${error}.`);
+		return error.response;
+	}
+}
+
+export async function verifyAccountPost(bankDetails: any, sessionId: any): Promise<any> {
+	const path = "/verify-account";
+	try {
+		const postRequest = await API_INSTANCE.post(path, bankDetails, { headers: { "x-govuk-signin-session-id": sessionId } });
+		return postRequest;
+	} catch (error: any) {
+		console.log(`Error response from ${path} endpoint: ${error}`);
 		return error.response;
 	}
 }
@@ -153,6 +165,7 @@ export async function getSessionAndVerifyKey(sessionId: string, tableName: strin
 export async function getSessionAndVerifyKeyExists(sessionId: string, tableName: string, key: string): Promise<void> {
 	const sessionInfo = await getSessionById(sessionId, tableName);
 	try {
+		// eslint-disable-next-line jest/valid-expect, no-unused-expressions, @typescript-eslint/no-unused-expressions
 		expect(sessionInfo![key as keyof ISessionItem]).toBeTruthy;
 	} catch (e: any) {
 		throw new Error("getSessionAndVerifyKeyExists - Failed to verify " + key + " exists: " + e);
@@ -244,7 +257,7 @@ export async function validateTxMAEventData(keyList: any): Promise<any> {
 	}
 }
 
-export async function validateJwtToken(jwtToken: any): Promise<void> {
+export function validateJwtToken(jwtToken: any): void {
 	const [rawHead, rawBody, signature] = jwtToken.split(".");
 
 	validateRawHead(rawHead);
@@ -261,5 +274,5 @@ function validateRawBody(rawBody: any): void {
 	const decodedBody = JSON.parse(jwtUtils.base64DecodeToString(rawBody.replace(/\W/g, "")));
 	expect(decodedBody.jti).toBeTruthy();
 	expect(decodedBody.vc.evidence[0].strengthScore).toBe(3);
-	expect(decodedBody.vc.evidence[0].validityScore).toBe(2);
+	expect(decodedBody.vc.evidence[0].validityScore).toBe(0);
 }

@@ -45,11 +45,6 @@ const decodedJwtFactory = ():Jwt => {
 					   ],
 					},
 				],
-				birthDate:[
-					{
-					   "value":"1960-02-02",
-					},
-				],
 			},
 		},
 		signature: "signature",

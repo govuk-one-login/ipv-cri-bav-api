@@ -1,10 +1,12 @@
 import bavStubPayload from "../data/exampleStubPayload.json";
+import verifyAccountYesPayload from "../data/bankDetailsYes.json";
 import {
 	authorizationGet,
 	sessionPost,
 	startStubServiceAndReturnSessionId,
 	stubStartPost,
 	userInfoPost,
+	  verifyAccountPost,
 	tokenPost,
 } from "../utils/ApiTestSteps";
 
@@ -31,22 +33,21 @@ describe("BAV CRI: /session Endpoint Unhappy Path Tests", () => {
 	});
 });
 
-// eslint-disable-next-line @typescript-eslint/tslint/config
-describe.skip("BAV CRI: /authorization Endpoint Unhappy Path Tests", () => {
+describe("BAV CRI: /authorization Endpoint Unhappy Path Tests", () => {
 	let sessionId: string;
 	beforeEach(async () => {
 		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
 	});
 
 	it("Incorrect Session State Test", async () => {
-		// Calling /authorization without calling /verifyaccount first, making the Session State 
-		// incorrect at the time of this request
+		// Authorization
 		const authResponse = await authorizationGet(sessionId);
 		expect(authResponse.status).toBe(401);
 	});
 
 	it("Repeated Request Made Test", async () => {
 		const origSessionId = sessionId;
+		await verifyAccountPost(verifyAccountYesPayload, sessionId);
 		const authResponse = await authorizationGet(sessionId);
 		const authCode = authResponse.data.authorizationCode;
 		const authRepeatResponse = await authorizationGet(origSessionId);
@@ -55,8 +56,7 @@ describe.skip("BAV CRI: /authorization Endpoint Unhappy Path Tests", () => {
 	});
 });
 
-// eslint-disable-next-line @typescript-eslint/tslint/config
-describe.skip("BAV CRI: /token Endpoint Unhappy Path Tests", () => {
+describe("BAV CRI: /token Endpoint Unhappy Path Tests", () => {
 	let sessionId: string;
 	beforeEach(async () => {
 		//Session Request
@@ -64,10 +64,13 @@ describe.skip("BAV CRI: /token Endpoint Unhappy Path Tests", () => {
 	});
 
 	it("Invalid Session State Test", async () => {
-		// Authorization
+		// Verify-account request
+		await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		
+		// Authorization request
 		const authResponse = await authorizationGet(sessionId);
 
-		// Token
+		// Token request
 		await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
 
 		// Request to /token endpoint again (which now has an incorrect session state)
@@ -77,12 +80,18 @@ describe.skip("BAV CRI: /token Endpoint Unhappy Path Tests", () => {
 });
 
 // eslint-disable-next-line @typescript-eslint/tslint/config
-describe.skip("BAV CRI: /userinfo Endpoint Unhappy Path Tests", () => {
+describe("BAV CRI: /userinfo Endpoint Unhappy Path Tests", () => {
 	it("Non-bearer Type Authentication Test", async () => {
 		//Session Request
 		const sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+
+		// Verify-account request
+		await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		
+		// Authorization
 		const authResponse = await authorizationGet(sessionId);
-		// TODO: Verify account here
+
+		// Token
 		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
 
 		// Make the request using a 'basic' token type

@@ -1,4 +1,5 @@
 import bavStubPayload from "../data/exampleStubPayload.json";
+import verifyAccountYesPayload from "../data/bankDetailsYes.json";
 import { constants } from "../utils/ApiConstants";
 import {
 	authorizationGet,
@@ -6,6 +7,7 @@ import {
 	getSessionAndVerifyKeyExists,
 	getSqsEventList,
 	startStubServiceAndReturnSessionId,
+	verifyAccountPost,
 	tokenPost,
 	userInfoPost,
 	validateJwtToken,
@@ -34,8 +36,37 @@ describe("BAV CRI: /session Endpoint Happy Path Tests", () => {
 	});
 });
 
-// eslint-disable-next-line @typescript-eslint/tslint/config
-describe.skip("BAV CRI: /authorization Endpoint Happy Path Tests", () => {
+describe("BAV CRI: /verify-account Endpoint Happy Path Tests", () => {
+	let sessionId: string;
+	beforeEach(async () => {
+		// Session Request
+		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+	});
+
+	it.each([
+		"86473611",
+		"8647361",
+		"864736",
+	])("Successful Request Tests", async (accountNumber: string) => {
+		expect(sessionId).toBeTruthy();
+
+		// Assign a new valid account number to the payload
+		verifyAccountYesPayload.account_number = accountNumber;
+
+		// Verify-account request
+		const verifyAccountResponse = await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		expect(verifyAccountResponse.status).toBe(200);
+
+		// Make sure authSession state is as expected
+		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_DATA_RECEIVED");
+
+		// Verify that the accountNumber and sortCode exist and have the correct value
+		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_PERSONAL_IDENTITY_TABLE_NAME, "accountNumber", verifyAccountYesPayload.account_number.padStart(8, "0"));
+		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_PERSONAL_IDENTITY_TABLE_NAME, "sortCode", verifyAccountYesPayload.sort_code);
+	});
+});
+
+describe("BAV CRI: /authorization Endpoint Happy Path Tests", () => {
 	let sessionId: string;
 	beforeEach(async () => {
 		// Session Request
@@ -44,6 +75,9 @@ describe.skip("BAV CRI: /authorization Endpoint Happy Path Tests", () => {
 
 	it("Successful Request Test", async () => {
 		expect(sessionId).toBeTruthy();
+
+		// Verify-account request
+		await verifyAccountPost(verifyAccountYesPayload, sessionId);
 
 		// Authorization request
 		const authResponse = await authorizationGet(sessionId);
@@ -61,8 +95,7 @@ describe.skip("BAV CRI: /authorization Endpoint Happy Path Tests", () => {
 	});
 });
 
-// eslint-disable-next-line @typescript-eslint/tslint/config
-describe.skip("BAV CRI: /token Endpoint Happy Path Tests", () => {
+describe("BAV CRI: /token Endpoint Happy Path Tests", () => {
 	let sessionId: string;
 	beforeEach(async () => {
 		// Session Request
@@ -70,6 +103,12 @@ describe.skip("BAV CRI: /token Endpoint Happy Path Tests", () => {
 	});
 
 	it("Successful Request Test", async () => {
+		expect(sessionId).toBeTruthy();
+
+		// Verify Account request
+		await verifyAccountPost(verifyAccountYesPayload, sessionId);
+
+		// Authorization request
 		const authResponse = await authorizationGet(sessionId);
 
 		// Token request
@@ -81,11 +120,10 @@ describe.skip("BAV CRI: /token Endpoint Happy Path Tests", () => {
 
 		// Make sure authSession state is as expected
 		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_ACCESS_TOKEN_ISSUED");
-	});
+	  });
 });
 
-// eslint-disable-next-line @typescript-eslint/tslint/config
-describe.skip("BAV CRI: /userinfo Endpoint Happy Path Tests", () => {
+describe("BAV CRI: /userinfo Endpoint Happy Path Tests", () => {
 	let sessionId: string;
 	beforeEach(async () => {
 		// Session Request
@@ -93,13 +131,23 @@ describe.skip("BAV CRI: /userinfo Endpoint Happy Path Tests", () => {
 	});
 
 	it("Successful Request Test", async () => {
+		expect(sessionId).toBeTruthy();
+
+		// Verify Account request
+		await verifyAccountPost(verifyAccountYesPayload, sessionId);
+
+		// Authorization request
 		const authResponse = await authorizationGet(sessionId);
+
+		// Token request
 		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+        
+		// User Info request
 		const userInfoResponse = await userInfoPost("Bearer " + tokenResponse.data.access_token);
 		expect(userInfoResponse.status).toBe(200);
 
 		// Check to make sure VC JWT is present in the response and validate its contentss
-		await validateJwtToken(userInfoResponse.data["https://vocab.account.gov.uk/v1/credentialJWT"][0]);
+		validateJwtToken(userInfoResponse.data["https://vocab.account.gov.uk/v1/credentialJWT"][0]);
 
 		// Verify authSessionState
 		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_CRI_VC_ISSUED");
@@ -111,10 +159,10 @@ describe.skip("BAV CRI: /userinfo Endpoint Happy Path Tests", () => {
 });
 
 describe("E2E Happy Path Well Known Endpoint", () => {
-	it("E2E Happy Path Journey - Well Known", async () => {
+	  it("E2E Happy Path Journey - Well Known", async () => {
 		// Well Known
 		const wellKnownResponse = await wellKnownGet();
 		validateWellKnownResponse(wellKnownResponse.data);
 		expect(wellKnownResponse.status).toBe(200);
-	});
+	  });
 });

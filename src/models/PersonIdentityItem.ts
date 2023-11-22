@@ -14,7 +14,6 @@ export interface PersonIdentityDateOfBirth {
 export interface PersonIdentityItem {
 	sessionId: string;
 	name: PersonIdentityName[];
-	birthDate: PersonIdentityDateOfBirth[];
 	expiryDate: number;
 	createdDate: number;
 	sortCode?: string;
@@ -24,5 +23,4 @@ export interface PersonIdentityItem {
 export interface SharedClaimsPersonIdentity {
 	sessionId: string;
 	name: PersonIdentityName[];
-	birthDate: PersonIdentityDateOfBirth[];
 }
