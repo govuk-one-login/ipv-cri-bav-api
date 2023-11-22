@@ -1,5 +1,4 @@
-import { getParameter } from "../../../utils/Config";
-import { putParameter } from "../../../utils/Config";
+import { getParameter, putParameter } from "../../../utils/Config";
 
 const path = "dev/HMRC/TOKEN";
 const sendMock = jest.fn();

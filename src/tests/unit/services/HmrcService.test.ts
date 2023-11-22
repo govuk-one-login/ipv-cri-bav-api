@@ -88,31 +88,32 @@ describe("HMRC Service", () => {
 				}));
 			expect(logger.error).toHaveBeenCalledWith({ message: "Error sending COP verify request to HMRC", messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT });
 		});
+	});
 
-		describe("#generateToken", () => {
-			it("Should return a valid access_token response", async () => {
-				jest.spyOn(axios, "post").mockResolvedValue({ data: tokenResponse });
-				const data = await hmrcServiceTest.generateToken();
-				expect(axios.post).toHaveBeenCalledWith(`${HMRC_BASE_URL}${Constants.HMRC_TOKEN_ENDPOINT_PATH}`,
-					params,
-					config);
-				expect(data?.access_token).toBe("token");
-			});
-	
-			it("should throw an AppError if there is an error generating the hmrc access token", async () => {		
-	
-				jest.spyOn(axios, "post").mockRejectedValueOnce(new Error("Failed to generate hmrc token"));
-	
-				await expect(hmrcServiceTest.generateToken()).rejects.toThrow(
-					new AppError(HttpCodesEnum.SERVER_ERROR, "Error generating HMRC token"),
-				);
-	
-				expect(logger.error).toHaveBeenCalledWith(
-					{ message: "An error occurred when generating HMRC token", hmrcErrorMessage: "Failed to generate hmrc token", hmrcErrorCode: undefined, messageCode: MessageCodes.FAILED_GENERATING_HMRC_TOKEN },
-				);
-				expect(axios.post).toHaveBeenCalledWith(`${HMRC_BASE_URL}${Constants.HMRC_TOKEN_ENDPOINT_PATH}`,
-					params,
-					config);
-			});
+	describe("#generateToken", () => {
+		it("Should return a valid access_token response", async () => {
+			jest.spyOn(axios, "post").mockResolvedValue({ data: tokenResponse });
+			const data = await hmrcServiceTest.generateToken();
+			expect(axios.post).toHaveBeenCalledWith(`${HMRC_BASE_URL}${Constants.HMRC_TOKEN_ENDPOINT_PATH}`,
+				params,
+				config);
+			expect(data?.access_token).toBe("token");
+		});
+
+		it("should throw an AppError if there is an error generating the hmrc access token", async () => {		
+
+			jest.spyOn(axios, "post").mockRejectedValueOnce(new Error("Failed to generate hmrc token"));
+
+			await expect(hmrcServiceTest.generateToken()).rejects.toThrow(
+				new AppError(HttpCodesEnum.SERVER_ERROR, "Error generating HMRC token"),
+			);
+
+			expect(logger.error).toHaveBeenCalledWith(
+				{ message: "An error occurred when generating HMRC token", hmrcErrorMessage: "Failed to generate hmrc token", hmrcErrorCode: undefined, messageCode: MessageCodes.FAILED_GENERATING_HMRC_TOKEN },
+			);
+			expect(axios.post).toHaveBeenCalledWith(`${HMRC_BASE_URL}${Constants.HMRC_TOKEN_ENDPOINT_PATH}`,
+				params,
+				config);
+		});
 	});
 });
