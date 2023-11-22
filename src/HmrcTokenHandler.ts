@@ -66,5 +66,3 @@ class HmrcTokenHandler implements LambdaInterface {
 export const handlerClass = new HmrcTokenHandler();
 export const lambdaHandler = handlerClass.handler.bind(handlerClass);
 
-
-
