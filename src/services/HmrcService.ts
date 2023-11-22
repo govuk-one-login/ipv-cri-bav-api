@@ -1,10 +1,10 @@
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Constants } from "../utils/Constants";
-import axios from "axios";
+import axios, { AxiosRequestConfig } from "axios";
 import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../models/enums/MessageCodes";
-import { HmrcVerifyResponse } from "../models/IHmrcResponse";
+import { HmrcVerifyResponse, HmrcTokenResponse } from "../models/IHmrcResponse";
 
 export class HmrcService {
 	readonly logger: Logger;
@@ -73,4 +73,33 @@ export class HmrcService {
     		throw new AppError(HttpCodesEnum.UNAUTHORIZED, message);
     	}
     }
+
+    async generateToken(): Promise<HmrcTokenResponse | undefined> {
+        
+    	try {
+    		const params = {
+    			client_secret : this.HMRC_CLIENT_SECRET,
+    			client_id : this.HMRC_CLIENT_ID,
+    			grant_type : "client_credentials",
+    		};
+    		const config: AxiosRequestConfig<any> = {
+    			headers: {
+    				Accept: "application/x-www-form-urlencoded",
+    			},
+    		};
+            
+    		const { data } = await axios.post(
+    			`${this.HMRC_BASE_URL}${Constants.HMRC_TOKEN_ENDPOINT_PATH}`,
+    			params,
+    			config,
+    		);
+
+    		this.logger.info("Received response from HMRC token endpoint");
+    		return data;
+    	} catch (error: any) {
+    		this.logger.error({ message: "An error occurred when generating HMRC token", hmrcErrorMessage: error.message, hmrcErrorCode: error.code, messageCode: MessageCodes.FAILED_GENERATING_HMRC_TOKEN });
+    		throw new AppError(HttpCodesEnum.SERVER_ERROR, "Error generating HMRC token");
+    	}
+    }
 }
+

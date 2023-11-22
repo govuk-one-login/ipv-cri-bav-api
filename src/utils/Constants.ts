@@ -10,6 +10,8 @@ export class Constants {
 
 	static readonly AUTHORIZATION_LOGGER_SVC_NAME : "AuthorizationHandler";
 
+	static readonly HMRC_TOKEN_LOGGER_SVC_NAME : "HmrcTokenHandler";
+
 	static readonly ACCESSTOKEN_LOGGER_SVC_NAME = "AccessTokenHandler";
 	
 	static readonly USERINFO_LOGGER_SVC_NAME : "UserInfoHandler";
@@ -50,15 +52,23 @@ export class Constants {
 
   static readonly IDENTITY_CHECK_CREDENTIAL = "IdentityCheckCredential";
 
-	static readonly IDENTITY_CHECK = "IdentityCheck";
+  static readonly IDENTITY_CHECK = "IdentityCheck";
 
   static readonly URN_UUID_PREFIX = "urn:uuid:";
 
   static readonly AUTHORIZATION_CODE_INDEX_NAME = "authorizationCode-index";
-  
+
+  static readonly HMRC_TOKEN_ENDPOINT_PATH = "/oauth/token";
+
+  static readonly HMRC_TOKEN_SSM_PATH = "/dev/HMRC/TOKEN";
+
+  static readonly HMRC_EXPECTED_TOKEN_EXPIRES_IN = 14400;
+
   static readonly HMRC_VERIFY_ENDPOINT_PATH = "verify/personal";
 
-	static readonly HMRC_USER_AGENT = "one-login-bav-cri";
+  static readonly HMRC_USER_AGENT = "one-login-bav-cri";
+  
+  
 }
 
 export const EnvironmentVariables = {
@@ -73,6 +83,8 @@ export const EnvironmentVariables = {
 	JWKS_BUCKET_NAME: "JWKS_BUCKET_NAME",
 	KMS_KEY_ARN: "KMS_KEY_ARN",
 	HMRC_BASE_URL: "HMRC_BASE_URL",
+	HMRC_CLIENT_ID_SSM_PATH: "HMRC_CLIENT_ID_SSM_PATH",
+	HMRC_CLIENT_SECRET_SSM_PATH: "HMRC_CLIENT_SECRET_SSM_PATH",
 	HMRC_CLIENT_ID: "HMRC_CLIENT_ID",
 	HMRC_CLIENT_SECRET: "HMRC_CLIENT_SECRET",
 	HMRC_TOKEN_SSM_PATH: "HMRC_TOKEN_SSM_PATH",

@@ -11,3 +11,6 @@ For local development deploy a custom stack:
 3. Log in using AWS SSO
 4. Deploy by running `sam build && sam deploy --config-env dev --resolve-s3`
 
+Note: When deploying custom stacks in dev NotLocalTestStack will prevent the scheduling of cron for HmrcTokenFunction unless the stackname is bav-cri-api
+If you require a BE stack with those capabilities please use the "Deploy Main to Dev Env" Github Workflow with your branch to deploy your changes to the main Dev Stack
+

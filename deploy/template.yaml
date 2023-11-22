@@ -103,6 +103,7 @@ Mappings:
       CLIENTS: '[{"jwksEndpoint":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/redirect?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
       TESTHARNESSURL: "https://bav-test-harness-testharness.review-bav.dev.account.gov.uk"
+      HMRCBASEURL: "https://api.isc.externaltest.tax.service.gov.uk"
       HMRCVERIFYBASEURL: "https://api.isc.externaltest.tax.service.gov.uk/misc/bank-account"
     build:
       ISSUER: 'https://review-bav.build.account.gov.uk'
@@ -112,6 +113,7 @@ Mappings:
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-bav.build.account.gov.uk/.well-known/jwks.json","clientId":"BD7B2A5D","redirectUri":"https://ipvstub.review-bav.build.account.gov.uk/redirect?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
+      HMRCBASEURL: "https://api.isc.externaltest.tax.service.gov.uk"
       HMRCVERIFYBASEURL: "https://api.isc.externaltest.tax.service.gov.uk/misc/bank-account"
       TESTHARNESSURL: "https://testharness.review-bav.build.account.gov.uk"
     staging:
@@ -122,6 +124,8 @@ Mappings:
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.staging.account.gov.uk/.well-known/jwks.json","clientId":"03A5A659-17AA-453F-B905-95D2804823D1","redirectUri":"https://identity.staging.account.gov.uk/credential-issuer/callback?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
+      HMRCBASEURL: "https://api.isc.externaltest.tax.service.gov.uk"
+      HMRCVERIFYBASEURL: "https://api.isc.externaltest.tax.service.gov.uk/misc/bank-account"
     integration:
       ISSUER: 'https://review-bav.integration.account.gov.uk'
       DNSSUFFIX: review-bav.integration.account.gov.uk
@@ -130,6 +134,8 @@ Mappings:
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.integration.account.gov.uk/.well-known/jwks.json","clientId":"AE140E43-1987-4EE8-86CC-BEF19FC9FF3F","redirectUri":"https://identity.integration.account.gov.uk/credential-issuer/callback?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
+      HMRCBASEURL: "https://api.isc.externaltest.tax.service.gov.uk"
+      HMRCVERIFYBASEURL: "https://api.isc.externaltest.tax.service.gov.uk/misc/bank-account"
     production:
       ISSUER: 'https://review-bav.account.gov.uk'
       DNSSUFFIX: review-bav.account.gov.uk
@@ -138,6 +144,8 @@ Mappings:
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.account.gov.uk/.well-known/jwks.json","clientId":"C910A762-4BB2-400D-8F3D-4D7E6C84E342","redirectUri":"https://identity.account.gov.uk/credential-issuer/callback?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
+      HMRCBASEURL: "https://api.isc.production.tax.service.gov.uk"
+      HMRCVERIFYBASEURL: "https://api.isc.production.tax.service.gov.uk/misc/bank-account"
   TxMAAccounts:
     # EVENTS is used to egress to TxMA.
     dev:
@@ -198,6 +206,16 @@ Conditions:
   DeployConcurrencyAlarms: !And
     - Condition: DeployAlarms
     - Condition: ApplyReservedConcurrency
+  NotLocalTestStack:
+    Fn::Not:
+      - Fn::And:
+          - Fn::Equals:
+              - !Ref Environment
+              - dev
+          - Fn::Not:
+              - Fn::Equals:
+                  - !Sub "${AWS::StackName}"
+                  - "bav-cri-api"
 
 Globals:
   Function:
@@ -1506,6 +1524,160 @@ Resources:
       Dimensions:
         - Name: FunctionName
           Value: !Ref JsonWebKeysFunction
+      TreatMissingData: notBreaching
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+  
+  HmrcTokenFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - "HmrcTokenLogGroup"
+    Properties:
+      FunctionName: !Sub "HmrcToken-${AWS::StackName}"
+      CodeUri: ../src/
+      Handler: HmrcTokenHandler.lambdaHandler
+      ReservedConcurrentExecutions: !If
+        - ApplyReservedConcurrency
+        - !Ref LambdaConcurrency
+        - !Ref AWS::NoValue         
+      Environment:
+        Variables:
+          HMRC_CLIENT_ID_SSM_PATH: !Sub "/${Environment}/HMRC/CLIENT_ID"
+          HMRC_CLIENT_SECRET_SSM_PATH: !Sub "/${Environment}/HMRC/CLIENT_SECRET"
+          HMRC_BASE_URL: !FindInMap [ EnvironmentVariables, !Ref Environment, HMRCBASEURL ]
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSXrayWriteOnlyAccess
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub "${Environment}/HMRC/CLIENT_ID"
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub "${Environment}/HMRC/CLIENT_SECRET"
+        - Statement:
+            - Sid: SSMParameterWritePolicy
+              Effect: Allow
+              Action:
+                - ssm:PutParameter
+              Resource:
+                - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${Environment}/HMRC/TOKEN"
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - HmrcTokenHandler.ts
+  
+  HmrcTokenScheduledRule: 
+    Type: AWS::Events::Rule
+    Condition: NotLocalTestStack
+    Properties: 
+      Description: "ScheduledRule"
+      ScheduleExpression: cron(0 0/3 * * ? *)
+      State: "ENABLED"
+      Targets: 
+        - 
+          Arn: 
+            Fn::GetAtt: 
+              - "HmrcTokenFunction"
+              - "Arn"
+          Id: "HmrcTokenFunction"
+
+  HmrcTokenLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/HmrcToken-${AWS::StackName}"
+      RetentionInDays: !FindInMap [ EnvironmentConfiguration, !Ref Environment, logretentionindays ]
+
+  HmrcTokenFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt HmrcTokenFunction.Arn
+      Principal: events.amazonaws.com
+
+  HmrcTokenFunctionFatalErorMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref HmrcTokenLogGroup
+      FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
+      MetricTransformations:
+        -
+          MetricValue: "1"
+          MetricNamespace: !Sub "${AWS::StackName}/LogMessages"
+          MetricName: "HmrcTokenFunction-Fatalerror"
+
+  HmrcTokenFunctionFatalErrorAlarm:
+    DependsOn:
+      - "HmrcTokenFunctionFatalErorMetricFilter"
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-HmrcTokenFunction-FatalErrorAlarm"
+      AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
+      ActionsEnabled: true
+      OKActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      InsufficientDataActions: [ ]
+      MetricName: HmrcTokenFunction-Fatalerror
+      Namespace: !Sub "${AWS::StackName}/LogMessages"
+      Statistic: Sum
+      Dimensions: [ ]
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  HmrcTokenConcurrency80Alarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployConcurrencyAlarms"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: []
+      AlarmDescription: !Sub "Trigger the alarm if over 80% of HmrcToken concurrency is used. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-HmrcTokenFunction-concurrency"
+      MetricName: ConcurrentExecutions
+      Namespace: AWS/Lambda
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref HmrcTokenFunction
+      Statistic: Maximum
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: !Ref LambdaConcurrencyThreshold
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+
+  HmrcTokenThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: []
+      AlarmDescription: !Sub "Trigger if the ${HmrcTokenFunction} lambda throttles. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-HmrcTokenFunction-throttles"
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref HmrcTokenFunction
       TreatMissingData: notBreaching
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
