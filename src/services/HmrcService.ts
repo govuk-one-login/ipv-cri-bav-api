@@ -73,7 +73,8 @@ export class HmrcService {
     		throw new AppError(HttpCodesEnum.UNAUTHORIZED, message);
     	}
     }
-	async generateToken(): Promise<HmrcTokenResponse | undefined> {
+
+    async generateToken(): Promise<HmrcTokenResponse | undefined> {
         
     	try {
     		const params = {

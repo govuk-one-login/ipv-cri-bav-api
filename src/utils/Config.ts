@@ -8,7 +8,7 @@ export const getParameter = async (path: string): Promise<string> => {
 	if (!response.Parameter) throw new Error("Parameter not found");
 	if (!response.Parameter?.Value) throw new Error("Parameter value is empty");
 	return response.Parameter?.Value;
-}
+};
 
 export async function putParameter(parameterName: string, parameterValue: string, type: string, description: string): Promise<void | undefined> {
 	const client = new SSMClient({ region: process.env.REGION });
