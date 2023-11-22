@@ -40,6 +40,10 @@ export class Constants {
 
 	static readonly REGEX_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+	static readonly SORT_CODE_REGEX = /^[0-9]{6}$/i;
+
+	static readonly ACCOUNT_NUMBER_REGEX = /^[0-9]{6,8}$/i;
+
 	static readonly W3_BASE_CONTEXT = "https://www.w3.org/2018/credentials/v1";
 
   static readonly DI_CONTEXT = "https://vocab.account.gov.uk/contexts/identity-v1.jsonld";
@@ -48,7 +52,7 @@ export class Constants {
 
   static readonly IDENTITY_CHECK_CREDENTIAL = "IdentityCheckCredential";
 
-	static readonly IDENTITY_CHECK = "IdentityCheck";
+  static readonly IDENTITY_CHECK = "IdentityCheck";
 
   static readonly URN_UUID_PREFIX = "urn:uuid:";
 
@@ -59,6 +63,10 @@ export class Constants {
   static readonly HMRC_TOKEN_SSM_PATH = "/dev/HMRC/TOKEN";
 
   static readonly HMRC_EXPECTED_TOKEN_EXPIRES_IN = 14400;
+
+  static readonly HMRC_VERIFY_ENDPOINT_PATH = "verify/personal";
+
+  static readonly HMRC_USER_AGENT = "one-login-bav-cri";
   
   
 }
@@ -77,5 +85,8 @@ export const EnvironmentVariables = {
 	HMRC_BASE_URL: "HMRC_BASE_URL",
 	HMRC_CLIENT_ID_SSM_PATH: "HMRC_CLIENT_ID_SSM_PATH",
 	HMRC_CLIENT_SECRET_SSM_PATH: "HMRC_CLIENT_SECRET_SSM_PATH",
+	HMRC_CLIENT_ID: "HMRC_CLIENT_ID",
+	HMRC_CLIENT_SECRET: "HMRC_CLIENT_SECRET",
+	HMRC_TOKEN_SSM_PATH: "HMRC_TOKEN_SSM_PATH",
 };
 

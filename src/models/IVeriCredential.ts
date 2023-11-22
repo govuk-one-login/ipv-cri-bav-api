@@ -1,6 +1,5 @@
 export interface CredentialSubject {
 	name: object[];
-	birthDate: object[];
 }
 export interface VerifiedCredential {
 	"@context": string[];
@@ -123,8 +122,4 @@ export interface Name {
 export interface NamePart {
 	value: string;
 	type: string;
-}
-
-export interface BirthDate {
-	value: string;
 }

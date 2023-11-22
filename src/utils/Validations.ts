@@ -1,8 +1,8 @@
+import { APIGatewayProxyEventHeaders, APIGatewayProxyEvent } from "aws-lambda";
 import { absoluteTimeNow } from "./DateTimeUtils";
 import { JwtPayload } from "../models/IVeriCredential";
 import { PersonIdentityName } from "../models/PersonIdentityItem";
 import { KmsJwtAdapter } from "./KmsJwtAdapter";
-import { APIGatewayProxyEvent } from "aws-lambda";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { AppError } from "./AppError";
 import { Constants } from "./Constants";
@@ -108,4 +108,15 @@ export const eventToSubjectIdentifier = async (jwtAdapter: KmsJwtAdapter, event:
 	}
 
 	return jwt.payload.sub;
+};
+
+export const getSessionIdHeaderErrors = (headers: APIGatewayProxyEventHeaders): string | void => {
+	const sessionId = headers[Constants.X_SESSION_ID];
+	if (!sessionId) {
+		return `Missing header: ${Constants.X_SESSION_ID} is required`;
+	}
+
+	if (!Constants.REGEX_UUID.test(sessionId)) {
+		return `${Constants.X_SESSION_ID} header does not contain a valid uuid`;
+	}
 };
