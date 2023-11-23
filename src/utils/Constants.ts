@@ -16,6 +16,8 @@ export class Constants {
 	
 	static readonly USERINFO_LOGGER_SVC_NAME : "UserInfoHandler";
 
+	static readonly ABORT_LOGGER_SVC_NAME : "AbortHandler";
+
 	static readonly BAV_METRICS_NAMESPACE = "BAV-CRI";
 
 	static readonly DEBUG = "DEBUG";

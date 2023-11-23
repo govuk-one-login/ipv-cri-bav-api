@@ -251,6 +251,7 @@ Globals:
           Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-name"
         SESSION_TABLE:
           Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+        ISSUER: !FindInMap [EnvironmentVariables, !Ref Environment, ISSUER]
         SECRET_PREFIX: !If [
           UseSecretPrefix,
           !Ref SecretPrefix,
@@ -480,7 +481,6 @@ Resources:
           AUTH_SESSION_TTL_SECS:
             !FindInMap [ EnvironmentVariables, !Ref Environment, AUTHSESSIONTTLSECS ]
           POWERTOOLS_SERVICE_NAME: SessionHandler
-          ISSUER: !FindInMap [EnvironmentVariables, !Ref Environment, ISSUER]
           KMS_KEY_ARN:
             Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
           CLIENT_CONFIG:
@@ -651,6 +651,182 @@ Resources:
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
   
+  ## AbortHandler
+  AbortFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: AbortFunctionLogGroup
+    Properties:
+      FunctionName: !Sub "BAV-Abort-${AWS::StackName}"
+      Handler: AbortHandler.lambdaHandler
+      CodeUri: ../src/
+      ReservedConcurrentExecutions: !If
+        - ApplyReservedConcurrency
+        - !Ref LambdaConcurrency
+        - !Ref AWS::NoValue
+      Environment:
+        Variables:
+          POWERTOOLS_SERVICE_NAME: AbortHandler
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSXrayWriteOnlyAccess
+        - DynamoDBWritePolicy:
+            TableName:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+        - DynamoDBReadPolicy:
+            TableName:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+        - KMSDecryptPolicy:
+            KeyId:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-key-id"
+        - Statement:
+            - Sid: KMSPolicy
+              Effect: Allow
+              Action:
+                - kms:*
+              Resource:
+                "*"
+              #Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
+              #Resource: !Sub "arn:aws:kms:eu-west-2:060113405249:key/ff437a51-ec7e-4118-9c95-7b0bb2856836"
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "sqs:SendMessage"
+              Resource: !GetAtt TxMASQSQueue.Arn
+            - Effect: Allow
+              Action:
+                - "kms:Encrypt"
+                - "kms:Decrypt"
+                - "kms:GenerateDataKey"
+              Resource: !GetAtt TxMAKMSEncryptionKey.Arn
+      Events:
+        abort:
+          Type: Api
+          Properties:
+            Path: /abort
+            Method: post
+            RestApiId: !Ref BAVRestApi
+
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: false
+        EntryPoints:
+          - AbortHandler.ts
+
+  AbortFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/BAV-Abort-${AWS::StackName}"
+      RetentionInDays:
+        !FindInMap [
+          EnvironmentConfiguration,
+          !Ref Environment,
+          logretentionindays,
+        ]
+
+  # AbortFunctionLogsSubscriptionFilterCSLS:
+  #   Type: AWS::Logs::SubscriptionFilter
+  #   Properties:
+  #     DestinationArn:
+  #       !FindInMap [ PlatformConfiguration, !Ref Environment, CSLSEGRESS ]
+  #     FilterPattern: ""
+  #     LogGroupName: !Ref AbortFunctionLogGroup
+
+  AbortFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref AbortFunction
+      Principal: apigateway.amazonaws.com
+
+  AbortFunctionFatalErorMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref AbortFunctionLogGroup
+      FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
+      MetricTransformations:
+        -
+          MetricValue: "1"
+          MetricNamespace: !Sub "${AWS::StackName}/LogMessages"
+          MetricName: "AbortFunction-Fatalerror"
+
+  AbortFunctionFatalErrorAlarm:
+    DependsOn:
+      - "AbortFunctionFatalErorMetricFilter"
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-AbortFunction-FatalErrorAlarm"
+      AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
+      ActionsEnabled: true
+      OKActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      InsufficientDataActions: [ ]
+      MetricName: AbortFunction-Fatalerror
+      Namespace: !Sub "${AWS::StackName}/LogMessages"
+      Statistic: Sum
+      Dimensions: [ ]
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  AbortConcurrency80Alarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployConcurrencyAlarms"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: []
+      AlarmDescription: !Sub "Trigger the alarm if over 80% of Abort is used. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-AbortFunction-concurrency"
+      MetricName: ConcurrentExecutions
+      Namespace: AWS/Lambda
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref AbortFunction
+      Statistic: Maximum
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: !Ref LambdaConcurrencyThreshold
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+
+  AbortThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: []
+      AlarmDescription: !Sub "Trigger if the ${AbortFunction} lambda throttles. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-AbortFunction-throttles"
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref AbortFunction
+      TreatMissingData: notBreaching
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+  
   ## UserInfoHandler
   UserInfoFunction:
     Type: AWS::Serverless::Function
@@ -666,7 +842,6 @@ Resources:
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: UserInfoHandler
-          ISSUER: !FindInMap [EnvironmentVariables, !Ref Environment, ISSUER]
           KMS_KEY_ARN:
             Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
       Policies:
@@ -850,7 +1025,6 @@ Resources:
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: AccessTokenHandler
-          ISSUER: !FindInMap [EnvironmentVariables, !Ref Environment, ISSUER]
           KMS_KEY_ARN:
             Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
       Policies:
@@ -1013,10 +1187,7 @@ Resources:
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: AuthorizationHandler
-          SESSION_TABLE:
-            Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
           TXMA_QUEUE_URL: !Ref TxMASQSQueue
-          ISSUER: !FindInMap [EnvironmentVariables, !Ref Environment, ISSUER]
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
