@@ -8,10 +8,7 @@ import {
 	userInfoPost,
 	verifyAccountPost,
 	tokenPost,
-	abortPost,
-	getSessionAndVerifyKey,
 } from "../utils/ApiTestSteps";
-import { constants } from "../utils/ApiConstants";
 
 describe("BAV CRI: /session Endpoint Unhappy Path Tests", () => {
 	let stubResponse: any;
