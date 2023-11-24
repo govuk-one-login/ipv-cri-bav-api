@@ -6,9 +6,12 @@ import {
 	startStubServiceAndReturnSessionId,
 	stubStartPost,
 	userInfoPost,
-	  verifyAccountPost,
+	verifyAccountPost,
 	tokenPost,
+	abortPost,
+	getSessionAndVerifyKey,
 } from "../utils/ApiTestSteps";
+import { constants } from "../utils/ApiConstants";
 
 describe("BAV CRI: /session Endpoint Unhappy Path Tests", () => {
 	let stubResponse: any;
@@ -66,7 +69,7 @@ describe("BAV CRI: /token Endpoint Unhappy Path Tests", () => {
 	it("Invalid Session State Test", async () => {
 		// Verify-account request
 		await verifyAccountPost(verifyAccountYesPayload, sessionId);
-		
+
 		// Authorization request
 		const authResponse = await authorizationGet(sessionId);
 
@@ -87,7 +90,7 @@ describe("BAV CRI: /userinfo Endpoint Unhappy Path Tests", () => {
 
 		// Verify-account request
 		await verifyAccountPost(verifyAccountYesPayload, sessionId);
-		
+
 		// Authorization
 		const authResponse = await authorizationGet(sessionId);
 
@@ -114,4 +117,26 @@ describe("BAV CRI: /userinfo Endpoint Unhappy Path Tests", () => {
 	//     const userInfoResponse = await userInfoPost("Bearer " + constants.DEV_IPV_BAV_MISSING_CLIENT_ID_TOKEN);
 	//     expect(userInfoResponse.status).toBe(400);
 	// });
+});
+
+describe("BAV CRI: /abort Endpoint Unhappy Path Tests", () => {
+	let sessionId: string;
+	beforeEach(async () => {
+		//Session Request
+		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+	});
+
+	it("Repeated Request Test", async () => {
+		// First request
+		await abortPost(sessionId);
+
+		// Repeated resquest
+		const response = await abortPost(sessionId);
+
+		expect(response.status).toBe(200);
+		expect(response.data).toBe("Session has already been aborted");
+
+		// Make sure authSession state is still as expected, after the repeated request
+		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_SESSION_ABORTED");
+	});
 });
