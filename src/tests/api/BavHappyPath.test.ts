@@ -219,6 +219,34 @@ describe("BAV CRI: /abort Endpoint Happy Path Tests", () => {
 		// Make sure the provided 'state' value is equal to the one in the database
 		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "state", "" + responseURIParameters.get('state'));
 	});
+
+	it("Repeated Request Test", async () => {
+		// First request
+		await abortPost(sessionId);
+
+		// Repeated resquest
+		const response = await abortPost(sessionId);
+
+		expect(response.status).toBe(200);
+		expect(response.data).toBe("Session has already been aborted");
+
+		// Make sure authSession state is still as expected, after the repeated request
+		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_SESSION_ABORTED");
+
+		// Ensure the URI header is present & valid
+		expect(response.headers).toBeTruthy();
+		expect(response.headers.location).toBeTruthy();
+
+		const responseURI = decodeURIComponent(response.headers.location);
+		const responseURIParameters = new URLSearchParams(responseURI);
+		expect(responseURIParameters.has('error')).toBe(true);
+		expect(responseURIParameters.has('state')).toBe(true);
+		expect(responseURIParameters.get('error')).toBe("access_denied");
+
+		// Make sure the provided 'state' value is equal to the one in the database
+		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "state", "" + responseURIParameters.get('state'));
+
+	});
 });
 
 describe("E2E Happy Path Well Known Endpoint", () => {
