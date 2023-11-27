@@ -14,6 +14,7 @@ import {
 	validateTxMAEventData,
 	validateWellKnownResponse,
 	wellKnownGet,
+	abortPost,
 }
 	from "../utils/ApiTestSteps";
 
@@ -120,7 +121,7 @@ describe("BAV CRI: /token Endpoint Happy Path Tests", () => {
 
 		// Make sure authSession state is as expected
 		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_ACCESS_TOKEN_ISSUED");
-	  });
+	});
 });
 
 describe("BAV CRI: /userinfo Endpoint Happy Path Tests", () => {
@@ -141,7 +142,7 @@ describe("BAV CRI: /userinfo Endpoint Happy Path Tests", () => {
 
 		// Token request
 		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
-        
+
 		// User Info request
 		const userInfoResponse = await userInfoPost("Bearer " + tokenResponse.data.access_token);
 		expect(userInfoResponse.status).toBe(200);
@@ -158,11 +159,101 @@ describe("BAV CRI: /userinfo Endpoint Happy Path Tests", () => {
 	});
 });
 
+describe("BAV CRI: /abort Endpoint Happy Path Tests", () => {
+	let sessionId: string;
+	beforeEach(async () => {
+		// Session Request
+		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+	});
+
+	it("Successful Request Test - Abort After Session Request", async () => {
+		const response = await abortPost(sessionId);
+		expect(response.status).toBe(200);
+		expect(response.data).toBe("Session has been aborted");
+
+		// Make sure authSession state is as expected
+		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_SESSION_ABORTED");
+
+		// Make sure txma event is present & valid
+		const sqsMessage = await getSqsEventList("txma/", sessionId, 2);
+		await validateTxMAEventData(sqsMessage);
+
+		// Ensure the URI header is present & valid
+		expect(response.headers).toBeTruthy();
+		expect(response.headers.location).toBeTruthy();
+
+		const responseURI = decodeURIComponent(response.headers.location);
+		const responseURIParameters = new URLSearchParams(responseURI);
+		expect(responseURIParameters.has('error')).toBe(true);
+		expect(responseURIParameters.has('state')).toBe(true);
+		expect(responseURIParameters.get('error')).toBe("access_denied");
+
+		// Make sure the provided 'state' value is equal to the one in the database
+		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "state", "" + responseURIParameters.get('state'));
+	});
+
+	it("Successful Request Test - Abort After Verify Account Request", async () => {
+		await verifyAccountPost(verifyAccountYesPayload, sessionId);
+
+		const response = await abortPost(sessionId);
+		expect(response.status).toBe(200);
+		expect(response.data).toBe("Session has been aborted");
+
+		// Make sure authSession state is as expected
+		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_SESSION_ABORTED");
+
+		// Make sure txma event is present & valid
+		const sqsMessage = await getSqsEventList("txma/", sessionId, 2);
+		await validateTxMAEventData(sqsMessage);
+
+		// Ensure the URI header is present & valid
+		expect(response.headers).toBeTruthy();
+		expect(response.headers.location).toBeTruthy();
+
+		const responseURI = decodeURIComponent(response.headers.location);
+		const responseURIParameters = new URLSearchParams(responseURI);
+		expect(responseURIParameters.has('error')).toBe(true);
+		expect(responseURIParameters.has('state')).toBe(true);
+		expect(responseURIParameters.get('error')).toBe("access_denied");
+
+		// Make sure the provided 'state' value is equal to the one in the database
+		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "state", "" + responseURIParameters.get('state'));
+	});
+
+	it("Repeated Request Test", async () => {
+		// First request
+		await abortPost(sessionId);
+
+		// Repeated resquest
+		const response = await abortPost(sessionId);
+
+		expect(response.status).toBe(200);
+		expect(response.data).toBe("Session has already been aborted");
+
+		// Make sure authSession state is still as expected, after the repeated request
+		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_SESSION_ABORTED");
+
+		// Ensure the URI header is present & valid
+		expect(response.headers).toBeTruthy();
+		expect(response.headers.location).toBeTruthy();
+
+		const responseURI = decodeURIComponent(response.headers.location);
+		const responseURIParameters = new URLSearchParams(responseURI);
+		expect(responseURIParameters.has('error')).toBe(true);
+		expect(responseURIParameters.has('state')).toBe(true);
+		expect(responseURIParameters.get('error')).toBe("access_denied");
+
+		// Make sure the provided 'state' value is equal to the one in the database
+		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "state", "" + responseURIParameters.get('state'));
+
+	});
+});
+
 describe("E2E Happy Path Well Known Endpoint", () => {
-	  it("E2E Happy Path Journey - Well Known", async () => {
+	it("E2E Happy Path Journey - Well Known", async () => {
 		// Well Known
 		const wellKnownResponse = await wellKnownGet();
 		validateWellKnownResponse(wellKnownResponse.data);
 		expect(wellKnownResponse.status).toBe(200);
-	  });
+	});
 });

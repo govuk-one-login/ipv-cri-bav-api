@@ -6,7 +6,7 @@ import {
 	startStubServiceAndReturnSessionId,
 	stubStartPost,
 	userInfoPost,
-	  verifyAccountPost,
+	verifyAccountPost,
 	tokenPost,
 } from "../utils/ApiTestSteps";
 
@@ -66,7 +66,7 @@ describe("BAV CRI: /token Endpoint Unhappy Path Tests", () => {
 	it("Invalid Session State Test", async () => {
 		// Verify-account request
 		await verifyAccountPost(verifyAccountYesPayload, sessionId);
-		
+
 		// Authorization request
 		const authResponse = await authorizationGet(sessionId);
 
@@ -87,7 +87,7 @@ describe("BAV CRI: /userinfo Endpoint Unhappy Path Tests", () => {
 
 		// Verify-account request
 		await verifyAccountPost(verifyAccountYesPayload, sessionId);
-		
+
 		// Authorization
 		const authResponse = await authorizationGet(sessionId);
 
