@@ -690,7 +690,6 @@ paths:
             Referrer-Policy:
               schema:
                 type: "string"
-      # TODO should be changed to "both" when lambda is using the body
       x-amazon-apigateway-request-validator: "both"
       x-amazon-apigateway-integration:
         httpMethod: "POST"
