@@ -22,12 +22,7 @@ After deploy, the proxy will be available on a custom URL in non dev, as https:/
 ### How to deploy ###
 
 Before you deploy the proxy you will need to login to the GDS's VPN and AWS account:
-
-```
-aws-vault exec <aws-profile-name>
-```
-
-To deploy to development environment you need to run the following command:
+export AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN to access AWS account CLI
 
 ```
 cd infra-l2-outbound-proxy
