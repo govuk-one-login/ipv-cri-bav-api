@@ -184,12 +184,12 @@ describe("BAV CRI: /abort Endpoint Happy Path Tests", () => {
 
 		const responseURI = decodeURIComponent(response.headers.location);
 		const responseURIParameters = new URLSearchParams(responseURI);
-		expect(responseURIParameters.has('error')).toBe(true);
-		expect(responseURIParameters.has('state')).toBe(true);
-		expect(responseURIParameters.get('error')).toBe("access_denied");
+		expect(responseURIParameters.has("error")).toBe(true);
+		expect(responseURIParameters.has("state")).toBe(true);
+		expect(responseURIParameters.get("error")).toBe("access_denied");
 
 		// Make sure the provided 'state' value is equal to the one in the database
-		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "state", "" + responseURIParameters.get('state'));
+		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "state", "" + responseURIParameters.get("state"));
 	});
 
 	it("Successful Request Test - Abort After Verify Account Request", async () => {
@@ -212,12 +212,12 @@ describe("BAV CRI: /abort Endpoint Happy Path Tests", () => {
 
 		const responseURI = decodeURIComponent(response.headers.location);
 		const responseURIParameters = new URLSearchParams(responseURI);
-		expect(responseURIParameters.has('error')).toBe(true);
-		expect(responseURIParameters.has('state')).toBe(true);
-		expect(responseURIParameters.get('error')).toBe("access_denied");
+		expect(responseURIParameters.has("error")).toBe(true);
+		expect(responseURIParameters.has("state")).toBe(true);
+		expect(responseURIParameters.get("error")).toBe("access_denied");
 
 		// Make sure the provided 'state' value is equal to the one in the database
-		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "state", "" + responseURIParameters.get('state'));
+		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "state", "" + responseURIParameters.get("state"));
 	});
 
 	it("Repeated Request Test", async () => {
@@ -239,12 +239,12 @@ describe("BAV CRI: /abort Endpoint Happy Path Tests", () => {
 
 		const responseURI = decodeURIComponent(response.headers.location);
 		const responseURIParameters = new URLSearchParams(responseURI);
-		expect(responseURIParameters.has('error')).toBe(true);
-		expect(responseURIParameters.has('state')).toBe(true);
-		expect(responseURIParameters.get('error')).toBe("access_denied");
+		expect(responseURIParameters.has("error")).toBe(true);
+		expect(responseURIParameters.has("state")).toBe(true);
+		expect(responseURIParameters.get("error")).toBe("access_denied");
 
 		// Make sure the provided 'state' value is equal to the one in the database
-		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "state", "" + responseURIParameters.get('state'));
+		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "state", "" + responseURIParameters.get("state"));
 
 	});
 });
