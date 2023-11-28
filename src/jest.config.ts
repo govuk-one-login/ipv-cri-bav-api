@@ -31,6 +31,9 @@ export default {
   testEnvironment: 'node',
   reporters: [
     'default',
-    ['jest-junit', { outputDirectory: 'results', outputName: 'report.xml' }]
+    ['jest-junit', { outputDirectory: 'results', outputName: 'report.xml' }],
+    ["./node_modules/jest-html-reporter", {
+      "pageTitle": "BAV Test Report"
+    }]
   ]
 }
