@@ -257,11 +257,11 @@ export async function validateTxMAEventData(keyList: any): Promise<any> {
 	}
 }
 
-export function validateJwtToken(jwtToken: any): void {
+export function validateJwtToken(jwtToken: any, payload: any): void {
 	const [rawHead, rawBody, signature] = jwtToken.split(".");
 
 	validateRawHead(rawHead);
-	validateRawBody(rawBody);
+	validateRawBody(rawBody, payload);
 }
 
 function validateRawHead(rawHead: any): void {
@@ -270,11 +270,13 @@ function validateRawHead(rawHead: any): void {
 	expect(decodeRawHead.typ).toBe("JWT");
 }
 
-function validateRawBody(rawBody: any): void {
+function validateRawBody(rawBody: any, payload: any): void {
 	const decodedBody = JSON.parse(jwtUtils.base64DecodeToString(rawBody.replace(/\W/g, "")));
 	expect(decodedBody.jti).toBeTruthy();
 	expect(decodedBody.vc.evidence[0].strengthScore).toBe(3);
 	expect(decodedBody.vc.evidence[0].validityScore).toBe(0);
+	expect(decodedBody.vc.credentialSubject.bankAccount[0].sortCode).toBe(payload.sort_code);
+	expect(decodedBody.vc.credentialSubject.bankAccount[0].accountNumber).toBe(payload.account_number.padStart(8, "0"));
 }
 
 export async function abortPost(sessionId: string): Promise<any> {
