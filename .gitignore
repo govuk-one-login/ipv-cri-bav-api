@@ -9,4 +9,3 @@ docker_vars.env
 cf-output.txt
 results/
 src/.env
-src/test-report.html
