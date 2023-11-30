@@ -276,3 +276,14 @@ function validateRawBody(rawBody: any): void {
 	expect(decodedBody.vc.evidence[0].strengthScore).toBe(3);
 	expect(decodedBody.vc.evidence[0].validityScore).toBe(0);
 }
+
+export async function abortPost(sessionId: string): Promise<any> {
+	const path = "/abort";
+	try {
+		const postRequest = await API_INSTANCE.post(path, null, { headers: { "x-govuk-signin-session-id": sessionId } });
+		return postRequest;
+	} catch (error: any) {
+		console.log(`Error response from ${path} endpoint: ${error}`);
+		return error.response;
+	}
+}
