@@ -1732,6 +1732,7 @@ Resources:
       FunctionName: !Sub "HmrcToken-${AWS::StackName}"
       CodeUri: ../src/
       Handler: HmrcTokenHandler.lambdaHandler
+      Timeout: 300
       ReservedConcurrentExecutions: !If
         - ApplyReservedConcurrency
         - !Ref LambdaConcurrency
@@ -1741,6 +1742,8 @@ Resources:
           HMRC_CLIENT_ID_SSM_PATH: !Sub "/${Environment}/HMRC/CLIENT_ID"
           HMRC_CLIENT_SECRET_SSM_PATH: !Sub "/${Environment}/HMRC/CLIENT_SECRET"
           HMRC_BASE_URL: !FindInMap [ EnvironmentVariables, !Ref Environment, HMRCBASEURL ]
+          HMRC_TOKEN_MAX_RETRIES: 10
+          HMRC_TOKEN_BACKOFF_PERIOD_MS: 30000 # 30 seconds
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
