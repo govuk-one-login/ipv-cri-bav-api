@@ -81,45 +81,45 @@ export class HmrcService {
 
     	let retryCount = 0;
     	//retry for maxRetry count configured value if fails
-		while (retryCount <= maxRetries) {
+    	while (retryCount <= maxRetries) {
     		this.logger.debug(`generateToken - trying to generate hmrcToken ${new Date().toISOString()}`, {
     			retryCount,
     		});
-			try {
-				const params = {
-					client_secret : this.HMRC_CLIENT_SECRET,
-					client_id : this.HMRC_CLIENT_ID,
-					grant_type : "client_credentials",
-				};
-				const config: AxiosRequestConfig<any> = {
-					headers: {
-						'Content-Type': "application/x-www-form-urlencoded",
-					},
-				};
+    		try {
+    			const params = {
+    				client_secret : this.HMRC_CLIENT_SECRET,
+    				client_id : this.HMRC_CLIENT_ID,
+    				grant_type : "client_credentials",
+    			};
+    			const config: AxiosRequestConfig<any> = {
+    				headers: {
+    					"Content-Type": "application/x-www-form-urlencoded",
+    				},
+    			};
 				
-				const { data } = await axios.post(
-					`${this.HMRC_BASE_URL}${Constants.HMRC_TOKEN_ENDPOINT_PATH}`,
-					params,
-					config,
-				);
+    			const { data } = await axios.post(
+    				`${this.HMRC_BASE_URL}${Constants.HMRC_TOKEN_ENDPOINT_PATH}`,
+    				params,
+    				config,
+    			);
 
-				this.logger.info("Received response from HMRC token endpoint");
-				return data;
-			} catch (error: any) {
-				this.logger.error({ message: "An error occurred when generating HMRC token", hmrcErrorMessage: error.message, hmrcStatusCode: error.status, hmrcErrorCode: error.code, messageCode: MessageCodes.FAILED_GENERATING_HMRC_TOKEN });				
+    			this.logger.info("Received response from HMRC token endpoint");
+    			return data;
+    		} catch (error: any) {
+    			this.logger.error({ message: "An error occurred when generating HMRC token", hmrcErrorMessage: error.message, hmrcStatusCode: error.status, hmrcErrorCode: error.code, messageCode: MessageCodes.FAILED_GENERATING_HMRC_TOKEN });				
 
-				if (error.message.includes('500') && retryCount < maxRetries) {
+    			if (error.message.includes("500") && retryCount < maxRetries) {
     				this.logger.error(`generateToken - Retrying to generate hmrcToken. Sleeping for ${backoffPeriodMs} ms ${HmrcService.name} ${new Date().toISOString()}`, { retryCount });
     				await sleep(backoffPeriodMs);
     				retryCount++;
     			} else {
     				throw new AppError(HttpCodesEnum.SERVER_ERROR, "Error generating HMRC token");
     			}
-			}
-		}
-		// If the hmrcToken wasnt generated after the retries, an error is thrown
-			this.logger.error(`generateToken - cannot generate hmrcToken even after ${maxRetries} retries.`);
-			throw new AppError(HttpCodesEnum.SERVER_ERROR, `Cannot generate hmrcToken even after ${maxRetries} retries.`);
+    		}
+    	}
+    	// If the hmrcToken wasnt generated after the retries, an error is thrown
+    	this.logger.error(`generateToken - cannot generate hmrcToken even after ${maxRetries} retries.`);
+    	throw new AppError(HttpCodesEnum.SERVER_ERROR, `Cannot generate hmrcToken even after ${maxRetries} retries.`);
 			
     }
 }
