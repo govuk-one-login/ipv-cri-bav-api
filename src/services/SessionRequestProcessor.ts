@@ -210,6 +210,7 @@ export class SessionRequestProcessor {
   			session_id: sessionId,
   			state: jwtPayload.state,
   			redirect_uri: jwtPayload.redirect_uri,
+				full_name: "John Jacob Smith",
   		}),
   	};
   }
