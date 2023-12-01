@@ -12,6 +12,7 @@ import { PersonIdentityItem } from "../../../models/PersonIdentityItem";
 import { BavService } from "../../../services/BavService";
 import { VerifyAccountRequestProcessor } from "../../../services/VerifyAccountRequestProcessor";
 import { HmrcService } from "../../../services/HmrcService";
+import { Constants } from "../../../utils/Constants";
 
 const mockBavService = mock<BavService>();
 const mockHmrcService = mock<HmrcService>();
@@ -77,6 +78,19 @@ describe("VerifyAccountRequestProcessor", () => {
 			expect(response.body).toBe(`No session found with the session id: ${sessionId}`);
 			expect(logger.error).toHaveBeenCalledWith("No session found for session id", {
 				messageCode: MessageCodes.SESSION_NOT_FOUND,
+			});
+		});
+
+		it("returns error response if session has exceeded retryCount", async () => {
+			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
+			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, retryCount: Constants.MAX_RETRIES });
+
+			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
+
+			expect(response.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
+			expect(response.body).toBe("Too many attempts");
+			expect(logger.error).toHaveBeenCalledWith(`Session retry count is ${Constants.MAX_RETRIES}, cannot have another attempt`, {
+				messageCode: MessageCodes.TOO_MANY_RETRIES,
 			});
 		});
 

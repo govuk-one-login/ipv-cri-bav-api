@@ -8,7 +8,7 @@ import { MessageCodes } from "../models/enums/MessageCodes";
 import { HmrcVerifyResponse } from "../models/IHmrcResponse";
 import { PersonIdentityItem } from "../models/PersonIdentityItem";
 import { CopCheckResult, ISessionItem } from "../models/ISessionItem";
-import { EnvironmentVariables } from "../utils/Constants";
+import { EnvironmentVariables, Constants } from "../utils/Constants";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 import { getFullName } from "../utils/PersonIdentityUtils";
@@ -74,6 +74,11 @@ export class VerifyAccountRequestProcessor {
   		return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
   	}
 
+		if (session.retryCount && session.retryCount >= Constants.MAX_RETRIES) {
+			this.logger.error(`Session retry count is ${session.retryCount}, cannot have another attempt`, { messageCode: MessageCodes.TOO_MANY_RETRIES });
+			return new Response(HttpCodesEnum.UNAUTHORIZED, "Too many attempts");
+		}
+
 		this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
 
   	await this.BavService.updateAccountDetails(sessionId, paddedAccountNumber, sortCode, this.personIdentityTableName);
@@ -90,6 +95,9 @@ export class VerifyAccountRequestProcessor {
   	this.logger.debug(`copCheckResult is ${copCheckResult}`);
 
   	await this.BavService.saveCopCheckResult(sessionId, copCheckResult);
+
+		// if there is a partial match then we need to update the retryCount in session table
+		// and then return it in the response
 
   	return new Response(HttpCodesEnum.OK, "Success");
 	}
