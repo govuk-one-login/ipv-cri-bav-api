@@ -142,9 +142,33 @@ describe("VerifyAccountRequestProcessor", () => {
 
 			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
 
-			expect(mockBavService.saveCopCheckResult).toHaveBeenCalledWith(sessionId, CopCheckResults.FULL_MATCH);
+			expect(mockBavService.saveCopCheckResult).toHaveBeenCalledWith(sessionId, CopCheckResults.FULL_MATCH, undefined);
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
-			expect(response.body).toBe("Success");
+			expect(response.body).toBe(JSON.stringify({ message:"Success" }));
+		});
+
+		it("saves saveCopCheckResult with increased retryCount if there was no match", async () => {
+			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
+			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, retryCount: 0 });
+			mockHmrcService.verify.mockResolvedValueOnce({ ...hmrcVerifyResponse, nameMatches: "partial" });
+
+			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
+
+			expect(mockBavService.saveCopCheckResult).toHaveBeenCalledWith(sessionId, CopCheckResults.PARTIAL_MATCH, 1);
+			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
+			expect(response.body).toBe(JSON.stringify({ message:"Success", retryCount: 1 }));
+		});
+
+		it("returns error response if user fails verification on second attempt", async () => {
+			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
+			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, retryCount: 1 });
+			mockHmrcService.verify.mockResolvedValueOnce({ ...hmrcVerifyResponse, nameMatches: "partial" });
+
+			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
+
+			expect(response.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);
+			expect(response.body).toBe("Fail");
+			expect(logger.warn).toHaveBeenCalledWith("User has failed second verification attempt");
 		});
 	});
 

@@ -54,6 +54,8 @@ export class VerifyAccountRequestProcessor {
   	return VerifyAccountRequestProcessor.instance;
 	}
 
+	// TODO
+	// eslint-disable-next-line max-lines-per-function
 	async processRequest(sessionId: string, body: VerifyAccountPayload): Promise<Response> {
   	const { account_number: accountNumber, sort_code: sortCode } = body;
   	const paddedAccountNumber = accountNumber.padStart(8, "0");
@@ -94,12 +96,22 @@ export class VerifyAccountRequestProcessor {
   	const copCheckResult = this.calculateCopCheckResult(verifyResponse);
   	this.logger.debug(`copCheckResult is ${copCheckResult}`);
 
-  	await this.BavService.saveCopCheckResult(sessionId, copCheckResult);
+		let retryCount;
+		if (copCheckResult !== CopCheckResults.FULL_MATCH) {
+			retryCount = session.retryCount || session.retryCount === 0 ? session.retryCount + 1 : 0;
+		}
+  	await this.BavService.saveCopCheckResult(sessionId, copCheckResult, retryCount);
 
-		// if there is a partial match then we need to update the retryCount in session table
-		// and then return it in the response
+		if (retryCount && retryCount === Constants.MAX_RETRIES) {
+			this.logger.warn("User has failed second verification attempt");
+			return new Response(HttpCodesEnum.SERVER_ERROR, "Fail");
+		}
 
-  	return new Response(HttpCodesEnum.OK, "Success");
+		const successResponse = {
+			message: "Success",
+			retryCount,
+		};
+  	return new Response(HttpCodesEnum.OK, JSON.stringify(successResponse));
 	}
 
 	calculateCopCheckResult(verifyResponse: HmrcVerifyResponse): CopCheckResult {

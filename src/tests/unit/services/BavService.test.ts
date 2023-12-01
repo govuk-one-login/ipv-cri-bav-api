@@ -298,7 +298,24 @@ describe("BAV Service", () => {
 		it("saves account information to dynamo", async () => {
 			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
 
-			await bavService.saveCopCheckResult(sessionId, copCheckResult);
+			await bavService.saveCopCheckResult(sessionId, copCheckResult, 1);
+
+			expect(UpdateCommand).toHaveBeenCalledWith({
+				TableName: tableName,
+				Key: { sessionId },
+				UpdateExpression: "SET copCheckResult = :copCheckResult, authSessionState = :authSessionState, retryCount = :retryCount",
+				ExpressionAttributeValues: {
+					":copCheckResult": copCheckResult,
+					":retryCount": 1,
+					":authSessionState": AuthSessionState.BAV_DATA_RECEIVED,
+				},
+			});
+		});
+
+		it("saves account information to dynamo without retryCount", async () => {
+			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+
+			await bavService.saveCopCheckResult(sessionId, copCheckResult, undefined);
 
 			expect(UpdateCommand).toHaveBeenCalledWith({
 				TableName: tableName,
@@ -314,7 +331,7 @@ describe("BAV Service", () => {
 		it("returns an error when account information cannot be saved to dynamo", async () => {
 			mockDynamoDbClient.send = jest.fn().mockRejectedValueOnce("Error!");
 
-			await expect(bavService.saveCopCheckResult(sessionId, copCheckResult)).rejects.toThrow(expect.objectContaining({
+			await expect(bavService.saveCopCheckResult(sessionId, copCheckResult, 1)).rejects.toThrow(expect.objectContaining({
 				statusCode: HttpCodesEnum.SERVER_ERROR,
 				message: "setCopCheckResult failed: got error saving copCheckResult",
 			}));
