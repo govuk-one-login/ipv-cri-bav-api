@@ -3,7 +3,8 @@ import { EvidenceRequested } from "./IVeriCredential";
 export type CopCheckResult =
 	"FULL_MATCH" | 
 	"PARTIAL_MATCH" | 
-	"NO_MATCH";
+	"NO_MATCH" |
+	"MATCH_ERROR";
 
 export interface IBAVSession {
 	given_names?: string[];

@@ -54,7 +54,6 @@ export class VerifyAccountRequestProcessor {
   	return VerifyAccountRequestProcessor.instance;
 	}
 
-	// TODO
 	// eslint-disable-next-line max-lines-per-function
 	async processRequest(sessionId: string, body: VerifyAccountPayload): Promise<Response> {
   	const { account_number: accountNumber, sort_code: sortCode } = body;
@@ -63,16 +62,12 @@ export class VerifyAccountRequestProcessor {
 		const session: ISessionItem | undefined = await this.BavService.getSessionById(sessionId);
 
   	if (!person) {
-  		this.logger.error("No person found for session id", {
-  			messageCode: MessageCodes.PERSON_NOT_FOUND,
-  		});
+  		this.logger.error("No person found for session id", { messageCode: MessageCodes.PERSON_NOT_FOUND });
   		return new Response(HttpCodesEnum.UNAUTHORIZED, `No person found with the session id: ${sessionId}`);
   	}
 
   	if (!session) {
-  		this.logger.error("No session found for session id", {
-  			messageCode: MessageCodes.SESSION_NOT_FOUND,
-  		});
+  		this.logger.error("No session found for session id", { messageCode: MessageCodes.SESSION_NOT_FOUND });
   		return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
   	}
 
@@ -96,22 +91,21 @@ export class VerifyAccountRequestProcessor {
   	const copCheckResult = this.calculateCopCheckResult(verifyResponse);
   	this.logger.debug(`copCheckResult is ${copCheckResult}`);
 
+		if (copCheckResult === CopCheckResults.MATCH_ERROR) {
+			this.logger.warn("Error received in COP verify response");
+			return new Response(HttpCodesEnum.SERVER_ERROR, "Error received in COP verify response");
+		}
+
 		let retryCount;
 		if (copCheckResult !== CopCheckResults.FULL_MATCH) {
-			retryCount = session.retryCount || session.retryCount === 0 ? session.retryCount + 1 : 0;
+			retryCount = session.retryCount ? session.retryCount + 1 : 1;
 		}
   	await this.BavService.saveCopCheckResult(sessionId, copCheckResult, retryCount);
 
-		if (retryCount && retryCount === Constants.MAX_RETRIES) {
-			this.logger.warn("User has failed second verification attempt");
-			return new Response(HttpCodesEnum.SERVER_ERROR, "Fail");
-		}
-
-		const successResponse = {
+  	return new Response(HttpCodesEnum.OK, JSON.stringify({
 			message: "Success",
 			retryCount,
-		};
-  	return new Response(HttpCodesEnum.OK, JSON.stringify(successResponse));
+		}));
 	}
 
 	calculateCopCheckResult(verifyResponse: HmrcVerifyResponse): CopCheckResult {
@@ -119,6 +113,8 @@ export class VerifyAccountRequestProcessor {
   		return CopCheckResults.FULL_MATCH;
   	} else if (verifyResponse.nameMatches ===  "partial" && verifyResponse.accountExists === "yes") {
   		return CopCheckResults.PARTIAL_MATCH;
+  	} else if (verifyResponse.nameMatches ===  "error" || verifyResponse.accountExists === "error") {
+  		return CopCheckResults.MATCH_ERROR;
   	} else {
   		return CopCheckResults.NO_MATCH;
   	}

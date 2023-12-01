@@ -149,26 +149,26 @@ describe("VerifyAccountRequestProcessor", () => {
 
 		it("saves saveCopCheckResult with increased retryCount if there was no match", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
-			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, retryCount: 0 });
-			mockHmrcService.verify.mockResolvedValueOnce({ ...hmrcVerifyResponse, nameMatches: "partial" });
-
-			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
-
-			expect(mockBavService.saveCopCheckResult).toHaveBeenCalledWith(sessionId, CopCheckResults.PARTIAL_MATCH, 1);
-			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
-			expect(response.body).toBe(JSON.stringify({ message:"Success", retryCount: 1 }));
-		});
-
-		it("returns error response if user fails verification on second attempt", async () => {
-			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
 			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, retryCount: 1 });
 			mockHmrcService.verify.mockResolvedValueOnce({ ...hmrcVerifyResponse, nameMatches: "partial" });
 
 			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
 
+			expect(mockBavService.saveCopCheckResult).toHaveBeenCalledWith(sessionId, CopCheckResults.PARTIAL_MATCH, 2);
+			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
+			expect(response.body).toBe(JSON.stringify({ message:"Success", retryCount: 2 }));
+		});
+
+		it("returns error response if cop check result is MATCH_ERROR", async () => {
+			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
+			mockBavService.getSessionById.mockResolvedValueOnce(session);
+			mockHmrcService.verify.mockResolvedValueOnce({ ...hmrcVerifyResponse, nameMatches: "error" });
+
+			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
+
 			expect(response.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);
-			expect(response.body).toBe("Fail");
-			expect(logger.warn).toHaveBeenCalledWith("User has failed second verification attempt");
+			expect(response.body).toBe("Error received in COP verify response");
+			expect(logger.warn).toHaveBeenCalledWith("Error received in COP verify response");
 		});
 	});
 
@@ -179,11 +179,11 @@ describe("VerifyAccountRequestProcessor", () => {
 			{ nameMatches: "no", accountExists: "yes", result: CopCheckResults.NO_MATCH },
 			{ nameMatches: "indeterminate", accountExists: "yes", result: CopCheckResults.NO_MATCH },
 			{ nameMatches: "inapplicable", accountExists: "yes", result: CopCheckResults.NO_MATCH },
-			{ nameMatches: "error", accountExists: "yes", result: CopCheckResults.NO_MATCH },
+			{ nameMatches: "error", accountExists: "yes", result: CopCheckResults.MATCH_ERROR },
 			{ nameMatches: "yes", accountExists: "no", result: CopCheckResults.NO_MATCH },
 			{ nameMatches: "yes", accountExists: "indeterminate", result: CopCheckResults.NO_MATCH },
 			{ nameMatches: "yes", accountExists: "inapplicable", result: CopCheckResults.NO_MATCH },
-			{ nameMatches: "yes", accountExists: "error", result: CopCheckResults.NO_MATCH },
+			{ nameMatches: "yes", accountExists: "error", result: CopCheckResults.MATCH_ERROR },
 		])("returns $result where nameMatches is $nameMatches and accountExists is $accountExists", ({ nameMatches, accountExists, result }) => {
 			expect(
 				verifyAccountRequestProcessorTest.calculateCopCheckResult({ ...hmrcVerifyResponse, nameMatches, accountExists }),

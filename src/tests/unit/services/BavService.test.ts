@@ -331,7 +331,7 @@ describe("BAV Service", () => {
 		it("returns an error when account information cannot be saved to dynamo", async () => {
 			mockDynamoDbClient.send = jest.fn().mockRejectedValueOnce("Error!");
 
-			await expect(bavService.saveCopCheckResult(sessionId, copCheckResult, 1)).rejects.toThrow(expect.objectContaining({
+			await expect(bavService.saveCopCheckResult(sessionId, copCheckResult)).rejects.toThrow(expect.objectContaining({
 				statusCode: HttpCodesEnum.SERVER_ERROR,
 				message: "setCopCheckResult failed: got error saving copCheckResult",
 			}));
