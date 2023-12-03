@@ -13,5 +13,5 @@ process.env.HMRC_CLIENT_SECRET_SSM_PATH = '/dev/HMRC/CLIENT_SECRET'
 process.env.HMRC_BASE_URL = "https://hmrc"
 process.env.HMRC_CLIENT_ID = "hmrc client ID"
 process.env.HMRC_CLIENT_SECRET = "hmrc client secret"
-process.env.HMRC_TOKEN_BACKOFF_PERIOD_MS = '2000'
-process.env.HMRC_TOKEN_MAX_RETRIES = '3'
+process.env.HMRC_TOKEN_BACKOFF_PERIOD_MS = "2000"
+process.env.HMRC_TOKEN_MAX_RETRIES = "3"

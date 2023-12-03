@@ -75,12 +75,11 @@ export class HmrcService {
     	}
     }
 
+    // eslint-disable-next-line max-lines-per-function
     async generateToken(backoffPeriodMs: number, maxRetries: number): Promise<HmrcTokenResponse | undefined> {
-        
     	this.logger.debug("generateToken", HmrcService.name);
 
     	let retryCount = 0;
-    	//retry for maxRetry count configured value if fails
     	while (retryCount <= maxRetries) {
     		this.logger.debug(`generateToken - trying to generate hmrcToken ${new Date().toISOString()}`, {
     			retryCount,
@@ -117,10 +116,8 @@ export class HmrcService {
     			}
     		}
     	}
-    	// If the hmrcToken wasnt generated after the retries, an error is thrown
     	this.logger.error(`generateToken - cannot generate hmrcToken even after ${maxRetries} retries.`);
     	throw new AppError(HttpCodesEnum.SERVER_ERROR, `Cannot generate hmrcToken even after ${maxRetries} retries.`);
-			
     }
 }
 
