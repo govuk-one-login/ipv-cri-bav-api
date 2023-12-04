@@ -96,7 +96,7 @@ export class HmrcService {
     				},
     			};
 				
-    			const { data } = await axios.post(
+    			const { data }: { data: HmrcTokenResponse } = await axios.post(
     				`${this.HMRC_BASE_URL}${Constants.HMRC_TOKEN_ENDPOINT_PATH}`,
     				params,
     				config,
