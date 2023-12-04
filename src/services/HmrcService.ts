@@ -35,7 +35,7 @@ export class HmrcService {
     // eslint-disable-next-line max-lines-per-function
     async verify(
     	{ accountNumber, sortCode, name }: { accountNumber: string; sortCode: string; name: string }, token: string,
-    ): Promise<HmrcVerifyResponse> {
+    ): Promise<HmrcVerifyResponse | undefined> {
     	const params = {
     		account: { accountNumber, sortCode },
     		subject: { name },
@@ -45,37 +45,37 @@ export class HmrcService {
     		"Authorization": `Bearer ${token}`,
     	};
 
-    	// let retryCount = 0;
+    	let retryCount = 0;
+    	while (retryCount <= this.maxRetries) {
+    		try {
+    			const endpoint = `${this.hmrcBaseUrl}/${Constants.HMRC_VERIFY_ENDPOINT_PATH}`;
+    			this.logger.info("Sending COP verify request to HMRC", { endpoint, retryCount });
+    			const { data }: { data: HmrcVerifyResponse } = await axios.post(endpoint, params, { headers });
 
-    	try {
-    		const endpoint = `${this.hmrcBaseUrl}/${Constants.HMRC_VERIFY_ENDPOINT_PATH}`;
-    		this.logger.info("Sending COP verify request to HMRC", { endpoint });
-    		const { data }: { data: HmrcVerifyResponse } = await axios.post(endpoint, params, { headers });
+    			this.logger.debug({
+    				message: "Recieved reponse from HMRC COP verify request",
+    				accountNumberIsWellFormatted: data.accountNumberIsWellFormatted,
+    				accountExists: data.accountExists,
+    				nameMatches: data.nameMatches,
+    				nonStandardAccountDetailsRequiredForBacs: data.nonStandardAccountDetailsRequiredForBacs,
+    				sortCodeIsPresentOnEISCD: data.sortCodeIsPresentOnEISCD,
+    				sortCodeSupportsDirectDebit: data.sortCodeSupportsDirectDebit,
+    				sortCodeSupportsDirectCredit: data.sortCodeSupportsDirectCredit,
+    			});
 
-    		this.logger.debug({
-    			message: "Recieved reponse from HMRC COP verify request",
-    			accountNumberIsWellFormatted: data.accountNumberIsWellFormatted,
-    			accountExists: data.accountExists,
-    			nameMatches: data.nameMatches,
-    			nonStandardAccountDetailsRequiredForBacs: data.nonStandardAccountDetailsRequiredForBacs,
-    			sortCodeIsPresentOnEISCD: data.sortCodeIsPresentOnEISCD,
-    			sortCodeSupportsDirectDebit: data.sortCodeSupportsDirectDebit,
-    			sortCodeSupportsDirectCredit: data.sortCodeSupportsDirectCredit,
-    		});
+    			return data;
+    		} catch (error: any) {
+    			const message = "Error sending COP verify request to HMRC";
+    			this.logger.error({ message, messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT });
 
-    		return data;
-    	} catch (error: any) {
-    		const message = "Error sending COP verify request to HMRC";
-    		this.logger.error({ message, messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT });
-
-
-    		// if (error?.response?.status === 500 && retryCount < maxRetries) {
-    		// 	this.logger.error(`generateToken - Retrying to generate hmrcToken. Sleeping for ${backoffPeriodMs} ms ${HmrcService.name} ${new Date().toISOString()}`, { retryCount });
-    		// 	await sleep(backoffPeriodMs);
-    		// 	retryCount++;
-    		// } else {
-    			throw new AppError(HttpCodesEnum.UNAUTHORIZED, message);
-    		// }
+    			if (error?.response?.status === 500 && retryCount < this.maxRetries) {
+    				this.logger.error(`Sleeping for ${this.backoffPeriodMs} ms before retrying verification`, { retryCount });
+    				await sleep(this.backoffPeriodMs);
+    				retryCount++;
+    			} else {
+    				throw new AppError(HttpCodesEnum.UNAUTHORIZED, message);
+    			}
+    		}
     	}
     }
 

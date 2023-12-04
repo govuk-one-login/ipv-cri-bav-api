@@ -81,6 +81,11 @@ export class VerifyAccountRequestProcessor {
   	const name = getFullName(person.name);
   	const verifyResponse = await this.HmrcService.verify({ accountNumber: paddedAccountNumber, sortCode, name }, this.hmrcToken);
 
+		if (!verifyResponse) {
+			this.logger.error("No verify reponse recieved", { messageCode: MessageCodes.NO_VERIFY_RESPONSE });
+			return new Response(HttpCodesEnum.SERVER_ERROR, "Could not verify account");
+		}
+
   	const copCheckResult = this.calculateCopCheckResult(verifyResponse);
   	this.logger.debug(`copCheckResult is ${copCheckResult}`);
 

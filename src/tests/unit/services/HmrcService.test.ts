@@ -11,7 +11,6 @@ import { Constants } from "../../../utils/Constants";
 import { AppError } from "../../../utils/AppError";
 
 const hmrcBaseUrl = process.env.HMRC_BASE_URL!;
-
 let hmrcServiceTest: HmrcService;
 const logger = mock<Logger>();
 
@@ -34,12 +33,12 @@ describe("HMRC Service", () => {
 		const hmrcTokenSsmPath = "dev/HMRC/TOKEN";
 
 		it("calls HMRC verify endpoint with correct params and headers", async () => {
-			jest.spyOn(axios, "post").mockResolvedValueOnce({ data: hmrcVerifyResponse });
 			const endpoint = `${hmrcServiceTest.hmrcBaseUrl}/${Constants.HMRC_VERIFY_ENDPOINT_PATH}`;
+			jest.spyOn(axios, "post").mockResolvedValueOnce({ data: hmrcVerifyResponse });
 
 			const response = await hmrcServiceTest.verify({ accountNumber, sortCode, name }, hmrcTokenSsmPath);
 
-			expect(logger.info).toHaveBeenCalledWith("Sending COP verify request to HMRC", { endpoint });
+			expect(logger.info).toHaveBeenCalledWith("Sending COP verify request to HMRC", { endpoint, retryCount: 0 });
 			expect(axios.post).toHaveBeenCalledWith(
 				endpoint,
 				{
@@ -66,8 +65,44 @@ describe("HMRC Service", () => {
 			expect(response).toEqual(hmrcVerifyResponse);
 		});
 
-		it("returns error if HMRC verify call fails", async () => {
-			jest.spyOn(axios, "post").mockRejectedValueOnce("Error!");
+		it("retries verify call when 500 response is received", async () => {
+			const endpoint = `${hmrcServiceTest.hmrcBaseUrl}/${Constants.HMRC_VERIFY_ENDPOINT_PATH}`;
+			const error = {
+				response: {
+					status: 500, message: "Server error",
+				},
+			};
+			jest.spyOn(axios, "post").mockRejectedValue(error);
+
+			await expect(hmrcServiceTest.verify({ accountNumber, sortCode, name }, hmrcTokenSsmPath)).rejects.toThrow(
+				new AppError(HttpCodesEnum.SERVER_ERROR, "Error sending COP verify request to HMRC"),
+			);
+			expect(logger.error).toHaveBeenCalledWith(
+				{ message: "Error sending COP verify request to HMRC", messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT },
+			);
+			expect(axios.post).toHaveBeenCalledTimes(4);
+			expect(axios.post).toHaveBeenCalledWith(
+				endpoint,
+				{
+					account: { accountNumber, sortCode },
+					subject: { name },
+				},
+				{ 
+					headers: {
+						"User-Agent": Constants.HMRC_USER_AGENT,
+						"Authorization": "Bearer dev/HMRC/TOKEN",
+					},
+				},
+			);
+		});
+
+		it("returns error if HMRC verify call fails with non 500", async () => {
+			const error = {
+				response: {
+					status: 400, message: "Bad requesr",
+				},
+			};
+			jest.spyOn(axios, "post").mockRejectedValueOnce(error);
 
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 			await expect(hmrcServiceTest.verify({ accountNumber, sortCode, name }, hmrcTokenSsmPath))
@@ -76,6 +111,7 @@ describe("HMRC Service", () => {
 					message: "Error sending COP verify request to HMRC",
 				}));
 			expect(logger.error).toHaveBeenCalledWith({ message: "Error sending COP verify request to HMRC", messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT });
+			expect(axios.post).toHaveBeenCalledTimes(1);
 		});
 	});
 
