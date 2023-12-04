@@ -40,8 +40,7 @@ export class HmrcService {
     // eslint-disable-next-line max-lines-per-function
     async verify(
     	{ accountNumber, sortCode, name }: { accountNumber: string; sortCode: string; name: string }, token: string,
-    ): Promise<HmrcVerifyResponse> {
-
+    ): Promise<HmrcVerifyResponse | undefined> {
     	const params = {
     		account: { accountNumber, sortCode },
     		subject: { name },
@@ -50,6 +49,8 @@ export class HmrcService {
     		"User-Agent": Constants.HMRC_USER_AGENT,
     		"Authorization": `Bearer ${token}`,
     	};
+
+    	let retryCount = 0;
 
     	try {
     		const endpoint = `${this.HMRC_BASE_URL}/${Constants.HMRC_VERIFY_ENDPOINT_PATH}`;
@@ -71,7 +72,15 @@ export class HmrcService {
     	} catch (error: any) {
     		const message = "Error sending COP verify request to HMRC";
     		this.logger.error({ message, messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT });
-    		throw new AppError(HttpCodesEnum.UNAUTHORIZED, message);
+
+
+    		if (error?.response?.status === 500 && retryCount < maxRetries) {
+    			this.logger.error(`generateToken - Retrying to generate hmrcToken. Sleeping for ${backoffPeriodMs} ms ${HmrcService.name} ${new Date().toISOString()}`, { retryCount });
+    			await sleep(backoffPeriodMs);
+    			retryCount++;
+    		} else {
+    			throw new AppError(HttpCodesEnum.UNAUTHORIZED, message);
+    		}
     	}
     }
 
