@@ -12,27 +12,22 @@ export class HmrcService {
 
 	private static instance: HmrcService;
 
-    readonly HMRC_BASE_URL: string;
+    readonly hmrcBaseUrl: string;
 
-    readonly HMRC_CLIENT_ID: string | undefined;
+    readonly backoffPeriodMs: number;
 
-    readonly HMRC_CLIENT_SECRET: string | undefined;
+    readonly maxRetries: number;
 
-    constructor(logger: Logger, HMRC_BASE_URL: string, HMRC_CLIENT_ID?: string, HMRC_CLIENT_SECRET?: string) {
+    constructor(logger: Logger, hmrcBaseUrl: string, backoffPeriodMs: number, maxRetries: number) {
     	this.logger = logger;
-    	this.HMRC_BASE_URL = HMRC_BASE_URL;
-    	this.HMRC_CLIENT_ID = HMRC_CLIENT_ID;
-    	this.HMRC_CLIENT_SECRET = HMRC_CLIENT_SECRET;
+    	this.hmrcBaseUrl = hmrcBaseUrl;
+    	this.backoffPeriodMs = backoffPeriodMs;
+    	this.maxRetries = maxRetries;
     }
 
-    static getInstance(
-    	logger: Logger,
-    	HMRC_BASE_URL: string,
-    	HMRC_CLIENT_ID?: string,
-    	HMRC_CLIENT_SECRET?: string,
-    ): HmrcService {
+    static getInstance(logger: Logger, hmrcBaseUrl: string, backoffPeriodMs: number, maxRetries: number): HmrcService {
     	if (!HmrcService.instance) {
-    		HmrcService.instance = new HmrcService(logger, HMRC_BASE_URL, HMRC_CLIENT_ID, HMRC_CLIENT_SECRET);
+    		HmrcService.instance = new HmrcService(logger, hmrcBaseUrl, backoffPeriodMs, maxRetries);
     	}
     	return HmrcService.instance;
     }
@@ -40,7 +35,7 @@ export class HmrcService {
     // eslint-disable-next-line max-lines-per-function
     async verify(
     	{ accountNumber, sortCode, name }: { accountNumber: string; sortCode: string; name: string }, token: string,
-    ): Promise<HmrcVerifyResponse | undefined> {
+    ): Promise<HmrcVerifyResponse> {
     	const params = {
     		account: { accountNumber, sortCode },
     		subject: { name },
@@ -50,10 +45,10 @@ export class HmrcService {
     		"Authorization": `Bearer ${token}`,
     	};
 
-    	let retryCount = 0;
+    	// let retryCount = 0;
 
     	try {
-    		const endpoint = `${this.HMRC_BASE_URL}/${Constants.HMRC_VERIFY_ENDPOINT_PATH}`;
+    		const endpoint = `${this.hmrcBaseUrl}/${Constants.HMRC_VERIFY_ENDPOINT_PATH}`;
     		this.logger.info("Sending COP verify request to HMRC", { endpoint });
     		const { data }: { data: HmrcVerifyResponse } = await axios.post(endpoint, params, { headers });
 
@@ -74,29 +69,29 @@ export class HmrcService {
     		this.logger.error({ message, messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT });
 
 
-    		if (error?.response?.status === 500 && retryCount < maxRetries) {
-    			this.logger.error(`generateToken - Retrying to generate hmrcToken. Sleeping for ${backoffPeriodMs} ms ${HmrcService.name} ${new Date().toISOString()}`, { retryCount });
-    			await sleep(backoffPeriodMs);
-    			retryCount++;
-    		} else {
+    		// if (error?.response?.status === 500 && retryCount < maxRetries) {
+    		// 	this.logger.error(`generateToken - Retrying to generate hmrcToken. Sleeping for ${backoffPeriodMs} ms ${HmrcService.name} ${new Date().toISOString()}`, { retryCount });
+    		// 	await sleep(backoffPeriodMs);
+    		// 	retryCount++;
+    		// } else {
     			throw new AppError(HttpCodesEnum.UNAUTHORIZED, message);
-    		}
+    		// }
     	}
     }
 
     // eslint-disable-next-line max-lines-per-function
-    async generateToken(backoffPeriodMs: number, maxRetries: number): Promise<HmrcTokenResponse | undefined> {
+    async generateToken(clientSecret: string, clientId: string): Promise<HmrcTokenResponse | undefined> {
     	this.logger.debug("generateToken", HmrcService.name);
 
     	let retryCount = 0;
-    	while (retryCount <= maxRetries) {
+    	while (retryCount <= this.maxRetries) {
     		this.logger.debug(`generateToken - trying to generate hmrcToken ${new Date().toISOString()}`, {
     			retryCount,
     		});
     		try {
     			const params = {
-    				client_secret : this.HMRC_CLIENT_SECRET,
-    				client_id : this.HMRC_CLIENT_ID,
+    				client_secret : clientSecret,
+    				client_id : clientId,
     				grant_type : "client_credentials",
     			};
     			const config: AxiosRequestConfig<any> = {
@@ -106,7 +101,7 @@ export class HmrcService {
     			};
 				
     			const { data }: { data: HmrcTokenResponse } = await axios.post(
-    				`${this.HMRC_BASE_URL}${Constants.HMRC_TOKEN_ENDPOINT_PATH}`,
+    				`${this.hmrcBaseUrl}${Constants.HMRC_TOKEN_ENDPOINT_PATH}`,
     				params,
     				config,
     			);
@@ -116,17 +111,17 @@ export class HmrcService {
     		} catch (error: any) {
     			this.logger.error({ message: "An error occurred when generating HMRC token", error, messageCode: MessageCodes.FAILED_GENERATING_HMRC_TOKEN });
 
-    			if (error?.response?.status === 500 && retryCount < maxRetries) {
-    				this.logger.error(`generateToken - Retrying to generate hmrcToken. Sleeping for ${backoffPeriodMs} ms ${HmrcService.name} ${new Date().toISOString()}`, { retryCount });
-    				await sleep(backoffPeriodMs);
+    			if (error?.response?.status === 500 && retryCount < this.maxRetries) {
+    				this.logger.error(`generateToken - Retrying to generate hmrcToken. Sleeping for ${this.backoffPeriodMs} ms ${HmrcService.name} ${new Date().toISOString()}`, { retryCount });
+    				await sleep(this.backoffPeriodMs);
     				retryCount++;
     			} else {
     				throw new AppError(HttpCodesEnum.SERVER_ERROR, "Error generating HMRC token");
     			}
     		}
     	}
-    	this.logger.error(`generateToken - cannot generate hmrcToken even after ${maxRetries} retries.`);
-    	throw new AppError(HttpCodesEnum.SERVER_ERROR, `Cannot generate hmrcToken even after ${maxRetries} retries.`);
+    	this.logger.error(`generateToken - cannot generate hmrcToken even after ${this.maxRetries} retries.`);
+    	throw new AppError(HttpCodesEnum.SERVER_ERROR, `Cannot generate hmrcToken even after ${this.maxRetries} retries.`);
     }
 }
 

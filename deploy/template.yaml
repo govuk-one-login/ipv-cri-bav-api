@@ -1335,7 +1335,7 @@ Resources:
             Fn::ImportValue: !Sub "${L2KMSStackName}-encryption-key"
           HMRC_TOKEN_SSM_PATH: !Sub "/${Environment}/HMRC/TOKEN"
           HMRC_BASE_URL: !FindInMap [ EnvironmentVariables, !Ref Environment, HMRCVERIFYBASEURL ]
-          HMRC_TOKEN_MAX_RETRIES: 3
+          HMRC_MAX_RETRIES: 3
           HMRC_TOKEN_BACKOFF_PERIOD_MS: 15000 # 15 seconds
       Policies:
         - AWSLambdaBasicExecutionRole
@@ -1746,7 +1746,7 @@ Resources:
           HMRC_CLIENT_ID_SSM_PATH: !Sub "/${Environment}/HMRC/CLIENT_ID"
           HMRC_CLIENT_SECRET_SSM_PATH: !Sub "/${Environment}/HMRC/CLIENT_SECRET"
           HMRC_BASE_URL: !FindInMap [ EnvironmentVariables, !Ref Environment, HMRCBASEURL ]
-          HMRC_TOKEN_MAX_RETRIES: 10
+          HMRC_MAX_RETRIES: 10
           HMRC_TOKEN_BACKOFF_PERIOD_MS: 30000 # 30 seconds
       Policies:
         - AWSLambdaBasicExecutionRole
