@@ -100,45 +100,43 @@ describe("HMRC Service", () => {
 			expect(data?.access_token).toBe("token");
 		});
 
-		it("should throw an AppError and doesnt retry if there is a non 500 error while generating the hmrc access token", async () => {		
-
-			jest.spyOn(axios, "post").mockRejectedValue( {
-				"message": "Request failed with status code 400",
-				"code": "ERR_BAD_REQUEST",
-        		"status": 400,					
-			});
+		it("should throw an AppError and doesn't retry if there is a non 500 error while generating the HMRC access token", async () => {
+			const error = {
+				response: {
+					status: 400, message: "Bad request",
+				},
+			};
+			jest.spyOn(axios, "post").mockRejectedValue(error);
 
 			await expect(hmrcServiceTest.generateToken(2000, 3)).rejects.toThrow(
 				new AppError(HttpCodesEnum.SERVER_ERROR, "Error generating HMRC token"),
 			);
-
 			expect(logger.error).toHaveBeenCalledWith(
-				{ message: "An error occurred when generating HMRC token", hmrcErrorMessage: "Request failed with status code 400", hmrcStatusCode: 400, hmrcErrorCode: "ERR_BAD_REQUEST", messageCode: MessageCodes.FAILED_GENERATING_HMRC_TOKEN },
+				{ message: "An error occurred when generating HMRC token", error, messageCode: MessageCodes.FAILED_GENERATING_HMRC_TOKEN },
 			);
-			expect(axios.post).toHaveBeenCalledWith(`${HMRC_BASE_URL}${Constants.HMRC_TOKEN_ENDPOINT_PATH}`,
-				params,
-				config);
 			expect(axios.post).toHaveBeenCalledTimes(1);
+			expect(axios.post).toHaveBeenCalledWith(`${HMRC_BASE_URL}${Constants.HMRC_TOKEN_ENDPOINT_PATH}`, params, config);
 		});
 	
-		it("generateToken retries when Hmrc Token endpoint throws a 500 error", async () => {
-			jest.spyOn(axios, "post").mockRejectedValue( {
-				"message": "Request failed with status code 500",
-				"code": "ERR_BAD_RESPONSE",
-        		"status": 500,					
-			});
+		it("generateToken retries when HMRC Token endpoint throws a 500 error", async () => {
+			const error = {
+				response: {
+					status: 500, message: "Server error",
+				},
+			};
+			jest.spyOn(axios, "post").mockRejectedValue(error);
 
 			await expect(hmrcServiceTest.generateToken(2000, 3)).rejects.toThrow(
 				new AppError(HttpCodesEnum.SERVER_ERROR, "Error generating HMRC token"),
 			);
-
 			expect(logger.error).toHaveBeenCalledWith(
-				{ message: "An error occurred when generating HMRC token", hmrcErrorMessage: "Request failed with status code 500", hmrcStatusCode: 500, hmrcErrorCode: "ERR_BAD_RESPONSE", messageCode: MessageCodes.FAILED_GENERATING_HMRC_TOKEN },
+				{ message: "An error occurred when generating HMRC token", error, messageCode: MessageCodes.FAILED_GENERATING_HMRC_TOKEN },
 			);
+			expect(axios.post).toHaveBeenCalledTimes(4);
 			expect(axios.post).toHaveBeenCalledWith(`${HMRC_BASE_URL}${Constants.HMRC_TOKEN_ENDPOINT_PATH}`,
 				params,
-				config);
-			expect(axios.post).toHaveBeenCalledTimes(4);
+				config,
+			);
 		});
 	});
 });

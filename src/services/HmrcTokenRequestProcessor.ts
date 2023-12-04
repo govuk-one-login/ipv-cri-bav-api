@@ -49,7 +49,7 @@ export class HmrcTokenRequestProcessor {
 
 			// Validating expires_in 
 			if (data.expires_in !== Constants.HMRC_EXPECTED_TOKEN_EXPIRES_IN) {
-				this.logger.error(`expires_in doesnt match the expected value, received ${data.expires_in} instead of ${Constants.HMRC_EXPECTED_TOKEN_EXPIRES_IN}`);
+				this.logger.error(`expires_in doesn't match the expected value, received ${data.expires_in} instead of ${Constants.HMRC_EXPECTED_TOKEN_EXPIRES_IN}`);
 			}
 
 			this.logger.info("Storing the HMRC access token to SSM");
