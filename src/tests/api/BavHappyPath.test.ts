@@ -1,4 +1,3 @@
-import bavStubPayload from "../data/exampleStubPayload.json";
 import verifyAccountYesPayload from "../data/bankDetailsYes.json";
 import { constants } from "../utils/ApiConstants";
 import {
@@ -22,7 +21,7 @@ describe("BAV CRI: /session Endpoint Happy Path Tests", () => {
 	let sessionId: string;
 	beforeEach(async () => {
 		// Session Request
-		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+		sessionId = await startStubServiceAndReturnSessionId(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number));
 	});
 
 	it("Successful Request Test", async () => {
@@ -41,8 +40,9 @@ describe("BAV CRI: /verify-account Endpoint Happy Path Tests", () => {
 	let sessionId: string;
 	beforeEach(async () => {
 		// Session Request
-		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+		sessionId = await startStubServiceAndReturnSessionId(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number));
 	});
+
 
 	it.each([
 		"86473611",
@@ -71,8 +71,9 @@ describe("BAV CRI: /authorization Endpoint Happy Path Tests", () => {
 	let sessionId: string;
 	beforeEach(async () => {
 		// Session Request
-		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+		sessionId = await startStubServiceAndReturnSessionId(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number));
 	});
+
 
 	it("Successful Request Test", async () => {
 		expect(sessionId).toBeTruthy();
@@ -100,8 +101,9 @@ describe("BAV CRI: /token Endpoint Happy Path Tests", () => {
 	let sessionId: string;
 	beforeEach(async () => {
 		// Session Request
-		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+		sessionId = await startStubServiceAndReturnSessionId(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number));
 	});
+
 
 	it("Successful Request Test", async () => {
 		expect(sessionId).toBeTruthy();
@@ -126,9 +128,11 @@ describe("BAV CRI: /token Endpoint Happy Path Tests", () => {
 
 describe("BAV CRI: /userinfo Endpoint Happy Path Tests", () => {
 	let sessionId: string;
+	let bankDetails: BankDetailsPayload;
 	beforeEach(async () => {
 		// Session Request
-		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+		bankDetails = new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number);
+		sessionId = await startStubServiceAndReturnSessionId(bankDetails);
 	});
 
 	it("Successful Request Test", async () => {
@@ -148,7 +152,6 @@ describe("BAV CRI: /userinfo Endpoint Happy Path Tests", () => {
 		expect(userInfoResponse.status).toBe(200);
 
 		// Check to make sure VC JWT is present in the response and validate its contentss
-		const bankDetails = new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number);
 		validateJwtToken(userInfoResponse.data["https://vocab.account.gov.uk/v1/credentialJWT"][0], bankDetails);
 
 		// Verify authSessionState
