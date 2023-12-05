@@ -16,6 +16,7 @@ import {
 	wellKnownGet,
 }
 	from "../utils/ApiTestSteps";
+import { BankDetailsPayload } from "../models/BankDetailsPayload";
 
 describe("BAV CRI: /session Endpoint Happy Path Tests", () => {
 	let sessionId: string;
@@ -120,7 +121,7 @@ describe("BAV CRI: /token Endpoint Happy Path Tests", () => {
 
 		// Make sure authSession state is as expected
 		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_ACCESS_TOKEN_ISSUED");
-	  });
+	});
 });
 
 describe("BAV CRI: /userinfo Endpoint Happy Path Tests", () => {
@@ -141,13 +142,14 @@ describe("BAV CRI: /userinfo Endpoint Happy Path Tests", () => {
 
 		// Token request
 		const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
-        
+
 		// User Info request
 		const userInfoResponse = await userInfoPost("Bearer " + tokenResponse.data.access_token);
 		expect(userInfoResponse.status).toBe(200);
 
 		// Check to make sure VC JWT is present in the response and validate its contentss
-		validateJwtToken(userInfoResponse.data["https://vocab.account.gov.uk/v1/credentialJWT"][0], verifyAccountYesPayload);
+		const bankDetails = new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number);
+		validateJwtToken(userInfoResponse.data["https://vocab.account.gov.uk/v1/credentialJWT"][0], bankDetails);
 
 		// Verify authSessionState
 		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_CRI_VC_ISSUED");
@@ -159,10 +161,10 @@ describe("BAV CRI: /userinfo Endpoint Happy Path Tests", () => {
 });
 
 describe("E2E Happy Path Well Known Endpoint", () => {
-	  it("E2E Happy Path Journey - Well Known", async () => {
+	it("E2E Happy Path Journey - Well Known", async () => {
 		// Well Known
 		const wellKnownResponse = await wellKnownGet();
 		validateWellKnownResponse(wellKnownResponse.data);
 		expect(wellKnownResponse.status).toBe(200);
-	  });
+	});
 });
