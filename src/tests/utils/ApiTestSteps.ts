@@ -40,7 +40,7 @@ export async function startStubServiceAndReturnSessionId(bavStubPayload: BankDet
 	return postRequest.data.session_id;
 }
 
-export async function stubStartPost(bavStubPayload: any): Promise<any> {
+export async function stubStartPost(bavStubPayload: BankDetailsPayload): Promise<any> {
 	const path = constants.DEV_IPV_BAV_STUB_URL;
 	try {
 		const postRequest = await axios.post(`${path}`, bavStubPayload);
