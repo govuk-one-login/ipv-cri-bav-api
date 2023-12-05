@@ -1,3 +1,4 @@
+import bavStubPayload from "../data/exampleStubPayload.json";
 import verifyAccountYesPayload from "../data/bankDetailsYes.json";
 import {
 	authorizationGet,
@@ -14,7 +15,7 @@ import { BankDetailsPayload } from "../models/BankDetailsPayload";
 describe("BAV CRI: /session Endpoint Unhappy Path Tests", () => {
 	let stubResponse: any;
 	beforeEach(async () => {
-		stubResponse = await stubStartPost(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number));
+		stubResponse = await stubStartPost(bavStubPayload);
 	});
 
 	it("Invalid Request Test", async () => {
@@ -38,7 +39,7 @@ describe("BAV CRI: /authorization Endpoint Unhappy Path Tests", () => {
 	let sessionId: string;
 	beforeEach(async () => {
 		// Session Request
-		sessionId = await startStubServiceAndReturnSessionId(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number));
+		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
 	});
 
 
@@ -63,7 +64,7 @@ describe("BAV CRI: /token Endpoint Unhappy Path Tests", () => {
 	let sessionId: string;
 	beforeEach(async () => {
 		// Session Request
-		sessionId = await startStubServiceAndReturnSessionId(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number));
+		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
 	});
 
 	it("Invalid Session State Test", async () => {
@@ -86,7 +87,8 @@ describe("BAV CRI: /token Endpoint Unhappy Path Tests", () => {
 describe("BAV CRI: /userinfo Endpoint Unhappy Path Tests", () => {
 	it("Non-bearer Type Authentication Test", async () => {
 		//Session Request
-		const sessionId = await startStubServiceAndReturnSessionId(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number));
+		const sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+
 
 		// Verify-account request
 		await verifyAccountPost(verifyAccountYesPayload, sessionId);

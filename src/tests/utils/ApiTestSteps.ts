@@ -33,14 +33,14 @@ HARNESS_API_INSTANCE.interceptors.request.use(awsSigv4Interceptor);
 
 const xmlParser = new XMLParser();
 
-export async function startStubServiceAndReturnSessionId(bavStubPayload: BankDetailsPayload): Promise<any> {
+export async function startStubServiceAndReturnSessionId(bavStubPayload: any): Promise<any> {
 	const stubResponse = await stubStartPost(bavStubPayload);
 	const postRequest = await sessionPost(stubResponse.data.clientId, stubResponse.data.request);
 	console.log(postRequest.data.session_id);
 	return postRequest.data.session_id;
 }
 
-export async function stubStartPost(bavStubPayload: BankDetailsPayload): Promise<any> {
+export async function stubStartPost(bavStubPayload: any): Promise<any> {
 	const path = constants.DEV_IPV_BAV_STUB_URL;
 	try {
 		const postRequest = await axios.post(`${path}`, bavStubPayload);

@@ -1,3 +1,4 @@
+import bavStubPayload from "../data/exampleStubPayload.json";
 import verifyAccountYesPayload from "../data/bankDetailsYes.json";
 import { constants } from "../utils/ApiConstants";
 import {
@@ -22,7 +23,7 @@ describe("BAV CRI: /session Endpoint Happy Path Tests", () => {
 	let sessionId: string;
 	beforeEach(async () => {
 		// Session Request
-		sessionId = await startStubServiceAndReturnSessionId(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number));
+		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
 	});
 
 	it("Successful Request Test", async () => {
@@ -41,7 +42,7 @@ describe("BAV CRI: /verify-account Endpoint Happy Path Tests", () => {
 	let sessionId: string;
 	beforeEach(async () => {
 		// Session Request
-		sessionId = await startStubServiceAndReturnSessionId(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number));
+		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
 	});
 
 
@@ -72,7 +73,7 @@ describe("BAV CRI: /authorization Endpoint Happy Path Tests", () => {
 	let sessionId: string;
 	beforeEach(async () => {
 		// Session Request
-		sessionId = await startStubServiceAndReturnSessionId(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number));
+		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
 	});
 
 
@@ -102,7 +103,7 @@ describe("BAV CRI: /token Endpoint Happy Path Tests", () => {
 	let sessionId: string;
 	beforeEach(async () => {
 		// Session Request
-		sessionId = await startStubServiceAndReturnSessionId(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number));
+		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
 	});
 
 
@@ -133,7 +134,7 @@ describe("BAV CRI: /userinfo Endpoint Happy Path Tests", () => {
 	beforeEach(async () => {
 		// Session Request
 		bankDetails = new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number);
-		sessionId = await startStubServiceAndReturnSessionId(bankDetails);
+		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
 	});
 
 	it("Successful Request Test", async () => {
