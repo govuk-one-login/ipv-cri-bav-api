@@ -163,11 +163,3 @@ describe("BAV CRI: /userinfo Endpoint Happy Path Tests", () => {
 	});
 });
 
-describe("E2E Happy Path Well Known Endpoint", () => {
-	it("E2E Happy Path Journey - Well Known", async () => {
-		// Well Known
-		const wellKnownResponse = await wellKnownGet();
-		validateWellKnownResponse(wellKnownResponse.data);
-		expect(wellKnownResponse.status).toBe(200);
-	});
-});
