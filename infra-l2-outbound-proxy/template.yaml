@@ -15,10 +15,10 @@ Conditions:
 Mappings:
   EnvironmentVariables:
     dev:
-      HMRCURL: "https://api.isc.externaltest.tax.service.gov.uk"
+      HMRCURL: "https://szxkgvdy5j.execute-api.eu-west-2.amazonaws.com/dev"
       PRETTYPROXYURL: "proxy.review-bav.dev.account.gov.uk"
     build:
-      HMRCURL: "https://api.isc.externaltest.tax.service.gov.uk"
+      HMRCURL: "https://kcdflis5zl.execute-api.eu-west-2.amazonaws.com/build"
       PRETTYPROXYURL: "proxy.review-bav.build.account.gov.uk"
     staging:
       HMRCURL: "https://api.isc.externaltest.tax.service.gov.uk"
