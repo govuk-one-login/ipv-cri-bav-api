@@ -1,4 +1,3 @@
-import bavStubPayload from "../data/exampleStubPayload.json";
 import verifyAccountYesPayload from "../data/bankDetailsYes.json";
 import {
 	authorizationGet,
@@ -9,11 +8,13 @@ import {
 	verifyAccountPost,
 	tokenPost,
 } from "../utils/ApiTestSteps";
+import { BankDetailsPayload } from "../models/BankDetailsPayload";
+
 
 describe("BAV CRI: /session Endpoint Unhappy Path Tests", () => {
 	let stubResponse: any;
 	beforeEach(async () => {
-		stubResponse = await stubStartPost(bavStubPayload);
+		stubResponse = await stubStartPost(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number));
 	});
 
 	it("Invalid Request Test", async () => {
@@ -36,8 +37,10 @@ describe("BAV CRI: /session Endpoint Unhappy Path Tests", () => {
 describe("BAV CRI: /authorization Endpoint Unhappy Path Tests", () => {
 	let sessionId: string;
 	beforeEach(async () => {
-		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+		// Session Request
+		sessionId = await startStubServiceAndReturnSessionId(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number));
 	});
+
 
 	it("Incorrect Session State Test", async () => {
 		// Authorization
@@ -59,8 +62,8 @@ describe("BAV CRI: /authorization Endpoint Unhappy Path Tests", () => {
 describe("BAV CRI: /token Endpoint Unhappy Path Tests", () => {
 	let sessionId: string;
 	beforeEach(async () => {
-		//Session Request
-		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+		// Session Request
+		sessionId = await startStubServiceAndReturnSessionId(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number));
 	});
 
 	it("Invalid Session State Test", async () => {
@@ -83,7 +86,7 @@ describe("BAV CRI: /token Endpoint Unhappy Path Tests", () => {
 describe("BAV CRI: /userinfo Endpoint Unhappy Path Tests", () => {
 	it("Non-bearer Type Authentication Test", async () => {
 		//Session Request
-		const sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+		const sessionId = await startStubServiceAndReturnSessionId(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number));
 
 		// Verify-account request
 		await verifyAccountPost(verifyAccountYesPayload, sessionId);
