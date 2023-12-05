@@ -8,6 +8,7 @@ import wellKnownGetSchema from "../data/wellKnownJwksResponseSchema.json";
 import { constants } from "./ApiConstants";
 import { ISessionItem } from "../../models/ISessionItem";
 import { jwtUtils } from "../../utils/JwtUtils";
+import { BankDetailsPayload } from "../models/BankDetailsPayload";
 
 const API_INSTANCE = axios.create({ baseURL: constants.DEV_CRI_BAV_API_URL });
 const ajv = new Ajv({ strict: false });
@@ -257,7 +258,7 @@ export async function validateTxMAEventData(keyList: any): Promise<any> {
 	}
 }
 
-export function validateJwtToken(jwtToken: any, payload: any): void {
+export function validateJwtToken(jwtToken: any, payload: BankDetailsPayload): void {
 	const [rawHead, rawBody, signature] = jwtToken.split(".");
 
 	validateRawHead(rawHead);
@@ -270,13 +271,13 @@ function validateRawHead(rawHead: any): void {
 	expect(decodeRawHead.typ).toBe("JWT");
 }
 
-function validateRawBody(rawBody: any, payload: any): void {
+function validateRawBody(rawBody: any, payload: BankDetailsPayload): void {
 	const decodedBody = JSON.parse(jwtUtils.base64DecodeToString(rawBody.replace(/\W/g, "")));
 	expect(decodedBody.jti).toBeTruthy();
 	expect(decodedBody.vc.evidence[0].strengthScore).toBe(3);
 	expect(decodedBody.vc.evidence[0].validityScore).toBe(0);
-	expect(decodedBody.vc.credentialSubject.bankAccount[0].sortCode).toBe(payload.sort_code);
-	expect(decodedBody.vc.credentialSubject.bankAccount[0].accountNumber).toBe(payload.account_number.padStart(8, "0"));
+	expect(decodedBody.vc.credentialSubject.bankAccount[0].sortCode).toBe(payload.sortCode);
+	expect(decodedBody.vc.credentialSubject.bankAccount[0].accountNumber).toBe(payload.accountNumber.padStart(8, "0"));
 }
 
 export async function abortPost(sessionId: string): Promise<any> {
