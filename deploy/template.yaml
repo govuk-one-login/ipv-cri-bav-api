@@ -1327,7 +1327,7 @@ Resources:
         - !Ref AWS::NoValue
       Environment:
         Variables:
-          POWERTOOLS_SERVICE_NAME: verifyAccountHandler
+          POWERTOOLS_SERVICE_NAME: VerifyAccountHandler
           KMS_KEY_ARN:
             Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
           ENCRYPTION_KEY_IDS:
@@ -1736,9 +1736,10 @@ Resources:
       ReservedConcurrentExecutions: !If
         - ApplyReservedConcurrency
         - !Ref LambdaConcurrency
-        - !Ref AWS::NoValue         
+        - !Ref AWS::NoValue
       Environment:
         Variables:
+          POWERTOOLS_SERVICE_NAME: HmrcTokenHandler
           HMRC_CLIENT_ID_SSM_PATH: !Sub "/${Environment}/HMRC/CLIENT_ID"
           HMRC_CLIENT_SECRET_SSM_PATH: !Sub "/${Environment}/HMRC/CLIENT_SECRET"
           HMRC_BASE_URL: !FindInMap [ EnvironmentVariables, !Ref Environment, HMRCBASEURL ]
