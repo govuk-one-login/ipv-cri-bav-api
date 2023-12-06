@@ -130,7 +130,7 @@ describe("BAV CRI: /token Endpoint Happy Path Tests", () => {
 	});
 });
 
-describe.only("BAV CRI: /userinfo Endpoint Happy Path Tests", () => {
+describe("BAV CRI: /userinfo Endpoint Happy Path Tests", () => {
 	let sessionId: string;
 	let bankDetails: BankDetailsPayload;
 	beforeEach(async () => {
