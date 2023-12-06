@@ -1,10 +1,10 @@
 export class BankDetailsPayload {
-    sortCode: string;
+    sort_code: string;
 
-    accountNumber: string;
+    account_number: string;
 
     constructor(sortCode: string, accountNumber: string) {
-    	this.sortCode = sortCode;
-    	this.accountNumber = accountNumber;
+    	this.sort_code = sortCode;
+    	this.account_number = accountNumber;
     }
 }

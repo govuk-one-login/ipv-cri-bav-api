@@ -51,7 +51,8 @@ describe("BAV CRI: /authorization Endpoint Unhappy Path Tests", () => {
 
 	it("Repeated Request Made Test", async () => {
 		const origSessionId = sessionId;
-		await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		const bankDetails = new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number);
+		await verifyAccountPost(bankDetails, sessionId);
 		const authResponse = await authorizationGet(sessionId);
 		const authCode = authResponse.data.authorizationCode;
 		const authRepeatResponse = await authorizationGet(origSessionId);
@@ -69,7 +70,8 @@ describe("BAV CRI: /token Endpoint Unhappy Path Tests", () => {
 
 	it("Invalid Session State Test", async () => {
 		// Verify-account request
-		await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		const bankDetails = new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number);
+		await verifyAccountPost(bankDetails, sessionId);
 
 		// Authorization request
 		const authResponse = await authorizationGet(sessionId);
@@ -91,7 +93,8 @@ describe("BAV CRI: /userinfo Endpoint Unhappy Path Tests", () => {
 
 
 		// Verify-account request
-		await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		const bankDetails = new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number);
+		await verifyAccountPost(bankDetails, sessionId);
 
 		// Authorization
 		const authResponse = await authorizationGet(sessionId);
