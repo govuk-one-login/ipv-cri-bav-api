@@ -239,6 +239,7 @@ export async function validateTxMAEventData(keyList: any): Promise<any> {
 	for (i = 0; i < keyList?.length; i++) {
 		const getObjectResponse = await HARNESS_API_INSTANCE.get("/object/" + keyList[i], {});
 		let valid = true;
+		let error: any;
 		import("../data/" + getObjectResponse.data.event_name + "_SCHEMA.json")
 			.then((jsonSchema) => {
 				const validate = ajv.compile(jsonSchema);
@@ -248,10 +249,11 @@ export async function validateTxMAEventData(keyList: any): Promise<any> {
 				}
 			})
 			.catch((err) => {
-				expect(err.message).not.toContain("Cannot find module");
+				error = err;
 				console.log(err.message);
 			})
 			.finally(() => {
+				expect(error.message).not.toContain("Cannot find module");
 				expect(valid).toBe(true);
 			});
 	}
