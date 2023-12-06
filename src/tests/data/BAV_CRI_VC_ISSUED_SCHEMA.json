@@ -1,0 +1,53 @@
+{
+    "event_name":"BAV_CRI_VC_ISSUED",
+    "user":{
+       "user_id":"5eba8106-bda4-4277-8ac7-e60676f68ac3",
+       "session_id":"e2ff21d0-ef0f-4def-b802-c7ff63a074d4",
+       "govuk_signin_journey_id":"ff29faa1f2c09b68f9c5f911a6688855",
+       "ip_address": "12.12.12.12"
+    },
+    "client_id":"5C584572",
+    "timestamp":1688480078,
+    "component_id":"https://review-c.dev.account.gov.uk",
+    "restricted":{
+       "name":[
+          {
+             "nameParts":[
+                {
+                   "type":"GivenName",
+                   "value":"Frederick"
+                },
+                {
+                   "type":"FamilyName",
+                   "value":"Flinstone"
+                }
+             ]
+          }
+       ],
+       "bankAccount": [
+         {
+           "sortCode": "103233",
+           "accountNumber": "12345678"
+         }
+       ]
+    },
+    "extensions":{
+       "evidence":[
+          {
+             "txn":"1c756b7e-b5b8-4f33-966d-4aeee9bb0000",
+             "strengthScore":3,
+             "validityScore":2,
+             "attemptNum": 1,
+             "ci":[
+                     "D15"
+                   ],
+             "ciReasons": [
+               {
+                 "ci": "D15",
+                 "reason": "partial_match"
+               }
+             ]
+          }
+       ]
+    }
+ }
