@@ -42,7 +42,6 @@ describe("BAV CRI: /authorization Endpoint Unhappy Path Tests", () => {
 		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
 	});
 
-
 	it("Incorrect Session State Test", async () => {
 		// Authorization
 		const authResponse = await authorizationGet(sessionId);
