@@ -276,7 +276,7 @@ function validateRawBody(rawBody: any): void {
 	const decodedBody = JSON.parse(jwtUtils.base64DecodeToString(rawBody.replace(/\W/g, "")));
 	expect(decodedBody.jti).toBeTruthy();
 	expect(decodedBody.vc.evidence[0].strengthScore).toBe(3);
-	expect(decodedBody.vc.evidence[0].validityScore).toBe(0);
+	expect(decodedBody.vc.evidence[0].validityScore).toBe(2);
 }
 
 export async function abortPost(sessionId: string): Promise<any> {
