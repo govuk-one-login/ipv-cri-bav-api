@@ -50,6 +50,8 @@ export class HmrcService {
     		"Authorization": `Bearer ${token}`,
     	};
 
+    	console.log("headers", headers);
+
     	try {
     		const endpoint = `${this.HMRC_BASE_URL}/${Constants.HMRC_VERIFY_ENDPOINT_PATH}`;
     		this.logger.info("Sending COP verify request to HMRC", { endpoint });
@@ -69,6 +71,7 @@ export class HmrcService {
     		return data;
     	} catch (error: any) {
     		const message = "Error sending COP verify request to HMRC";
+    		console.log("error", error);
     		this.logger.error({ message, messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT });
     		throw new AppError(HttpCodesEnum.UNAUTHORIZED, message);
     	}
