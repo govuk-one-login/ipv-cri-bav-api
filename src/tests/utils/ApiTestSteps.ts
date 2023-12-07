@@ -238,8 +238,8 @@ export async function validateTxMAEventData(keyList: any): Promise<any> {
 	let i: any;
 	for (i = 0; i < keyList?.length; i++) {
 		const getObjectResponse = await HARNESS_API_INSTANCE.get("/object/" + keyList[i], {});
-		console.log(JSON.stringify(getObjectResponse.data, null, 2));
 		let valid = true;
+		let error: any = null;
 		import("../data/" + getObjectResponse.data.event_name + "_SCHEMA.json")
 			.then((jsonSchema) => {
 				const validate = ajv.compile(jsonSchema);
@@ -249,9 +249,11 @@ export async function validateTxMAEventData(keyList: any): Promise<any> {
 				}
 			})
 			.catch((err) => {
+				error = err;
 				console.log(err.message);
 			})
 			.finally(() => {
+				expect(error).toBeNull();
 				expect(valid).toBe(true);
 			});
 	}

@@ -23,7 +23,6 @@
         "required": [
           "user_id",
           "session_id",
-          "govuk_signin_journey_id",
           "ip_address"
         ]
       },
