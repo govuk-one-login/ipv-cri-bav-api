@@ -45,7 +45,8 @@ export class HmrcService {
     		"Authorization": `Bearer ${token}`,
     	};
 
-    	let retryCount = 1;
+    	let retryCount = 0;
+    	let exponentialBackOffPeriod = this.backoffPeriodMs;
     	while (retryCount <= this.maxRetries) {
     		try {
     			const endpoint = `${this.hmrcBaseUrl}/${Constants.HMRC_VERIFY_ENDPOINT_PATH}`;
@@ -69,9 +70,10 @@ export class HmrcService {
     			this.logger.error({ message, messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT });
 
     			if (error?.response?.status === 500 && retryCount < this.maxRetries) {
-    				this.logger.error(`Sleeping for ${this.backoffPeriodMs} ms before retrying verification`, { retryCount });
-    				await sleep(this.backoffPeriodMs);
+    				this.logger.error(`Sleeping for ${exponentialBackOffPeriod} ms before retrying verification`, { retryCount });
+    				await sleep(exponentialBackOffPeriod);
     				retryCount++;
+    				exponentialBackOffPeriod = exponentialBackOffPeriod * 2;
     			} else {
     				throw new AppError(HttpCodesEnum.UNAUTHORIZED, message);
     			}

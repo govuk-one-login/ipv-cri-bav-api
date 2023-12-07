@@ -7,19 +7,22 @@ import { hmrcVerifyResponse } from "../data/hmrcEvents";
 import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../../../models/enums/MessageCodes";
 import { HmrcService } from "../../../services/HmrcService";
-import { Constants } from "../../../utils/Constants";
 import { AppError } from "../../../utils/AppError";
+import { Constants } from "../../../utils/Constants";
+import { sleep } from "../../../utils/Sleep";
 
 const hmrcBaseUrl = process.env.HMRC_BASE_URL!;
 let hmrcServiceTest: HmrcService;
-const logger = mock<Logger>();
-
 const tokenResponse = {
 	"access_token": "token",
 	"scope": "default",
 	"expires_in": 14400,
 	"token_type": "bearer",
 };
+const logger = mock<Logger>();
+jest.mock(("../../../utils/Sleep"), () => ({
+	sleep: jest.fn(),
+}));
 
 describe("HMRC Service", () => {
 	beforeAll(() => {
@@ -38,7 +41,7 @@ describe("HMRC Service", () => {
 
 			const response = await hmrcServiceTest.verify({ accountNumber, sortCode, name }, hmrcTokenSsmPath);
 
-			expect(logger.info).toHaveBeenCalledWith("Sending COP verify request to HMRC", { endpoint, retryCount: 1 });
+			expect(logger.info).toHaveBeenCalledWith("Sending COP verify request to HMRC", { endpoint, retryCount: 0 });
 			expect(axios.post).toHaveBeenCalledWith(
 				endpoint,
 				{
@@ -65,7 +68,7 @@ describe("HMRC Service", () => {
 			expect(response).toEqual(hmrcVerifyResponse);
 		});
 
-		it("retries verify call when 500 response is received", async () => {
+		it("retries verify call with exponential backoff when 500 response is received", async () => {
 			const endpoint = `${hmrcServiceTest.hmrcBaseUrl}/${Constants.HMRC_VERIFY_ENDPOINT_PATH}`;
 			const error = {
 				response: {
@@ -80,7 +83,7 @@ describe("HMRC Service", () => {
 			expect(logger.error).toHaveBeenCalledWith(
 				{ message: "Error sending COP verify request to HMRC", messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT },
 			);
-			expect(axios.post).toHaveBeenCalledTimes(3);
+			expect(axios.post).toHaveBeenCalledTimes(4);
 			expect(axios.post).toHaveBeenCalledWith(
 				endpoint,
 				{
@@ -94,6 +97,9 @@ describe("HMRC Service", () => {
 					},
 				},
 			);
+			expect(sleep).toHaveBeenNthCalledWith(1, 2000);
+			expect(sleep).toHaveBeenNthCalledWith(2, 4000);
+			expect(sleep).toHaveBeenNthCalledWith(3, 8000);
 		});
 
 		it("returns error if HMRC verify call fails with non 500", async () => {
