@@ -45,7 +45,7 @@ export class HmrcService {
     		"Authorization": `Bearer ${token}`,
     	};
 
-    	let retryCount = 0;
+    	let retryCount = 1;
     	while (retryCount <= this.maxRetries) {
     		try {
     			const endpoint = `${this.hmrcBaseUrl}/${Constants.HMRC_VERIFY_ENDPOINT_PATH}`;

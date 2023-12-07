@@ -1336,7 +1336,7 @@ Resources:
           HMRC_TOKEN_SSM_PATH: !Sub "/${Environment}/HMRC/TOKEN"
           HMRC_BASE_URL: !FindInMap [ EnvironmentVariables, !Ref Environment, HMRCVERIFYBASEURL ]
           HMRC_MAX_RETRIES: 3
-          HMRC_TOKEN_BACKOFF_PERIOD_MS: 15000 # 15 seconds
+          HMRC_TOKEN_BACKOFF_PERIOD_MS: 8000 # 8 seconds
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
