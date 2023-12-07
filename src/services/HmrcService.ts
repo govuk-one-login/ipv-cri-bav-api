@@ -45,8 +45,12 @@ export class HmrcService {
     		"Authorization": `Bearer ${token}`,
     	};
 
+<<<<<<< HEAD
     	let retryCount = 0;
     	let exponentialBackOffPeriod = this.backoffPeriodMs;
+=======
+    	let retryCount = 1;
+>>>>>>> f2b2e58 (KIWI-1415 reduce backoff period)
     	while (retryCount <= this.maxRetries) {
     		try {
     			const endpoint = `${this.hmrcBaseUrl}/${Constants.HMRC_VERIFY_ENDPOINT_PATH}`;
