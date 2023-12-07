@@ -41,7 +41,7 @@ describe("HMRC Service", () => {
 
 			const response = await hmrcServiceTest.verify({ accountNumber, sortCode, name }, hmrcTokenSsmPath);
 
-			expect(logger.info).toHaveBeenCalledWith("Sending COP verify request to HMRC", { endpoint, retryCount: 1 });
+			expect(logger.info).toHaveBeenCalledWith("Sending COP verify request to HMRC", { endpoint, retryCount: 0 });
 			expect(axios.post).toHaveBeenCalledWith(
 				endpoint,
 				{
@@ -83,7 +83,7 @@ describe("HMRC Service", () => {
 			expect(logger.error).toHaveBeenCalledWith(
 				{ message: "Error sending COP verify request to HMRC", messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT },
 			);
-			expect(axios.post).toHaveBeenCalledTimes(3);
+			expect(axios.post).toHaveBeenCalledTimes(4);
 			expect(axios.post).toHaveBeenCalledWith(
 				endpoint,
 				{
