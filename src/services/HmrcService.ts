@@ -75,7 +75,7 @@ export class HmrcService {
     				retryCount++;
     				exponentialBackOffPeriod = exponentialBackOffPeriod * 2;
     			} else {
-    				throw new AppError(HttpCodesEnum.UNAUTHORIZED, message);
+    				throw new AppError(HttpCodesEnum.SERVER_ERROR, message);
     			}
     		}
     	}

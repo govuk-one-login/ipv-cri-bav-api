@@ -147,7 +147,7 @@ describe("HMRC Service", () => {
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 			await expect(hmrcServiceTest.verify({ accountNumber, sortCode, name }, hmrcTokenSsmPath))
 				.rejects.toThrow(expect.objectContaining({
-					statusCode: HttpCodesEnum.UNAUTHORIZED,
+					statusCode: HttpCodesEnum.SERVER_ERROR,
 					message: "Error sending COP verify request to HMRC",
 				}));
 			expect(logger.error).toHaveBeenCalledWith({ message: "Error sending COP verify request to HMRC", messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT });
