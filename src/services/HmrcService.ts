@@ -69,7 +69,7 @@ export class HmrcService {
     			const message = "Error sending COP verify request to HMRC";
     			this.logger.error({ message, messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT });
 
-    			if (error?.response?.status === 500 && retryCount < this.maxRetries) {
+    			if ((error?.response?.status === 500 || error?.response?.status === 429) && retryCount < this.maxRetries) {
     				this.logger.error(`Sleeping for ${exponentialBackOffPeriod} ms before retrying verification`, { retryCount });
     				await sleep(exponentialBackOffPeriod);
     				retryCount++;
