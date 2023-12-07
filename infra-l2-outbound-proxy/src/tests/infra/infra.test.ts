@@ -10,8 +10,8 @@ it("Should contain only one Api Gateway V2 resource definition", () => {
 describe("Outbound Proxy Api Gateway Integration URLs", () => {
   test.each`
     ENVIRONMENT      | HMRCURL                                              | PRETTYPROXYURL
-    ${"dev"}         | ${"https://szxkgvdy5j.execute-api.eu-west-2.amazonaws.com/dev"} | ${"proxy.review-bav.dev.account.gov.uk"}
-    ${"build"}       | ${"https://kcdflis5zl.execute-api.eu-west-2.amazonaws.com/build"} | ${"proxy.review-bav.build.account.gov.uk"}
+    ${"dev"}         | ${"https://api.isc.externaltest.tax.service.gov.uk"} | ${"proxy.review-bav.dev.account.gov.uk"}
+    ${"build"}       | ${"https://api.isc.externaltest.tax.service.gov.uk"} | ${"proxy.review-bav.build.account.gov.uk"}
     ${"staging"}     | ${"https://api.isc.externaltest.tax.service.gov.uk"} | ${"proxy.review-bav.staging.account.gov.uk"}
     ${"integration"} | ${"https://api.isc.externaltest.tax.service.gov.uk"} | ${"proxy.review-bav.integration.account.gov.uk"}
     ${"production"}  | ${"https://api.isc.production.tax.service.gov.uk"} | ${"proxy.review-bav.account.gov.uk"}
