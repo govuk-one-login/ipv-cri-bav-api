@@ -9,6 +9,9 @@ import { Constants } from "../../utils/Constants";
 import { MessageCodes } from "../../models/enums/MessageCodes";
 
 const mockedPersonInfoRequestProcessor = mock<PersonInfoRequestProcessor>();
+jest.mock("../../utils/Config", () => ({
+	getParameter: (parameter: string) => parameter,
+}));
 
 // eslint-disable-next-line max-lines-per-function
 describe("PersonInfoHandler", () => {

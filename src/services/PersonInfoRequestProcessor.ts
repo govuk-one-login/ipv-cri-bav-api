@@ -1,5 +1,6 @@
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
+import NodeRSA from "node-rsa";
 import { BavService } from "./BavService";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../models/enums/MessageCodes";
@@ -20,7 +21,10 @@ export class PersonInfoRequestProcessor {
 
 	private readonly personIdentityTableName: string;
 
-	constructor(logger: Logger, metrics: Metrics) {
+	private readonly publicKey: string;
+
+	constructor(logger: Logger, metrics: Metrics, publicKey: string) {
+		this.publicKey = publicKey;
 		this.personIdentityTableName = checkEnvironmentVariable(EnvironmentVariables.PERSON_IDENTITY_TABLE_NAME, logger);
   	const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, logger);
 
@@ -29,9 +33,9 @@ export class PersonInfoRequestProcessor {
   	this.BavService = BavService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
 	}
 
-	static getInstance(logger: Logger, metrics: Metrics): PersonInfoRequestProcessor {
+	static getInstance(logger: Logger, metrics: Metrics, publicKey: string): PersonInfoRequestProcessor {
   	if (!PersonInfoRequestProcessor.instance) {
-  		PersonInfoRequestProcessor.instance = new PersonInfoRequestProcessor(logger, metrics);
+  		PersonInfoRequestProcessor.instance = new PersonInfoRequestProcessor(logger, metrics, publicKey);
   	}
   	return PersonInfoRequestProcessor.instance;
 	}
@@ -59,9 +63,16 @@ export class PersonInfoRequestProcessor {
   	});
 
   	const name = getFullName(person.name);
+		const encryptedResponseValue = this.encryptResponse({ name });
 
-		console.log("name", name);
+  	return new Response(HttpCodesEnum.OK, encryptedResponseValue);
+	}
 
-  	return new Response(HttpCodesEnum.OK, `name is ${name}`);
+	encryptResponse(data: { name: string }): string {
+		const dataString = JSON.stringify(data);
+
+		this.logger.info("Encrypting personal info");
+		const key = new NodeRSA(this.publicKey);
+		return key.encrypt(dataString, "base64");
 	}
 }
