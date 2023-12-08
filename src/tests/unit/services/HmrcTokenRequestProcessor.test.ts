@@ -57,7 +57,7 @@ describe("HmrcTokenRequestProcessor", () => {
 		});
 
 		await hmrcTokenRequestProcessorTest.processRequest();
-		expect(logger.error).toHaveBeenCalledWith(`expires_in doesnt match the expected value, received 15400 instead of ${Constants.HMRC_EXPECTED_TOKEN_EXPIRES_IN}`);
+		expect(logger.error).toHaveBeenCalledWith(`expires_in doesn't match the expected value, received 15400 instead of ${Constants.HMRC_EXPECTED_TOKEN_EXPIRES_IN}`);
 	});
 
 	it("sucessfully generates the token and stores it to SSM parameter", async () => {

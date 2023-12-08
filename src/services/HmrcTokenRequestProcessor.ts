@@ -18,10 +18,16 @@ export class HmrcTokenRequestProcessor {
 
 	private readonly hmrcService: HmrcService;
 
+	private readonly hmrcTokenMaxRetries: number;
+
+	private readonly hmrcTokenBackoffPeriodMs: number;
+
 	constructor(logger: Logger, metrics: Metrics, HMRC_CLIENT_ID: string, HMRC_CLIENT_SECRET: string) {
 		this.logger = logger;
 		this.metrics = metrics;
 		this.hmrcBaseUrl = checkEnvironmentVariable(EnvironmentVariables.HMRC_BASE_URL, logger);
+		this.hmrcTokenMaxRetries = +checkEnvironmentVariable(EnvironmentVariables.HMRC_TOKEN_MAX_RETRIES, logger);
+		this.hmrcTokenBackoffPeriodMs = +checkEnvironmentVariable(EnvironmentVariables.HMRC_TOKEN_BACKOFF_PERIOD_MS, logger);
 		this.hmrcService = HmrcService.getInstance(this.logger, this.hmrcBaseUrl, HMRC_CLIENT_ID, HMRC_CLIENT_SECRET);
 	}
 
@@ -35,7 +41,7 @@ export class HmrcTokenRequestProcessor {
 	async processRequest(): Promise<void> {		
 		this.logger.info("Generating a new hmrc access token ");
 		try {
-			const data = await this.hmrcService.generateToken();
+			const data = await this.hmrcService.generateToken(this.hmrcTokenBackoffPeriodMs, this.hmrcTokenMaxRetries);
 			
 			if (!data) {
 				throw new AppError(HttpCodesEnum.SERVER_ERROR, "Failed generating hmrc access token");
@@ -43,7 +49,7 @@ export class HmrcTokenRequestProcessor {
 
 			// Validating expires_in 
 			if (data.expires_in !== Constants.HMRC_EXPECTED_TOKEN_EXPIRES_IN) {
-				this.logger.error(`expires_in doesnt match the expected value, received ${data.expires_in} instead of ${Constants.HMRC_EXPECTED_TOKEN_EXPIRES_IN}`);
+				this.logger.error(`expires_in doesn't match the expected value, received ${data.expires_in} instead of ${Constants.HMRC_EXPECTED_TOKEN_EXPIRES_IN}`);
 			}
 
 			this.logger.info("Storing the HMRC access token to SSM");
