@@ -8,7 +8,9 @@ import {
 	userInfoPost,
 	verifyAccountPost,
 	tokenPost,
+	getSessionAndVerifyKey,
 } from "../utils/ApiTestSteps";
+import { constants } from "../utils/ApiConstants";
 
 describe("BAV CRI: /session Endpoint Unhappy Path Tests", () => {
 	let stubResponse: any;
@@ -30,6 +32,40 @@ describe("BAV CRI: /session Endpoint Unhappy Path Tests", () => {
 
 		expect(sessionResponse.status).toBe(400);
 		expect(sessionResponse.data).toBe("Bad Request");
+	});
+});
+
+describe("BAV CRI: /verify-account Endpoint Unhappy Path Tests", () => {
+	let sessionId: string;
+
+	it("HMRC Multiple Retries Test - Error Code 5XX", async () => {
+		bavStubPayload.shared_claims.name[0].nameParts[0].value = "Evan";
+		bavStubPayload.shared_claims.name[0].nameParts[1].value = "Erickson";
+
+		// Session Request
+		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+
+		// Verify-account request
+		const verifyAccountResponse = await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		expect(verifyAccountResponse.status).toBe(500);
+
+		// Make sure authSession state is NOT BAV_DATA_RECEIVED
+		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_SESSION_CREATED");
+	});
+
+	it("HMRC Multiple Retries Test - Error Code 429", async () => {
+		bavStubPayload.shared_claims.name[0].nameParts[0].value = "Evan Tom Mark";
+		bavStubPayload.shared_claims.name[0].nameParts[1].value = "Erickson";
+
+		// Session Request
+		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+
+		// Verify-account request
+		const verifyAccountResponse = await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		expect(verifyAccountResponse.status).toBe(500);
+
+		// Make sure authSession state is NOT BAV_DATA_RECEIVED
+		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_SESSION_CREATED");
 	});
 });
 
