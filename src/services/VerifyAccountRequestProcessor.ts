@@ -35,14 +35,16 @@ export class VerifyAccountRequestProcessor {
   	this.metrics = metrics;
   	logger.debug("metrics is  " + JSON.stringify(this.metrics));
   	this.metrics.addMetric("Called", MetricUnits.Count, 1);
-
-  	const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, this.logger);
   	this.personIdentityTableName = checkEnvironmentVariable(EnvironmentVariables.PERSON_IDENTITY_TABLE_NAME, this.logger);
-  	const hmrcBaseUrl = checkEnvironmentVariable(EnvironmentVariables.HMRC_BASE_URL, this.logger);
   	this.hmrcToken = HMRC_TOKEN;
 
+  	const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, this.logger);
+  	const hmrcBaseUrl = checkEnvironmentVariable(EnvironmentVariables.HMRC_BASE_URL, this.logger);
+		const maxRetries = +checkEnvironmentVariable(EnvironmentVariables.HMRC_MAX_RETRIES, logger);
+		const hmrcBackoffPeriodMs = +checkEnvironmentVariable(EnvironmentVariables.HMRC_TOKEN_BACKOFF_PERIOD_MS, logger);
+
   	this.BavService = BavService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
-  	this.HmrcService = HmrcService.getInstance(this.logger, hmrcBaseUrl);
+  	this.HmrcService = HmrcService.getInstance(this.logger, hmrcBaseUrl, hmrcBackoffPeriodMs, maxRetries);
 	}
 
 	static getInstance(logger: Logger, metrics: Metrics, HMRC_TOKEN: string): VerifyAccountRequestProcessor {
@@ -78,6 +80,11 @@ export class VerifyAccountRequestProcessor {
 
   	const name = getFullName(person.name);
   	const verifyResponse = await this.HmrcService.verify({ accountNumber: paddedAccountNumber, sortCode, name }, this.hmrcToken);
+
+		if (!verifyResponse) {
+			this.logger.error("No verify reponse recieved", { messageCode: MessageCodes.NO_VERIFY_RESPONSE });
+			return new Response(HttpCodesEnum.SERVER_ERROR, "Could not verify account");
+		}
 
   	const copCheckResult = this.calculateCopCheckResult(verifyResponse);
   	this.logger.debug(`copCheckResult is ${copCheckResult}`);

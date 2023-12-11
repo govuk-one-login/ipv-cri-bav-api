@@ -14,21 +14,22 @@ export class HmrcTokenRequestProcessor {
 
 	private readonly metrics: Metrics;
 
-	private readonly hmrcBaseUrl: string;
-
 	private readonly hmrcService: HmrcService;
 
-	private readonly hmrcTokenMaxRetries: number;
+	private readonly hmrcClientId: string;
 
-	private readonly hmrcTokenBackoffPeriodMs: number;
+	private readonly hmrcClientSecret: string;
 
 	constructor(logger: Logger, metrics: Metrics, HMRC_CLIENT_ID: string, HMRC_CLIENT_SECRET: string) {
 		this.logger = logger;
 		this.metrics = metrics;
-		this.hmrcBaseUrl = checkEnvironmentVariable(EnvironmentVariables.HMRC_BASE_URL, logger);
-		this.hmrcTokenMaxRetries = +checkEnvironmentVariable(EnvironmentVariables.HMRC_TOKEN_MAX_RETRIES, logger);
-		this.hmrcTokenBackoffPeriodMs = +checkEnvironmentVariable(EnvironmentVariables.HMRC_TOKEN_BACKOFF_PERIOD_MS, logger);
-		this.hmrcService = HmrcService.getInstance(this.logger, this.hmrcBaseUrl, HMRC_CLIENT_ID, HMRC_CLIENT_SECRET);
+		this.hmrcClientId = HMRC_CLIENT_ID;
+		this.hmrcClientSecret = HMRC_CLIENT_SECRET;
+
+		const hmrcBaseUrl = checkEnvironmentVariable(EnvironmentVariables.HMRC_BASE_URL, logger);
+		const maxRetries = +checkEnvironmentVariable(EnvironmentVariables.HMRC_MAX_RETRIES, logger);
+		const hmrcBackoffPeriodMs = +checkEnvironmentVariable(EnvironmentVariables.HMRC_TOKEN_BACKOFF_PERIOD_MS, logger);
+		this.hmrcService = HmrcService.getInstance(this.logger, hmrcBaseUrl, hmrcBackoffPeriodMs, maxRetries);
 	}
 
 	static getInstance(logger: Logger, metrics: Metrics, HMRC_CLIENT_ID: string, HMRC_CLIENT_SECRET: string): HmrcTokenRequestProcessor {
@@ -41,7 +42,7 @@ export class HmrcTokenRequestProcessor {
 	async processRequest(): Promise<void> {		
 		this.logger.info("Generating a new hmrc access token ");
 		try {
-			const data = await this.hmrcService.generateToken(this.hmrcTokenBackoffPeriodMs, this.hmrcTokenMaxRetries);
+			const data = await this.hmrcService.generateToken(this.hmrcClientSecret, this.hmrcClientId);
 			
 			if (!data) {
 				throw new AppError(HttpCodesEnum.SERVER_ERROR, "Failed generating hmrc access token");
