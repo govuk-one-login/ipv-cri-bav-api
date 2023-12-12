@@ -171,4 +171,47 @@ describe("Infra", () => {
 			},
 		);
 	});
+
+	describe("KMS", () => {
+		it("Each KMS Key should have an associated alias", () => {
+			const kmsKeys = template.findResources("AWS::KMS::Key");
+			const kmsKeyList = Object.keys(kmsKeys);
+			kmsKeyList.forEach((kmsKey) => {
+				template.hasResourceProperties("AWS::KMS::Alias", {
+					TargetKeyId: {
+						"Ref": kmsKey,
+					},
+				});
+			});
+		});
+	});
+
+	describe("S3", () => {
+		it("All S3 buckets should have public access blocked", () => {
+			const buckets = template.findResources("AWS::S3::Bucket");
+			const bucketList = Object.keys(buckets);
+			bucketList.forEach((bucket) => {
+				expect(buckets[bucket].Properties.PublicAccessBlockConfiguration).toEqual(expect.objectContaining({
+					BlockPublicAcls: true,
+					BlockPublicPolicy: true,
+					IgnorePublicAcls: true,
+					RestrictPublicBuckets: true,
+				}));
+			});
+		});
+
+		it("All S3 buckets should be encrypted", () => {
+			const buckets = template.findResources("AWS::S3::Bucket");
+			const bucketList = Object.keys(buckets);
+			bucketList.forEach((bucket) => {
+				expect(buckets[bucket].Properties.BucketEncryption.ServerSideEncryptionConfiguration).toEqual(expect.arrayContaining([
+					expect.objectContaining({
+						ServerSideEncryptionByDefault: expect.objectContaining({
+							SSEAlgorithm: expect.any(String),
+						}),
+					})
+				]));
+			});
+		});
+	});
 });
