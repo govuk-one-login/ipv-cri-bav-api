@@ -32,7 +32,7 @@ export class AbortHandler implements LambdaInterface {
 			logger.info("Starting AbortRequestProcessor");
 			return await AbortRequestProcessor.getInstance(logger, metrics).processRequest(sessionId);
 		} catch (error: any) {
-			logger.error({ message: "AbortRequestProcessor encoundered an error.", error, messageCode: MessageCodes.SERVER_ERROR });
+			logger.error({ message: "AbortRequestProcessor encountered an error.", error, messageCode: MessageCodes.SERVER_ERROR });
 			if (error instanceof AppError) {
 				return new Response(error.statusCode, error.message);
 			}

@@ -39,7 +39,7 @@ export class PersonInfoHandler implements LambdaInterface {
 			logger.info("Starting PersonInfoRequestProcessor");
 			return await PersonInfoRequestProcessor.getInstance(logger, metrics, PUBLIC_KEY).processRequest(sessionId);
 		} catch (error: any) {
-			logger.error({ message: "PersonInfoRequestProcessor encoundered an error.", error, messageCode: MessageCodes.SERVER_ERROR });
+			logger.error({ message: "PersonInfoRequestProcessor encountered an error.", error, messageCode: MessageCodes.SERVER_ERROR });
 			if (error instanceof AppError) {
 				return new Response(error.statusCode, error.message);
 			}
