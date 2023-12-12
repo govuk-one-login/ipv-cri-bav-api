@@ -1,4 +1,5 @@
 import bavStubPayload from "../data/exampleStubPayload.json";
+import bavStubPayloadBlankNameParts from "../data/exampleStubPayloadBlankNameParts.json";
 import verifyAccountYesPayload from "../data/bankDetailsYes.json";
 import {
 	authorizationGet,
@@ -39,11 +40,11 @@ describe("BAV CRI: /verify-account Endpoint Unhappy Path Tests", () => {
 	let sessionId: string;
 
 	it("HMRC Multiple Retries Test - Error Code 5XX", async () => {
-		bavStubPayload.shared_claims.name[0].nameParts[0].value = "Evan";
-		bavStubPayload.shared_claims.name[0].nameParts[1].value = "Erickson";
+		bavStubPayloadBlankNameParts.shared_claims.name[0].nameParts[0].value = "Evan";
+		bavStubPayloadBlankNameParts.shared_claims.name[0].nameParts[1].value = "Erickson";
 
 		// Session Request
-		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+		sessionId = await startStubServiceAndReturnSessionId(bavStubPayloadBlankNameParts);
 
 		// Verify-account request
 		const verifyAccountResponse = await verifyAccountPost(verifyAccountYesPayload, sessionId);
@@ -54,11 +55,11 @@ describe("BAV CRI: /verify-account Endpoint Unhappy Path Tests", () => {
 	});
 
 	it("HMRC Multiple Retries Test - Error Code 429", async () => {
-		bavStubPayload.shared_claims.name[0].nameParts[0].value = "Evan Tom Mark";
-		bavStubPayload.shared_claims.name[0].nameParts[1].value = "Erickson";
+		bavStubPayloadBlankNameParts.shared_claims.name[0].nameParts[0].value = "Evan Tom Mark";
+		bavStubPayloadBlankNameParts.shared_claims.name[0].nameParts[1].value = "Erickson";
 
 		// Session Request
-		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+		sessionId = await startStubServiceAndReturnSessionId(bavStubPayloadBlankNameParts);
 
 		// Verify-account request
 		const verifyAccountResponse = await verifyAccountPost(verifyAccountYesPayload, sessionId);

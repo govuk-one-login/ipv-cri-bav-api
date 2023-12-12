@@ -1,0 +1,18 @@
+{
+    "shared_claims": {
+        "name": [
+            {
+                "nameParts": [
+                    {
+                        "value": "",
+                        "type": "GivenName"
+                    },
+                    {
+                        "value": "",
+                        "type": "FamilyName"
+                    }
+                ]
+            }
+        ]
+    }
+}
