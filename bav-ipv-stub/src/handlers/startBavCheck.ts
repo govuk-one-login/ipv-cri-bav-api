@@ -29,15 +29,11 @@ export const handler = async (
       {
         nameParts: [
           {
-            value: "Frederick",
+            value: "Yasmine",
             type: "GivenName",
           },
           {
-            value: "Joseph",
-            type: "GivenName",
-          },
-          {
-            value: "Flintstone",
+            value: "Young",
             type: "FamilyName",
           },
         ],
