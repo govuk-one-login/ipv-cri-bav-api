@@ -1183,24 +1183,8 @@ components:
             # The service is shut down for operational reasons
             - OAUTH_NOT_ENABLED
       PersonInfoResponse:
-        type: object
-        required:
-          - full_name
-        additionalProperties: true
-        properties:
-          # TODO is the value encrypted or is the whole response encrypted?
-          full_name:
-            type: string
-            description: Encrypted name
-            example: "Jane Doe"
-      PersonInfoKeyResponse:
-        required:
-          - "key"
-        type: "object"
-        properties:
-          key:
-            type: "string"
-            example: "MIIBOwIBAAJBA"
+        type: string
+        description: encrypted string containing person info
   parameters:
     SessionHeader:
       name: session-id
