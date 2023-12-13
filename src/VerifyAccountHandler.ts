@@ -33,7 +33,6 @@ export class VerifyAccountHandler implements LambdaInterface {
 		logger.addContext(context);
 
 		try {
-			console.log('SAVING_PARTIAL_NAME_DATA', process.env.SAVING_PARTIAL_NAME_DATA);
 			const { sessionId, body } = this.validateEvent(event);
 			const hmrcTokenSsmPath = checkEnvironmentVariable(EnvironmentVariables.HMRC_TOKEN_SSM_PATH, logger);
     	HMRC_TOKEN = await getParameter(hmrcTokenSsmPath);

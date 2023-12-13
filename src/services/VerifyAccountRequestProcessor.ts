@@ -14,6 +14,8 @@ import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 import { getFullName } from "../utils/PersonIdentityUtils";
 import { Response } from "../utils/Response";
 import { VerifyAccountPayload } from "../type/VerifyAccountPayload";
+import { absoluteTimeNow } from "../utils/DateTimeUtils";
+import { PartialNameSQSRecord } from "../type/partialNameSQSRecord";
 
 export class VerifyAccountRequestProcessor {
   private static instance: VerifyAccountRequestProcessor;
@@ -30,12 +32,15 @@ export class VerifyAccountRequestProcessor {
 
 	private readonly hmrcToken: string;
 
+	private readonly partialNameQueueUrl: string;
+
 	constructor(logger: Logger, metrics: Metrics, HMRC_TOKEN: string) {
   	this.logger = logger;
   	this.metrics = metrics;
   	logger.debug("metrics is  " + JSON.stringify(this.metrics));
   	this.metrics.addMetric("Called", MetricUnits.Count, 1);
   	this.personIdentityTableName = checkEnvironmentVariable(EnvironmentVariables.PERSON_IDENTITY_TABLE_NAME, this.logger);
+		this.partialNameQueueUrl = checkEnvironmentVariable(EnvironmentVariables.PARTIAL_NAME_QUEUE_URL, logger);
   	this.hmrcToken = HMRC_TOKEN;
 
   	const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, this.logger);
@@ -78,23 +83,37 @@ export class VerifyAccountRequestProcessor {
 
   	await this.BavService.updateAccountDetails(sessionId, paddedAccountNumber, sortCode, this.personIdentityTableName);
 
-  	const name = getFullName(person.name);
-  	const verifyResponse = await this.HmrcService.verify({ accountNumber: paddedAccountNumber, sortCode, name }, this.hmrcToken);
+  	const cicName = getFullName(person.name);
+		const timeOfRequest = absoluteTimeNow();
+  	const verifyResponse = await this.HmrcService.verify({ accountNumber: paddedAccountNumber, sortCode, name: cicName }, this.hmrcToken);
 
 		if (!verifyResponse) {
 			this.logger.error("No verify reponse recieved", { messageCode: MessageCodes.NO_VERIFY_RESPONSE });
 			return new Response(HttpCodesEnum.SERVER_ERROR, "Could not verify account");
 		}
 
-  	const copCheckResult = this.calculateCopCheckResult(verifyResponse);
+  	const copCheckResult = await this.calculateCopCheckResult(verifyResponse, timeOfRequest, cicName);
   	this.logger.debug(`copCheckResult is ${copCheckResult}`);
 
-  	await this.BavService.saveCopCheckResult(sessionId, copCheckResult);
+  	this.BavService.saveCopCheckResult(sessionId, copCheckResult);
+
+		if (copCheckResult === CopCheckResults.PARTIAL_MATCH) {
+			const partialNameRecord: PartialNameSQSRecord = {
+				itemNumber: "hmrcUuid", //TODO: Get hmrcUuid from hmrcUuid PR
+				timeStamp: timeOfRequest,
+				cicName: cicName,
+				accountName: verifyResponse.accountName,
+				accountExists: verifyResponse.accountExists,
+				nameMatches: verifyResponse.nameMatches
+			}
+			
+			await this.BavService.savePartialNameInfo(this.partialNameQueueUrl, partialNameRecord)
+		}
 
   	return new Response(HttpCodesEnum.OK, "Success");
 	}
 
-	calculateCopCheckResult(verifyResponse: HmrcVerifyResponse): CopCheckResult {
+	calculateCopCheckResult(verifyResponse: HmrcVerifyResponse, timeOfRequest: number, cicName: string): CopCheckResult {
   	if (verifyResponse.nameMatches ===  "yes" && verifyResponse.accountExists === "yes") {
   		return CopCheckResults.FULL_MATCH;
   	} else if (verifyResponse.nameMatches ===  "partial" && verifyResponse.accountExists === "yes") {
