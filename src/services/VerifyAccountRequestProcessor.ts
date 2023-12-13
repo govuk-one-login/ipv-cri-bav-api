@@ -1,5 +1,7 @@
+/* eslint-disable max-lines-per-function */
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
+import { randomUUID } from "crypto";
 import { BavService } from "./BavService";
 import { HmrcService } from "./HmrcService";
 import { CopCheckResults } from "../models/enums/Hmrc";
@@ -76,10 +78,22 @@ export class VerifyAccountRequestProcessor {
 
 		this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
 
-  	await this.BavService.updateAccountDetails(sessionId, paddedAccountNumber, sortCode, this.personIdentityTableName);
+		let { hmrcUuid } = session;
+		if (!hmrcUuid) {
+			hmrcUuid = randomUUID();
+			await this.BavService.saveHmrcUuid(sessionId, hmrcUuid);
+		}
+
+  	await this.BavService.updateAccountDetails(
+			{ sessionId, accountNumber: paddedAccountNumber, sortCode },
+			this.personIdentityTableName,
+		);
 
   	const name = getFullName(person.name);
-  	const verifyResponse = await this.HmrcService.verify({ accountNumber: paddedAccountNumber, sortCode, name }, this.hmrcToken);
+  	const verifyResponse = await this.HmrcService.verify(
+			{ accountNumber: paddedAccountNumber, sortCode, name, uuid: hmrcUuid },
+			this.hmrcToken,
+		);
 
 		if (!verifyResponse) {
 			this.logger.error("No verify reponse recieved", { messageCode: MessageCodes.NO_VERIFY_RESPONSE });

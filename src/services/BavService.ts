@@ -218,7 +218,10 @@ export class BavService {
 		}
 	}
 
-	async updateAccountDetails(sessionId: string, accountNumber: string, sortCode: string, tableName = this.tableName): Promise<void> {
+	async updateAccountDetails(
+		{ sessionId, accountNumber, sortCode }: { sessionId: string; accountNumber: string; sortCode: string },
+		tableName = this.tableName,
+	): Promise<void> {
 		this.logger.info({ message: `Updating ${tableName} with account details` });
 
 		const updateStateCommand = new UpdateCommand({
@@ -241,7 +244,7 @@ export class BavService {
 	}
 
 	async saveCopCheckResult(sessionId: string, copCheckResult: CopCheckResult): Promise<void> {
-		this.logger.info({ message: "Saving session table with copCheckResult", copCheckResult });
+		this.logger.info({ message: `Updating ${this.tableName} table with copCheckResult`, copCheckResult });
 
 		const updateStateCommand = new UpdateCommand({
 			TableName: this.tableName,
@@ -258,7 +261,28 @@ export class BavService {
 			this.logger.info({ message: "Saved copCheckResult in dynamodb" });
 		} catch (error) {
 			this.logger.error({ message: "Got error saving copCheckResult", messageCode: MessageCodes.FAILED_UPDATING_SESSION, error });
-			throw new AppError(HttpCodesEnum.SERVER_ERROR, "setCopCheckResult failed: got error saving copCheckResult");
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "saveCopCheckResult failed: got error saving copCheckResult");
+		}
+	}
+
+	async saveHmrcUuid(sessionId: string, hmrcUuid: string): Promise<void> {
+		this.logger.info({ message: `Updating ${this.tableName} table with hmrcUuid`, hmrcUuid });
+
+		const updateStateCommand = new UpdateCommand({
+			TableName: this.tableName,
+			Key: { sessionId },
+			UpdateExpression: "SET hmrcUuid = :hmrcUuid",
+			ExpressionAttributeValues: {
+				":hmrcUuid": hmrcUuid,
+			},
+		});
+
+		try {
+			await this.dynamo.send(updateStateCommand);
+			this.logger.info({ message: "Saved hmrcUuid in dynamodb" });
+		} catch (error) {
+			this.logger.error({ message: "Got error saving hmrcUuid", messageCode: MessageCodes.FAILED_UPDATING_SESSION, error });
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "saveHmrcUuid failed: got error saving hmrcUuid");
 		}
 	}
 

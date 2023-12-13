@@ -13,6 +13,11 @@ import { BavService } from "../../../services/BavService";
 import { VerifyAccountRequestProcessor } from "../../../services/VerifyAccountRequestProcessor";
 import { HmrcService } from "../../../services/HmrcService";
 
+const hmrcUuid = "new hmrcUuid";
+jest.mock("crypto", () => ({
+	...jest.requireActual("crypto"),
+	randomUUID: () => hmrcUuid,
+}));
 const mockBavService = mock<BavService>();
 const mockHmrcService = mock<HmrcService>();
 const logger = mock<Logger>();
@@ -80,18 +85,27 @@ describe("VerifyAccountRequestProcessor", () => {
 			});
 		});
 
+		it("generates and saves hmrcUuid if one doesn't exist", async () => {
+			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
+			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, hmrcUuid: undefined });
+			mockHmrcService.verify.mockResolvedValueOnce(hmrcVerifyResponse);
+
+			await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
+
+			expect(mockBavService.saveHmrcUuid).toHaveBeenCalledWith(sessionId, hmrcUuid);
+		});
+
 		it("saves account details to person identity table", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
-			mockBavService.getSessionById.mockResolvedValueOnce(session);
+			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, hmrcUuid: "HMRC_UUID" });
 			mockHmrcService.verify.mockResolvedValueOnce(hmrcVerifyResponse);
 
 			await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
 
 			expect(logger.appendKeys).toHaveBeenCalledWith({ govuk_signin_journey_id: session.clientSessionId });
+			expect(mockBavService.saveHmrcUuid).not.toHaveBeenCalled();
 			expect(mockBavService.updateAccountDetails).toHaveBeenCalledWith(
-				sessionId,
-				body.account_number,
-				body.sort_code,
+				{	sessionId, accountNumber: body.account_number, sortCode: body.sort_code },
 				process.env.PERSON_IDENTITY_TABLE_NAME,
 			);
 		});
@@ -103,7 +117,7 @@ describe("VerifyAccountRequestProcessor", () => {
 
 			await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
 
-			expect(mockHmrcService.verify).toHaveBeenCalledWith({ accountNumber: body.account_number, sortCode: body.sort_code, name: "Frederick Joseph Flintstone" }, TOKEN_SSM_PARAM );
+			expect(mockHmrcService.verify).toHaveBeenCalledWith({ accountNumber: body.account_number, sortCode: body.sort_code, name: "Frederick Joseph Flintstone", uuid: hmrcUuid }, TOKEN_SSM_PARAM );
 		});
 
 		it("pads account number if it's too short", async () => {
@@ -113,12 +127,10 @@ describe("VerifyAccountRequestProcessor", () => {
 
 			await verifyAccountRequestProcessorTest.processRequest(sessionId, { ...body, account_number: "123456" });
 			expect(mockBavService.updateAccountDetails).toHaveBeenCalledWith(
-				sessionId,
-				"00123456",
-				body.sort_code,
+				{ sessionId, accountNumber: "00123456", sortCode: body.sort_code },
 				process.env.PERSON_IDENTITY_TABLE_NAME,
 			);
-			expect(mockHmrcService.verify).toHaveBeenCalledWith({ accountNumber: "00123456", sortCode: body.sort_code, name: "Frederick Joseph Flintstone" }, TOKEN_SSM_PARAM );
+			expect(mockHmrcService.verify).toHaveBeenCalledWith({ accountNumber: "00123456", sortCode: body.sort_code, name: "Frederick Joseph Flintstone", uuid: hmrcUuid }, TOKEN_SSM_PARAM );
 		});
 
 		it("saves saveCopCheckResult and returns success where there has been a match", async () => {

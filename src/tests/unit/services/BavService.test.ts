@@ -268,7 +268,7 @@ describe("BAV Service", () => {
 		it("saves account information to dynamo", async () => {
 			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
 
-			await bavService.updateAccountDetails(sessionId, accountNumber, sortCode);
+			await bavService.updateAccountDetails({ sessionId, accountNumber, sortCode });
 
 			expect(UpdateCommand).toHaveBeenCalledWith({
 				TableName: tableName,
@@ -284,10 +284,11 @@ describe("BAV Service", () => {
 		it("returns an error when account information cannot be saved to dynamo", async () => {
 			mockDynamoDbClient.send = jest.fn().mockRejectedValueOnce("Error!");
 
-			await expect(bavService.updateAccountDetails(sessionId, accountNumber, sortCode)).rejects.toThrow(expect.objectContaining({
-				statusCode: HttpCodesEnum.SERVER_ERROR,
-				message: "Error updating record",
-			}));
+			await expect(bavService.updateAccountDetails({ sessionId, accountNumber, sortCode }))
+				.rejects.toThrow(expect.objectContaining({
+					statusCode: HttpCodesEnum.SERVER_ERROR,
+					message: "Error updating record",
+				}));
 			expect(logger.error).toHaveBeenCalledWith({ message: "Error updating record with account details", messageCode: MessageCodes.FAILED_UPDATING_PERSON_IDENTITY, error: "Error!" });
 		});
 	});
@@ -316,9 +317,38 @@ describe("BAV Service", () => {
 
 			await expect(bavService.saveCopCheckResult(sessionId, copCheckResult)).rejects.toThrow(expect.objectContaining({
 				statusCode: HttpCodesEnum.SERVER_ERROR,
-				message: "setCopCheckResult failed: got error saving copCheckResult",
+				message: "saveCopCheckResult failed: got error saving copCheckResult",
 			}));
 			expect(logger.error).toHaveBeenCalledWith({ message: "Got error saving copCheckResult", messageCode: MessageCodes.FAILED_UPDATING_SESSION, error: "Error!" });
+		});
+	});
+
+	describe("#saveHmrcUuid", () => {
+		const hmrcUuid = "hmrcUuid";
+
+		it("saves account information to dynamo", async () => {
+			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+
+			await bavService.saveHmrcUuid(sessionId, hmrcUuid);
+
+			expect(UpdateCommand).toHaveBeenCalledWith({
+				TableName: tableName,
+				Key: { sessionId },
+				UpdateExpression: "SET hmrcUuid = :hmrcUuid",
+				ExpressionAttributeValues: {
+					":hmrcUuid": hmrcUuid,
+				},
+			});
+		});
+
+		it("returns an error when account information cannot be saved to dynamo", async () => {
+			mockDynamoDbClient.send = jest.fn().mockRejectedValueOnce("Error!");
+
+			await expect(bavService.saveHmrcUuid(sessionId, hmrcUuid)).rejects.toThrow(expect.objectContaining({
+				statusCode: HttpCodesEnum.SERVER_ERROR,
+				message: "saveHmrcUuid failed: got error saving hmrcUuid",
+			}));
+			expect(logger.error).toHaveBeenCalledWith({ message: "Got error saving hmrcUuid", messageCode: MessageCodes.FAILED_UPDATING_SESSION, error: "Error!" });
 		});
 	});
 

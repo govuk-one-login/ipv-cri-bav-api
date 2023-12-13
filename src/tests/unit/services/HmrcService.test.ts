@@ -33,15 +33,16 @@ describe("HMRC Service", () => {
 		const accountNumber = "12345678";
 		const sortCode = "123456";
 		const name = "Test Testing";
+		const uuid = "uuid";
 		const hmrcTokenSsmPath = "dev/HMRC/TOKEN";
 
 		it("calls HMRC verify endpoint with correct params and headers", async () => {
 			const endpoint = `${hmrcServiceTest.hmrcBaseUrl}/${Constants.HMRC_VERIFY_ENDPOINT_PATH}`;
 			jest.spyOn(axios, "post").mockResolvedValueOnce({ data: hmrcVerifyResponse });
 
-			const response = await hmrcServiceTest.verify({ accountNumber, sortCode, name }, hmrcTokenSsmPath);
+			const response = await hmrcServiceTest.verify({ accountNumber, sortCode, name, uuid }, hmrcTokenSsmPath);
 
-			expect(logger.info).toHaveBeenCalledWith("Sending COP verify request to HMRC", { endpoint, retryCount: 0 });
+			expect(logger.info).toHaveBeenCalledWith("Sending COP verify request to HMRC", { uuid, endpoint, retryCount: 0 });
 			expect(axios.post).toHaveBeenCalledWith(
 				endpoint,
 				{
@@ -52,6 +53,7 @@ describe("HMRC Service", () => {
 					headers: {
 						"User-Agent": Constants.HMRC_USER_AGENT,
 						"Authorization": "Bearer dev/HMRC/TOKEN",
+						"X-Tracking-Id": uuid,
 					},
 				},
 			);
@@ -77,11 +79,11 @@ describe("HMRC Service", () => {
 			};
 			jest.spyOn(axios, "post").mockRejectedValue(error);
 
-			await expect(hmrcServiceTest.verify({ accountNumber, sortCode, name }, hmrcTokenSsmPath)).rejects.toThrow(
+			await expect(hmrcServiceTest.verify({ accountNumber, sortCode, name, uuid }, hmrcTokenSsmPath)).rejects.toThrow(
 				new AppError(HttpCodesEnum.SERVER_ERROR, "Error sending COP verify request to HMRC"),
 			);
 			expect(logger.error).toHaveBeenCalledWith(
-				{ message: "Error sending COP verify request to HMRC", messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT },
+				{ message: "Error sending COP verify request to HMRC", messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT, statusCode: 500 },
 			);
 			expect(axios.post).toHaveBeenCalledTimes(4);
 			expect(axios.post).toHaveBeenCalledWith(
@@ -94,6 +96,7 @@ describe("HMRC Service", () => {
 					headers: {
 						"User-Agent": Constants.HMRC_USER_AGENT,
 						"Authorization": "Bearer dev/HMRC/TOKEN",
+						"X-Tracking-Id": uuid,
 					},
 				},
 			);
@@ -111,11 +114,11 @@ describe("HMRC Service", () => {
 			};
 			jest.spyOn(axios, "post").mockRejectedValue(error);
 
-			await expect(hmrcServiceTest.verify({ accountNumber, sortCode, name }, hmrcTokenSsmPath)).rejects.toThrow(
+			await expect(hmrcServiceTest.verify({ accountNumber, sortCode, name, uuid }, hmrcTokenSsmPath)).rejects.toThrow(
 				new AppError(HttpCodesEnum.SERVER_ERROR, "Error sending COP verify request to HMRC"),
 			);
 			expect(logger.error).toHaveBeenCalledWith(
-				{ message: "Error sending COP verify request to HMRC", messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT },
+				{ message: "Error sending COP verify request to HMRC", messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT, statusCode: 429 },
 			);
 			expect(axios.post).toHaveBeenCalledTimes(4);
 			expect(axios.post).toHaveBeenCalledWith(
@@ -128,6 +131,7 @@ describe("HMRC Service", () => {
 					headers: {
 						"User-Agent": Constants.HMRC_USER_AGENT,
 						"Authorization": "Bearer dev/HMRC/TOKEN",
+						"X-Tracking-Id": uuid,
 					},
 				},
 			);
@@ -145,12 +149,12 @@ describe("HMRC Service", () => {
 			jest.spyOn(axios, "post").mockRejectedValueOnce(error);
 
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-			await expect(hmrcServiceTest.verify({ accountNumber, sortCode, name }, hmrcTokenSsmPath))
+			await expect(hmrcServiceTest.verify({ accountNumber, sortCode, name, uuid }, hmrcTokenSsmPath))
 				.rejects.toThrow(expect.objectContaining({
 					statusCode: HttpCodesEnum.SERVER_ERROR,
 					message: "Error sending COP verify request to HMRC",
 				}));
-			expect(logger.error).toHaveBeenCalledWith({ message: "Error sending COP verify request to HMRC", messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT });
+			expect(logger.error).toHaveBeenCalledWith({ message: "Error sending COP verify request to HMRC", messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT, statusCode: 400 });
 			expect(axios.post).toHaveBeenCalledTimes(1);
 		});
 	});
