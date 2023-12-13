@@ -63,7 +63,7 @@ export class PersonInfoRequestProcessor {
   	});
 
   	const name = getFullName(person.name);
-		const encryptedResponseValue = this.encryptResponse({ name });
+  	const encryptedResponseValue = this.encryptResponse({ name });
 
   	return new Response(HttpCodesEnum.OK, encryptedResponseValue);
 	}
