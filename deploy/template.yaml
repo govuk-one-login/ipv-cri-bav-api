@@ -339,6 +339,23 @@ Resources:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
 
+  PartialNamesBucket:
+    Type: "AWS::S3::Bucket"
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: !Sub ${AWS::StackName}-partial-names-bav-${Environment}
+      VersioningConfiguration:
+        Status: "Enabled"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
   JWKSBucketRole:
     Type: "AWS::IAM::Role"
     Properties:
@@ -1381,6 +1398,10 @@ Resources:
         - KMSDecryptPolicy:
             KeyId:
               Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-key-id"
+        - S3WritePolicy:
+            BucketName: !Ref PartialNamesBucket
+        - S3ReadPolicy:
+            BucketName: !Ref PartialNamesBucket
         - Statement:
             - Sid: KMSPolicy
               Effect: Allow
