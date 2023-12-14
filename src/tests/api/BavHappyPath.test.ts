@@ -66,6 +66,9 @@ describe("BAV CRI: /verify-account Endpoint Happy Path Tests", () => {
 		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_PERSONAL_IDENTITY_TABLE_NAME, "sortCode", verifyAccountYesPayload.sort_code);
 	});
 
+});
+
+describe("BAV CRI: /verify-account Retry Happy Path Tests", () => {
 	it.each([
 		["Ashley", "Allen"],
 		["Deborah", "Dawson"],
@@ -73,8 +76,8 @@ describe("BAV CRI: /verify-account Endpoint Happy Path Tests", () => {
 		["Yasmine", "Dawson"],
 		["Yasmine", "Newton"],
 		["Yasmine", "Palmer"],
-	])("Name Retry Tests - First Retry", async (firstName: string, lastName: any) => {
-		const newBavStubPayload = structuredClone(bavStubPayload); 
+	])("Name Retry Tests", async (firstName: string, lastName: any) => {
+		const newBavStubPayload = structuredClone(bavStubPayload);
 		newBavStubPayload.shared_claims.name[0].nameParts[0].value = firstName;
 		newBavStubPayload.shared_claims.name[0].nameParts[1].value = lastName;
 
@@ -93,6 +96,7 @@ describe("BAV CRI: /verify-account Endpoint Happy Path Tests", () => {
 		expect(verifyAccountResponseRetry.data.retryCount).toBe(2);
 	});
 });
+
 
 describe("BAV CRI: /authorization Endpoint Happy Path Tests", () => {
 	let sessionId: string;
