@@ -1688,6 +1688,15 @@ Resources:
         - alias/PartialNameMatchEncryptionKey
       TargetKeyId: !Ref PartialNameMatchEncryptionKey
 
+## Partial Names Athena and Glue resources
+  PartialNameMatchGlueDatabase:
+    Type: AWS::Glue::Database
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseInput:
+        Description: !Sub "PartialNames-${AWS::StackName}"
+        Name: !Sub "partialnames-${AWS::StackName}"
+
   JsonWebKeysFunction:
     Type: AWS::Serverless::Function
     DependsOn:
