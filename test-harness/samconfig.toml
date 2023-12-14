@@ -2,10 +2,10 @@ version = 0.1
 [dev]
 [dev.deploy]
 [dev.deploy.parameters]
-stack_name = "bav-test-harness"
+stack_name = "bav-test-harness-ddunford"
 s3_prefix = "bav-test-harness"
 region = "eu-west-2"
 confirm_changeset = false
 capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM"
-parameter_overrides = "CodeSigningConfigArn=\"none\" Environment=\"dev\" PermissionsBoundary=\"none\" SecretPrefix=\"none\" VpcStackName=\"vpc-cri\" BackendStack=\"bav-cri-api\""
+parameter_overrides = "CodeSigningConfigArn=\"none\" Environment=\"dev\" PermissionsBoundary=\"none\" SecretPrefix=\"none\" VpcStackName=\"vpc-cri\" BackendStack=\"backend-ddunford-bav\""
 image_repositories = []
