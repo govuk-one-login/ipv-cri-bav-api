@@ -82,7 +82,7 @@ describe("BAV CRI: /verify-account Endpoint Unhappy Path Tests", () => {
 		newBavStubPayload.shared_claims.name[0].nameParts[0].value = firstName;
 		newBavStubPayload.shared_claims.name[0].nameParts[1].value = lastName;
 
-		const sessionId = await startStubServiceAndReturnSessionId(newBavStubPayload);
+		sessionId = await startStubServiceAndReturnSessionId(newBavStubPayload);
 
 		// Verify-account first name mismatch
 		await verifyAccountPost(verifyAccountYesPayload, sessionId);
