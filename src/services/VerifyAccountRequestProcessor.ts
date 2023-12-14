@@ -15,7 +15,7 @@ import { getFullName } from "../utils/PersonIdentityUtils";
 import { Response } from "../utils/Response";
 import { VerifyAccountPayload } from "../type/VerifyAccountPayload";
 import { absoluteTimeNow } from "../utils/DateTimeUtils";
-import { PartialNameSQSRecord } from "../type/partialNameSQSRecord";
+// import { PartialNameSQSRecord } from "../type/partialNameSQSRecord";
 
 export class VerifyAccountRequestProcessor {
   private static instance: VerifyAccountRequestProcessor;
@@ -98,7 +98,7 @@ export class VerifyAccountRequestProcessor {
   	this.BavService.saveCopCheckResult(sessionId, copCheckResult);
 
 		if (copCheckResult === CopCheckResults.PARTIAL_MATCH) {
-			const partialNameRecord: PartialNameSQSRecord = {
+			const partialNameRecord: any = {
 				itemNumber: "hmrcUuid", //TODO: Get hmrcUuid from hmrcUuid PR
 				timeStamp: timeOfRequest,
 				cicName: cicName,

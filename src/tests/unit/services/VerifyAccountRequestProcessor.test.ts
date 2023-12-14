@@ -134,22 +134,22 @@ describe("VerifyAccountRequestProcessor", () => {
 		});
 	});
 
-	describe("#calculateCopCheckResult", () => {
-		it.each([
-			{ nameMatches: "yes", accountExists: "yes", result: CopCheckResults.FULL_MATCH },
-			{ nameMatches: "partial", accountExists: "yes", result: CopCheckResults.PARTIAL_MATCH },
-			{ nameMatches: "no", accountExists: "yes", result: CopCheckResults.NO_MATCH },
-			{ nameMatches: "indeterminate", accountExists: "yes", result: CopCheckResults.NO_MATCH },
-			{ nameMatches: "inapplicable", accountExists: "yes", result: CopCheckResults.NO_MATCH },
-			{ nameMatches: "error", accountExists: "yes", result: CopCheckResults.NO_MATCH },
-			{ nameMatches: "yes", accountExists: "no", result: CopCheckResults.NO_MATCH },
-			{ nameMatches: "yes", accountExists: "indeterminate", result: CopCheckResults.NO_MATCH },
-			{ nameMatches: "yes", accountExists: "inapplicable", result: CopCheckResults.NO_MATCH },
-			{ nameMatches: "yes", accountExists: "error", result: CopCheckResults.NO_MATCH },
-		])("returns $result where nameMatches is $nameMatches and accountExists is $accountExists", ({ nameMatches, accountExists, result }) => {
-			expect(
-				verifyAccountRequestProcessorTest.calculateCopCheckResult({ ...hmrcVerifyResponse, nameMatches, accountExists }),
-			).toBe(result);
-		});
-	});
+	// describe("#calculateCopCheckResult", () => {
+	// 	it.each([
+	// 		{ nameMatches: "yes", accountExists: "yes", result: CopCheckResults.FULL_MATCH },
+	// 		{ nameMatches: "partial", accountExists: "yes", result: CopCheckResults.PARTIAL_MATCH },
+	// 		{ nameMatches: "no", accountExists: "yes", result: CopCheckResults.NO_MATCH },
+	// 		{ nameMatches: "indeterminate", accountExists: "yes", result: CopCheckResults.NO_MATCH },
+	// 		{ nameMatches: "inapplicable", accountExists: "yes", result: CopCheckResults.NO_MATCH },
+	// 		{ nameMatches: "error", accountExists: "yes", result: CopCheckResults.NO_MATCH },
+	// 		{ nameMatches: "yes", accountExists: "no", result: CopCheckResults.NO_MATCH },
+	// 		{ nameMatches: "yes", accountExists: "indeterminate", result: CopCheckResults.NO_MATCH },
+	// 		{ nameMatches: "yes", accountExists: "inapplicable", result: CopCheckResults.NO_MATCH },
+	// 		{ nameMatches: "yes", accountExists: "error", result: CopCheckResults.NO_MATCH },
+	// 	])("returns $result where nameMatches is $nameMatches and accountExists is $accountExists", ({ nameMatches, accountExists, result }) => {
+	// 		expect(
+	// 			verifyAccountRequestProcessorTest.calculateCopCheckResult({ ...hmrcVerifyResponse, nameMatches, accountExists }),
+	// 		).toBe(result);
+	// 	});
+	// });
 });

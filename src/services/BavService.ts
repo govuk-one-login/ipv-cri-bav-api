@@ -13,7 +13,7 @@ import { sqsClient } from "../utils/SqsClient";
 import { TxmaEvent } from "../utils/TxmaEvent";
 import { Constants } from "../utils/Constants";
 import { AuthSessionState } from "../models/enums/AuthSessionState";
-import { PartialNameSQSRecord } from "../type/partialNameSQSRecord";
+// import { PartialNameSQSRecord } from "../type/partialNameSQSRecord";
 
 export class BavService {
 	readonly tableName: string;
@@ -130,7 +130,7 @@ export class BavService {
 		}
 	}
 
-	async savePartialNameInfo(QueueUrl: string, event: PartialNameSQSRecord): Promise<void> {
+	async savePartialNameInfo(QueueUrl: string, event: any): Promise<void> {
 		try {
 			const messageBody = JSON.stringify(event);
 			const params = {
