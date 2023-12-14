@@ -84,11 +84,6 @@ export class VerifyAccountRequestProcessor {
 			await this.BavService.saveHmrcUuid(sessionId, hmrcUuid);
 		}
 
-  	await this.BavService.updateAccountDetails(
-			{ sessionId, accountNumber: paddedAccountNumber, sortCode },
-			this.personIdentityTableName,
-		);
-
   	const name = getFullName(person.name);
   	const verifyResponse = await this.HmrcService.verify(
 			{ accountNumber: paddedAccountNumber, sortCode, name, uuid: hmrcUuid },
@@ -99,6 +94,11 @@ export class VerifyAccountRequestProcessor {
 			this.logger.error("No verify reponse recieved", { messageCode: MessageCodes.NO_VERIFY_RESPONSE });
 			return new Response(HttpCodesEnum.SERVER_ERROR, "Could not verify account");
 		}
+
+		await this.BavService.updateAccountDetails(
+			{ sessionId, accountNumber: paddedAccountNumber, sortCode },
+			this.personIdentityTableName,
+		);
 
   	const copCheckResult = this.calculateCopCheckResult(verifyResponse);
   	this.logger.debug(`copCheckResult is ${copCheckResult}`);
