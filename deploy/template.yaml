@@ -322,6 +322,23 @@ Resources:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
   
+  PartialMatchesAthenaResultsBucket:
+    Type: "AWS::S3::Bucket"
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: !Sub ${AWS::StackName}-partial-matches-athena-results-${Environment}
+      VersioningConfiguration:
+        Status: "Enabled"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
   JsonWebKeysBucket:
     Type: "AWS::S3::Bucket"
     DeletionPolicy: Delete
@@ -1688,14 +1705,64 @@ Resources:
         - alias/PartialNameMatchEncryptionKey
       TargetKeyId: !Ref PartialNameMatchEncryptionKey
 
-## Partial Names Athena and Glue resources
+  ## Partial Names Athena and Glue resources
   PartialNameMatchGlueDatabase:
     Type: AWS::Glue::Database
     Properties:
       CatalogId: !Ref AWS::AccountId
       DatabaseInput:
-        Description: !Sub "PartialNames-${AWS::StackName}"
-        Name: !Sub "partialnames-${AWS::StackName}"
+        Description: !Sub "PartialNameMatch-${AWS::StackName}"
+        Name: !Sub "partialnamematch-${AWS::StackName}"
+
+  PartialNameMatchGlueTable:
+    Type: AWS::Glue::Table
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: !Ref PartialNameMatchGlueDatabase
+      TableInput:
+        Description: !Sub "PartialNameMatch-${AWS::StackName}"
+        Name: !Sub "partialnamematch-${AWS::StackName}"
+        PartitionKeys: []
+        TableType: EXTERNAL_TABLE
+        StorageDescriptor:
+          Location: !Sub "s3://${PartialMatchesBucket}/"
+          InputFormat: "org.apache.hadoop.mapred.TextInputFormat"
+          OutputFormat: "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
+          SerdeInfo:
+            Name: "partialnamematch"
+            SerializationLibrary: "org.openx.data.jsonserde.JsonSerDe"
+          Parameters: {
+                        "ignore.malformed.json": "FALSE",
+                        "dots.in.keys": "FALSE",
+                        "case.insensitive": "TRUE",
+                        "mapping": "TRUE"
+          }
+          Columns:
+            - Name: itemNumber
+              Type: string
+            - Name: timeStamp
+              Type: int
+            - Name: accountExists
+              Type: string
+            - Name: nameMatches
+              Type: string
+
+  PartialNameMatchAthenaWorkgroup:
+    Type: AWS::Athena::WorkGroup
+    Properties:
+      Description: !Sub "PartialNameMatch-${AWS::StackName"
+      Name: !Sub "PartialNameMatch-${AWS::StackName}"
+      RecursiveDeleteOption: true
+      State: ENABLED
+      WorkGroupConfiguration:
+        EnforceWorkGroupConfiguration: true
+        PublishCloudWatchMetricsEnabled: true
+        ResultConfiguration:
+          EncryptionConfiguration:
+            EncryptionOption: SSE_S3
+            # TODO: set to KMS CMK
+          ExpectedBucketOwner: !Ref AWS::AccountId
+          OutputLocation: !Sub "s3://${PartialMatchesAthenaResultsBucket}/"
 
   JsonWebKeysFunction:
     Type: AWS::Serverless::Function
