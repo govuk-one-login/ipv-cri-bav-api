@@ -5,7 +5,7 @@ import { LambdaInterface } from "@aws-lambda-powertools/commons";
 import { Constants, EnvironmentVariables } from "./utils/Constants";
 import { failEntireBatch, passEntireBatch } from "./utils/SqsBatchResponseHelper";
 import { PartialNameProcessor } from "./services/PartialNameProcessor";
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { PutObjectCommand, PutObjectCommandInput, S3Client } from "@aws-sdk/client-s3";
 import { NodeHttpHandler } from "@aws-sdk/node-http-handler";
 import { checkEnvironmentVariable } from "./utils/EnvironmentVariables";
 import { absoluteTimeNow } from "./utils/DateTimeUtils";
@@ -42,6 +42,7 @@ class PartialNameMatchHandler implements LambdaInterface {
 
 		if (event.Records.length === 1) {
 			const partialMatchesBucketName = checkEnvironmentVariable(EnvironmentVariables.PARTIAL_MATCHES_BUCKET, logger);
+			const partialMatchesBucketKey = checkEnvironmentVariable(EnvironmentVariables.PARTIAL_MATCHES_BUCKET_KEY, logger);
 			const record: SQSRecord = event.Records[0];
 			logger.debug("Starting to process record");
 
@@ -49,11 +50,13 @@ class PartialNameMatchHandler implements LambdaInterface {
 				const body = JSON.parse(record.body);
 				logger.debug("Parsed SQS event body");
 				
-				const uploadParams = {
+				const uploadParams: PutObjectCommandInput = {
 					Bucket: partialMatchesBucketName,
 					Key: `${absoluteTimeNow()}.json`,
 					Body: JSON.stringify(body),
 					ContentType: "application/json",
+					ServerSideEncryption: "aws:kms",
+					SSEKMSKeyId: partialMatchesBucketKey,
 				};
 		
 				try {
