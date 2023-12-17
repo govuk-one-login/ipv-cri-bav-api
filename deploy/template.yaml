@@ -305,7 +305,7 @@ Resources:
       VpcId:
         Fn::ImportValue: !Sub "${VpcStackName}-VpcId"
 
-  PartialMatchesKey:
+  PartialNameMatchBucketKey:
     Type: AWS::KMS::Key
     Properties:
       Description: Specific KMS CMK for Partial Matches S3 Bucket Encryption
@@ -330,10 +330,19 @@ Resources:
         - Key: Environment
           Value: !Sub ${Environment}
 
-  PartialMatchesBucketForceEncryption:
+  PartialNameMatchBucketKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !If
+        -  CreateDevResources
+        - !Sub "alias/PartialNameMatchBucketEncryptionKey-${AWS::StackName}"
+        - alias/PartialNameMatchBucketEncryptionKey
+      TargetKeyId: !Ref PartialNameMatchEncryptionKey
+
+  PartialNameMatchBucketForceEncryptionPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
-      Bucket: !Ref PartialMatchesBucket
+      Bucket: !Ref PartialNameMatchBucket
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -343,7 +352,7 @@ Resources:
             Action:
               - s3:PutObject
             Resource:
-              - !Join ["", ["arn:aws:s3:::", !Ref PartialMatchesBucket, "/*"]]
+              - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchBucket, "/*"]]
             Condition:
               StringNotEquals:
                 "s3:x-amz-server-side-encryption": "aws:kms"
@@ -353,17 +362,17 @@ Resources:
             Action:
               - s3:PutObject
             Resource:
-              - !Join ["", ["arn:aws:s3:::", !Ref PartialMatchesBucket, "/*"]]
+              - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchBucket, "/*"]]
             Condition:
               "Null":
                 "s3:x-amz-server-side-encryption": true
-    DependsOn: PartialMatchesBucket
+    DependsOn: PartialNameMatchBucket
 
-  PartialMatchesBucket:
+  PartialNameMatchBucket:
     Type: "AWS::S3::Bucket"
     DeletionPolicy: Delete
     Properties:
-      BucketName: !Sub ${AWS::StackName}-partial-matches-${Environment}
+      BucketName: !Sub ${AWS::StackName}-partial-name-match-${Environment}
       VersioningConfiguration:
         Status: "Enabled"
       PublicAccessBlockConfiguration:
@@ -375,7 +384,7 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: aws:kms
-              KMSMasterKeyID: !GetAtt PartialMatchesKey.Arn
+              KMSMasterKeyID: !Ref PartialNameMatchBucketKey
       LifecycleConfiguration:
         Rules:
           - Id: ExpiryRule
@@ -383,11 +392,40 @@ Resources:
             NoncurrentVersionExpirationInDays: 1
             Status: Enabled
 
-  PartialMatchesAthenaResultsBucket:
+  PartialNameMatchAthenaResultsBucketForceEncryptionPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref PartialNameMatchAthenaResultsBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyIncorrectEncryptionHeader
+            Effect: Deny
+            Principal: "*"
+            Action:
+              - s3:PutObject
+            Resource:
+              - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchAthenaResultsBucket, "/*"]]
+            Condition:
+              StringNotEquals:
+                "s3:x-amz-server-side-encryption": "aws:kms"
+          - Sid: DenyUnEncryptedObjectUploads
+            Effect: Deny
+            Principal: "*"
+            Action:
+              - s3:PutObject
+            Resource:
+              - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchAthenaResultsBucket, "/*"]]
+            Condition:
+              "Null":
+                "s3:x-amz-server-side-encryption": true
+    DependsOn: PartialNameMatchAthenaResultsBucket
+
+  PartialNameMatchAthenaResultsBucket:
     Type: "AWS::S3::Bucket"
     DeletionPolicy: Delete
     Properties:
-      BucketName: !Sub ${AWS::StackName}-partial-matches-athena-results-${Environment}
+      BucketName: !Sub ${AWS::StackName}-partial-name-match-athena-results-${Environment}
       VersioningConfiguration:
         Status: "Enabled"
       PublicAccessBlockConfiguration:
@@ -399,7 +437,7 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: aws:kms
-              KMSMasterKeyID: !GetAtt PartialMatchesKey.Arn
+              KMSMasterKeyID: "PartialNameMatchBucketKey"
       LifecycleConfiguration:
         Rules:
           - Id: ExpiryRule
@@ -1793,7 +1831,7 @@ Resources:
         PartitionKeys: []
         TableType: EXTERNAL_TABLE
         StorageDescriptor:
-          Location: !Sub "s3://${PartialMatchesBucket}/"
+          Location: !Sub "s3://${PartialNameMatchBucket}/"
           InputFormat: "org.apache.hadoop.mapred.TextInputFormat"
           OutputFormat: "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
           SerdeInfo:
@@ -1827,10 +1865,10 @@ Resources:
         PublishCloudWatchMetricsEnabled: true
         ResultConfiguration:
           EncryptionConfiguration:
-            EncryptionOption: SSE_S3
-            # TODO: set to KMS CMK
+            EncryptionOption: "SSE_KMS"
+            KmsKey: !Ref PartialNameMatchBucketKey
           ExpectedBucketOwner: !Ref AWS::AccountId
-          OutputLocation: !Sub "s3://${PartialMatchesAthenaResultsBucket}/"
+          OutputLocation: !Sub "s3://${PartialNameMatchAthenaResultsBucket}/"
 
   JsonWebKeysFunction:
     Type: AWS::Serverless::Function
@@ -2151,21 +2189,21 @@ Resources:
         - !Ref AWS::NoValue
       Environment:
         Variables:
-          PARTIAL_MATCHES_BUCKET: !Ref PartialMatchesBucket
-          PARTIAL_MATCHES_BUCKET_KEY: !Ref PartialMatchesKey
-          POWERTOOLS_SERVICE_NAME: PartialNameMatchHandler
+          PARTIAL_MATCHES_BUCKET: !Ref PartialNameMatchBucket
+          PARTIAL_MATCHES_BUCKET_KEY: !Ref PartialNameMatchBucketKey
+          POWERTOOLS_SERVICE_NAME: "PartialNameMatchHandler"
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
         - S3WritePolicy:
-            BucketName: !Ref PartialMatchesBucket
+            BucketName: !Ref PartialNameMatchBucket
         - Statement:
             - Sid: "KMSEncryptForPartialMatchBucket"
               Effect: Allow
               Action:
                 - "kms:Encrypt"
                 - "kms:GenerateDataKey"
-              Resource: !GetAtt PartialMatchesKey.Arn
+              Resource: !GetAtt PartialNameMatchBucketKey.Arn
         - Statement:
             - Sid: "KMSDecryptForPartialMatchQueue"
               Effect: Allow
