@@ -305,6 +305,60 @@ Resources:
       VpcId:
         Fn::ImportValue: !Sub "${VpcStackName}-VpcId"
 
+  PartialMatchesKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: Specific KMS CMK for Partial Matches S3 Bucket Encryption
+      Enabled: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource:
+              - "*"
+      KeySpec: SYMMETRIC_DEFAULT
+      KeyUsage: ENCRYPT_DECRYPT
+      MultiRegion: false
+      PendingWindowInDays: 7
+      Tags:
+        - Key: KeyType
+          Value: Encryption Key
+        - Key: Environment
+          Value: !Sub ${Environment}
+
+  PartialMatchesBucketForceEncryption:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref PartialMatchesBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyIncorrectEncryptionHeader
+            Effect: Deny
+            Principal: "*"
+            Action:
+              - s3:PutObject
+            Resource:
+              - !Join ["", ["arn:aws:s3:::", !Ref PartialMatchesBucket, "/*"]]
+            Condition:
+              StringNotEquals:
+                "s3:x-amz-server-side-encryption": "aws:kms"
+          - Sid: DenyUnEncryptedObjectUploads
+            Effect: Deny
+            Principal: "*"
+            Action:
+              - s3:PutObject
+            Resource:
+              - !Join ["", ["arn:aws:s3:::", !Ref PartialMatchesBucket, "/*"]]
+            Condition:
+              "Null":
+                "s3:x-amz-server-side-encryption": true
+    DependsOn: PartialMatchesBucket
+
   PartialMatchesBucket:
     Type: "AWS::S3::Bucket"
     DeletionPolicy: Delete
@@ -320,8 +374,15 @@ Resources:
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-  
+              SSEAlgorithm: aws:kms
+              KMSMasterKeyID: !GetAtt PartialMatchesKey.Arn
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpiryRule
+            ExpirationInDays: 30
+            NoncurrentVersionExpirationInDays: 1
+            Status: Enabled
+
   PartialMatchesAthenaResultsBucket:
     Type: "AWS::S3::Bucket"
     DeletionPolicy: Delete
@@ -337,7 +398,14 @@ Resources:
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
+              SSEAlgorithm: aws:kms
+              KMSMasterKeyID: !GetAtt PartialMatchesKey.Arn
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpiryRule
+            ExpirationInDays: 30
+            NoncurrentVersionExpirationInDays: 1
+            Status: Enabled
 
   JsonWebKeysBucket:
     Type: "AWS::S3::Bucket"
@@ -2084,20 +2152,27 @@ Resources:
       Environment:
         Variables:
           PARTIAL_MATCHES_BUCKET: !Ref PartialMatchesBucket
+          PARTIAL_MATCHES_BUCKET_KEY: !Ref PartialMatchesKey
+          POWERTOOLS_SERVICE_NAME: PartialNameMatchHandler
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
         - S3WritePolicy:
             BucketName: !Ref PartialMatchesBucket
-        - S3ReadPolicy:
-            BucketName: !Ref PartialMatchesBucket
         - Statement:
-            - Sid: KMSPolicy
+            - Sid: "KMSEncryptForPartialMatchBucket"
               Effect: Allow
               Action:
-                - kms:*
-              Resource:
-                "*"
+                - "kms:Encrypt"
+                - "kms:GenerateDataKey"
+              Resource: !GetAtt PartialMatchesKey.Arn
+        - Statement:
+            - Sid: "KMSDecryptForPartialMatchQueue"
+              Effect: Allow
+              Action:
+                - "kms:Decrypt"
+                - "kms:GenerateDataKey"
+              Resource: !GetAtt PartialNameMatchEncryptionKey.Arn
         - Statement:
             - Effect: Allow
               Action:
