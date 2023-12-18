@@ -3,6 +3,7 @@ import verifyAccountYesPayload from "../data/bankDetailsYes.json";
 import {
 	authorizationGet,
 	sessionPost,
+	personInfoGet,
 	startStubServiceAndReturnSessionId,
 	stubStartPost,
 	userInfoPost,
@@ -11,6 +12,8 @@ import {
 	getSessionAndVerifyKey,
 } from "../utils/ApiTestSteps";
 import { constants } from "../utils/ApiConstants";
+import { randomUUID } from "crypto";
+
 
 describe("BAV CRI: /session Endpoint Unhappy Path Tests", () => {
 	let stubResponse: any;
@@ -35,11 +38,25 @@ describe("BAV CRI: /session Endpoint Unhappy Path Tests", () => {
 	});
 });
 
+describe("BAV CRI: /person-info Endpoint Unhappy Path Tests", () => {
+
+	it("Invalid Session Id Test", async () => {
+		const sessionId = randomUUID()
+
+		// Person Info
+		const personInfoResponse = await personInfoGet(sessionId);
+		expect(personInfoResponse.status).toBe(401);
+		expect(personInfoResponse.data).toBe("No person found with the session id: " + sessionId);
+
+	});
+});
+
+
 describe("BAV CRI: /verify-account Endpoint Unhappy Path Tests", () => {
 	let sessionId: string;
 
 	it("HMRC Multiple Retries Test - Error Code 5XX", async () => {
-		const newBavStubPayload = structuredClone(bavStubPayload); 
+		const newBavStubPayload = structuredClone(bavStubPayload);
 		newBavStubPayload.shared_claims.name[0].nameParts[0].value = "Evan";
 		newBavStubPayload.shared_claims.name[0].nameParts[1].value = "Erickson";
 
