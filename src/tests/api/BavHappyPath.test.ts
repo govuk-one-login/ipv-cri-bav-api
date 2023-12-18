@@ -6,6 +6,7 @@ import {
 	getSessionAndVerifyKey,
 	getSessionAndVerifyKeyExists,
 	getSqsEventList,
+	personInfoGet,
 	startStubServiceAndReturnSessionId,
 	verifyAccountPost,
 	tokenPost,
@@ -15,6 +16,7 @@ import {
 	validateWellKnownResponse,
 	wellKnownGet,
 	abortPost,
+	validatePersonInfoResponse
 }
 	from "../utils/ApiTestSteps";
 import { BankDetailsPayload } from "../models/BankDetailsPayload";
@@ -35,6 +37,28 @@ describe("BAV CRI: /session Endpoint Happy Path Tests", () => {
 		// Make sure txma event is present & valid
 		const sqsMessage = await getSqsEventList("txma/", sessionId, 1);
 		await validateTxMAEventData(sqsMessage);
+	});
+});
+
+describe("BAV CRI: /person-info Endpoint Happy Path Tests", () => {
+
+	it.each([
+		["Yasmine", "Dawson"],
+		["Yasmine", "Palmer"],
+		["Nigel", "Newton"],
+	])("Successful Request Tests", async (firstName: string, lastName: string) => {
+
+		const newBavStubPayload = structuredClone(bavStubPayload);
+		newBavStubPayload.shared_claims.name[0].nameParts[0].value = firstName;
+		newBavStubPayload.shared_claims.name[0].nameParts[1].value = lastName;
+
+		const sessionId = await startStubServiceAndReturnSessionId(newBavStubPayload);
+		expect(sessionId).toBeTruthy();
+
+		// Person Info
+		const personInfoResponse = await personInfoGet(sessionId);
+		expect(personInfoResponse.status).toBe(200);
+		await validatePersonInfoResponse(personInfoResponse, firstName, lastName);
 	});
 });
 

@@ -6,4 +6,5 @@ export const constants = {
 	DEV_BAV_TEST_HARNESS_URL: process.env.DEV_BAV_TEST_HARNESS_URL,
 	DEV_BAV_SESSION_TABLE_NAME: "session-bav-cri-ddb",
 	DEV_BAV_PERSONAL_IDENTITY_TABLE_NAME: "person-identity-bav-cri-ddb",
+	PERSON_INFO_PRIVATE_KEY: process.env.PERSON_INFO_PRIVATE_KEY,
 };
