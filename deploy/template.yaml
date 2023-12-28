@@ -313,7 +313,8 @@ Resources:
       KeyPolicy:
         Version: "2012-10-17"
         Statement:
-          - Effect: Allow
+          - Sid: AllowIdentityPoliciesInAccountToDetermineKeyAccess
+            Effect: Allow
             Principal:
               AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
             Action:
@@ -1512,14 +1513,15 @@ Resources:
               Resource:
                 "*"
         - Statement:
-            - Effect: Allow
+            - Sid: AllowSendMessageToPartialNameQueue
+              Effect: Allow
               Action:
                 - "sqs:SendMessage"
               Resource: !GetAtt PartialNameMatchQueue.Arn
-            - Effect: Allow
+            - Sid: AllowEncryptMessageSendingToPartialNameQueue
+              Effect: Allow
               Action:
                 - "kms:Encrypt"
-                - "kms:Decrypt"
                 - "kms:GenerateDataKey"
               Resource: !GetAtt PartialNameMatchEncryptionKey.Arn
       Events:
@@ -1760,7 +1762,8 @@ Resources:
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Effect: "Allow"
+          - Sid: AllowUseOfPartialNameMatchQueue
+            Effect: "Allow"
             Action:
               - "sqs:DeleteMessage"
               - "sqs:GetQueueAttributes"
