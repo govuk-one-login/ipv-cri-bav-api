@@ -171,4 +171,18 @@ describe("Infra", () => {
 			},
 		);
 	});
+
+	describe("KMS", () => {
+		it("Each KMS Key should have an associated alias", () => {
+			const kmsKeys = template.findResources("AWS::KMS::Key");
+			const kmsKeyList = Object.keys(kmsKeys);
+			kmsKeyList.forEach((kmsKey) => {
+				template.hasResourceProperties("AWS::KMS::Alias", {
+					TargetKeyId: {
+						"Ref": kmsKey,
+					},
+				});
+			});
+		});
+	});
 });
