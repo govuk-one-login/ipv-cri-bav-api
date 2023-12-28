@@ -337,7 +337,7 @@ Resources:
         -  CreateDevResources
         - !Sub "alias/PartialNameMatchBucketEncryptionKey-${AWS::StackName}"
         - alias/PartialNameMatchBucketEncryptionKey
-      TargetKeyId: !Ref PartialNameMatchEncryptionKey
+      TargetKeyId: !Ref PartialNameMatchBucketKey
 
   PartialNameMatchBucketForceEncryptionPolicy:
     Type: AWS::S3::BucketPolicy
@@ -369,7 +369,7 @@ Resources:
     DependsOn: PartialNameMatchBucket
 
   PartialNameMatchBucket:
-    Type: "AWS::S3::Bucket"
+    Type: AWS::S3::Bucket
     DeletionPolicy: Delete
     Properties:
       BucketName: !Sub ${AWS::StackName}-partial-name-match-${Environment}
@@ -384,7 +384,7 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: aws:kms
-              KMSMasterKeyID: !Ref PartialNameMatchBucketKey
+              KMSMasterKeyID: !Ref PartialNameMatchBucketKeyAlias
       LifecycleConfiguration:
         Rules:
           - Id: ExpiryRule
@@ -422,7 +422,7 @@ Resources:
     DependsOn: PartialNameMatchAthenaResultsBucket
 
   PartialNameMatchAthenaResultsBucket:
-    Type: "AWS::S3::Bucket"
+    Type: AWS::S3::Bucket
     DeletionPolicy: Delete
     Properties:
       BucketName: !Sub ${AWS::StackName}-partial-name-match-athena-results-${Environment}
@@ -437,7 +437,7 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: aws:kms
-              KMSMasterKeyID: "PartialNameMatchBucketKey"
+              KMSMasterKeyID: !Ref PartialNameMatchBucketKeyAlias
       LifecycleConfiguration:
         Rules:
           - Id: ExpiryRule
@@ -1866,7 +1866,7 @@ Resources:
         ResultConfiguration:
           EncryptionConfiguration:
             EncryptionOption: "SSE_KMS"
-            KmsKey: !Ref PartialNameMatchBucketKey
+            KmsKey: !Ref PartialNameMatchBucketKeyAlias
           ExpectedBucketOwner: !Ref AWS::AccountId
           OutputLocation: !Sub "s3://${PartialNameMatchAthenaResultsBucket}/"
 
@@ -2190,7 +2190,7 @@ Resources:
       Environment:
         Variables:
           PARTIAL_MATCHES_BUCKET: !Ref PartialNameMatchBucket
-          PARTIAL_MATCHES_BUCKET_KEY: !Ref PartialNameMatchBucketKey
+          PARTIAL_MATCHES_BUCKET_KEY: !Ref PartialNameMatchBucketKeyAlias
           POWERTOOLS_SERVICE_NAME: "PartialNameMatchHandler"
       Policies:
         - AWSLambdaBasicExecutionRole
