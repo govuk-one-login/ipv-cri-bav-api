@@ -144,7 +144,7 @@ export class BavService {
 			this.logger.info("Sent message to PartialName Queue");
 		} catch (error) {
 			this.logger.error({
-				message: `Error when sending event partianl name info to SQS Queue`,
+				message: `Error when sending event partial name info to SQS Queue`,
 				messageCode: MessageCodes.FAILED_TO_WRITE_PARTIAL_NAME_INFO,
 			});
 		}
