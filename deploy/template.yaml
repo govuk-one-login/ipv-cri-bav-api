@@ -340,14 +340,14 @@ Resources:
         - alias/PartialNameMatchBucketEncryptionKey
       TargetKeyId: !Ref PartialNameMatchBucketKey
 
-  PartialNameMatchBucketForceEncryptionPolicy:
+  PartialNameMatchBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
       Bucket: !Ref PartialNameMatchBucket
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Sid: DenyIncorrectEncryptionHeader
+          - Sid: DenyIncorrectEncryptionType
             Effect: Deny
             Principal: "*"
             Action:
@@ -357,7 +357,7 @@ Resources:
             Condition:
               StringNotEquals:
                 "s3:x-amz-server-side-encryption": "aws:kms"
-          - Sid: DenyUnEncryptedObjectUploads
+          - Sid: DenyUnencryptedObjectUploads
             Effect: Deny
             Principal: "*"
             Action:
@@ -367,6 +367,16 @@ Resources:
             Condition:
               "Null":
                 "s3:x-amz-server-side-encryption": true
+          - Sid: RestrictGetObjectToAthenaOnly
+            Effect: Deny
+            Principal: "*"
+            Action:
+              - "s3:GetObject*"
+            Resource:
+              - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchBucket, "/*"]]
+            Condition:
+              StringNotEquals:
+                "aws:CalledVia": "athena.amazonaws.com"
     DependsOn: PartialNameMatchBucket
 
   PartialNameMatchBucket:
@@ -393,14 +403,14 @@ Resources:
             NoncurrentVersionExpirationInDays: 1
             Status: Enabled
 
-  PartialNameMatchAthenaResultsBucketForceEncryptionPolicy:
+  PartialNameMatchAthenaResultsBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
       Bucket: !Ref PartialNameMatchAthenaResultsBucket
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Sid: DenyIncorrectEncryptionHeader
+          - Sid: DenyIncorrectEncryptionType
             Effect: Deny
             Principal: "*"
             Action:
@@ -410,7 +420,7 @@ Resources:
             Condition:
               StringNotEquals:
                 "s3:x-amz-server-side-encryption": "aws:kms"
-          - Sid: DenyUnEncryptedObjectUploads
+          - Sid: DenyUnencryptedObjectUploads
             Effect: Deny
             Principal: "*"
             Action:
@@ -420,6 +430,26 @@ Resources:
             Condition:
               "Null":
                 "s3:x-amz-server-side-encryption": true
+          - Sid: RestrictPutObjectToAthenaOnly
+            Effect: Deny
+            Principal: "*"
+            Action:
+              - "s3:PutObject*"
+            Resource:
+              - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchAthenaResultsBucket, "/*"]]
+            Condition:
+              StringNotEquals:
+                "aws:CalledVia": "athena.amazonaws.com"
+          - Sid: RestrictGetObjectToAthenaOnly
+            Effect: Deny
+            Principal: "*"
+            Action:
+              - "s3:GetObject*"
+            Resource:
+              - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchAthenaResultsBucket, "/*"]]
+            Condition:
+              StringNotEquals:
+                "aws:CalledVia": "athena.amazonaws.com"
     DependsOn: PartialNameMatchAthenaResultsBucket
 
   PartialNameMatchAthenaResultsBucket:
@@ -447,7 +477,7 @@ Resources:
             Status: Enabled
 
   JsonWebKeysBucket:
-    Type: "AWS::S3::Bucket"
+    Type: AWS::S3::Bucket
     DeletionPolicy: Delete
     Properties:
       BucketName: !Sub ${AWS::StackName}-jwks-bav-${Environment}
