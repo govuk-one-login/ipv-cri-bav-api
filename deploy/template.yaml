@@ -396,6 +396,7 @@ Resources:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: aws:kms
               KMSMasterKeyID: !Ref PartialNameMatchBucketKeyAlias
+            BucketKeyEnabled: true
       LifecycleConfiguration:
         Rules:
           - Id: ExpiryRule
@@ -430,20 +431,11 @@ Resources:
             Condition:
               "Null":
                 "s3:x-amz-server-side-encryption": true
-          - Sid: RestrictPutObjectToAthenaOnly
+          - Sid: RestrictObjectAccessToAthenaOnly
             Effect: Deny
             Principal: "*"
             Action:
               - "s3:PutObject*"
-            Resource:
-              - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchAthenaResultsBucket, "/*"]]
-            Condition:
-              StringNotEquals:
-                "aws:CalledVia": "athena.amazonaws.com"
-          - Sid: RestrictGetObjectToAthenaOnly
-            Effect: Deny
-            Principal: "*"
-            Action:
               - "s3:GetObject*"
             Resource:
               - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchAthenaResultsBucket, "/*"]]
@@ -469,6 +461,7 @@ Resources:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: aws:kms
               KMSMasterKeyID: !Ref PartialNameMatchBucketKeyAlias
+            BucketKeyEnabled: true
       LifecycleConfiguration:
         Rules:
           - Id: ExpiryRule
@@ -477,7 +470,7 @@ Resources:
             Status: Enabled
 
   JsonWebKeysBucket:
-    Type: AWS::S3::Bucket
+    Type: "AWS::S3::Bucket"
     DeletionPolicy: Delete
     Properties:
       BucketName: !Sub ${AWS::StackName}-jwks-bav-${Environment}
@@ -1535,13 +1528,9 @@ Resources:
         - KMSDecryptPolicy:
             KeyId:
               Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-key-id"
-        - Statement:
-            - Sid: KMSPolicy
-              Effect: Allow
-              Action:
-                - kms:*
-              Resource:
-                "*"
+        - KMSDecryptPolicy:
+            KeyId:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-key-id"
         - Statement:
             - Sid: AllowSendMessageToPartialNameQueue
               Effect: Allow
@@ -1552,6 +1541,7 @@ Resources:
               Effect: Allow
               Action:
                 - "kms:Encrypt"
+                - "kms:Decrypt"
                 - "kms:GenerateDataKey"
               Resource: !GetAtt PartialNameMatchEncryptionKey.Arn
       Events:
@@ -1876,6 +1866,7 @@ Resources:
                         "case.insensitive": "TRUE",
                         "mapping": "TRUE"
           }
+          # TODO: update schema below to reflect full item schema
           Columns:
             - Name: itemNumber
               Type: string
@@ -2252,7 +2243,6 @@ Resources:
             - Effect: Allow
               Action:
                 - "kms:Encrypt"
-                - "kms:Decrypt"
                 - "kms:GenerateDataKey"
               Resource: !GetAtt TxMAKMSEncryptionKey.Arn
       Events:
