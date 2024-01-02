@@ -18,6 +18,8 @@ export class Constants {
 
 	static readonly ABORT_LOGGER_SVC_NAME : "AbortHandler";
 
+	static readonly PERSON_INFO_KEY_LOGGER_SVC_NAME : "PersonInfoKeyHandler";
+
 	static readonly BAV_METRICS_NAMESPACE = "BAV-CRI";
 
 	static readonly DEBUG = "DEBUG";
@@ -92,5 +94,6 @@ export const EnvironmentVariables = {
 	HMRC_TOKEN_SSM_PATH: "HMRC_TOKEN_SSM_PATH",
 	HMRC_MAX_RETRIES: "HMRC_MAX_RETRIES",
 	HMRC_TOKEN_BACKOFF_PERIOD_MS: "HMRC_TOKEN_BACKOFF_PERIOD_MS",
+	PRIVATE_KEY_SSM_PATH: "PRIVATE_KEY_SSM_PATH",
 };
 

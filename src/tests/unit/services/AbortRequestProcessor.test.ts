@@ -1,10 +1,10 @@
+/* eslint-disable max-lines-per-function */
 import { mock } from "jest-mock-extended";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { AbortRequestProcessor } from "../../../services/AbortRequestProcessor";
 import { BavService } from "../../../services/BavService";
 import { ISessionItem } from "../../../models/ISessionItem";
-import { MessageCodes } from "../../../models/enums/MessageCodes";
 import { AuthSessionState } from "../../../models/enums/AuthSessionState";
 import { Response } from "../../../utils/Response";
 import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
