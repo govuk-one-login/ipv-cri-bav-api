@@ -8,7 +8,7 @@ import { MessageCodes } from "../models/enums/MessageCodes";
 import { HmrcVerifyResponse } from "../models/IHmrcResponse";
 import { PersonIdentityItem } from "../models/PersonIdentityItem";
 import { CopCheckResult, ISessionItem } from "../models/ISessionItem";
-import { EnvironmentVariables } from "../utils/Constants";
+import { EnvironmentVariables, Constants } from "../utils/Constants";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 import { getFullName } from "../utils/PersonIdentityUtils";
@@ -54,6 +54,7 @@ export class VerifyAccountRequestProcessor {
   	return VerifyAccountRequestProcessor.instance;
 	}
 
+	// eslint-disable-next-line max-lines-per-function
 	async processRequest(sessionId: string, body: VerifyAccountPayload): Promise<Response> {
   	const { account_number: accountNumber, sort_code: sortCode } = body;
   	const paddedAccountNumber = accountNumber.padStart(8, "0");
@@ -61,18 +62,19 @@ export class VerifyAccountRequestProcessor {
 		const session: ISessionItem | undefined = await this.BavService.getSessionById(sessionId);
 
   	if (!person) {
-  		this.logger.error("No person found for session id", {
-  			messageCode: MessageCodes.PERSON_NOT_FOUND,
-  		});
+  		this.logger.error("No person found for session id", { messageCode: MessageCodes.PERSON_NOT_FOUND });
   		return new Response(HttpCodesEnum.UNAUTHORIZED, `No person found with the session id: ${sessionId}`);
   	}
 
   	if (!session) {
-  		this.logger.error("No session found for session id", {
-  			messageCode: MessageCodes.SESSION_NOT_FOUND,
-  		});
+  		this.logger.error("No session found for session id", { messageCode: MessageCodes.SESSION_NOT_FOUND });
   		return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
   	}
+
+		if (session.retryCount && session.retryCount >= Constants.MAX_RETRIES) {
+			this.logger.error(`Session retry count is ${session.retryCount}, cannot have another attempt`, { messageCode: MessageCodes.TOO_MANY_RETRIES });
+			return new Response(HttpCodesEnum.UNAUTHORIZED, "Too many attempts");
+		}
 
 		this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
 
@@ -89,9 +91,21 @@ export class VerifyAccountRequestProcessor {
   	const copCheckResult = this.calculateCopCheckResult(verifyResponse);
   	this.logger.debug(`copCheckResult is ${copCheckResult}`);
 
-  	await this.BavService.saveCopCheckResult(sessionId, copCheckResult);
+		if (copCheckResult === CopCheckResults.MATCH_ERROR) {
+			this.logger.warn("Error received in COP verify response");
+			return new Response(HttpCodesEnum.SERVER_ERROR, "Error received in COP verify response");
+		}
 
-  	return new Response(HttpCodesEnum.OK, "Success");
+		let retryCount;
+		if (copCheckResult !== CopCheckResults.FULL_MATCH) {
+			retryCount = session.retryCount ? session.retryCount + 1 : 1;
+		}
+  	await this.BavService.saveCopCheckResult(sessionId, copCheckResult, retryCount);
+
+  	return new Response(HttpCodesEnum.OK, JSON.stringify({
+			message: "Success",
+			retryCount,
+		}));
 	}
 
 	calculateCopCheckResult(verifyResponse: HmrcVerifyResponse): CopCheckResult {
@@ -99,6 +113,8 @@ export class VerifyAccountRequestProcessor {
   		return CopCheckResults.FULL_MATCH;
   	} else if (verifyResponse.nameMatches ===  "partial" && verifyResponse.accountExists === "yes") {
   		return CopCheckResults.PARTIAL_MATCH;
+  	} else if (verifyResponse.nameMatches ===  "error" || verifyResponse.accountExists === "error") {
+  		return CopCheckResults.MATCH_ERROR;
   	} else {
   		return CopCheckResults.NO_MATCH;
   	}

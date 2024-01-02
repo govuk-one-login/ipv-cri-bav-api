@@ -12,6 +12,7 @@ import { PersonIdentityItem } from "../../../models/PersonIdentityItem";
 import { BavService } from "../../../services/BavService";
 import { VerifyAccountRequestProcessor } from "../../../services/VerifyAccountRequestProcessor";
 import { HmrcService } from "../../../services/HmrcService";
+import { Constants } from "../../../utils/Constants";
 
 const mockBavService = mock<BavService>();
 const mockHmrcService = mock<HmrcService>();
@@ -80,6 +81,19 @@ describe("VerifyAccountRequestProcessor", () => {
 			});
 		});
 
+		it("returns error response if session has exceeded retryCount", async () => {
+			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
+			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, retryCount: Constants.MAX_RETRIES });
+
+			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
+
+			expect(response.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
+			expect(response.body).toBe("Too many attempts");
+			expect(logger.error).toHaveBeenCalledWith(`Session retry count is ${Constants.MAX_RETRIES}, cannot have another attempt`, {
+				messageCode: MessageCodes.TOO_MANY_RETRIES,
+			});
+		});
+
 		it("saves account details to person identity table", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
 			mockBavService.getSessionById.mockResolvedValueOnce(session);
@@ -128,9 +142,33 @@ describe("VerifyAccountRequestProcessor", () => {
 
 			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
 
-			expect(mockBavService.saveCopCheckResult).toHaveBeenCalledWith(sessionId, CopCheckResults.FULL_MATCH);
+			expect(mockBavService.saveCopCheckResult).toHaveBeenCalledWith(sessionId, CopCheckResults.FULL_MATCH, undefined);
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
-			expect(response.body).toBe("Success");
+			expect(response.body).toBe(JSON.stringify({ message:"Success" }));
+		});
+
+		it("saves saveCopCheckResult with increased retryCount if there was no match", async () => {
+			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
+			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, retryCount: 1 });
+			mockHmrcService.verify.mockResolvedValueOnce({ ...hmrcVerifyResponse, nameMatches: "partial" });
+
+			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
+
+			expect(mockBavService.saveCopCheckResult).toHaveBeenCalledWith(sessionId, CopCheckResults.PARTIAL_MATCH, 2);
+			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
+			expect(response.body).toBe(JSON.stringify({ message:"Success", retryCount: 2 }));
+		});
+
+		it("returns error response if cop check result is MATCH_ERROR", async () => {
+			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
+			mockBavService.getSessionById.mockResolvedValueOnce(session);
+			mockHmrcService.verify.mockResolvedValueOnce({ ...hmrcVerifyResponse, nameMatches: "error" });
+
+			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
+
+			expect(response.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);
+			expect(response.body).toBe("Error received in COP verify response");
+			expect(logger.warn).toHaveBeenCalledWith("Error received in COP verify response");
 		});
 	});
 
@@ -141,11 +179,11 @@ describe("VerifyAccountRequestProcessor", () => {
 			{ nameMatches: "no", accountExists: "yes", result: CopCheckResults.NO_MATCH },
 			{ nameMatches: "indeterminate", accountExists: "yes", result: CopCheckResults.NO_MATCH },
 			{ nameMatches: "inapplicable", accountExists: "yes", result: CopCheckResults.NO_MATCH },
-			{ nameMatches: "error", accountExists: "yes", result: CopCheckResults.NO_MATCH },
+			{ nameMatches: "error", accountExists: "yes", result: CopCheckResults.MATCH_ERROR },
 			{ nameMatches: "yes", accountExists: "no", result: CopCheckResults.NO_MATCH },
 			{ nameMatches: "yes", accountExists: "indeterminate", result: CopCheckResults.NO_MATCH },
 			{ nameMatches: "yes", accountExists: "inapplicable", result: CopCheckResults.NO_MATCH },
-			{ nameMatches: "yes", accountExists: "error", result: CopCheckResults.NO_MATCH },
+			{ nameMatches: "yes", accountExists: "error", result: CopCheckResults.MATCH_ERROR },
 		])("returns $result where nameMatches is $nameMatches and accountExists is $accountExists", ({ nameMatches, accountExists, result }) => {
 			expect(
 				verifyAccountRequestProcessorTest.calculateCopCheckResult({ ...hmrcVerifyResponse, nameMatches, accountExists }),

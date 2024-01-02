@@ -65,7 +65,38 @@ describe("BAV CRI: /verify-account Endpoint Happy Path Tests", () => {
 		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_PERSONAL_IDENTITY_TABLE_NAME, "accountNumber", verifyAccountYesPayload.account_number.padStart(8, "0"));
 		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_PERSONAL_IDENTITY_TABLE_NAME, "sortCode", verifyAccountYesPayload.sort_code);
 	});
+
 });
+
+describe("BAV CRI: /verify-account Retry Happy Path Tests", () => {
+	it.each([
+		["Ashley", "Allen"],
+		["Deborah", "Dawson"],
+		["Nigel", "Newton"],
+		["Yasmine", "Dawson"],
+		["Yasmine", "Newton"],
+		["Yasmine", "Palmer"],
+	])("Name Retry Tests", async (firstName: string, lastName: any) => {
+		const newBavStubPayload = structuredClone(bavStubPayload);
+		newBavStubPayload.shared_claims.name[0].nameParts[0].value = firstName;
+		newBavStubPayload.shared_claims.name[0].nameParts[1].value = lastName;
+
+		const sessionId = await startStubServiceAndReturnSessionId(newBavStubPayload);
+
+		// Verify-account first name mismatch
+		const verifyAccountResponse = await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		expect(verifyAccountResponse.status).toBe(200);
+		expect(verifyAccountResponse.data.message).toBe("Success");
+		expect(verifyAccountResponse.data.retryCount).toBe(1);
+
+		// Verify-account second name mismatch
+		const verifyAccountResponseRetry = await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		expect(verifyAccountResponseRetry.status).toBe(200);
+		expect(verifyAccountResponseRetry.data.message).toBe("Success");
+		expect(verifyAccountResponseRetry.data.retryCount).toBe(2);
+	});
+});
+
 
 describe("BAV CRI: /authorization Endpoint Happy Path Tests", () => {
 	let sessionId: string;
