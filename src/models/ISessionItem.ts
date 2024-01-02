@@ -31,6 +31,7 @@ export interface ISessionItem extends IBAVSession {
 	authSessionState: string;
 	evidence_requested?: EvidenceRequested;
 	copCheckResult?: CopCheckResult;
+	hmrcUuid?: string;
 	retryCount?: number;
 }
 
