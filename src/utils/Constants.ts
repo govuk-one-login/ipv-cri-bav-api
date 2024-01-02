@@ -70,7 +70,7 @@ export class Constants {
 
   static readonly HMRC_USER_AGENT = "one-login-bav-cri";
   
-  
+  static readonly MAX_RETRIES = 2;
 }
 
 export const EnvironmentVariables = {

@@ -69,6 +69,32 @@ describe("BAV CRI: /verify-account Endpoint Unhappy Path Tests", () => {
 		// Make sure authSession state is NOT BAV_DATA_RECEIVED
 		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_SESSION_CREATED");
 	});
+
+	it.each([
+		["Ashley", "Allen"],
+		["Deborah", "Dawson"],
+		["Nigel", "Newton"],
+		["Yasmine", "Dawson"],
+		["Yasmine", "Newton"],
+		["Yasmine", "Palmer"],
+	])("Name Retry Tests - Too many retries rejection", async (firstName: string, lastName: any) => {
+		const newBavStubPayload = structuredClone(bavStubPayload); 
+		newBavStubPayload.shared_claims.name[0].nameParts[0].value = firstName;
+		newBavStubPayload.shared_claims.name[0].nameParts[1].value = lastName;
+
+		sessionId = await startStubServiceAndReturnSessionId(newBavStubPayload);
+
+		// Verify-account first name mismatch
+		await verifyAccountPost(verifyAccountYesPayload, sessionId);
+
+		// Verify-account second name mismatch
+		await verifyAccountPost(verifyAccountYesPayload, sessionId);
+
+		// Verify-account third name mismatch
+		const verifyAccountResponseSecondRetry = await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		expect(verifyAccountResponseSecondRetry.status).toBe(401);
+		expect(verifyAccountResponseSecondRetry.data).toBe("Too many attempts");
+	});
 });
 
 describe("BAV CRI: /authorization Endpoint Unhappy Path Tests", () => {
