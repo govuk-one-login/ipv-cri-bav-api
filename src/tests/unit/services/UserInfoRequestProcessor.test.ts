@@ -131,7 +131,7 @@ describe("UserInfoRequestProcessor", () => {
 			"timestamp":1585695600,
 			"user":{
 				"ip_address":"127.0.0.1",
-				"persistent_session_id":"sdgsdg",
+				"govuk_signin_journey_id": "sdfssg",
 				"session_id":"sdfsdg",
 				"user_id":"sub",
 			},
@@ -143,8 +143,8 @@ describe("UserInfoRequestProcessor", () => {
 			"timestamp":1585695600,
 			"user":{
 				"ip_address":"127.0.0.1",
-				"persistent_session_id":"sdgsdg",
 				"session_id":"sdfsdg",
+				"govuk_signin_journey_id": "sdfssg",
 				"user_id":"sub",
 			},
 		});

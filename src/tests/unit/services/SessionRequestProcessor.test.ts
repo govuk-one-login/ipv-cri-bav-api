@@ -231,7 +231,6 @@ describe("SessionRequestProcessor", () => {
 				user: {
 					govuk_signin_journey_id: "abcdef",
 					ip_address: "",
-					persistent_session_id: undefined,
 					session_id: "mock-session-id",
 					user_id: "",
 				},
