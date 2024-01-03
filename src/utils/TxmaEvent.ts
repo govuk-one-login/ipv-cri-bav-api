@@ -4,7 +4,6 @@ import { absoluteTimeNow } from "./DateTimeUtils";
 
 export type TxmaEventName =
 	"BAV_CRI_START" | 
-	"BAV_CRI_AUTH_CODE_ISSUED" | 
 	"BAV_CRI_VC_ISSUED" |
 	"BAV_CRI_END" | 
 	"BAV_CRI_SESSION_ABORTED";
