@@ -86,6 +86,7 @@ export class VerifyAccountRequestProcessor {
   		return new Response(HttpCodesEnum.UNAUTHORIZED, "Too many attempts");
   	}
 
+  	const name = getFullName(person.name);
   	this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
 
   	let { hmrcUuid } = session;
@@ -94,10 +95,50 @@ export class VerifyAccountRequestProcessor {
   		await this.BavService.saveHmrcUuid(sessionId, hmrcUuid);
   	}
 
-  	const name = getFullName(person.name);
+  	const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
+  	await this.BavService.sendToTXMA(
+  		this.txmaQueueUrl,
+  		{
+  			event_name: TxmaEventNames.BAV_COP_REQUEST_SENT,
+  			...coreEventFields,
+  			extensions:{
+  				evidence:[
+						 {
+  						txn: hmrcUuid,
+  					},
+  				],
+			 },
+			 restricted:{
+  				"CoP_request_details": [
+					 {
+  						name,
+  						sortCode,
+  						accountNumber: paddedAccountNumber,
+  						attemptNum: session.retryCount || 0,
+					 },
+  				],
+		 		},
+  		},
+  	);
+
   	const verifyResponse = await this.HmrcService.verify(
   		{ accountNumber: paddedAccountNumber, sortCode, name, uuid: hmrcUuid },
   		this.hmrcToken,
+  	);
+
+  	await this.BavService.sendToTXMA(
+  		this.txmaQueueUrl,
+  		{
+  			event_name: TxmaEventNames.BAV_COP_RESPONSE_RECEIVED,
+  			...coreEventFields,
+  			extensions:{
+  				evidence:[
+						 {
+  						txn: hmrcUuid,
+  					},
+  				],
+			  },
+  		},
   	);
 
   	if (!verifyResponse) {
@@ -123,31 +164,6 @@ export class VerifyAccountRequestProcessor {
   		retryCount = session.retryCount ? session.retryCount + 1 : 1;
   	}
   	await this.BavService.saveCopCheckResult(sessionId, copCheckResult, retryCount);
-
-  	const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
-  	await this.BavService.sendToTXMA(
-  		this.txmaQueueUrl,
-  		{
-  			event_name: TxmaEventNames.BAV_COP_REQUEST_SENT,
-  			...coreEventFields,
-  			extensions:{
-  				evidence:[
-						 {
-  						txn: hmrcUuid,
-  					},
-  				],
-			 },
-			 restricted:{
-  				"CoP_request_details": [
-					 {
-  						name,
-  						sortCode,
-  						accountNumber: paddedAccountNumber,
-  						attemptNum: retryCount || 0,
-					 },
-  				],
-		 },
-  	});
 
   	return new Response(HttpCodesEnum.OK, JSON.stringify({
   		message: "Success",
