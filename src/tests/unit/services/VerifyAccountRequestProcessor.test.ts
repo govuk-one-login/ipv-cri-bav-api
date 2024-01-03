@@ -13,6 +13,7 @@ import { BavService } from "../../../services/BavService";
 import { VerifyAccountRequestProcessor } from "../../../services/VerifyAccountRequestProcessor";
 import { HmrcService } from "../../../services/HmrcService";
 import { Constants } from "../../../utils/Constants";
+import { absoluteTimeNow } from "../../../utils/DateTimeUtils";
 
 const hmrcUuid = "new hmrcUuid";
 jest.mock("crypto", () => ({
@@ -133,6 +134,54 @@ describe("VerifyAccountRequestProcessor", () => {
 			await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress);
 
 			expect(mockHmrcService.verify).toHaveBeenCalledWith({ accountNumber: body.account_number, sortCode: body.sort_code, name: "Frederick Joseph Flintstone", uuid: hmrcUuid }, TOKEN_SSM_PARAM );
+			expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "MYQUEUE", {
+				event_name: "BAV_COP_REQUEST_SENT",
+				client_id: session.clientId,
+				component_id: "https://XXX-c.env.account.gov.uk",
+				extensions: {
+					evidence: [
+				 		{
+					 		txn: "new hmrcUuid",
+						},
+					],
+				},
+				restricted:{
+  				"CoP_request_details": [
+					 {
+  						name: "Frederick Joseph Flintstone",
+  						sortCode: body.sort_code,
+  						accountNumber: body.account_number,
+  						attemptNum: 0,
+					 },
+  				],
+		 		},
+				timestamp: absoluteTimeNow(),
+				user:  {
+					govuk_signin_journey_id: session.clientSessionId,
+					ip_address: clientIpAddress,
+					session_id: session.sessionId,
+					user_id: session.subject,
+				},
+			});
+			expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(2, "MYQUEUE", {
+				event_name: "BAV_COP_RESPONSE_RECEIVED",
+				client_id: session.clientId,
+				component_id: "https://XXX-c.env.account.gov.uk",
+				extensions: {
+					evidence: [
+				 		{
+					 		txn: "new hmrcUuid",
+						},
+					],
+				},
+				user:  {
+					govuk_signin_journey_id: session.clientSessionId,
+					ip_address: clientIpAddress,
+					session_id: session.sessionId,
+					user_id: session.subject,
+				},
+				timestamp: absoluteTimeNow(),
+			});
 		});
 
 		it("pads account number if it's too short", async () => {

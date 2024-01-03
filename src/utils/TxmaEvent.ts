@@ -1,4 +1,3 @@
-import { VerifiedCredentialSubject } from "../models/IVeriCredential";
 import { ISessionItem } from "../models/ISessionItem";
 import { absoluteTimeNow } from "./DateTimeUtils";
 
