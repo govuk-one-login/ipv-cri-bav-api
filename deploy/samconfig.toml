@@ -2,8 +2,8 @@ version = 0.1
 [dev]
 [dev.deploy]
 [dev.deploy.parameters]
-stack_name = "backend-ddunford-bav"
-s3_prefix = "backend-ddunford-bav"
+stack_name = "bav-cri-api-partialmatch"
+s3_prefix = "bav-cri-api-partialmatch"
 region = "eu-west-2"
 confirm_changeset = false
 capabilities = "CAPABILITY_IAM"
