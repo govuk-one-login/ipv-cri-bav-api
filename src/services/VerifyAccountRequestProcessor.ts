@@ -126,6 +126,11 @@ export class VerifyAccountRequestProcessor {
   		this.hmrcToken,
   	);
 
+  	if (!verifyResponse) {
+  		this.logger.error("No verify reponse recieved", { messageCode: MessageCodes.NO_VERIFY_RESPONSE });
+  		return new Response(HttpCodesEnum.SERVER_ERROR, "Could not verify account");
+  	}
+
   	await this.BavService.sendToTXMA(
   		this.txmaQueueUrl,
   		{
@@ -140,11 +145,6 @@ export class VerifyAccountRequestProcessor {
 			  },
   		},
   	);
-
-  	if (!verifyResponse) {
-  		this.logger.error("No verify reponse recieved", { messageCode: MessageCodes.NO_VERIFY_RESPONSE });
-  		return new Response(HttpCodesEnum.SERVER_ERROR, "Could not verify account");
-  	}
 
   	await this.BavService.updateAccountDetails(
   		{ sessionId, accountNumber: paddedAccountNumber, sortCode },
