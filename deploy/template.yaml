@@ -892,7 +892,7 @@ Resources:
   PersonInfoKeyFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/BAV-PersonInfoKey-${AWS::StackName}"
+      LogGroupName: !Sub "/aws/lambda/BAV-Person-Info-Key-${AWS::StackName}"
       RetentionInDays:
         !FindInMap [
           EnvironmentConfiguration,
