@@ -4,6 +4,7 @@ import { absoluteTimeNow } from "./DateTimeUtils";
 
 export type TxmaEventName =
 	"BAV_CRI_START" | 
+	"BAV_COP_REQUEST_SENT" | 
 	"BAV_CRI_VC_ISSUED" |
 	"BAV_CRI_END" | 
 	"BAV_CRI_SESSION_ABORTED";
@@ -22,13 +23,19 @@ export interface BaseTxmaEvent {
 	"component_id": string;
 }
 
+export interface CopRequestDetails {
+	name: string;
+	sortCode: string;
+	accountNumber: string;
+	attemptNum: number;
+}
+
 export interface RestrictedObject {
-	"user"?: VerifiedCredentialSubject;
 	"name"?: object[];
+	"CoP_request_details": CopRequestDetails[];
 }
 
 export type VerifiedCredentialEvidenceTxMA = Array<{
-	type?: string;
 	txn: string;
 	strengthScore?: number;
 	validityScore?: number;
@@ -38,7 +45,6 @@ export type VerifiedCredentialEvidenceTxMA = Array<{
 
 export interface ExtensionObject {
 	"evidence"?: VerifiedCredentialEvidenceTxMA;
-	"previous_govuk_signin_journey_id"?: string;
 }
 
 export interface TxmaEvent extends BaseTxmaEvent {
