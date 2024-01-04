@@ -16,7 +16,6 @@ import { Response } from "../utils/Response";
 import { buildCoreEventFields } from "../utils/TxmaEvent";
 import { eventToSubjectIdentifier } from "../utils/Validations";
 import { AppError } from "../utils/AppError";
-import { PersonIdentityItem } from "../models/PersonIdentityItem";
 import { VerifiableCredentialService } from "./VerifiableCredentialService";
 
 export class UserInfoRequestProcessor {
@@ -62,9 +61,10 @@ export class UserInfoRequestProcessor {
   	return UserInfoRequestProcessor.instance;
 	}
 
+	// eslint-disable-next-line max-lines-per-function, complexity
 	async processRequest(event: APIGatewayProxyEvent): Promise<Response> {
-		// Validate the Authentication header and retrieve the sub (sessionId) from the JWT token.
 		let sessionId: string;
+
 		try {
 			sessionId = await eventToSubjectIdentifier(this.kmsDecryptor, event);
 		} catch (error) {
@@ -82,7 +82,6 @@ export class UserInfoRequestProcessor {
 			return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
 		}
 
-		// add sessionId to all subsequent log messages
 		this.logger.appendKeys({ sessionId });
 		
 		const session: ISessionItem | undefined = await this.BavService.getSessionById(sessionId);
@@ -93,11 +92,10 @@ export class UserInfoRequestProcessor {
 			return new Response(HttpCodesEnum.UNAUTHORIZED, "No Session Found");
 		}
 
-		// add govuk_signin_journey_id to all subsequent log messages
 		this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
 
 		this.logger.info("Found Session:", {
-			// note: we only log specific non-PII attributes from the session object:
+			// note: we only log specific non-PII attributes from the session object
 			session: {
 				authSessionState: session.authSessionState,
 				accessTokenExpiryDate: session.accessTokenExpiryDate,
@@ -111,7 +109,7 @@ export class UserInfoRequestProcessor {
   
 		this.metrics.addMetric("found session data", MetricUnits.Count, 1);
 
-		const personInfo: PersonIdentityItem | undefined = await this.BavService.getPersonIdentityBySessionId(sessionId, this.personIdentityTableName);
+		const personInfo = await this.BavService.getPersonIdentityBySessionId(sessionId, this.personIdentityTableName);
 		if (!personInfo) {
 			this.logger.error("No person found with this session ID", {
 				messageCode: MessageCodes.PERSON_NOT_FOUND,
@@ -119,14 +117,11 @@ export class UserInfoRequestProcessor {
 			return new Response(HttpCodesEnum.UNAUTHORIZED, "Missing Person Identity");
 		}
 
-		this.logger.info("Found person Identity data");
-  
 		this.metrics.addMetric("found person identity data", MetricUnits.Count, 1);
 
-		// Validate the AuthSessionState to be "BAV_ACCESS_TOKEN_ISSUED"
 		if (session.authSessionState !== AuthSessionState.BAV_ACCESS_TOKEN_ISSUED) {
 			this.logger.error("Session is in wrong Auth state", {
-				// note: we only log specific non-PII attributes from the session object:
+				// note: we only log specific non-PII attributes from the session object
 				expectedSessionState: AuthSessionState.BAV_ACCESS_TOKEN_ISSUED,
 				session: {
 					authSessionState: session.authSessionState,
@@ -136,35 +131,23 @@ export class UserInfoRequestProcessor {
 			return new Response(HttpCodesEnum.UNAUTHORIZED, "Invalid Session State");
 		}
 
-		// Person info required for VC
 		const names = personInfo.name[0].nameParts;
 
-		// Validate the User Info data presence required to generate the VC
 		if (names && names.length > 0 && personInfo.sortCode && personInfo.accountNumber) {
-
-			//Generate VC and create a signedVC as response back to IPV Core.
 			const signedJWT = await this.verifiableCredentialService.generateSignedVerifiableCredentialJwt(session, names, {
 				sortCode: personInfo.sortCode,
 				accountNumber: personInfo.accountNumber,
 			}, absoluteTimeNow);
 
-			// Add metric and send TXMA event to the sqsqueue
 			this.metrics.addMetric("Generated signed verifiable credential jwt", MetricUnits.Count, 1);
 
 			await this.BavService.updateSessionAuthState(session.sessionId, AuthSessionState.BAV_CRI_VC_ISSUED);
 
 			const txmaCoreFields = buildCoreEventFields(session, this.issuer, session.clientIpAddress, absoluteTimeNow);
-			
 			await this.BavService.sendToTXMA(
 				this.txmaQueueUrl, {
 					event_name: TxmaEventNames.BAV_CRI_VC_ISSUED,
 					...txmaCoreFields,
-					restricted: {
-						name: [{
-							nameParts: names,
-						},
-						],
-					},
 				});
 
 			await this.BavService.sendToTXMA(
@@ -173,9 +156,7 @@ export class UserInfoRequestProcessor {
 					...txmaCoreFields,
 				},
 			);
-			
 
-			// return success response
 			return new Response(HttpCodesEnum.OK, JSON.stringify({
 				sub: session.subject,
 				"https://vocab.account.gov.uk/v1/credentialJWT": [signedJWT],
@@ -190,6 +171,5 @@ export class UserInfoRequestProcessor {
 			});
 			return new Response(HttpCodesEnum.BAD_REQUEST, "Bad Request");
 		}
-
 	}
 }
