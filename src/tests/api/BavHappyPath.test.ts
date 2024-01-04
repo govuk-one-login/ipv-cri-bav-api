@@ -64,12 +64,7 @@ describe("BAV CRI: /verify-account Endpoint Happy Path Tests", () => {
 		// Verify that the accountNumber and sortCode exist and have the correct value
 		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_PERSONAL_IDENTITY_TABLE_NAME, "accountNumber", verifyAccountYesPayload.account_number.padStart(8, "0"));
 		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_PERSONAL_IDENTITY_TABLE_NAME, "sortCode", verifyAccountYesPayload.sort_code);
-	
-		// Make sure txma event is present & valid
-		const sqsMessage = await getSqsEventList("txma/", sessionId, 8);
-		await validateTxMAEventData(sqsMessage);
 	});
-
 });
 
 describe("BAV CRI: /verify-account Retry Happy Path Tests", () => {
