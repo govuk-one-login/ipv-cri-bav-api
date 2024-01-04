@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 /* eslint-disable @typescript-eslint/unbound-method */
 import { mock } from "jest-mock-extended";
 import { Logger } from "@aws-lambda-powertools/logger";
@@ -7,6 +8,7 @@ import { KmsJwtAdapter } from "../../../utils/KmsJwtAdapter";
 import { CopCheckResult } from "../../../models/enums/CopCheckResult";
 import { MessageCodes } from "../../../models/enums/MessageCodes";
 import { AppError } from "../../../utils/AppError";
+import { Constants } from "../../../utils/Constants";
 
 const mockKmsJwtAdapter = mock<KmsJwtAdapter>();
 const mockLogger = mock<Logger>();
@@ -16,7 +18,7 @@ function getMockSessionItem(): ISessionItem {
 		sessionId: "sdfsdg",
 		clientId: "ipv-core-stub",
 		accessToken: "AbCdEf123456",
-		clientSessionId: "sdfssg",
+		clientSessionId: "testJourneyId",
 		authorizationCode: "",
 		authorizationCodeExpiryDate: 123,
 		redirectUri: "http",
@@ -34,6 +36,35 @@ function getMockSessionItem(): ISessionItem {
 	return sess;
 }
 
+const journeyId = "testJourneyId";
+const successBlock = {
+	type: Constants.IDENTITY_CHECK,
+	txn: journeyId,
+	strengthScore: 3,
+	validityScore: 2,
+	checkDetails: [
+		{
+			checkMethod: "data",
+			identityCheckPolicy: "none",
+		},
+	],
+};
+const failureBlock = {
+	type: Constants.IDENTITY_CHECK,
+	txn: journeyId,
+	strengthScore: 3,
+	validityScore: 0,
+	failedCheckDetails: [
+		{
+			checkMethod: "data",
+			identityCheckPolicy: "none",
+		},
+	],
+	ci: [
+		"D15",
+	],
+};
+
 describe("VerifiableCredentialService", () => {
 	const mockIssuer = "mockIssuer";
 	let service: VerifiableCredentialService;
@@ -43,7 +74,6 @@ describe("VerifiableCredentialService", () => {
 		service = new VerifiableCredentialService( mockKmsJwtAdapter, mockIssuer, mockLogger);
 	});
 
-	// Singleton pattern tests
 	describe("getInstance", () => {
 		it("should create a new instance if not already created", () => {
 			const newInstance = VerifiableCredentialService.getInstance( mockKmsJwtAdapter, mockIssuer, mockLogger);
@@ -57,10 +87,8 @@ describe("VerifiableCredentialService", () => {
 		});
 	});
 
-	// Evidence block tests
 	describe("evidence block generation", () => {
 		it("should return a success evidence block correctly", () => {
-			const journeyId = "testJourneyId";
 			const evidenceBlock = service.getSuccessEvidenceBlock(journeyId);
 			expect(evidenceBlock).toEqual(expect.objectContaining({
 				txn: journeyId,
@@ -70,7 +98,6 @@ describe("VerifiableCredentialService", () => {
 		});
 
 		it("should return a failure evidence block correctly", () => {
-			const journeyId = "testJourneyId";
 			const evidenceBlock = service.getFailureEvidenceBlock(journeyId);
 			expect(evidenceBlock).toEqual(expect.objectContaining({
 				txn: journeyId,
@@ -81,7 +108,6 @@ describe("VerifiableCredentialService", () => {
 		});
 	});
 
-	// JWT generation tests
 	describe("generateSignedVerifiableCredentialJwt", () => {
 		const mockSessionItem = getMockSessionItem();
 		const mockNameParts = [
@@ -94,27 +120,30 @@ describe("VerifiableCredentialService", () => {
 			accountNumber: "10293435",
 		};
 		const mockNow = () => 1234567890;
-		const mockUUID = "mockUUID";
 
 		it("should generate a signed JWT for a full match result", async () => {
-			const expectedResult = "mockSignedJwt";
-			mockKmsJwtAdapter.sign.mockResolvedValue(expectedResult);
+			const signedJWT = "mockSignedJwt";
+			mockKmsJwtAdapter.sign.mockResolvedValue(signedJWT);
 
-			const jwt = await service.generateSignedVerifiableCredentialJwt(mockSessionItem, mockNameParts, mockBankAccountInfo, mockNow);
+			const result = await service.generateSignedVerifiableCredentialJwt(
+				mockSessionItem, mockNameParts, mockBankAccountInfo, mockNow,
+			);
 
-			expect(jwt).toBe(expectedResult);
+			expect(result).toEqual({ signedJWT, evidenceInfo: successBlock });
 			expect(mockKmsJwtAdapter.sign).toHaveBeenCalled();
 			expect(mockLogger.info).toHaveBeenCalledWith("Generated VerifiableCredential jwt", { jti: expect.any(String) });
 		});
 
 		it("should generate a signed JWT for a non-full match result", async () => {
 			mockSessionItem.copCheckResult = CopCheckResult.PARTIAL_MATCH;
-			const expectedResult = "mockSignedJwtPartial";
-			mockKmsJwtAdapter.sign.mockResolvedValue(expectedResult);
+			const signedJWT = "mockSignedJwtPartial";
+			mockKmsJwtAdapter.sign.mockResolvedValue(signedJWT);
 
-			const jwt = await service.generateSignedVerifiableCredentialJwt(mockSessionItem, mockNameParts, mockBankAccountInfo, mockNow);
+			const result = await service.generateSignedVerifiableCredentialJwt(
+				mockSessionItem, mockNameParts, mockBankAccountInfo, mockNow,
+			);
 
-			expect(jwt).toBe(expectedResult);
+			expect(result).toEqual({ signedJWT, evidenceInfo: failureBlock });
 			expect(mockKmsJwtAdapter.sign).toHaveBeenCalled();
 			expect(mockLogger.info).toHaveBeenCalledWith("Generated VerifiableCredential jwt", { jti: expect.any(String) });
 		});

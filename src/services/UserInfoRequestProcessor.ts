@@ -134,10 +134,13 @@ export class UserInfoRequestProcessor {
 		const names = personInfo.name[0].nameParts;
 
 		if (names && names.length > 0 && personInfo.sortCode && personInfo.accountNumber) {
-			const signedJWT = await this.verifiableCredentialService.generateSignedVerifiableCredentialJwt(session, names, {
-				sortCode: personInfo.sortCode,
-				accountNumber: personInfo.accountNumber,
-			}, absoluteTimeNow);
+			const { signedJWT, evidenceInfo } = await this.verifiableCredentialService.generateSignedVerifiableCredentialJwt(
+				session,
+				names, {
+					sortCode: personInfo.sortCode,
+					accountNumber: personInfo.accountNumber,
+				},
+				absoluteTimeNow);
 
 			this.metrics.addMetric("Generated signed verifiable credential jwt", MetricUnits.Count, 1);
 
@@ -148,6 +151,28 @@ export class UserInfoRequestProcessor {
 				this.txmaQueueUrl, {
 					event_name: TxmaEventNames.BAV_CRI_VC_ISSUED,
 					...txmaCoreFields,
+					restricted:{
+						name: personInfo.name,
+						bankAccount: [{
+							sortCode: personInfo.sortCode,
+							accountNumber: personInfo.accountNumber,
+						}],
+				  },
+					extensions: {
+						evidence: [
+							{
+								txn: session.hmrcUuid!,
+								strengthScore: evidenceInfo.strengthScore,
+								validityScore: evidenceInfo.validityScore,
+								attemptNum: session.retryCount,
+								ci: evidenceInfo.ci,
+								ciReasons: [{
+									ci: evidenceInfo.ci?.[0],
+									reason: session.copCheckResult,
+								}],
+							},
+						],
+				 },
 				});
 
 			await this.BavService.sendToTXMA(
