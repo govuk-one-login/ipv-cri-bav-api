@@ -70,7 +70,6 @@ describe("BAV CRI: /verify-account Endpoint Happy Path Tests", () => {
 		const sqsMessage = await getSqsEventList("txma/", sessionId, 8);
 		await validateTxMAEventData(sqsMessage);
 	});
-
 });
 
 describe("BAV CRI: /verify-account Retry Happy Path Tests", () => {
