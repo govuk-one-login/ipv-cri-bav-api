@@ -26,6 +26,7 @@
     "jose": "^4.11.2",
     "lodash": "^4.17.21",
     "node-jose": "^2.1.1",
+    "node-rsa": "^1.1.1",
     "notifications-node-client": "^7.0.0"
   },
   "scripts": {
