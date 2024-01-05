@@ -318,7 +318,7 @@ export async function abortPost(sessionId: string): Promise<any> {
 	}
 }
 
-function validatePersonInfoResponse(personInfoKey: any, personInfoResponse: any, firstName: string, lastName: string): void {
+export function validatePersonInfoResponse(personInfoKey: any, personInfoResponse: any, firstName: string, lastName: string): void {
 	const privateKey = new NodeRSA(personInfoKey);
 	const encryptedValue = personInfoResponse.data;
 	const decryptedValue = privateKey.decrypt(encryptedValue, "utf8");
