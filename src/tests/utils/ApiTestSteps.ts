@@ -66,9 +66,9 @@ export async function personInfoGet(sessionId: any): Promise<any> {
 }
 
 export async function personInfoKeyGet(): Promise<any> {
-	const path = "https://api-bav-cri-api-ccooling-1.review-bav.dev.account.gov.uk/person-info-key";
+	const path = "/person-info-key";
 	try {
-		const getRequest = await axios.get(path);
+		const getRequest = await API_INSTANCE.get(path);
 		expect(getRequest.status).toBe(200);
 		return getRequest;
 	} catch (error: any) {
