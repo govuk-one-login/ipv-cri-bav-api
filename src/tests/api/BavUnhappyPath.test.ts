@@ -11,6 +11,7 @@ import {
 	getSessionAndVerifyKey,
 } from "../utils/ApiTestSteps";
 import { constants } from "../utils/ApiConstants";
+import { BankDetailsPayload } from "../models/BankDetailsPayload";
 
 describe("BAV CRI: /session Endpoint Unhappy Path Tests", () => {
 	let stubResponse: any;
@@ -47,7 +48,7 @@ describe("BAV CRI: /verify-account Endpoint Unhappy Path Tests", () => {
 		sessionId = await startStubServiceAndReturnSessionId(newBavStubPayload);
 
 		// Verify-account request
-		const verifyAccountResponse = await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		const verifyAccountResponse = await verifyAccountPost(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number), sessionId);
 		expect(verifyAccountResponse.status).toBe(500);
 
 		// Make sure authSession state is NOT BAV_DATA_RECEIVED
@@ -63,7 +64,7 @@ describe("BAV CRI: /verify-account Endpoint Unhappy Path Tests", () => {
 		sessionId = await startStubServiceAndReturnSessionId(newBavStubPayload);
 
 		// Verify-account request
-		const verifyAccountResponse = await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		const verifyAccountResponse = await verifyAccountPost(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number), sessionId);
 		expect(verifyAccountResponse.status).toBe(500);
 
 		// Make sure authSession state is NOT BAV_DATA_RECEIVED
@@ -111,7 +112,7 @@ describe("BAV CRI: /authorization Endpoint Unhappy Path Tests", () => {
 
 	it("Repeated Request Made Test", async () => {
 		const origSessionId = sessionId;
-		await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		await verifyAccountPost(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number), sessionId);
 		const authResponse = await authorizationGet(sessionId);
 		const authCode = authResponse.data.authorizationCode;
 		const authRepeatResponse = await authorizationGet(origSessionId);
@@ -129,7 +130,7 @@ describe("BAV CRI: /token Endpoint Unhappy Path Tests", () => {
 
 	it("Invalid Session State Test", async () => {
 		// Verify-account request
-		await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		await verifyAccountPost(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number), sessionId);
 
 		// Authorization request
 		const authResponse = await authorizationGet(sessionId);
@@ -150,7 +151,7 @@ describe("BAV CRI: /userinfo Endpoint Unhappy Path Tests", () => {
 		const sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
 
 		// Verify-account request
-		await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		await verifyAccountPost(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number), sessionId);
 
 		// Authorization
 		const authResponse = await authorizationGet(sessionId);

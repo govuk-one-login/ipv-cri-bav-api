@@ -8,6 +8,7 @@ import wellKnownGetSchema from "../data/wellKnownJwksResponseSchema.json";
 import { constants } from "./ApiConstants";
 import { ISessionItem } from "../../models/ISessionItem";
 import { jwtUtils } from "../../utils/JwtUtils";
+import { BankDetailsPayload } from "../models/BankDetailsPayload";
 
 const API_INSTANCE = axios.create({ baseURL: constants.DEV_CRI_BAV_API_URL });
 const ajv = new Ajv({ strict: false });
@@ -63,10 +64,10 @@ export async function sessionPost(clientId: any, request: any): Promise<any> {
 	}
 }
 
-export async function verifyAccountPost(bankDetails: any, sessionId: any): Promise<any> {
+export async function verifyAccountPost(bankDetails: BankDetailsPayload, sessionId: any): Promise<any> {
 	const path = "/verify-account";
 	try {
-		const postRequest = await API_INSTANCE.post(path, bankDetails, { headers: { "x-govuk-signin-session-id": sessionId } });
+		const postRequest = await API_INSTANCE.post(path, JSON.stringify(bankDetails), { headers: { "x-govuk-signin-session-id": sessionId } });
 		return postRequest;
 	} catch (error: any) {
 		console.log(`Error response from ${path} endpoint: ${error}`);
@@ -259,11 +260,11 @@ export async function validateTxMAEventData(keyList: any): Promise<any> {
 	}
 }
 
-export function validateJwtToken(jwtToken: any): void {
+export function validateJwtToken(jwtToken: any, payload: BankDetailsPayload): void {
 	const [rawHead, rawBody, signature] = jwtToken.split(".");
 
 	validateRawHead(rawHead);
-	validateRawBody(rawBody);
+	validateRawBody(rawBody, payload);
 }
 
 function validateRawHead(rawHead: any): void {
@@ -272,11 +273,13 @@ function validateRawHead(rawHead: any): void {
 	expect(decodeRawHead.typ).toBe("JWT");
 }
 
-function validateRawBody(rawBody: any): void {
+function validateRawBody(rawBody: any, payload: BankDetailsPayload): void {
 	const decodedBody = JSON.parse(jwtUtils.base64DecodeToString(rawBody.replace(/\W/g, "")));
 	expect(decodedBody.jti).toBeTruthy();
 	expect(decodedBody.vc.evidence[0].strengthScore).toBe(3);
 	expect(decodedBody.vc.evidence[0].validityScore).toBe(2);
+	expect(decodedBody.vc.credentialSubject.bankAccount[0].sortCode).toBe(payload.sort_code);
+	expect(decodedBody.vc.credentialSubject.bankAccount[0].accountNumber).toBe(payload.account_number.padStart(8, "0"));
 }
 
 export async function abortPost(sessionId: string): Promise<any> {
