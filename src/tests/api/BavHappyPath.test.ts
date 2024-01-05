@@ -7,6 +7,7 @@ import {
 	getSessionAndVerifyKeyExists,
 	getSqsEventList,
 	personInfoGet,
+	personInfoKeyGet,
 	startStubServiceAndReturnSessionId,
 	verifyAccountPost,
 	tokenPost,
@@ -58,7 +59,10 @@ describe("BAV CRI: /person-info Endpoint Happy Path Tests", () => {
 		// Person Info
 		const personInfoResponse = await personInfoGet(sessionId);
 		expect(personInfoResponse.status).toBe(200);
-		await validatePersonInfoResponse(personInfoResponse, firstName, lastName);
+
+		// Person Info Key
+		const personInfoKey = await personInfoKeyGet();
+		await validatePersonInfoResponse(personInfoKey.data.key, personInfoResponse, firstName, lastName);
 	});
 });
 

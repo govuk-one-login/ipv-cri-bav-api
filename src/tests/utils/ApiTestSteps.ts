@@ -56,9 +56,21 @@ export async function stubStartPost(bavStubPayload: any): Promise<any> {
 export async function personInfoGet(sessionId: any): Promise<any> {
 	const path = "/person-info";
 	try {
-		const postRequest = await API_INSTANCE.get(path, { headers: { "x-govuk-signin-session-id": sessionId } });
-		expect(postRequest.status).toBe(200);
-		return postRequest;
+		const getRequest = await API_INSTANCE.get(path, { headers: { "x-govuk-signin-session-id": sessionId } });
+		expect(getRequest.status).toBe(200);
+		return getRequest;
+	} catch (error: any) {
+		console.log(`Error response from ${path} endpoint: ${error}.`);
+		return error.response;
+	}
+}
+
+export async function personInfoKeyGet(): Promise<any> {
+	const path = "https://api-bav-cri-api-ccooling-1.review-bav.dev.account.gov.uk/person-info-key";
+	try {
+		const getRequest = await axios.get(path);
+		expect(getRequest.status).toBe(200);
+		return getRequest;
 	} catch (error: any) {
 		console.log(`Error response from ${path} endpoint: ${error}.`);
 		return error.response;
@@ -307,13 +319,9 @@ export async function abortPost(sessionId: string): Promise<any> {
 	}
 }
 
-export async function validatePersonInfoResponse(personInfoResponse: any, firstName: string, lastName: string): Promise<any> {
-	const privateKey = new NodeRSA("-----BEGIN RSA PRIVATE KEY-----" +
-		constants.PERSON_INFO_PRIVATE_KEY +
-		"-----END RSA PRIVATE KEY-----");
-
+export async function validatePersonInfoResponse(personInfoKey: any, personInfoResponse: any, firstName: string, lastName: string): Promise<any> {
+	const privateKey = new NodeRSA(personInfoKey);
 	const encryptedValue = personInfoResponse.data;
-
 	const decryptedValue = privateKey.decrypt(encryptedValue, 'utf8');
 	expect(decryptedValue).toBe("{\"name\":\"" + firstName + " " + lastName + "\"}")
 }
