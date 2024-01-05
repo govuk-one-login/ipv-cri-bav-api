@@ -65,7 +65,7 @@ export async function sessionPost(clientId: any, request: any): Promise<any> {
 	}
 }
 
-export async function personInfoGet(sessionId: any): Promise<any> {
+export async function personInfoGet(sessionId: string): Promise<any> {
 	const path = "/person-info";
 	try {
 		const getRequest = await API_INSTANCE.get(path, { headers: { "x-govuk-signin-session-id": sessionId } });
@@ -318,7 +318,7 @@ export async function abortPost(sessionId: string): Promise<any> {
 	}
 }
 
-export function validatePersonInfoResponse(personInfoKey: any, personInfoResponse: any, firstName: string, lastName: string): void {
+export function validatePersonInfoResponse(personInfoKey: string, personInfoResponse: any, firstName: string, lastName: string): void {
 	const privateKey = new NodeRSA(personInfoKey);
 	const encryptedValue = personInfoResponse.data;
 	const decryptedValue = privateKey.decrypt(encryptedValue, "utf8");
