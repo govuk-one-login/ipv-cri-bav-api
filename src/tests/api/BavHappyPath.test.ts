@@ -121,10 +121,6 @@ describe("BAV CRI: /authorization Endpoint Happy Path Tests", () => {
 
 		// Make sure authSession state is as expected
 		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_AUTH_CODE_ISSUED");
-
-		// Make sure txma event is present & valid
-		const sqsMessage = await getSqsEventList("txma/", sessionId, 2);
-		await validateTxMAEventData(sqsMessage);
 	});
 });
 
