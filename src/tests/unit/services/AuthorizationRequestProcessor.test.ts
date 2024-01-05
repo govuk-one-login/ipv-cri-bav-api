@@ -95,8 +95,8 @@ describe("AuthorizationRequestProcessor", () => {
 			timestamp: 1585695600,
 			user: {
 			  ip_address: session.clientIpAddress,
-			  persistent_session_id: session.persistentSessionId,
 			  session_id: sessionId,
+			  govuk_signin_journey_id: session.clientSessionId,
 			  user_id: session.subject,
 			},
 		});
@@ -117,8 +117,8 @@ describe("AuthorizationRequestProcessor", () => {
 			timestamp: 1585695600,
 			user: {
 			  ip_address: session.clientIpAddress,
-			  persistent_session_id: session.persistentSessionId,
 			  session_id: sessionId,
+			  govuk_signin_journey_id: session.clientSessionId,
 			  user_id: session.subject,
 			},
 		});

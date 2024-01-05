@@ -48,7 +48,6 @@ function getTXMAEventPayload(): TxmaEvent {
 		event_name: "BAV_CRI_START",
 		user: {
 			user_id: "sessionCliendId",
-			persistent_session_id: "sessionPersistentSessionId",
 			session_id: "sessionID",
 			govuk_signin_journey_id: "clientSessionId",
 			ip_address: "sourceIp",
