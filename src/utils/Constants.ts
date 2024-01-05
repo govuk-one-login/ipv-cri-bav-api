@@ -73,6 +73,8 @@ export class Constants {
   static readonly HMRC_USER_AGENT = "one-login-bav-cri";
   
   static readonly MAX_RETRIES = 2;
+
+  static readonly TXMA_FIELDS_TO_SHOW = ["event_name", "session_id", "govuk_signin_journey_id", "attemptNum"];
 }
 
 export const EnvironmentVariables = {
