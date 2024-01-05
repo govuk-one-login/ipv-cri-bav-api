@@ -41,8 +41,8 @@ describe("BAV CRI: /session Endpoint Unhappy Path Tests", () => {
 
 describe("BAV CRI: /person-info Endpoint Unhappy Path Tests", () => {
 
-	it.only("Invalid Session Id Test", async () => {
-		const sessionId = randomUUID()
+	it("Invalid Session Id Test", async () => {
+		const sessionId = randomUUID();
 
 		// Person Info
 		const personInfoResponse = await personInfoGet(sessionId);
