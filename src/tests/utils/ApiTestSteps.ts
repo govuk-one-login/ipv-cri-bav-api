@@ -9,7 +9,7 @@ import { constants } from "./ApiConstants";
 import { ISessionItem } from "../../models/ISessionItem";
 import { jwtUtils } from "../../utils/JwtUtils";
 import { BankDetailsPayload } from "../models/BankDetailsPayload";
-import NodeRSA = require("node-rsa")
+import NodeRSA = require("node-rsa");
 
 const API_INSTANCE = axios.create({ baseURL: constants.DEV_CRI_BAV_API_URL });
 const ajv = new Ajv({ strict: false });
@@ -318,9 +318,9 @@ export async function abortPost(sessionId: string): Promise<any> {
 	}
 }
 
-export async function validatePersonInfoResponse(personInfoKey: any, personInfoResponse: any, firstName: string, lastName: string): Promise<any> {
+function validatePersonInfoResponse(personInfoKey: any, personInfoResponse: any, firstName: string, lastName: string): void {
 	const privateKey = new NodeRSA(personInfoKey);
 	const encryptedValue = personInfoResponse.data;
-	const decryptedValue = privateKey.decrypt(encryptedValue, 'utf8');
-	expect(decryptedValue).toBe("{\"name\":\"" + firstName + " " + lastName + "\"}")
+	const decryptedValue = privateKey.decrypt(encryptedValue, "utf8");
+	expect(decryptedValue).toBe("{\"name\":\"" + firstName + " " + lastName + "\"}");
 }

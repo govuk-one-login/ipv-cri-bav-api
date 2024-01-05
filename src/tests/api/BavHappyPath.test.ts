@@ -62,7 +62,7 @@ describe("BAV CRI: /person-info Endpoint Happy Path Tests", () => {
 
 		// Person Info Key
 		const personInfoKey = await personInfoKeyGet();
-		await validatePersonInfoResponse(personInfoKey.data.key, personInfoResponse, firstName, lastName);
+		validatePersonInfoResponse(personInfoKey.data.key, personInfoResponse, firstName, lastName);
 	});
 });
 
