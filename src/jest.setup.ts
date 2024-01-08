@@ -15,3 +15,5 @@ process.env.HMRC_CLIENT_ID = "hmrc client ID"
 process.env.HMRC_CLIENT_SECRET = "hmrc client secret"
 process.env.HMRC_TOKEN_BACKOFF_PERIOD_MS = "2000"
 process.env.HMRC_MAX_RETRIES = "3"
+// pragma: allowlist secret
+process.env.PRIVATE_KEY_SSM_PATH = "person-info/PRIVATE_KEY"
