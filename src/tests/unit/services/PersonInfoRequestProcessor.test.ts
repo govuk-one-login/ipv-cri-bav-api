@@ -54,6 +54,7 @@ describe("PersonInfoRequestProcessor", () => {
 
 	describe("#processRequest", () => {
 		it("returns error response if person identity cannot be found", async () => {
+			mockBavService.getSessionById.mockResolvedValueOnce(session);
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(undefined);
 
 			const response = await personInfoRequestProcessorTest.processRequest(sessionId);

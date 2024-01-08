@@ -53,9 +53,7 @@ export class AbortHandler implements LambdaInterface {
 			throw new AppError(HttpCodesEnum.BAD_REQUEST, sessionIdError);
 		}
 
-		const sessionId = event.headers[Constants.X_SESSION_ID]!;
-
-		return sessionId;
+		return event.headers[Constants.X_SESSION_ID]!;
 	}
 }
 

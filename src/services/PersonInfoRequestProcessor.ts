@@ -41,26 +41,25 @@ export class PersonInfoRequestProcessor {
 	}
 
 	async processRequest(sessionId: string): Promise<Response> {
-  	const person = await this.BavService.getPersonIdentityById(sessionId, this.personIdentityTableName);
   	const session = await this.BavService.getSessionById(sessionId);
-
-		if (!person) {
-  		this.logger.error("No person found for session id", {
-  			messageCode: MessageCodes.PERSON_NOT_FOUND,
-  		});
-  		return new Response(HttpCodesEnum.UNAUTHORIZED, `No person found with the session id: ${sessionId}`);
-  	}
-
-  	if (!session) {
+		if (!session) {
   		this.logger.error("No session found for session id", {
   			messageCode: MessageCodes.SESSION_NOT_FOUND,
   		});
   		return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
   	}
 
-  	this.logger.appendKeys({
+		this.logger.appendKeys({
   		govuk_signin_journey_id: session?.clientSessionId,
   	});
+
+  	const person = await this.BavService.getPersonIdentityById(sessionId, this.personIdentityTableName);
+		if (!person) {
+  		this.logger.error("No person found for session id", {
+  			messageCode: MessageCodes.PERSON_NOT_FOUND,
+  		});
+  		return new Response(HttpCodesEnum.UNAUTHORIZED, `No person found with the session id: ${sessionId}`);
+  	}
 
   	const name = getFullName(person.name);
   	const encryptedResponseValue = this.encryptResponse({ name });

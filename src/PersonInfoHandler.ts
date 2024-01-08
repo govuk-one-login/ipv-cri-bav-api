@@ -34,7 +34,7 @@ export class PersonInfoHandler implements LambdaInterface {
 		try {
 			const sessionId = this.validateEvent(event);
 			const publicKeyPath = checkEnvironmentVariable(EnvironmentVariables.PUBLIC_KEY_SSM_PATH, logger);
-    	PUBLIC_KEY = await getParameter(publicKeyPath);
+			PUBLIC_KEY = PUBLIC_KEY ?? await getParameter(publicKeyPath);
 
 			logger.info("Starting PersonInfoRequestProcessor");
 			return await PersonInfoRequestProcessor.getInstance(logger, metrics, PUBLIC_KEY).processRequest(sessionId);
@@ -60,9 +60,7 @@ export class PersonInfoHandler implements LambdaInterface {
 			throw new AppError(HttpCodesEnum.BAD_REQUEST, sessionIdError);
 		}
 
-		const sessionId = event.headers[Constants.X_SESSION_ID]!;
-
-		return sessionId;
+		return event.headers[Constants.X_SESSION_ID]!;
 	}
 }
 
