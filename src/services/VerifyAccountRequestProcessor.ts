@@ -40,7 +40,7 @@ export class VerifyAccountRequestProcessor {
   	logger.debug("metrics is  " + JSON.stringify(this.metrics));
   	this.metrics.addMetric("Called", MetricUnits.Count, 1);
   	this.personIdentityTableName = checkEnvironmentVariable(EnvironmentVariables.PERSON_IDENTITY_TABLE_NAME, this.logger);
-		this.partialNameQueueUrl = checkEnvironmentVariable(EnvironmentVariables.PARTIAL_NAME_QUEUE_URL, logger);
+		this.partialNameQueueUrl = checkEnvironmentVariable(EnvironmentVariables.PARTIAL_MATCHES_QEUEUE_URL, logger);
   	this.hmrcToken = HMRC_TOKEN;
 
   	const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, this.logger);

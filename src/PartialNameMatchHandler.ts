@@ -65,8 +65,6 @@ class PartialNameMatchHandler implements LambdaInterface {
 					logger.error({ message: "Error writing partialMatch to S3 bucket" + err });
 					throw new Error("Error writing partialMatch to S3 bucket");
 				}
-				
-				await PartialNameProcessor.getInstance(logger, metrics).processRequest(body);
 				return passEntireBatch;
 
 			} catch (error) {

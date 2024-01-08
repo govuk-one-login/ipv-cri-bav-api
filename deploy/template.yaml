@@ -104,7 +104,7 @@ Mappings:
       DNSSUFFIX: review-bav.dev.account.gov.uk
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
-      PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
+      PARTIALMATCHESRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: '[{"jwksEndpoint":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/redirect?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
@@ -116,7 +116,7 @@ Mappings:
       DNSSUFFIX: review-bav.build.account.gov.uk
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
-      PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
+      PARTIALMATCHESRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-bav.build.account.gov.uk/.well-known/jwks.json","clientId":"BD7B2A5D","redirectUri":"https://ipvstub.review-bav.build.account.gov.uk/redirect?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
@@ -128,7 +128,7 @@ Mappings:
       DNSSUFFIX: review-bav.staging.account.gov.uk
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
-      PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
+      PARTIALMATCHESRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.staging.account.gov.uk/.well-known/jwks.json","clientId":"03A5A659-17AA-453F-B905-95D2804823D1","redirectUri":"https://identity.staging.account.gov.uk/credential-issuer/callback?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
@@ -139,7 +139,7 @@ Mappings:
       DNSSUFFIX: review-bav.integration.account.gov.uk
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
-      PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
+      PARTIALMATCHESRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.integration.account.gov.uk/.well-known/jwks.json","clientId":"AE140E43-1987-4EE8-86CC-BEF19FC9FF3F","redirectUri":"https://identity.integration.account.gov.uk/credential-issuer/callback?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
@@ -150,7 +150,7 @@ Mappings:
       DNSSUFFIX: review-bav.account.gov.uk
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
-      PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
+      PARTIALMATCHESRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.account.gov.uk/.well-known/jwks.json","clientId":"C910A762-4BB2-400D-8F3D-4D7E6C84E342","redirectUri":"https://identity.account.gov.uk/credential-issuer/callback?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
@@ -1507,7 +1507,7 @@ Resources:
           HMRC_BASE_URL: !FindInMap [ EnvironmentVariables, !Ref Environment, HMRCVERIFYBASEURL ]
           HMRC_MAX_RETRIES: 2
           HMRC_TOKEN_BACKOFF_PERIOD_MS: 5000 # 5 seconds
-          PARTIAL_NAME_QUEUE_URL: !Ref PartialNameMatchQueue
+          PARTIAL_MATCHES_QEUEUE_URL: !Ref PartialMatchesQueue
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
@@ -1539,11 +1539,13 @@ Resources:
               Resource: !GetAtt PartialNameMatchQueue.Arn
             - Sid: AllowEncryptMessageSendingToPartialNameQueue
               Effect: Allow
+              Resource: !GetAtt PartialMatchesQueue.Arn
+            - Effect: Allow
               Action:
                 - "kms:Encrypt"
                 - "kms:Decrypt"
                 - "kms:GenerateDataKey"
-              Resource: !GetAtt PartialNameMatchEncryptionKey.Arn
+              Resource: !GetAtt PartialMatchesEncryptionKey.Arn
       Events:
         verifyAccount:
           Type: Api
@@ -1760,25 +1762,25 @@ Resources:
         - alias/TxMAKMSEncryptionKey
       TargetKeyId: !Ref TxMAKMSEncryptionKey
 
-  ## PartialNameMatch SQS Queue
-  PartialNameMatchQueue:
+  ## PartialMatches SQS Queue
+  PartialMatchesQueue:
     Type: AWS::SQS::Queue
     Properties:
-      MessageRetentionPeriod: !FindInMap [EnvironmentVariables, !Ref Environment, PARTIALNAMEMATCHRENTIONPERIODDAYS]
+      MessageRetentionPeriod: !FindInMap [EnvironmentVariables, !Ref Environment, PARTIALMATCHESRENTIONPERIODDAYS]
       VisibilityTimeout: 60
       KmsMasterKeyId: !Ref PartialNameMatchKeyAlias
       RedrivePolicy:
         deadLetterTargetArn:
           Fn::GetAtt:
-            - "PartialNameMatchQueueDeadLetterQueue"
+            - "PartialMatchesQueueDeadLetterQueue"
             - "Arn"
         maxReceiveCount: 5
 
-  PartialNameMatchQueuePolicy:
+  PartialMatchesQueuePolicy:
     Type: AWS::SQS::QueuePolicy
     Properties:
       Queues:
-        - !Ref PartialNameMatchQueue
+        - !Ref PartialMatchesQueue
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -1790,15 +1792,15 @@ Resources:
               - "sqs:ChangeMessageVisibility"
               - "sqs:ReceiveMessage"
             Resource:
-              - !GetAtt PartialNameMatchQueue.Arn
+              - !GetAtt PartialMatchesQueue.Arn
 
-  PartialNameMatchQueueDeadLetterQueue:
+  PartialMatchesQueueDeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
       MessageRetentionPeriod: 259200 # three days
-      KmsMasterKeyId: !Sub PartialNameMatchEncryptionKey
+      KmsMasterKeyId: !Sub PartialMatchesEncryptionKey
 
-  PartialNameMatchEncryptionKey:
+  PartialMatchesEncryptionKey:
     Type: AWS::KMS::Key
     # KMS Key manually rotated.
     # checkov:skip=CKV_AWS_7: KMS Key manually rotated.
@@ -1830,9 +1832,9 @@ Resources:
     Properties:
       AliasName: !If
         -  CreateDevResources    
-        - !Sub "alias/PartialNameMatchEncryptionKey-${AWS::StackName}"
-        - alias/PartialNameMatchEncryptionKey
-      TargetKeyId: !Ref PartialNameMatchEncryptionKey
+        - !Sub "alias/PartialMatchesEncryptionKey-${AWS::StackName}"
+        - alias/PartialMatchesEncryptionKey
+      TargetKeyId: !Ref PartialMatchesEncryptionKey
 
   ## Partial Names Athena and Glue resources
   PartialNameMatchGlueDatabase:
@@ -2200,12 +2202,12 @@ Resources:
       ComparisonOperator: GreaterThanOrEqualToThreshold
 
   ## PartialNameMatchHandler
-  PartialNameMatchFunction:
+  SavePartialMatchesFunction:
     Type: AWS::Serverless::Function
-    DependsOn: PartialNameMatchFunctionLogGroup
+    DependsOn: SavePartialMatchesFunctionLogGroup
     Properties:
-      FunctionName: !Sub "BAV-PartialNameMatch-${AWS::StackName}"
-      Handler: PartialNameMatchHandler.lambdaHandler
+      FunctionName: !Sub "BAV-SavePartialMatches-${AWS::StackName}"
+      Handler: SavePartialMatchesHandler.lambdaHandler
       CodeUri: ../src/
       ReservedConcurrentExecutions: !If
         - ApplyReservedConcurrency
@@ -2249,7 +2251,7 @@ Resources:
         SQSTrigger:
           Type: SQS
           Properties:
-            Queue: !GetAtt PartialNameMatchQueue.Arn
+            Queue: !GetAtt PartialMatchesQueue.Arn
             BatchSize: 1
 
     Metadata: # Manage esbuild properties
@@ -2259,12 +2261,12 @@ Resources:
         Target: "es2020"
         Sourcemap: false
         EntryPoints:
-          - PartialNameMatchHandler.ts
+          - SavePartialMatchesHandler.ts
 
-  PartialNameMatchFunctionLogGroup:
+  SavePartialMatchesFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/BAV-PartialNameMatch-${AWS::StackName}"
+      LogGroupName: !Sub "/aws/lambda/BAV-SavePartialMatches-${AWS::StackName}"
       RetentionInDays:
         !FindInMap [
           EnvironmentConfiguration,
@@ -2272,39 +2274,39 @@ Resources:
           logretentionindays,
         ]
 
-  # PartialNameMatchFunctionLogsSubscriptionFilterCSLS:
+  # SavePartialMatchesFunctionLogsSubscriptionFilterCSLS:
   #   Type: AWS::Logs::SubscriptionFilter
   #   Properties:
   #     DestinationArn:
   #       !FindInMap [ PlatformConfiguration, !Ref Environment, CSLSEGRESS ]
   #     FilterPattern: ""
-  #     LogGroupName: !Ref PartialNameMatchFunctionLogGroup
+  #     LogGroupName: !Ref SavePartialMatchesFunctionLogGroup
 
-  PartialNameMatchFunctionPermission:
+  SavePartialMatchesFunctionPermission:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: !Ref PartialNameMatchFunction
+      FunctionName: !Ref SavePartialMatchesFunction
       Principal: apigateway.amazonaws.com
 
-  PartialNameMatchFunctionFatalErorMetricFilter:
+  SavePartialMatchesFunctionFatalErorMetricFilter:
     Type: AWS::Logs::MetricFilter
     Properties:
-      LogGroupName: !Ref PartialNameMatchFunctionLogGroup
+      LogGroupName: !Ref SavePartialMatchesFunctionLogGroup
       FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
       MetricTransformations:
         -
           MetricValue: "1"
           MetricNamespace: !Sub "${AWS::StackName}/LogMessages"
-          MetricName: "PartialNameMatchFunction-Fatalerror"
+          MetricName: "SavePartialMatchesFunction-Fatalerror"
 
-  PartialNameMatchFunctionFatalErrorAlarm:
+  SavePartialMatchesFunctionFatalErrorAlarm:
     DependsOn:
-      - "PartialNameMatchFunctionFatalErorMetricFilter"
+      - "SavePartialMatchesFunctionFatalErorMetricFilter"
     Type: AWS::CloudWatch::Alarm
     Condition: "DeployAlarms"
     Properties:
-      AlarmName: !Sub "${AWS::StackName}-PartialNameMatchFunction-FatalErrorAlarm"
+      AlarmName: !Sub "${AWS::StackName}-SavePartialMatchesFunction-FatalErrorAlarm"
       AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
       ActionsEnabled: true
       OKActions:
@@ -2312,7 +2314,7 @@ Resources:
       AlarmActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
       InsufficientDataActions: [ ]
-      MetricName: PartialNameMatchFunction-Fatalerror
+      MetricName: SavePartialMatchesFunction-Fatalerror
       Namespace: !Sub "${AWS::StackName}/LogMessages"
       Statistic: Sum
       Dimensions: [ ]
@@ -2323,7 +2325,7 @@ Resources:
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
 
-  PartialNameMatchConcurrency80Alarm:
+  SavePartialMatchesConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
     Condition: "DeployConcurrencyAlarms"
     Properties:
@@ -2334,12 +2336,12 @@ Resources:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
       AlarmDescription: !Sub "Trigger the alarm if over 80% of Session is used. ${SupportManualURL}"
-      AlarmName: !Sub "${AWS::StackName}-PartialNameMatchFunction-concurrency"
+      AlarmName: !Sub "${AWS::StackName}-SavePartialMatchesFunction-concurrency"
       MetricName: ConcurrentExecutions
       Namespace: AWS/Lambda
       Dimensions:
         - Name: FunctionName
-          Value: !Ref PartialNameMatchFunction
+          Value: !Ref SavePartialMatchesFunction
       Statistic: Maximum
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
@@ -2348,7 +2350,7 @@ Resources:
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
 
-  PartialNameMatchThrottleAlarm:
+  SavePartialMatchesThrottleAlarm:
     Type: AWS::CloudWatch::Alarm
     Condition: "DeployAlarms"
     Properties:
@@ -2358,14 +2360,14 @@ Resources:
       OKActions:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
-      AlarmDescription: !Sub "Trigger if the ${PartialNameMatchFunction} lambda throttles. ${SupportManualURL}"
-      AlarmName: !Sub "${AWS::StackName}-PartialNameMatchFunction-throttles"
+      AlarmDescription: !Sub "Trigger if the ${SavePartialMatchesFunction} lambda throttles. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-SavePartialMatchesFunction-throttles"
       MetricName: Throttles
       Namespace: AWS/Lambda
       Statistic: Sum
       Dimensions:
         - Name: FunctionName
-          Value: !Ref PartialNameMatchFunction
+          Value: !Ref SavePartialMatchesFunction
       TreatMissingData: notBreaching
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
