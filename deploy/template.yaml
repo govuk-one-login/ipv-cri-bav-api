@@ -1017,6 +1017,158 @@ Resources:
       DatapointsToAlarm: 1
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
+
+  ## PersonInfoKeyHandler
+  PersonInfoKeyFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: PersonInfoKeyFunctionLogGroup
+    Properties:
+      FunctionName: !Sub "BAV-Person-Info-Key-${AWS::StackName}"
+      Handler: PersonInfoKeyHandler.lambdaHandler
+      CodeUri: ../src/
+      ReservedConcurrentExecutions: !If
+        - ApplyReservedConcurrency
+        - !Ref LambdaConcurrency
+        - !Ref AWS::NoValue
+      Environment:
+        Variables:
+          POWERTOOLS_SERVICE_NAME: PersonInfoKeyHandler
+          PRIVATE_KEY_SSM_PATH: !Sub "/${Environment}/person-info/PRIVATE_KEY"
+          KMS_KEY_ARN:
+            Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSXrayWriteOnlyAccess
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub "${Environment}/person-info/PRIVATE_KEY"
+      Events:
+        personInfoKey:
+          Type: Api
+          Properties:
+            Path: /person-info-key
+            Method: get
+            RestApiId: !Ref BAVRestApi
+
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: false
+        EntryPoints:
+          - PersonInfoKeyHandler.ts
+
+  PersonInfoKeyFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/BAV-Person-Info-Key-${AWS::StackName}"
+      RetentionInDays:
+        !FindInMap [
+          EnvironmentConfiguration,
+          !Ref Environment,
+          logretentionindays,
+        ]
+
+  # PersonInfoKeyFunctionLogsSubscriptionFilterCSLS:
+  #   Type: AWS::Logs::SubscriptionFilter
+  #   Properties:
+  #     DestinationArn:
+  #       !FindInMap [ PlatformConfiguration, !Ref Environment, CSLSEGRESS ]
+  #     FilterPattern: ""
+  #     LogGroupName: !Ref PersonInfoKeyFunctionLogGroup
+
+  PersonInfoKeyFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref PersonInfoKeyFunction
+      Principal: apigateway.amazonaws.com
+
+  PersonInfoKeyFunctionFatalErorMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref PersonInfoKeyFunctionLogGroup
+      FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
+      MetricTransformations:
+        -
+          MetricValue: "1"
+          MetricNamespace: !Sub "${AWS::StackName}/LogMessages"
+          MetricName: "PersonInfoKeyFunction-Fatalerror"
+
+  PersonInfoKeyFunctionFatalErrorAlarm:
+    DependsOn:
+      - "PersonInfoKeyFunctionFatalErorMetricFilter"
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-PersonInfoKeyFunction-FatalErrorAlarm"
+      AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
+      ActionsEnabled: true
+      OKActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      InsufficientDataActions: [ ]
+      MetricName: PersonInfoKeyFunction-Fatalerror
+      Namespace: !Sub "${AWS::StackName}/LogMessages"
+      Statistic: Sum
+      Dimensions: [ ]
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  PersonInfoKeyConcurrency80Alarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployConcurrencyAlarms"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: []
+      AlarmDescription: !Sub "Trigger the alarm if over 80% of PersonInfoKey is used. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-PersonInfoKeyFunction-concurrency"
+      MetricName: ConcurrentExecutions
+      Namespace: AWS/Lambda
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref PersonInfoKeyFunction
+      Statistic: Maximum
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: !Ref LambdaConcurrencyThreshold
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+
+  PersonInfoKeyThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: []
+      AlarmDescription: !Sub "Trigger if the ${PersonInfoKeyFunction} lambda throttles. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-PersonInfoKeyFunction-throttles"
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref PersonInfoKeyFunction
+      TreatMissingData: notBreaching
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
   
   ## UserInfoHandler
   UserInfoFunction:
@@ -1761,6 +1913,42 @@ Resources:
         - !Sub "alias/TxMAKMSEncryptionKey-${AWS::StackName}"
         - alias/TxMAKMSEncryptionKey
       TargetKeyId: !Ref TxMAKMSEncryptionKey
+
+  PartialNameMatchEncryptionKey:
+    Type: AWS::KMS::Key
+    # KMS Key manually rotated.
+    # checkov:skip=CKV_AWS_7: KMS Key manually rotated.
+    Properties:
+      Description: A KMS Key for encrypting the SQS Queue for Partial Name Matches
+      Enabled: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource:
+              - "*"
+      KeySpec: SYMMETRIC_DEFAULT
+      KeyUsage: ENCRYPT_DECRYPT
+      MultiRegion: false
+      PendingWindowInDays: 7
+      Tags:
+        - Key: KeyType
+          Value: Encryption Key
+        - Key: Environment
+          Value: !Sub ${Environment}
+
+  PartialNameMatchEncryptionKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !If
+        - CreateDevResources
+        - !Sub "alias/PartialNameMatchEncryptionKey-${AWS::StackName}"
+        - alias/PartialNameMatchEncryptionKey
+      TargetKeyId: !Ref PartialNameMatchEncryptionKey
 
   ## PartialMatches SQS Queue
   PartialNameMatchQueue:
