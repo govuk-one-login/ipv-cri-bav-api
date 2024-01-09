@@ -5,13 +5,10 @@ import { BavService } from "./BavService";
 import { AuthSessionState } from "../models/enums/AuthSessionState";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../models/enums/MessageCodes";
-import { TxmaEventNames } from "../models/enums/TxmaEvents";
 import { EnvironmentVariables } from "../utils/Constants";
-import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 import { Response } from "../utils/Response";
-import { buildCoreEventFields } from "../utils/TxmaEvent";
 
 export class AuthorizationRequestProcessor {
 	private static instance: AuthorizationRequestProcessor;
@@ -20,15 +17,9 @@ export class AuthorizationRequestProcessor {
 
 	private readonly metrics: Metrics;
 
-	private readonly issuer: string;
-
-	private readonly txmaQueueUrl: string;
-
 	private readonly BavService: BavService;
 
 	constructor(logger: Logger, metrics: Metrics) {
-		this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, logger);
-		this.txmaQueueUrl = checkEnvironmentVariable(EnvironmentVariables.TXMA_QUEUE_URL, logger);
   	const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, logger);
 
 		this.logger = logger;
@@ -43,6 +34,7 @@ export class AuthorizationRequestProcessor {
 		return AuthorizationRequestProcessor.instance;
 	}
 
+	// eslint-disable-next-line max-lines-per-function
 	async processRequest(sessionId: string): Promise<Response> {
 		const session = await this.BavService.getSessionById(sessionId);
 
@@ -72,13 +64,6 @@ export class AuthorizationRequestProcessor {
 		const authorizationCode = randomUUID();
 		await this.BavService.setAuthorizationCode(sessionId, authorizationCode);
 		this.metrics.addMetric("Set authorization code", MetricUnits.Count, 1);
-
-		await this.BavService.sendToTXMA(
-			this.txmaQueueUrl, {
-				event_name: TxmaEventNames.BAV_CRI_AUTH_CODE_ISSUED,
-				...buildCoreEventFields(session, this.issuer, session.clientIpAddress, absoluteTimeNow),
-			},
-		);
 
 		const authResponse = {
 			authorizationCode: {
