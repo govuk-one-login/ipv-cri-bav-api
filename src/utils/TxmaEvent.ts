@@ -1,4 +1,5 @@
 import { ISessionItem } from "../models/ISessionItem";
+import { PersonIdentityName } from "../models/PersonIdentityItem";
 import { absoluteTimeNow } from "./DateTimeUtils";
 
 export type TxmaEventName =
@@ -10,17 +11,22 @@ export type TxmaEventName =
 	"BAV_CRI_SESSION_ABORTED";
 
 export interface TxmaUser {
-	"user_id": string;
-	"session_id": string;
-	"govuk_signin_journey_id": string;
-	"ip_address"?: string | undefined;
+	user_id: string;
+	session_id: string;
+	govuk_signin_journey_id: string;
+	ip_address?: string | undefined;
 }
 
 export interface BaseTxmaEvent {
-	"user": TxmaUser;
-	"client_id": string;
-	"timestamp": number;
-	"component_id": string;
+	user: TxmaUser;
+	client_id: string;
+	timestamp: number;
+	component_id: string;
+}
+
+export interface BankAccountDetails {
+	sortCode: string;
+	accountNumber: string;
 }
 
 export interface CopRequestDetails {
@@ -31,26 +37,34 @@ export interface CopRequestDetails {
 }
 
 export interface RestrictedObject {
-	"name"?: object[];
-	"CoP_request_details"?: CopRequestDetails[];
+	name?: PersonIdentityName[];
+	bankAccount?: BankAccountDetails[];
+	CoP_request_details?: CopRequestDetails[];
+}
+
+export interface CiReasons {
+	ci?: string;
+	reason?: string;
 }
 
 export type VerifiedCredentialEvidenceTxMA = Array<{
 	txn: string;
+	attemptNum?: number;
 	strengthScore?: number;
 	validityScore?: number;
 	verificationScore?: number;
 	ci?: string[];
+	ciReasons?: CiReasons[];
 }>;
 
 export interface ExtensionObject {
-	"evidence"?: VerifiedCredentialEvidenceTxMA;
+	evidence?: VerifiedCredentialEvidenceTxMA;
 }
 
 export interface TxmaEvent extends BaseTxmaEvent {
-	"event_name": TxmaEventName;
-	"restricted"?: RestrictedObject;
-	"extensions"?: ExtensionObject;
+	event_name: TxmaEventName;
+	restricted?: RestrictedObject;
+	extensions?: ExtensionObject;
 }
 
 export const buildCoreEventFields = (
