@@ -1515,6 +1515,17 @@ Resources:
                 - kms:*
               Resource:
                 "*"
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "sqs:SendMessage"
+              Resource: !GetAtt TxMASQSQueue.Arn
+            - Effect: Allow
+              Action:
+                - "kms:Encrypt"
+                - "kms:Decrypt"
+                - "kms:GenerateDataKey"
+              Resource: !GetAtt TxMAKMSEncryptionKey.Arn
       Events:
         verifyAccount:
           Type: Api

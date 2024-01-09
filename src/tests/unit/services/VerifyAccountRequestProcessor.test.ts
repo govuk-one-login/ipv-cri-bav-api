@@ -13,6 +13,7 @@ import { BavService } from "../../../services/BavService";
 import { VerifyAccountRequestProcessor } from "../../../services/VerifyAccountRequestProcessor";
 import { HmrcService } from "../../../services/HmrcService";
 import { Constants } from "../../../utils/Constants";
+import { absoluteTimeNow } from "../../../utils/DateTimeUtils";
 
 const hmrcUuid = "new hmrcUuid";
 jest.mock("crypto", () => ({
@@ -29,6 +30,7 @@ const body = {
 	sort_code: "123456",
 	account_number: "12345678",
 };
+const clientIpAddress = "127.0.0.1";
 const person: PersonIdentityItem = {
 	sessionId,
 	name: [{
@@ -64,7 +66,7 @@ describe("VerifyAccountRequestProcessor", () => {
 		it("returns error response if person identity cannot be found", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(undefined);
 
-			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
+			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress);
 
 			expect(response.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 			expect(response.body).toBe(`No person found with the session id: ${sessionId}`);
@@ -77,7 +79,7 @@ describe("VerifyAccountRequestProcessor", () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
 			mockBavService.getSessionById.mockResolvedValueOnce(undefined);
 
-			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
+			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress);
 
 			expect(response.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 			expect(response.body).toBe(`No session found with the session id: ${sessionId}`);
@@ -91,7 +93,7 @@ describe("VerifyAccountRequestProcessor", () => {
 			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, hmrcUuid: undefined });
 			mockHmrcService.verify.mockResolvedValueOnce(hmrcVerifyResponse);
 
-			await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
+			await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress);
 
 			expect(mockBavService.saveHmrcUuid).toHaveBeenCalledWith(sessionId, hmrcUuid);
 	  });
@@ -100,7 +102,7 @@ describe("VerifyAccountRequestProcessor", () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
 			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, retryCount: Constants.MAX_RETRIES });
 
-			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
+			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress);
 
 			expect(response.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 			expect(response.body).toBe("Too many attempts");
@@ -114,7 +116,7 @@ describe("VerifyAccountRequestProcessor", () => {
 			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, hmrcUuid: "HMRC_UUID" });
 			mockHmrcService.verify.mockResolvedValueOnce(hmrcVerifyResponse);
 
-			await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
+			await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress);
 
 			expect(logger.appendKeys).toHaveBeenCalledWith({ govuk_signin_journey_id: session.clientSessionId });
 			expect(mockBavService.saveHmrcUuid).not.toHaveBeenCalled();
@@ -129,9 +131,57 @@ describe("VerifyAccountRequestProcessor", () => {
 			mockBavService.getSessionById.mockResolvedValueOnce(session);
 			mockHmrcService.verify.mockResolvedValueOnce(hmrcVerifyResponse);
 
-			await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
+			await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress);
 
 			expect(mockHmrcService.verify).toHaveBeenCalledWith({ accountNumber: body.account_number, sortCode: body.sort_code, name: "Frederick Joseph Flintstone", uuid: hmrcUuid }, TOKEN_SSM_PARAM );
+			expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "MYQUEUE", {
+				event_name: "BAV_COP_REQUEST_SENT",
+				client_id: session.clientId,
+				component_id: "https://XXX-c.env.account.gov.uk",
+				extensions: {
+					evidence: [
+				 		{
+					 		txn: "new hmrcUuid",
+						},
+					],
+				},
+				restricted:{
+  				"CoP_request_details": [
+					 {
+  						name: "Frederick Joseph Flintstone",
+  						sortCode: body.sort_code,
+  						accountNumber: body.account_number,
+  						attemptNum: 0,
+					 },
+  				],
+		 		},
+				timestamp: absoluteTimeNow(),
+				user:  {
+					govuk_signin_journey_id: session.clientSessionId,
+					ip_address: clientIpAddress,
+					session_id: session.sessionId,
+					user_id: session.subject,
+				},
+			});
+			expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(2, "MYQUEUE", {
+				event_name: "BAV_COP_RESPONSE_RECEIVED",
+				client_id: session.clientId,
+				component_id: "https://XXX-c.env.account.gov.uk",
+				extensions: {
+					evidence: [
+				 		{
+					 		txn: "new hmrcUuid",
+						},
+					],
+				},
+				user:  {
+					govuk_signin_journey_id: session.clientSessionId,
+					ip_address: clientIpAddress,
+					session_id: session.sessionId,
+					user_id: session.subject,
+				},
+				timestamp: absoluteTimeNow(),
+			});
 		});
 
 		it("pads account number if it's too short", async () => {
@@ -139,7 +189,7 @@ describe("VerifyAccountRequestProcessor", () => {
 			mockBavService.getSessionById.mockResolvedValueOnce(session);
 			mockHmrcService.verify.mockResolvedValueOnce(hmrcVerifyResponse);
 
-			await verifyAccountRequestProcessorTest.processRequest(sessionId, { ...body, account_number: "123456" });
+			await verifyAccountRequestProcessorTest.processRequest(sessionId, { ...body, account_number: "123456" }, clientIpAddress);
 			expect(mockBavService.updateAccountDetails).toHaveBeenCalledWith(
 				{ sessionId, accountNumber: "00123456", sortCode: body.sort_code },
 				process.env.PERSON_IDENTITY_TABLE_NAME,
@@ -152,7 +202,7 @@ describe("VerifyAccountRequestProcessor", () => {
 			mockBavService.getSessionById.mockResolvedValueOnce(session);
 			mockHmrcService.verify.mockResolvedValueOnce(hmrcVerifyResponse);
 
-			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
+			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress);
 
 			expect(mockBavService.saveCopCheckResult).toHaveBeenCalledWith(sessionId, CopCheckResults.FULL_MATCH, undefined);
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
@@ -164,7 +214,7 @@ describe("VerifyAccountRequestProcessor", () => {
 			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, retryCount: 1 });
 			mockHmrcService.verify.mockResolvedValueOnce({ ...hmrcVerifyResponse, nameMatches: "partial" });
 
-			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
+			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress);
 
 			expect(mockBavService.saveCopCheckResult).toHaveBeenCalledWith(sessionId, CopCheckResults.PARTIAL_MATCH, 2);
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
@@ -176,7 +226,7 @@ describe("VerifyAccountRequestProcessor", () => {
 			mockBavService.getSessionById.mockResolvedValueOnce(session);
 			mockHmrcService.verify.mockResolvedValueOnce({ ...hmrcVerifyResponse, nameMatches: "error" });
 
-			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body);
+			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress);
 
 			expect(response.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);
 			expect(response.body).toBe("Error received in COP verify response");
