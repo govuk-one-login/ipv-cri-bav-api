@@ -10,6 +10,7 @@ process.env.CLIENT_CONFIG = '[{"jwksEndpoint":"https://api.identity.account.gov.
 process.env.HMRC_TOKEN_SSM_PATH = "dev/HMRC/TOKEN"
 process.env.HMRC_CLIENT_ID_SSM_PATH = '/dev/HMRC/CLIENT_ID'
 process.env.HMRC_CLIENT_SECRET_SSM_PATH = '/dev/HMRC/CLIENT_SECRET'
+process.env.PUBLIC_KEY_SSM_PATH = "dev/person-info/PUBLIC_KEY"
 process.env.HMRC_BASE_URL = "https://hmrc"
 process.env.HMRC_CLIENT_ID = "hmrc client ID"
 process.env.HMRC_CLIENT_SECRET = "hmrc client secret"
