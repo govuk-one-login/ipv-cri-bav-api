@@ -304,6 +304,71 @@ Resources:
           ToPort: 443
       VpcId:
         Fn::ImportValue: !Sub "${VpcStackName}-VpcId"
+
+  PartialNameMatchAthenaResultsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref PartialNameMatchAthenaResultsBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyIncorrectEncryptionType
+            Effect: Deny
+            Principal: "*"
+            Action:
+              - s3:PutObject
+            Resource:
+              - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchAthenaResultsBucket, "/*"]]
+            Condition:
+              StringNotEquals:
+                "s3:x-amz-server-side-encryption": "aws:kms"
+          - Sid: DenyUnencryptedObjectUploads
+            Effect: Deny
+            Principal: "*"
+            Action:
+              - s3:PutObject
+            Resource:
+              - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchAthenaResultsBucket, "/*"]]
+            Condition:
+              "Null":
+                "s3:x-amz-server-side-encryption": true
+          - Sid: RestrictObjectAccessToAthenaOnly
+            Effect: Deny
+            Principal: "*"
+            Action:
+              - "s3:PutObject*"
+              - "s3:GetObject*"
+            Resource:
+              - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchAthenaResultsBucket, "/*"]]
+            Condition:
+              StringNotEquals:
+                "aws:CalledVia": "athena.amazonaws.com"
+    DependsOn: PartialNameMatchAthenaResultsBucket
+
+  PartialNameMatchAthenaResultsBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: !Sub ${AWS::StackName}-partial-name-match-athena-results-${Environment}
+      VersioningConfiguration:
+        Status: "Enabled"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: aws:kms
+              KMSMasterKeyID: !Ref PartialNameMatchBucketKeyAlias
+            BucketKeyEnabled: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpiryRule
+            ExpirationInDays: 30
+            NoncurrentVersionExpirationInDays: 1
+            Status: Enabled
   
   JsonWebKeysBucket:
     Type: "AWS::S3::Bucket"
@@ -1485,6 +1550,7 @@ Resources:
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: VerifyAccountHandler
+          SAVING_PARTIAL_NAME_DATA: True
           KMS_KEY_ARN:
             Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
           ENCRYPTION_KEY_IDS:
@@ -1493,6 +1559,7 @@ Resources:
           HMRC_BASE_URL: !FindInMap [ EnvironmentVariables, !Ref Environment, HMRCVERIFYBASEURL ]
           HMRC_MAX_RETRIES: 2
           HMRC_TOKEN_BACKOFF_PERIOD_MS: 5000 # 5 seconds
+          PARTIAL_MATCHES_QEUEUE_URL: !Ref PartialMatchesQueue
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
@@ -1513,13 +1580,24 @@ Resources:
         - KMSDecryptPolicy:
             KeyId:
               Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-key-id"
+        - KMSDecryptPolicy:
+            KeyId:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-key-id"
         - Statement:
-            - Sid: KMSPolicy
+            - Sid: AllowSendMessageToPartialNameQueue
               Effect: Allow
               Action:
-                - kms:*
-              Resource:
-                "*"
+                - "sqs:SendMessage"
+              Resource: !GetAtt PartialNameMatchQueue.Arn
+            - Sid: AllowEncryptMessageSendingToPartialNameQueue
+              Effect: Allow
+              Resource: !GetAtt PartialMatchesQueue.Arn
+            - Effect: Allow
+              Action:
+                - "kms:Encrypt"
+                - "kms:Decrypt"
+                - "kms:GenerateDataKey"
+              Resource: !GetAtt PartialMatchesEncryptionKey.Arn
       Events:
         verifyAccount:
           Type: Api
@@ -1845,6 +1923,66 @@ Resources:
         - !Sub "alias/PartialNameMatchEncryptionKey-${AWS::StackName}"
         - alias/PartialNameMatchEncryptionKey
       TargetKeyId: !Ref PartialNameMatchEncryptionKey
+
+  ## Partial Names Athena and Glue resources
+  PartialNameMatchGlueDatabase:
+    Type: AWS::Glue::Database
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseInput:
+        Description: !Sub "PartialNameMatch-${AWS::StackName}"
+        Name: !Sub "partialnamematch-${AWS::StackName}"
+
+  PartialNameMatchGlueTable:
+    Type: AWS::Glue::Table
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: !Ref PartialNameMatchGlueDatabase
+      TableInput:
+        Description: !Sub "PartialNameMatch-${AWS::StackName}"
+        Name: !Sub "partialnamematch-${AWS::StackName}"
+        PartitionKeys: []
+        TableType: EXTERNAL_TABLE
+        StorageDescriptor:
+          Location: !Sub "s3://${PartialNameMatchBucket}/"
+          InputFormat: "org.apache.hadoop.mapred.TextInputFormat"
+          OutputFormat: "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
+          SerdeInfo:
+            Name: "partialnamematch"
+            SerializationLibrary: "org.openx.data.jsonserde.JsonSerDe"
+          Parameters: {
+                        "ignore.malformed.json": "FALSE",
+                        "dots.in.keys": "FALSE",
+                        "case.insensitive": "TRUE",
+                        "mapping": "TRUE"
+          }
+          # TODO: update schema below to reflect full item schema
+          Columns:
+            - Name: itemNumber
+              Type: string
+            - Name: timeStamp
+              Type: int
+            - Name: accountExists
+              Type: string
+            - Name: nameMatches
+              Type: string
+
+  PartialNameMatchAthenaWorkgroup:
+    Type: AWS::Athena::WorkGroup
+    Properties:
+      Description: !Sub "PartialNameMatch-${AWS::StackName"
+      Name: !Sub "PartialNameMatch-${AWS::StackName}"
+      RecursiveDeleteOption: true
+      State: ENABLED
+      WorkGroupConfiguration:
+        EnforceWorkGroupConfiguration: true
+        PublishCloudWatchMetricsEnabled: true
+        ResultConfiguration:
+          EncryptionConfiguration:
+            EncryptionOption: "SSE_KMS"
+            KmsKey: !Ref PartialNameMatchBucketKeyAlias
+          ExpectedBucketOwner: !Ref AWS::AccountId
+          OutputLocation: !Sub "s3://${PartialNameMatchAthenaResultsBucket}/"
 
   JsonWebKeysFunction:
     Type: AWS::Serverless::Function
