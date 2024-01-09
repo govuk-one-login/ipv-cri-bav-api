@@ -20,7 +20,7 @@ const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE, serviceNa
 
 let s3Client: S3Client;
 
-class PartialNameMatchHandler implements LambdaInterface {
+class SavePartialMatchesHandler implements LambdaInterface {
 	@metrics.logMetrics({ throwOnEmptyMetrics: false, captureColdStartMetric: true })
 	async handler(event: SQSEvent, context: Context): Promise<SQSBatchResponse> {
 
@@ -77,6 +77,6 @@ class PartialNameMatchHandler implements LambdaInterface {
 
 }
 
-const handlerClass = new PartialNameMatchHandler();
+const handlerClass = new SavePartialMatchesHandler();
 export const lambdaHandler = handlerClass.handler.bind(handlerClass);
 
