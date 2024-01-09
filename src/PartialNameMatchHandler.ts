@@ -4,7 +4,6 @@ import { Metrics } from "@aws-lambda-powertools/metrics";
 import { LambdaInterface } from "@aws-lambda-powertools/commons";
 import { Constants, EnvironmentVariables } from "./utils/Constants";
 import { failEntireBatch, passEntireBatch } from "./utils/SqsBatchResponseHelper";
-import { PartialNameProcessor } from "./services/PartialNameProcessor";
 import { PutObjectCommand, PutObjectCommandInput, S3Client } from "@aws-sdk/client-s3";
 import { NodeHttpHandler } from "@aws-sdk/node-http-handler";
 import { checkEnvironmentVariable } from "./utils/EnvironmentVariables";

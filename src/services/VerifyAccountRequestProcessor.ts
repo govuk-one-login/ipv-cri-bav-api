@@ -42,7 +42,7 @@ export class VerifyAccountRequestProcessor {
   	logger.debug("metrics is  " + JSON.stringify(this.metrics));
   	this.metrics.addMetric("Called", MetricUnits.Count, 1);
   	this.personIdentityTableName = checkEnvironmentVariable(EnvironmentVariables.PERSON_IDENTITY_TABLE_NAME, this.logger);
-		this.partialNameQueueUrl = checkEnvironmentVariable(EnvironmentVariables.PARTIAL_MATCHES_QEUEUE_URL, logger);
+		this.partialNameQueueUrl = checkEnvironmentVariable(EnvironmentVariables.PARTIAL_NAME_MATCHES_QEUEUE_URL, logger);
   	this.hmrcToken = HMRC_TOKEN;
 
   	const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, this.logger);
@@ -130,10 +130,10 @@ export class VerifyAccountRequestProcessor {
 				cicName: name,
 				accountName: verifyResponse.accountName,
 				accountExists: verifyResponse.accountExists,
-				nameMatches: verifyResponse.nameMatches
-			}
+				nameMatches: verifyResponse.nameMatches,
+			};
 			
-			await this.BavService.savePartialNameInfo(this.partialNameQueueUrl, partialNameRecord)
+			await this.BavService.savePartialNameInfo(this.partialNameQueueUrl, partialNameRecord);
 		}
 
   	return new Response(HttpCodesEnum.OK, JSON.stringify({

@@ -1658,7 +1658,7 @@ Resources:
           HMRC_BASE_URL: !FindInMap [ EnvironmentVariables, !Ref Environment, HMRCVERIFYBASEURL ]
           HMRC_MAX_RETRIES: 2
           HMRC_TOKEN_BACKOFF_PERIOD_MS: 5000 # 5 seconds
-          PARTIAL_MATCHES_QEUEUE_URL: !Ref PartialMatchesQueue
+          PARTIAL_NAME_MATCHES_QEUEUE_URL: !Ref PartialNameMatchQueue
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
@@ -1690,13 +1690,13 @@ Resources:
               Resource: !GetAtt PartialNameMatchQueue.Arn
             - Sid: AllowEncryptMessageSendingToPartialNameQueue
               Effect: Allow
-              Resource: !GetAtt PartialMatchesQueue.Arn
+              Resource: !GetAtt PartialNameMatchQueue.Arn
             - Effect: Allow
               Action:
                 - "kms:Encrypt"
                 - "kms:Decrypt"
                 - "kms:GenerateDataKey"
-              Resource: !GetAtt PartialMatchesEncryptionKey.Arn
+              Resource: !GetAtt PartialNameMatchEncryptionKey.Arn
       Events:
         verifyAccount:
           Type: Api
@@ -1914,7 +1914,7 @@ Resources:
       TargetKeyId: !Ref TxMAKMSEncryptionKey
 
   ## PartialMatches SQS Queue
-  PartialMatchesQueue:
+  PartialNameMatchQueue:
     Type: AWS::SQS::Queue
     Properties:
       MessageRetentionPeriod: !FindInMap [EnvironmentVariables, !Ref Environment, PARTIALMATCHESRENTIONPERIODDAYS]
@@ -1923,15 +1923,15 @@ Resources:
       RedrivePolicy:
         deadLetterTargetArn:
           Fn::GetAtt:
-            - "PartialMatchesQueueDeadLetterQueue"
+            - "PartialNameMatchQueueDeadLetterQueue"
             - "Arn"
         maxReceiveCount: 5
 
-  PartialMatchesQueuePolicy:
+  PartialNameMatchQueuePolicy:
     Type: AWS::SQS::QueuePolicy
     Properties:
       Queues:
-        - !Ref PartialMatchesQueue
+        - !Ref PartialNameMatchQueue
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -1943,15 +1943,15 @@ Resources:
               - "sqs:ChangeMessageVisibility"
               - "sqs:ReceiveMessage"
             Resource:
-              - !GetAtt PartialMatchesQueue.Arn
+              - !GetAtt PartialNameMatchQueue.Arn
 
-  PartialMatchesQueueDeadLetterQueue:
+  PartialNameMatchQueueDeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
       MessageRetentionPeriod: 259200 # three days
-      KmsMasterKeyId: !Sub PartialMatchesEncryptionKey
+      KmsMasterKeyId: !Sub PartialNameMatchEncryptionKey
 
-  PartialMatchesEncryptionKey:
+  PartialNameMatchEncryptionKey:
     Type: AWS::KMS::Key
     # KMS Key manually rotated.
     # checkov:skip=CKV_AWS_7: KMS Key manually rotated.
@@ -1983,9 +1983,9 @@ Resources:
     Properties:
       AliasName: !If
         -  CreateDevResources    
-        - !Sub "alias/PartialMatchesEncryptionKey-${AWS::StackName}"
-        - alias/PartialMatchesEncryptionKey
-      TargetKeyId: !Ref PartialMatchesEncryptionKey
+        - !Sub "alias/PartialNameMatchEncryptionKey-${AWS::StackName}"
+        - alias/PartialNameMatchEncryptionKey
+      TargetKeyId: !Ref PartialNameMatchEncryptionKey
 
   ## Partial Names Athena and Glue resources
   PartialNameMatchGlueDatabase:
@@ -2358,7 +2358,7 @@ Resources:
     DependsOn: SavePartialMatchesFunctionLogGroup
     Properties:
       FunctionName: !Sub "BAV-SavePartialMatches-${AWS::StackName}"
-      Handler: SavePartialMatchesHandler.lambdaHandler
+      Handler: PartialNameMatchHandler.lambdaHandler
       CodeUri: ../src/
       ReservedConcurrentExecutions: !If
         - ApplyReservedConcurrency
@@ -2402,7 +2402,7 @@ Resources:
         SQSTrigger:
           Type: SQS
           Properties:
-            Queue: !GetAtt PartialMatchesQueue.Arn
+            Queue: !GetAtt PartialNameMatchQueue.Arn
             BatchSize: 1
 
     Metadata: # Manage esbuild properties
@@ -2412,7 +2412,7 @@ Resources:
         Target: "es2020"
         Sourcemap: false
         EntryPoints:
-          - SavePartialMatchesHandler.ts
+          - PartialNameMatchHandler.ts
 
   SavePartialMatchesFunctionLogGroup:
     Type: AWS::Logs::LogGroup
