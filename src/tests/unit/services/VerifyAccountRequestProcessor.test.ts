@@ -151,7 +151,7 @@ describe("VerifyAccountRequestProcessor", () => {
   						name: "Frederick Joseph Flintstone",
   						sortCode: body.sort_code,
   						accountNumber: body.account_number,
-  						attemptNum: 0,
+  						attemptNum: 1,
 					 },
   				],
 		 		},
