@@ -60,20 +60,20 @@ describe("VerifiableCredentialService", () => {
 	// Evidence block tests
 	describe("evidence block generation", () => {
 		it("should return a success evidence block correctly", () => {
-			const journeyId = "testJourneyId";
-			const evidenceBlock = service.getSuccessEvidenceBlock(journeyId);
+			const hmrcUuid = "testId";
+			const evidenceBlock = service.getSuccessEvidenceBlock(hmrcUuid);
 			expect(evidenceBlock).toEqual(expect.objectContaining({
-				txn: journeyId,
+				txn: hmrcUuid,
 				strengthScore: 3,
 				validityScore: 2,
 			}));
 		});
 
 		it("should return a failure evidence block correctly", () => {
-			const journeyId = "testJourneyId";
-			const evidenceBlock = service.getFailureEvidenceBlock(journeyId);
+			const hmrcUuid = "testId";
+			const evidenceBlock = service.getFailureEvidenceBlock(hmrcUuid);
 			expect(evidenceBlock).toEqual(expect.objectContaining({
-				txn: journeyId,
+				txn: hmrcUuid,
 				strengthScore: 3,
 				validityScore: 0,
 				ci: expect.arrayContaining(["D15"]),
