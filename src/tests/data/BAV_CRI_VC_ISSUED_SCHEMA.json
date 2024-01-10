@@ -156,7 +156,6 @@
                          }
                        },
                        "required": [
-                         "ci",
                          "reason"
                        ]
                      }
@@ -167,9 +166,7 @@
                  "txn",
                  "strengthScore",
                  "validityScore",
-                 "attemptNum",
-                 "ci",
-                 "ciReasons"
+                 "attemptNum"
                ]
              }
            ]
