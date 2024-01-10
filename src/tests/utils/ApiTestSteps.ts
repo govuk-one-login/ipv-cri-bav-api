@@ -9,6 +9,7 @@ import { constants } from "./ApiConstants";
 import { ISessionItem } from "../../models/ISessionItem";
 import { jwtUtils } from "../../utils/JwtUtils";
 import { BankDetailsPayload } from "../models/BankDetailsPayload";
+import NodeRSA = require("node-rsa");
 
 const API_INSTANCE = axios.create({ baseURL: constants.DEV_CRI_BAV_API_URL });
 const ajv = new Ajv({ strict: false });
@@ -58,6 +59,30 @@ export async function sessionPost(clientId: any, request: any): Promise<any> {
 		const postRequest = await API_INSTANCE.post(path, { client_id: clientId, request });
 		expect(postRequest.status).toBe(200);
 		return postRequest;
+	} catch (error: any) {
+		console.log(`Error response from ${path} endpoint: ${error}.`);
+		return error.response;
+	}
+}
+
+export async function personInfoGet(sessionId: string): Promise<any> {
+	const path = "/person-info";
+	try {
+		const getRequest = await API_INSTANCE.get(path, { headers: { "x-govuk-signin-session-id": sessionId } });
+		expect(getRequest.status).toBe(200);
+		return getRequest;
+	} catch (error: any) {
+		console.log(`Error response from ${path} endpoint: ${error}.`);
+		return error.response;
+	}
+}
+
+export async function personInfoKeyGet(): Promise<any> {
+	const path = "/person-info-key";
+	try {
+		const getRequest = await API_INSTANCE.get(path);
+		expect(getRequest.status).toBe(200);
+		return getRequest;
 	} catch (error: any) {
 		console.log(`Error response from ${path} endpoint: ${error}.`);
 		return error.response;
@@ -291,4 +316,11 @@ export async function abortPost(sessionId: string): Promise<any> {
 		console.log(`Error response from ${path} endpoint: ${error}`);
 		return error.response;
 	}
+}
+
+export function validatePersonInfoResponse(personInfoKey: string, personInfoResponse: any, firstName: string, lastName: string): void {
+	const privateKey = new NodeRSA(personInfoKey);
+	const encryptedValue = personInfoResponse.data;
+	const decryptedValue = privateKey.decrypt(encryptedValue, "utf8");
+	expect(decryptedValue).toBe("{\"name\":\"" + firstName + " " + lastName + "\"}");
 }
