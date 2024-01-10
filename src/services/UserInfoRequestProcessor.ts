@@ -175,33 +175,6 @@ export class UserInfoRequestProcessor {
 				 },
 				});
 
-			console.log("hi", {
-				event_name: TxmaEventNames.BAV_CRI_VC_ISSUED,
-				...txmaCoreFields,
-				restricted:{
-					name: personInfo.name,
-					bankAccount: [{
-						sortCode: personInfo.sortCode,
-						accountNumber: personInfo.accountNumber,
-					}],
-				  },
-				extensions: {
-					evidence: [
-						{
-							txn: session.hmrcUuid!,
-							strengthScore: evidenceInfo.strengthScore,
-							validityScore: evidenceInfo.validityScore,
-							attemptNum: session.retryCount || 1,
-							ci: evidenceInfo.ci,
-							ciReasons: [{
-								ci: evidenceInfo.ci?.[0],
-								reason: session.copCheckResult,
-							}],
-						},
-					],
-				 },
-			});
-
 			await this.BavService.sendToTXMA(
 				this.txmaQueueUrl, {
 					event_name: TxmaEventNames.BAV_CRI_END,
