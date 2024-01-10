@@ -95,7 +95,7 @@ describe("BAV CRI: /verify-account Endpoint Happy Path Tests", () => {
 		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_PERSONAL_IDENTITY_TABLE_NAME, "sortCode", bankDetails.sort_code);
 	
 		// Make sure txma event is present & valid
-		const sqsMessage = await getSqsEventList("txma/", sessionId, 8);
+		const sqsMessage = await getSqsEventList("txma/", sessionId, 3);
 		await validateTxMAEventData(sqsMessage);
 	});
 });
