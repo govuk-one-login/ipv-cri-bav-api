@@ -47,7 +47,7 @@ describe("BAV CRI: /person-info Endpoint Unhappy Path Tests", () => {
 		// Person Info
 		const personInfoResponse = await personInfoGet(sessionId);
 		expect(personInfoResponse.status).toBe(401);
-		expect(personInfoResponse.data).toBe("No person found with the session id: " + sessionId);
+		expect(personInfoResponse.data).toBe("No session found with the session id: " + sessionId);
 
 	});
 });
