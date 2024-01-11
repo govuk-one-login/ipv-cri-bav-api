@@ -90,7 +90,6 @@ describe("VerifiableCredentialService", () => {
 
 	describe("evidence block generation", () => {
 		it("should return a success evidence block correctly", () => {
-			const hmrcUuid = "testId";
 			const evidenceBlock = service.getSuccessEvidenceBlock(hmrcUuid);
 			expect(evidenceBlock).toEqual(expect.objectContaining({
 				txn: hmrcUuid,
@@ -100,7 +99,6 @@ describe("VerifiableCredentialService", () => {
 		});
 
 		it("should return a failure evidence block correctly", () => {
-			const hmrcUuid = "testId";
 			const evidenceBlock = service.getFailureEvidenceBlock(hmrcUuid);
 			expect(evidenceBlock).toEqual(expect.objectContaining({
 				txn: hmrcUuid,
