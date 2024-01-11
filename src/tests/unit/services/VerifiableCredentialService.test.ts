@@ -32,14 +32,15 @@ function getMockSessionItem(): ISessionItem {
 		attemptCount: 1,
 		authSessionState: "BAV_ACCESS_TOKEN_ISSUED",
 		copCheckResult: "FULL_MATCH",
+		hmrcUuid: "testId",
 	};
 	return sess;
 }
 
-const journeyId = "testJourneyId";
+const hmrcUuid = "testId";
 const successBlock = {
 	type: Constants.IDENTITY_CHECK,
-	txn: journeyId,
+	txn: hmrcUuid,
 	strengthScore: 3,
 	validityScore: 2,
 	checkDetails: [
@@ -51,7 +52,7 @@ const successBlock = {
 };
 const failureBlock = {
 	type: Constants.IDENTITY_CHECK,
-	txn: journeyId,
+	txn: hmrcUuid,
 	strengthScore: 3,
 	validityScore: 0,
 	failedCheckDetails: [
