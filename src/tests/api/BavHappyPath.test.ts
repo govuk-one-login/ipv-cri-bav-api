@@ -223,9 +223,11 @@ describe("BAV CRI: /userinfo Endpoint Happy Path Tests", () => {
 
 		// Get the hmrcUuid value from the database and verify that the txn in the decoded body is of the same value
 		const hmrcUuid = await getKeyFromSession(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "hmrcUuid");
+		expect(decodedBody.vc.evidence[0].txn).toBe(hmrcUuid);
+
+		// Finally verify that the sort code and account number in the decoded body are the values we expect
 		expect(decodedBody.vc.credentialSubject.bankAccount[0].sortCode).toBe(bankDetails.sort_code);
 		expect(decodedBody.vc.credentialSubject.bankAccount[0].accountNumber).toBe(bankDetails.account_number.padStart(8, "0"));
-		expect(decodedBody.vc.evidence[0].txn).toBe(hmrcUuid);
 
 		// Verify authSessionState
 		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_CRI_VC_ISSUED");
