@@ -99,7 +99,6 @@ export class UserInfoRequestProcessor {
 			session: {
 				authSessionState: session.authSessionState,
 				accessTokenExpiryDate: session.accessTokenExpiryDate,
-				attemptCount: session.attemptCount,
 				authorizationCodeExpiryDate: session.authorizationCodeExpiryDate,
 				createdDate: session.createdDate,
 				expiryDate: session.expiryDate,

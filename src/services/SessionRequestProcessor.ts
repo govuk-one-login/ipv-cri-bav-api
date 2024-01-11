@@ -178,7 +178,6 @@ export class SessionRequestProcessor {
   		subject: jwtPayload.sub ? jwtPayload.sub : "",
   		persistentSessionId: jwtPayload.persistent_session_id,
   		clientIpAddress,
-  		attemptCount: 0,
   		authSessionState: AuthSessionState.BAV_SESSION_CREATED,
   		evidence_requested: jwtPayload.evidence_requested,
   	};

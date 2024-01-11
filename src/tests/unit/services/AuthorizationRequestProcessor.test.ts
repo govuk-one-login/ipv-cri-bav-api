@@ -28,7 +28,6 @@ const session: ISessionItem = {
 	subject: "sub",
 	persistentSessionId: "sdgsdg",
 	clientIpAddress: "127.0.0.1",
-	attemptCount: 1,
 	authSessionState: AuthSessionState.BAV_DATA_RECEIVED,
 };
 const authResponse = {
