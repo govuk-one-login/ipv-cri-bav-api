@@ -114,7 +114,7 @@ export class VerifyAccountRequestProcessor {
   						name,
   						sortCode,
   						accountNumber: paddedAccountNumber,
-  						attemptNum: session.retryCount || 0,
+  						attemptNum: session.retryCount || 1,
 					 },
   				],
 		 		},
