@@ -18,6 +18,8 @@ import {
 	wellKnownGet,
 	abortPost,
 	validatePersonInfoResponse,
+	decodeRawBody,
+	getKeyFromSession,
 }
 	from "../utils/ApiTestSteps";
 import { BankDetailsPayload } from "../models/BankDetailsPayload";
@@ -213,7 +215,17 @@ describe("BAV CRI: /userinfo Endpoint Happy Path Tests", () => {
 		expect(userInfoResponse.status).toBe(200);
 
 		// Check to make sure VC JWT is present in the response and validate its contents
-		validateJwtToken(userInfoResponse.data["https://vocab.account.gov.uk/v1/credentialJWT"][0], bankDetails);
+		validateJwtToken(userInfoResponse.data["https://vocab.account.gov.uk/v1/credentialJWT"][0]);
+
+		// Extract the raw body from the user info response and decode it
+		const rawBody = userInfoResponse.data["https://vocab.account.gov.uk/v1/credentialJWT"][0].split(".")[1];
+		const decodedBody = decodeRawBody(rawBody);
+
+		// Get the hmrcUuid value from the database and verify that the txn in the decoded body is of the same value
+		const hmrcUuid = await getKeyFromSession(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "hmrcUuid");
+		expect(decodedBody.vc.credentialSubject.bankAccount[0].sortCode).toBe(bankDetails.sort_code);
+		expect(decodedBody.vc.credentialSubject.bankAccount[0].accountNumber).toBe(bankDetails.account_number.padStart(8, "0"));
+		expect(decodedBody.vc.evidence[0].txn).toBe(hmrcUuid);
 
 		// Verify authSessionState
 		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_CRI_VC_ISSUED");
