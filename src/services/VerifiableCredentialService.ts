@@ -32,10 +32,10 @@ export class VerifiableCredentialService {
 		return VerifiableCredentialService.instance;
 	}
 
-	getSuccessEvidenceBlock(journeyId: string): VerifiedCredentialEvidence {
+	getSuccessEvidenceBlock(hmrcUuid: string): VerifiedCredentialEvidence {
 		return {
 			type: Constants.IDENTITY_CHECK,
-			txn: journeyId,
+			txn: hmrcUuid,
 			strengthScore: 3,
 			validityScore: 2,
 			checkDetails: [
@@ -47,10 +47,10 @@ export class VerifiableCredentialService {
 		};
 	}
 
-	getFailureEvidenceBlock(journeyId: string): VerifiedCredentialEvidence {
+	getFailureEvidenceBlock(hmrcUuid: string): VerifiedCredentialEvidence {
 		return {
 			type: Constants.IDENTITY_CHECK,
-			txn: journeyId,
+			txn: hmrcUuid,
 			strengthScore: 3,
 			validityScore: 0,
 			failedCheckDetails: [
@@ -72,7 +72,7 @@ export class VerifiableCredentialService {
 		const now = getNow();
 		const subject = sessionItem.subject;
 		const evidenceInfo = sessionItem.copCheckResult === CopCheckResult.FULL_MATCH ?
-			this.getSuccessEvidenceBlock(sessionItem.clientSessionId) : this.getFailureEvidenceBlock(sessionItem.clientSessionId);
+			this.getSuccessEvidenceBlock(sessionItem.hmrcUuid!) : this.getFailureEvidenceBlock(sessionItem.hmrcUuid!);
 		const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, bankAccountInfo, evidenceInfo)
 			.build();
 		const result = {

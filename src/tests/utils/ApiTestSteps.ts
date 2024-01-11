@@ -179,6 +179,15 @@ export async function getSessionById(sessionId: string, tableName: string): Prom
 	return session;
 }
 
+export async function getKeyFromSession(sessionId: string, tableName: string, key: string): Promise<any> {
+	const sessionInfo = await getSessionById(sessionId, tableName);
+	try {
+		return sessionInfo![key as keyof ISessionItem];
+	} catch (e: any) {
+		throw new Error("getKeyFromSession - Failed to get " + key + " value: " + e);
+	}
+}
+
 export async function getSessionAndVerifyKey(sessionId: string, tableName: string, key: string, expectedValue: string): Promise<void> {
 	const sessionInfo = await getSessionById(sessionId, tableName);
 	try {
@@ -285,11 +294,11 @@ export async function validateTxMAEventData(keyList: any): Promise<any> {
 	}
 }
 
-export function validateJwtToken(jwtToken: any, payload: BankDetailsPayload): void {
+export function validateJwtToken(jwtToken: any): void {
 	const [rawHead, rawBody, signature] = jwtToken.split(".");
 
 	validateRawHead(rawHead);
-	validateRawBody(rawBody, payload);
+	validateRawBody(rawBody);
 }
 
 function validateRawHead(rawHead: any): void {
@@ -298,13 +307,15 @@ function validateRawHead(rawHead: any): void {
 	expect(decodeRawHead.typ).toBe("JWT");
 }
 
-function validateRawBody(rawBody: any, payload: BankDetailsPayload): void {
-	const decodedBody = JSON.parse(jwtUtils.base64DecodeToString(rawBody.replace(/\W/g, "")));
+function validateRawBody(rawBody: any): void {
+	const decodedBody = decodeRawBody(rawBody);
 	expect(decodedBody.jti).toBeTruthy();
 	expect(decodedBody.vc.evidence[0].strengthScore).toBe(3);
 	expect(decodedBody.vc.evidence[0].validityScore).toBe(2);
-	expect(decodedBody.vc.credentialSubject.bankAccount[0].sortCode).toBe(payload.sort_code);
-	expect(decodedBody.vc.credentialSubject.bankAccount[0].accountNumber).toBe(payload.account_number.padStart(8, "0"));
+}
+
+export function decodeRawBody(rawBody: any): any {
+	return JSON.parse(jwtUtils.base64DecodeToString(rawBody.replace(/\W/g, "")));
 }
 
 export async function abortPost(sessionId: string): Promise<any> {
