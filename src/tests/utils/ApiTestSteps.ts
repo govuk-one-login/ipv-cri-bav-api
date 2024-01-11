@@ -314,7 +314,7 @@ function validateRawBody(rawBody: any): void {
 	expect(decodedBody.vc.evidence[0].validityScore).toBe(2);
 }
 
-export function decodeRawBody(rawBody: any) {
+export function decodeRawBody(rawBody: any): any {
 	return JSON.parse(jwtUtils.base64DecodeToString(rawBody.replace(/\W/g, "")));
 }
 
