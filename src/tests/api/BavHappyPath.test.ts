@@ -123,12 +123,6 @@ describe("BAV CRI: /verify-account Retry Happy Path Tests", () => {
 		expect(verifyAccountResponse.data.message).toBe("Success");
 		expect(verifyAccountResponse.data.retryCount).toBe(1);
 
-		// Verify-account second name mismatch
-		const verifyAccountResponseRetry = await verifyAccountPost(verifyAccountYesPayload, sessionId);
-		expect(verifyAccountResponseRetry.status).toBe(200);
-		expect(verifyAccountResponseRetry.data.message).toBe("Success");
-		expect(verifyAccountResponseRetry.data.retryCount).toBe(2);
-
 		// Make sure txma event is present & valid
 		const sqsMessage = await getSqsEventList("txma/", sessionId, 3);
 		await validateTxMAEventData(sqsMessage);

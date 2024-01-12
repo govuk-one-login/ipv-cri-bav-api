@@ -27,7 +27,6 @@ export interface ISessionItem extends IBAVSession {
 	subject: string;
 	persistentSessionId: string;
 	clientIpAddress: string;
-	attemptCount: number;
 	authSessionState: string;
 	evidence_requested?: EvidenceRequested;
 	copCheckResult?: CopCheckResult;

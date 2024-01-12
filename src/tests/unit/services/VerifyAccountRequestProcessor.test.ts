@@ -211,14 +211,14 @@ describe("VerifyAccountRequestProcessor", () => {
 
 		it("saves saveCopCheckResult with increased retryCount if there was no match", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
-			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, retryCount: 1 });
+			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, retryCount: 0 });
 			mockHmrcService.verify.mockResolvedValueOnce({ ...hmrcVerifyResponse, nameMatches: "partial" });
 
 			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress);
 
-			expect(mockBavService.saveCopCheckResult).toHaveBeenCalledWith(sessionId, CopCheckResults.PARTIAL_MATCH, 2);
+			expect(mockBavService.saveCopCheckResult).toHaveBeenCalledWith(sessionId, CopCheckResults.PARTIAL_MATCH, 1);
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
-			expect(response.body).toBe(JSON.stringify({ message:"Success", retryCount: 2 }));
+			expect(response.body).toBe(JSON.stringify({ message:"Success", retryCount: 1 }));
 		});
 
 		it("returns error response if cop check result is MATCH_ERROR", async () => {
