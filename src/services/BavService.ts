@@ -13,7 +13,7 @@ import { sqsClient } from "../utils/SqsClient";
 import { TxmaEvent } from "../utils/TxmaEvent";
 import { Constants } from "../utils/Constants";
 import { AuthSessionState } from "../models/enums/AuthSessionState";
-// import { PartialNameSQSRecord } from "../type/partialNameSQSRecord";
+import { PartialNameSQSRecord } from "../models/IHmrcResponse";
 
 export class BavService {
 	readonly tableName: string;
@@ -133,7 +133,7 @@ export class BavService {
 		}
 	}
 
-	async savePartialNameInfo(QueueUrl: string, event: any): Promise<void> {
+	async savePartialNameInfo(QueueUrl: string, event: PartialNameSQSRecord): Promise<void> {
 		try {
 			const messageBody = JSON.stringify(event);
 			const params = {
@@ -147,7 +147,7 @@ export class BavService {
 			this.logger.info("Sent message to PartialName Queue");
 		} catch (error) {
 			this.logger.error({
-				message: `Error when sending event partial name info to SQS Queue`,
+				message: "Error when sending event partial name info to SQS Queue",
 				messageCode: MessageCodes.FAILED_TO_WRITE_PARTIAL_NAME_INFO,
 			});
 		}

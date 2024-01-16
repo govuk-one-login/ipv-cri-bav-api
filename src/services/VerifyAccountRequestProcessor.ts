@@ -8,7 +8,7 @@ import { CopCheckResults } from "../models/enums/Hmrc";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { TxmaEventNames } from "../models/enums/TxmaEvents";
-import { HmrcVerifyResponse, PartialNameExport } from "../models/IHmrcResponse";
+import { HmrcVerifyResponse, PartialNameSQSRecord } from "../models/IHmrcResponse";
 import { PersonIdentityItem } from "../models/PersonIdentityItem";
 import { CopCheckResult, ISessionItem } from "../models/ISessionItem";
 import { EnvironmentVariables, Constants } from "../utils/Constants";
@@ -59,17 +59,17 @@ export class VerifyAccountRequestProcessor {
 
   	this.BavService = BavService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
   	this.HmrcService = HmrcService.getInstance(this.logger, hmrcBaseUrl, hmrcBackoffPeriodMs, maxRetries);
-  }
+	}
 
-  static getInstance(logger: Logger, metrics: Metrics, HMRC_TOKEN: string): VerifyAccountRequestProcessor {
+	static getInstance(logger: Logger, metrics: Metrics, HMRC_TOKEN: string): VerifyAccountRequestProcessor {
   	if (!VerifyAccountRequestProcessor.instance) {
   		VerifyAccountRequestProcessor.instance = new VerifyAccountRequestProcessor(logger, metrics, HMRC_TOKEN);
   	}
   	return VerifyAccountRequestProcessor.instance;
-  }
+	}
 
-  // eslint-disable-next-line max-lines-per-function, complexity
-  async processRequest(sessionId: string, body: VerifyAccountPayload, clientIpAddress: string): Promise<Response> {
+	// eslint-disable-next-line max-lines-per-function, complexity
+	async processRequest(sessionId: string, body: VerifyAccountPayload, clientIpAddress: string): Promise<Response> {
   	const { account_number: accountNumber, sort_code: sortCode } = body;
   	const paddedAccountNumber = accountNumber.padStart(8, "0");
   	const person: PersonIdentityItem | undefined = await this.BavService.getPersonIdentityById(sessionId, this.personIdentityTableName);
@@ -171,25 +171,25 @@ export class VerifyAccountRequestProcessor {
   	await this.BavService.saveCopCheckResult(sessionId, copCheckResult, retryCount);
 
 		if (copCheckResult === CopCheckResults.PARTIAL_MATCH) {
-			const partialNameRecord: PartialNameExport = {
+			const partialNameRecord: PartialNameSQSRecord = {
 				itemNumber: hmrcUuid,
 				timeStamp: timeOfRequest,
 				cicName: name,
 				accountName: verifyResponse.accountName,
 				accountExists: verifyResponse.accountExists,
-				nameMatches: verifyResponse.nameMatches
-			}
+				nameMatches: verifyResponse.nameMatches,
+			};
 			
-			await this.BavService.savePartialNameInfo(this.partialNameQueueUrl, partialNameRecord)
+			await this.BavService.savePartialNameInfo(this.partialNameQueueUrl, partialNameRecord);
 		}
 
   	return new Response(HttpCodesEnum.OK, JSON.stringify({
   		message: "Success",
   		retryCount,
   	}));
-  }
+	}
 
-  calculateCopCheckResult(verifyResponse: HmrcVerifyResponse): CopCheckResult {
+	calculateCopCheckResult(verifyResponse: HmrcVerifyResponse): CopCheckResult {
   	if (verifyResponse.nameMatches ===  "yes" && verifyResponse.accountExists === "yes") {
   		return CopCheckResults.FULL_MATCH;
   	} else if (verifyResponse.nameMatches ===  "partial" && verifyResponse.accountExists === "yes") {
@@ -199,5 +199,5 @@ export class VerifyAccountRequestProcessor {
   	} else {
   		return CopCheckResults.NO_MATCH;
   	}
-  }
+	}
 }

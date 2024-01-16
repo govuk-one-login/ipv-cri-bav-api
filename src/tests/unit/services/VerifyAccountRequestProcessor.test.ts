@@ -251,5 +251,32 @@ describe("VerifyAccountRequestProcessor", () => {
 				verifyAccountRequestProcessorTest.calculateCopCheckResult({ ...hmrcVerifyResponse, nameMatches, accountExists }),
 			).toBe(result);
 		});
+
+		it("calls savePartialNameInfo if CopCheckResults is PARTIAL_MATCH", async () => {
+			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
+			mockBavService.getSessionById.mockResolvedValueOnce(session);
+			mockHmrcService.verify.mockResolvedValueOnce({ ...hmrcVerifyResponse, nameMatches: "error" });
+
+			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress);
+
+			expect(response.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);
+			expect(response.body).toBe("Error received in COP verify response");
+			expect(logger.warn).toHaveBeenCalledWith("Error received in COP verify response");
+		});
+
+		it("calls savePartialNameInfo if CopCheckResults is PARTIAL_MATCH", async () => {
+			jest.useFakeTimers();
+			jest.setSystemTime(new Date(1585695600000)); // == 2020-03-31T23:00:00.000Z
+			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
+			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, retryCount: 0 });
+			mockHmrcService.verify.mockResolvedValueOnce({ ...hmrcVerifyResponse, nameMatches: "partial" });
+
+			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress);
+
+			expect(mockBavService.savePartialNameInfo).toHaveBeenCalledWith("PARTIALMATCH_QUEUE", { "accountExists": "yes", "accountName": "Mr Peter Smith", "cicName": "Frederick Joseph Flintstone", "itemNumber": "new hmrcUuid", "nameMatches": "partial", "timeStamp": 1585695600 });
+			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
+			expect(response.body).toBe(JSON.stringify({ message:"Success", retryCount: 1 }));
+			jest.useRealTimers();
+		});
 	});
 });

@@ -4,7 +4,6 @@ import { Metrics } from "@aws-lambda-powertools/metrics";
 import { LambdaInterface } from "@aws-lambda-powertools/commons";
 import { Constants, EnvironmentVariables } from "./utils/Constants";
 import { failEntireBatch, passEntireBatch } from "./utils/SqsBatchResponseHelper";
-import { PartialNameProcessor } from "./services/PartialNameProcessor";
 import { PutObjectCommand, PutObjectCommandInput, S3Client } from "@aws-sdk/client-s3";
 import { NodeHttpHandler } from "@aws-sdk/node-http-handler";
 import { checkEnvironmentVariable } from "./utils/EnvironmentVariables";
@@ -19,7 +18,7 @@ export const logger = new Logger({
 
 const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE, serviceName: POWERTOOLS_SERVICE_NAME });
 
-let s3Client: S3Client;
+export let s3Client: S3Client;
 
 class PartialNameMatchHandler implements LambdaInterface {
 	@metrics.logMetrics({ throwOnEmptyMetrics: false, captureColdStartMetric: true })
@@ -49,7 +48,7 @@ class PartialNameMatchHandler implements LambdaInterface {
 			try {
 				const body = JSON.parse(record.body);
 				logger.debug("Parsed SQS event body");
-				
+
 				const uploadParams: PutObjectCommandInput = {
 					Bucket: partialMatchesBucketName,
 					Key: `${absoluteTimeNow()}.json`,
@@ -66,7 +65,6 @@ class PartialNameMatchHandler implements LambdaInterface {
 					throw new Error("Error writing partialMatch to S3 bucket");
 				}
 				
-				await PartialNameProcessor.getInstance(logger, metrics).processRequest(body);
 				return passEntireBatch;
 
 			} catch (error) {

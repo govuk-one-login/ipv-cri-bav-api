@@ -2203,7 +2203,6 @@ Resources:
                         "case.insensitive": "TRUE",
                         "mapping": "TRUE"
           }
-          # TODO: update schema below to reflect full item schema
           Columns:
             - Name: itemNumber
               Type: string
@@ -2592,7 +2591,7 @@ Resources:
           Type: SQS
           Properties:
             Queue: !GetAtt PartialMatchesQueue.Arn
-            BatchSize: 1
+            BatchSize: 10
 
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
