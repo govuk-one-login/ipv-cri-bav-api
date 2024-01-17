@@ -64,8 +64,6 @@ export class Constants {
 
   static readonly HMRC_TOKEN_ENDPOINT_PATH = "/oauth/token";
 
-  static readonly HMRC_TOKEN_SSM_PATH = "/dev/HMRC/TOKEN";
-
   static readonly HMRC_EXPECTED_TOKEN_EXPIRES_IN = 14400;
 
   static readonly HMRC_VERIFY_ENDPOINT_PATH = "verify/personal";
