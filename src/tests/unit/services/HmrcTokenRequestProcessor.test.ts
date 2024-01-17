@@ -12,6 +12,7 @@ let hmrcTokenRequestProcessorTest: HmrcTokenRequestProcessor;
 const metrics = new Metrics({ namespace: "BAV" });
 const HMRC_CLIENT_ID = "clientId";
 const HMRC_CLIENT_SECRET = "client-secret";
+const HMRC_TOKEN_SSM_PATH = "/dev/HMRC/TOKEN";
 jest.mock("../../../utils/Config", () => {
 	return {
 		putParameter: jest.fn(() => {return;}),
@@ -65,7 +66,7 @@ describe("HmrcTokenRequestProcessor", () => {
 
 		await hmrcTokenRequestProcessorTest.processRequest();
 		expect(logger.info).toHaveBeenNthCalledWith(2, "Storing the HMRC access token to SSM");
-		expect(putParameter).toHaveBeenCalledWith(Constants.HMRC_TOKEN_SSM_PATH, tokenResponse.access_token, "String", "HMRC Access token");
+		expect(putParameter).toHaveBeenCalledWith(HMRC_TOKEN_SSM_PATH, tokenResponse.access_token, "String", "HMRC Access token");
 		expect(logger.info).toHaveBeenNthCalledWith(3, "Successfully Stored the HMRC token to SSM");
 	});
 });
