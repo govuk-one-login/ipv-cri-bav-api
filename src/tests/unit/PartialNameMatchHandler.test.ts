@@ -40,7 +40,7 @@ describe("PartialNameMatchHandler", () => {
 	it("Saves SQS message to S3 given a valid event payload", async () => {
 		await lambdaHandler(event as SQSEvent, CONTEXT);
 		jest.spyOn(s3Client, "send").mockReturnValueOnce();
-		expect(s3Client.send).toHaveBeenCalledWith({ "Body": "{\"itemNumber\":\"8356a38c-f8e5-49cc-9639-6a1655e53c69\",\"timeStamp\":1705409058,\"cicName\":\"Yasmine Palmer\",\"accountExists\":\"yes\",\"nameMatches\":\"partial\"}", "Bucket": "BUCKET_NAME", "ContentType": "application/json", "Key": "1577836800.json", "SSEKMSKeyId": "BUCKET_KEY", "ServerSideEncryption": "aws:kms" });
+		expect(s3Client.send).toHaveBeenCalledWith({ "Body": "{\"itemNumber\":\"8356a38c-f8e5-49cc-9639-6a1655e53c69\",\"timeStamp\":1705409058,\"cicName\":\"Yasmine Palmer\",\"accountExists\":\"yes\",\"nameMatches\":\"partial\"}", "Bucket": "BUCKET_NAME", "ContentType": "application/json", "Key": "1577836800-e37a7d34-659f-4899-b968-2026151905b8.json", "SSEKMSKeyId": "BUCKET_KEY", "ServerSideEncryption": "aws:kms" });
 	});
 
 });

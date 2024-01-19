@@ -156,7 +156,7 @@ export class VerifyAccountRequestProcessor {
   		this.personIdentityTableName,
   	);
 
-  	const copCheckResult = await this.calculateCopCheckResult(verifyResponse);
+  	const copCheckResult = this.calculateCopCheckResult(verifyResponse);
   	this.logger.debug(`copCheckResult is ${copCheckResult}`);
 
   	if (copCheckResult === CopCheckResults.MATCH_ERROR) {

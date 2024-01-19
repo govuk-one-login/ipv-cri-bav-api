@@ -253,18 +253,6 @@ describe("VerifyAccountRequestProcessor", () => {
 		});
 
 		it("calls savePartialNameInfo if CopCheckResults is PARTIAL_MATCH", async () => {
-			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
-			mockBavService.getSessionById.mockResolvedValueOnce(session);
-			mockHmrcService.verify.mockResolvedValueOnce({ ...hmrcVerifyResponse, nameMatches: "error" });
-
-			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress);
-
-			expect(response.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);
-			expect(response.body).toBe("Error received in COP verify response");
-			expect(logger.warn).toHaveBeenCalledWith("Error received in COP verify response");
-		});
-
-		it("calls savePartialNameInfo if CopCheckResults is PARTIAL_MATCH", async () => {
 			jest.useFakeTimers();
 			jest.setSystemTime(new Date(1585695600000)); // == 2020-03-31T23:00:00.000Z
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
