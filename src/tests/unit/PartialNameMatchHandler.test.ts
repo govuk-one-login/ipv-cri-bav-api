@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { SQSEvent } from "aws-lambda";
-import { s3Client, lambdaHandler, logger } from "../../PartialNameMatchHandler";
+import { s3Client, lambdaHandler } from "../../PartialNameMatchHandler";
 import { CONTEXT } from "./data/context";
 
 jest.useFakeTimers().setSystemTime(new Date("2020-01-01"));
