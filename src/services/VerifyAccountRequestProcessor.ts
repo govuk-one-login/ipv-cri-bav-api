@@ -8,7 +8,7 @@ import { CopCheckResults } from "../models/enums/Hmrc";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { TxmaEventNames } from "../models/enums/TxmaEvents";
-import { HmrcVerifyResponse } from "../models/IHmrcResponse";
+import { HmrcVerifyResponse, PartialNameSQSRecord } from "../models/IHmrcResponse";
 import { PersonIdentityItem } from "../models/PersonIdentityItem";
 import { CopCheckResult, ISessionItem } from "../models/ISessionItem";
 import { EnvironmentVariables, Constants } from "../utils/Constants";
@@ -18,6 +18,7 @@ import { getFullName } from "../utils/PersonIdentityUtils";
 import { Response } from "../utils/Response";
 import { buildCoreEventFields } from "../utils/TxmaEvent";
 import { VerifyAccountPayload } from "../type/VerifyAccountPayload";
+import { absoluteTimeNow } from "../utils/DateTimeUtils";
 
 export class VerifyAccountRequestProcessor {
   private static instance: VerifyAccountRequestProcessor;
@@ -38,7 +39,9 @@ export class VerifyAccountRequestProcessor {
 
   private readonly hmrcToken: string;
 
-  constructor(logger: Logger, metrics: Metrics, HMRC_TOKEN: string) {
+	private readonly partialNameQueueUrl: string;
+
+	constructor(logger: Logger, metrics: Metrics, HMRC_TOKEN: string) {
   	this.logger = logger;
   	this.metrics = metrics;
   	logger.debug("metrics is  " + JSON.stringify(this.metrics));
@@ -46,6 +49,7 @@ export class VerifyAccountRequestProcessor {
 	  this.txmaQueueUrl = checkEnvironmentVariable(EnvironmentVariables.TXMA_QUEUE_URL, this.logger);
 	  this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, this.logger);
   	this.personIdentityTableName = checkEnvironmentVariable(EnvironmentVariables.PERSON_IDENTITY_TABLE_NAME, this.logger);
+		this.partialNameQueueUrl = checkEnvironmentVariable(EnvironmentVariables.PARTIAL_MATCHES_QEUEUE_URL, logger);
   	this.hmrcToken = HMRC_TOKEN;
 
   	const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, this.logger);
@@ -55,17 +59,17 @@ export class VerifyAccountRequestProcessor {
 
   	this.BavService = BavService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
   	this.HmrcService = HmrcService.getInstance(this.logger, hmrcBaseUrl, hmrcBackoffPeriodMs, maxRetries);
-  }
+	}
 
-  static getInstance(logger: Logger, metrics: Metrics, HMRC_TOKEN: string): VerifyAccountRequestProcessor {
+	static getInstance(logger: Logger, metrics: Metrics, HMRC_TOKEN: string): VerifyAccountRequestProcessor {
   	if (!VerifyAccountRequestProcessor.instance) {
   		VerifyAccountRequestProcessor.instance = new VerifyAccountRequestProcessor(logger, metrics, HMRC_TOKEN);
   	}
   	return VerifyAccountRequestProcessor.instance;
-  }
+	}
 
-  // eslint-disable-next-line max-lines-per-function, complexity
-  async processRequest(sessionId: string, body: VerifyAccountPayload, clientIpAddress: string): Promise<Response> {
+	// eslint-disable-next-line max-lines-per-function, complexity
+	async processRequest(sessionId: string, body: VerifyAccountPayload, clientIpAddress: string): Promise<Response> {
   	const { account_number: accountNumber, sort_code: sortCode } = body;
   	const paddedAccountNumber = accountNumber.padStart(8, "0");
   	const person: PersonIdentityItem | undefined = await this.BavService.getPersonIdentityById(sessionId, this.personIdentityTableName);
@@ -88,6 +92,7 @@ export class VerifyAccountRequestProcessor {
 
   	const name = getFullName(person.name);
   	this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
+		const timeOfRequest = absoluteTimeNow();
 
   	let { hmrcUuid } = session;
   	if (!hmrcUuid) {
@@ -165,13 +170,26 @@ export class VerifyAccountRequestProcessor {
   	}
   	await this.BavService.saveCopCheckResult(sessionId, copCheckResult, retryCount);
 
+		if (copCheckResult === CopCheckResults.PARTIAL_MATCH) {
+			const partialNameRecord: PartialNameSQSRecord = {
+				itemNumber: hmrcUuid,
+				timeStamp: timeOfRequest,
+				cicName: name,
+				accountName: verifyResponse.accountName,
+				accountExists: verifyResponse.accountExists,
+				nameMatches: verifyResponse.nameMatches,
+			};
+			
+			await this.BavService.savePartialNameInfo(this.partialNameQueueUrl, partialNameRecord);
+		}
+
   	return new Response(HttpCodesEnum.OK, JSON.stringify({
   		message: "Success",
   		retryCount,
   	}));
-  }
+	}
 
-  calculateCopCheckResult(verifyResponse: HmrcVerifyResponse): CopCheckResult {
+	calculateCopCheckResult(verifyResponse: HmrcVerifyResponse): CopCheckResult {
   	if (verifyResponse.nameMatches ===  "yes" && verifyResponse.accountExists === "yes") {
   		return CopCheckResults.FULL_MATCH;
   	} else if (verifyResponse.nameMatches ===  "partial" && verifyResponse.accountExists === "yes") {
@@ -181,5 +199,5 @@ export class VerifyAccountRequestProcessor {
   	} else {
   		return CopCheckResults.NO_MATCH;
   	}
-  }
+	}
 }

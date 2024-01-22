@@ -13,6 +13,7 @@ import { sqsClient } from "../utils/SqsClient";
 import { TxmaEvent } from "../utils/TxmaEvent";
 import { Constants } from "../utils/Constants";
 import { AuthSessionState } from "../models/enums/AuthSessionState";
+import { PartialNameSQSRecord } from "../models/IHmrcResponse";
 
 export class BavService {
 	readonly tableName: string;
@@ -128,6 +129,26 @@ export class BavService {
 			this.logger.error({
 				message: `Error when sending event ${event.event_name} to TXMA Queue`,
 				messageCode: MessageCodes.FAILED_TO_WRITE_TXMA,
+			});
+		}
+	}
+
+	async savePartialNameInfo(QueueUrl: string, event: PartialNameSQSRecord): Promise<void> {
+		try {
+			const messageBody = JSON.stringify(event);
+			const params = {
+				MessageBody: messageBody,
+				QueueUrl,
+			};
+
+			this.logger.info({ message: "Sending partial name info to SQS" });
+
+			await sqsClient.send(new SendMessageCommand(params));
+			this.logger.info("Sent message to PartialName Queue");
+		} catch (error) {
+			this.logger.error({
+				message: "Error when sending event partial name info to SQS Queue",
+				messageCode: MessageCodes.FAILED_TO_WRITE_PARTIAL_NAME_INFO,
 			});
 		}
 	}

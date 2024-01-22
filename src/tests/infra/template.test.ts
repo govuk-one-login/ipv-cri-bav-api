@@ -59,8 +59,8 @@ describe("Infra", () => {
 		});
 	});
 
-	it("There are 10 lambdas defined, all with a specific permission:", () => {
-		const lambdaCount = 10;
+	it("There are 11 lambdas defined, all with a specific permission:", () => {
+		const lambdaCount = 11;
 		template.resourceCountIs("AWS::Serverless::Function", lambdaCount);
 		template.resourceCountIs("AWS::Lambda::Permission", lambdaCount);
 	});
@@ -170,5 +170,48 @@ describe("Infra", () => {
 				).toBe(retention);
 			},
 		);
+	});
+
+	describe("KMS", () => {
+		it("Each KMS Key should have an associated alias", () => {
+			const kmsKeys = template.findResources("AWS::KMS::Key");
+			const kmsKeyList = Object.keys(kmsKeys);
+			kmsKeyList.forEach((kmsKey) => {
+				template.hasResourceProperties("AWS::KMS::Alias", {
+					TargetKeyId: {
+						"Ref": kmsKey,
+					},
+				});
+			});
+		});
+	});
+
+	describe("S3", () => {
+		it("All S3 buckets should have public access blocked", () => {
+			const buckets = template.findResources("AWS::S3::Bucket");
+			const bucketList = Object.keys(buckets);
+			bucketList.forEach((bucket) => {
+				expect(buckets[bucket].Properties.PublicAccessBlockConfiguration).toEqual(expect.objectContaining({
+					BlockPublicAcls: true,
+					BlockPublicPolicy: true,
+					IgnorePublicAcls: true,
+					RestrictPublicBuckets: true,
+				}));
+			});
+		});
+
+		it("All S3 buckets should be encrypted", () => {
+			const buckets = template.findResources("AWS::S3::Bucket");
+			const bucketList = Object.keys(buckets);
+			bucketList.forEach((bucket) => {
+				expect(buckets[bucket].Properties.BucketEncryption.ServerSideEncryptionConfiguration).toEqual(expect.arrayContaining([
+					expect.objectContaining({
+						ServerSideEncryptionByDefault: expect.objectContaining({
+							SSEAlgorithm: expect.any(String),
+						}),
+					})
+				]));
+			});
+		});
 	});
 });

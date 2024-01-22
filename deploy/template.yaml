@@ -104,6 +104,7 @@ Mappings:
       DNSSUFFIX: review-bav.dev.account.gov.uk
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
+      PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: '[{"jwksEndpoint":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/redirect?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
@@ -115,6 +116,7 @@ Mappings:
       DNSSUFFIX: review-bav.build.account.gov.uk
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
+      PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-bav.build.account.gov.uk/.well-known/jwks.json","clientId":"BD7B2A5D","redirectUri":"https://ipvstub.review-bav.build.account.gov.uk/redirect?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
@@ -126,6 +128,7 @@ Mappings:
       DNSSUFFIX: review-bav.staging.account.gov.uk
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
+      PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.staging.account.gov.uk/.well-known/jwks.json","clientId":"03A5A659-17AA-453F-B905-95D2804823D1","redirectUri":"https://identity.staging.account.gov.uk/credential-issuer/callback?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
@@ -136,6 +139,7 @@ Mappings:
       DNSSUFFIX: review-bav.integration.account.gov.uk
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
+      PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.integration.account.gov.uk/.well-known/jwks.json","clientId":"AE140E43-1987-4EE8-86CC-BEF19FC9FF3F","redirectUri":"https://identity.integration.account.gov.uk/credential-issuer/callback?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
@@ -146,6 +150,7 @@ Mappings:
       DNSSUFFIX: review-bav.account.gov.uk
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
+      PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.account.gov.uk/.well-known/jwks.json","clientId":"C910A762-4BB2-400D-8F3D-4D7E6C84E342","redirectUri":"https://identity.account.gov.uk/credential-issuer/callback?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
@@ -299,7 +304,171 @@ Resources:
           ToPort: 443
       VpcId:
         Fn::ImportValue: !Sub "${VpcStackName}-VpcId"
-  
+
+  PartialNameMatchBucketKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: Specific KMS CMK for Partial Matches S3 Bucket Encryption
+      Enabled: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowIdentityPoliciesInAccountToDetermineKeyAccess
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource:
+              - "*"
+      KeySpec: SYMMETRIC_DEFAULT
+      KeyUsage: ENCRYPT_DECRYPT
+      MultiRegion: false
+      PendingWindowInDays: 7
+      Tags:
+        - Key: KeyType
+          Value: Encryption Key
+        - Key: Environment
+          Value: !Sub ${Environment}
+
+  PartialNameMatchBucketKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !If
+        -  CreateDevResources
+        - !Sub "alias/PartialNameMatchBucketEncryptionKey-${AWS::StackName}"
+        - alias/PartialNameMatchBucketEncryptionKey
+      TargetKeyId: !Ref PartialNameMatchBucketKey
+
+  PartialNameMatchBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref PartialNameMatchBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyIncorrectEncryptionType
+            Effect: Deny
+            Principal: "*"
+            Action:
+              - s3:PutObject
+            Resource:
+              - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchBucket, "/*"]]
+            Condition:
+              StringNotEquals:
+                "s3:x-amz-server-side-encryption": "aws:kms"
+          - Sid: DenyUnencryptedObjectUploads
+            Effect: Deny
+            Principal: "*"
+            Action:
+              - s3:PutObject
+            Resource:
+              - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchBucket, "/*"]]
+            Condition:
+              "Null":
+                "s3:x-amz-server-side-encryption": true
+          - Sid: RestrictGetObjectToAthenaOnly
+            Effect: Deny
+            Principal: "*"
+            Action:
+              - "s3:GetObject*"
+            Resource:
+              - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchBucket, "/*"]]
+            Condition:
+              StringNotEquals:
+                "aws:CalledVia": "athena.amazonaws.com"
+    DependsOn: PartialNameMatchBucket
+
+  PartialNameMatchBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: !Sub ${AWS::StackName}-partial-name-match-${Environment}
+      VersioningConfiguration:
+        Status: "Enabled"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: aws:kms
+              KMSMasterKeyID: !Ref PartialNameMatchBucketKeyAlias
+            BucketKeyEnabled: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpiryRule
+            ExpirationInDays: 30
+            NoncurrentVersionExpirationInDays: 1
+            Status: Enabled
+
+  PartialNameMatchAthenaResultsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref PartialNameMatchAthenaResultsBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyIncorrectEncryptionType
+            Effect: Deny
+            Principal: "*"
+            Action:
+              - s3:PutObject
+            Resource:
+              - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchAthenaResultsBucket, "/*"]]
+            Condition:
+              StringNotEquals:
+                "s3:x-amz-server-side-encryption": "aws:kms"
+          - Sid: DenyUnencryptedObjectUploads
+            Effect: Deny
+            Principal: "*"
+            Action:
+              - s3:PutObject
+            Resource:
+              - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchAthenaResultsBucket, "/*"]]
+            Condition:
+              "Null":
+                "s3:x-amz-server-side-encryption": true
+          - Sid: RestrictObjectAccessToAthenaOnly
+            Effect: Deny
+            Principal: "*"
+            Action:
+              - "s3:PutObject*"
+              - "s3:GetObject*"
+            Resource:
+              - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchAthenaResultsBucket, "/*"]]
+            Condition:
+              StringNotEquals:
+                "aws:CalledVia": "athena.amazonaws.com"
+    DependsOn: PartialNameMatchAthenaResultsBucket
+
+  PartialNameMatchAthenaResultsBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: !Sub ${AWS::StackName}-partial-name-athena-results-${Environment}
+      VersioningConfiguration:
+        Status: "Enabled"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: aws:kms
+              KMSMasterKeyID: !Ref PartialNameMatchBucketKeyAlias
+            BucketKeyEnabled: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpiryRule
+            ExpirationInDays: 30
+            NoncurrentVersionExpirationInDays: 1
+            Status: Enabled
+
   JsonWebKeysBucket:
     Type: "AWS::S3::Bucket"
     DeletionPolicy: Delete
@@ -1649,6 +1818,7 @@ Resources:
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: VerifyAccountHandler
+          SAVING_PARTIAL_NAME_DATA: True
           KMS_KEY_ARN:
             Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
           ENCRYPTION_KEY_IDS:
@@ -1657,6 +1827,7 @@ Resources:
           HMRC_BASE_URL: !FindInMap [ EnvironmentVariables, !Ref Environment, HMRCVERIFYBASEURL ]
           HMRC_MAX_RETRIES: 2
           HMRC_TOKEN_BACKOFF_PERIOD_MS: 5000 # 5 seconds
+          PARTIAL_MATCHES_QEUEUE_URL: !Ref PartialMatchesQueue
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
@@ -1677,6 +1848,9 @@ Resources:
         - KMSDecryptPolicy:
             KeyId:
               Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-key-id"
+        - KMSDecryptPolicy:
+            KeyId:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-key-id"
         - Statement:
             - Sid: KMSPolicy
               Effect: Allow
@@ -1684,7 +1858,6 @@ Resources:
                 - kms:*
               Resource:
                 "*"
-        - Statement:
             - Effect: Allow
               Action:
                 - "sqs:SendMessage"
@@ -1695,6 +1868,19 @@ Resources:
                 - "kms:Decrypt"
                 - "kms:GenerateDataKey"
               Resource: !GetAtt TxMAKMSEncryptionKey.Arn
+        - Statement:
+            - Sid: AllowSendMessageToPartialNameQueue
+              Effect: Allow
+              Action:
+                - "sqs:SendMessage"
+              Resource: !GetAtt PartialMatchesQueue.Arn
+            - Sid: AllowEncryptMessageSendingToPartialNameQueue
+              Effect: Allow
+              Action:
+                - "kms:Encrypt"
+                - "kms:Decrypt"
+                - "kms:GenerateDataKey"
+              Resource: !GetAtt PartialMatchesEncryptionKey.Arn
       Events:
         verifyAccount:
           Type: Api
@@ -1910,6 +2096,143 @@ Resources:
         - !Sub "alias/TxMAKMSEncryptionKey-${AWS::StackName}"
         - alias/TxMAKMSEncryptionKey
       TargetKeyId: !Ref TxMAKMSEncryptionKey
+
+  ## PartialNameMatch SQS Queue
+  PartialMatchesQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: !FindInMap [EnvironmentVariables, !Ref Environment, PARTIALNAMEMATCHRENTIONPERIODDAYS]
+      VisibilityTimeout: 60
+      KmsMasterKeyId: !Ref PartialNameMatchKeyAlias
+      RedrivePolicy:
+        deadLetterTargetArn:
+          Fn::GetAtt:
+            - "PartialNameMatchQueueDeadLetterQueue"
+            - "Arn"
+        maxReceiveCount: 5
+
+  namePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref PartialMatchesQueue
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowUseOfPartialNameMatchQueue
+            Effect: "Allow"
+            Action:
+              - "sqs:DeleteMessage"
+              - "sqs:GetQueueAttributes"
+              - "sqs:ChangeMessageVisibility"
+              - "sqs:ReceiveMessage"
+            Resource:
+              - !GetAtt PartialMatchesQueue.Arn
+
+  PartialNameMatchQueueDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 259200 # three days
+      KmsMasterKeyId: !Sub PartialMatchesEncryptionKey
+
+  PartialMatchesEncryptionKey:
+    Type: AWS::KMS::Key
+    # KMS Key manually rotated.
+    # checkov:skip=CKV_AWS_7: KMS Key manually rotated.
+    Properties:
+      Description: A KMS Key for encrypting the SQS Queue for PartialNameMatches
+      Enabled: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource:
+              - "*"
+      KeySpec: SYMMETRIC_DEFAULT
+      KeyUsage: ENCRYPT_DECRYPT
+      MultiRegion: false
+      PendingWindowInDays: 7
+      Tags:
+        - Key: KeyType
+          Value: Encryption Key
+        - Key: Environment
+          Value: !Sub ${Environment}
+
+  PartialNameMatchKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !If
+        -  CreateDevResources    
+        - !Sub "alias/PartialMatchesEncryptionKey-${AWS::StackName}"
+        - alias/PartialMatchesEncryptionKey
+      TargetKeyId: !Ref PartialMatchesEncryptionKey
+
+  ## Partial Names Athena and Glue resources
+  PartialNameMatchGlueDatabase:
+    Type: AWS::Glue::Database
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseInput:
+        Description: !Sub "PartialNameMatch-${AWS::StackName}"
+        Name: !Sub "partialnamematch-${AWS::StackName}"
+
+  PartialNameMatchGlueTable:
+    Type: AWS::Glue::Table
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: !Ref PartialNameMatchGlueDatabase
+      TableInput:
+        Description: !Sub "PartialNameMatch-${AWS::StackName}"
+        Name: !Sub "partialnamematch-${AWS::StackName}"
+        PartitionKeys: []
+        TableType: EXTERNAL_TABLE
+        StorageDescriptor:
+          Location: !Sub "s3://${PartialNameMatchBucket}/"
+          InputFormat: "org.apache.hadoop.mapred.TextInputFormat"
+          OutputFormat: "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
+          SerdeInfo:
+            Name: "partialnamematch"
+            SerializationLibrary: "org.openx.data.jsonserde.JsonSerDe"
+          Parameters: {
+                        "ignore.malformed.json": "FALSE",
+                        "dots.in.keys": "FALSE",
+                        "case.insensitive": "TRUE",
+                        "mapping": "TRUE"
+          }
+          Columns:
+            - Name: itemNumber
+              Type: string
+            - Name: timeStamp
+              Type: int
+            - Name: cicName
+              Type: string
+            - Name: accountName
+              Type: string
+            - Name: accountExists
+              Type: string
+            - Name: nameMatches
+              Type: string
+
+  PartialNameMatchAthenaWorkgroup:
+    Type: AWS::Athena::WorkGroup
+    Properties:
+      Description: !Sub "PartialNameMatch-${AWS::StackName"
+      Name: !Sub "PartialNameMatch-${AWS::StackName}"
+      RecursiveDeleteOption: true
+      State: ENABLED
+      WorkGroupConfiguration:
+        EnforceWorkGroupConfiguration: true
+        PublishCloudWatchMetricsEnabled: true
+        ResultConfiguration:
+          EncryptionConfiguration:
+            EncryptionOption: "SSE_KMS"
+            KmsKey: !Ref PartialNameMatchBucketKeyAlias
+          ExpectedBucketOwner: !Ref AWS::AccountId
+          OutputLocation: !Sub "s3://${PartialNameMatchAthenaResultsBucket}/"
 
   JsonWebKeysFunction:
     Type: AWS::Serverless::Function
@@ -2210,6 +2533,180 @@ Resources:
       Dimensions:
         - Name: FunctionName
           Value: !Ref HmrcTokenFunction
+      TreatMissingData: notBreaching
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+
+  ## PartialNameMatchHandler
+  PartialNameMatchFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: PartialNameMatchFunctionLogGroup
+    Properties:
+      FunctionName: !Sub "BAV-PartialNameMatch-${AWS::StackName}"
+      Handler: PartialNameMatchHandler.lambdaHandler
+      CodeUri: ../src/
+      ReservedConcurrentExecutions: !If
+        - ApplyReservedConcurrency
+        - !Ref LambdaConcurrency
+        - !Ref AWS::NoValue
+      Environment:
+        Variables:
+          PARTIAL_MATCHES_BUCKET: !Ref PartialNameMatchBucket
+          PARTIAL_MATCHES_BUCKET_KEY: !Ref PartialNameMatchBucketKeyAlias
+          POWERTOOLS_SERVICE_NAME: "PartialNameMatchHandler"
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSXrayWriteOnlyAccess
+        - S3WritePolicy:
+            BucketName: !Ref PartialNameMatchBucket
+        - Statement:
+            - Sid: "KMSEncryptForPartialMatchBucket"
+              Effect: Allow
+              Action:
+                - "kms:Encrypt"
+                - "kms:GenerateDataKey"
+              Resource: !GetAtt PartialNameMatchBucketKey.Arn
+        - Statement:
+            - Sid: "KMSDecryptForPartialMatchQueue"
+              Effect: Allow
+              Action:
+                - "kms:Decrypt"
+                - "kms:GenerateDataKey"
+              Resource: !GetAtt PartialMatchesEncryptionKey.Arn
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "sqs:SendMessage"
+              Resource: !GetAtt TxMASQSQueue.Arn
+            - Effect: Allow
+              Action:
+                - "kms:Encrypt"
+                - "kms:GenerateDataKey"
+              Resource: !GetAtt TxMAKMSEncryptionKey.Arn
+      Events:
+        SQSTrigger:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt PartialMatchesQueue.Arn
+            BatchSize: 10
+
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: false
+        EntryPoints:
+          - PartialNameMatchHandler.ts
+
+  PartialNameMatchFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/BAV-PartialNameMatch-${AWS::StackName}"
+      RetentionInDays:
+        !FindInMap [
+          EnvironmentConfiguration,
+          !Ref Environment,
+          logretentionindays,
+        ]
+
+  # PartialNameMatchFunctionLogsSubscriptionFilterCSLS:
+  #   Type: AWS::Logs::SubscriptionFilter
+  #   Properties:
+  #     DestinationArn:
+  #       !FindInMap [ PlatformConfiguration, !Ref Environment, CSLSEGRESS ]
+  #     FilterPattern: ""
+  #     LogGroupName: !Ref PartialNameMatchFunctionLogGroup
+
+  PartialNameMatchFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref PartialNameMatchFunction
+      Principal: apigateway.amazonaws.com
+
+  PartialNameMatchFunctionFatalErorMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref PartialNameMatchFunctionLogGroup
+      FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
+      MetricTransformations:
+        -
+          MetricValue: "1"
+          MetricNamespace: !Sub "${AWS::StackName}/LogMessages"
+          MetricName: "PartialNameMatchFunction-Fatalerror"
+
+  PartialNameMatchFunctionFatalErrorAlarm:
+    DependsOn:
+      - "PartialNameMatchFunctionFatalErorMetricFilter"
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-PartialNameMatchFunction-FatalErrorAlarm"
+      AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
+      ActionsEnabled: true
+      OKActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      InsufficientDataActions: [ ]
+      MetricName: PartialNameMatchFunction-Fatalerror
+      Namespace: !Sub "${AWS::StackName}/LogMessages"
+      Statistic: Sum
+      Dimensions: [ ]
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  PartialNameMatchConcurrency80Alarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployConcurrencyAlarms"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: []
+      AlarmDescription: !Sub "Trigger the alarm if over 80% of Session is used. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-PartialNameMatchFunction-concurrency"
+      MetricName: ConcurrentExecutions
+      Namespace: AWS/Lambda
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref PartialNameMatchFunction
+      Statistic: Maximum
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: !Ref LambdaConcurrencyThreshold
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+
+  PartialNameMatchThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: []
+      AlarmDescription: !Sub "Trigger if the ${PartialNameMatchFunction} lambda throttles. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-PartialNameMatchFunction-throttles"
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref PartialNameMatchFunction
       TreatMissingData: notBreaching
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1

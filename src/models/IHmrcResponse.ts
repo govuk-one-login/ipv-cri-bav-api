@@ -16,3 +16,12 @@ export interface HmrcVerifyResponse {
 	nameMatches: string;
 	accountName: string;
 }
+
+export interface PartialNameSQSRecord {
+	itemNumber: string;
+	timeStamp: number;
+	cicName: string;
+	accountName: string;
+	accountExists: string;
+	nameMatches: string;
+}
