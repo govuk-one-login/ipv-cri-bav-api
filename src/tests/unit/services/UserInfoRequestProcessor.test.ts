@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 import { UserInfoRequestProcessor } from "../../../services/UserInfoRequestProcessor";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "jest-mock-extended";
@@ -42,9 +43,10 @@ function getMockSessionItem(): ISessionItem {
 		subject: "sub",
 		persistentSessionId: "sdgsdg",
 		clientIpAddress: "127.0.0.1",
-		attemptCount: 1,
 		authSessionState: "BAV_ACCESS_TOKEN_ISSUED",
 		copCheckResult: "FULL_MATCH",
+		retryCount: 1,
+		hmrcUuid: "1c756b7e-b5b8-4f33-966d-4aeee9bb0000",
 	};
 	return sess;
 }
@@ -103,8 +105,7 @@ describe("UserInfoRequestProcessor", () => {
 		expect(mockBavService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
 		expect(mockBavService.updateSessionAuthState).toHaveBeenCalledTimes(1);
 		expect(mockBavService.updateSessionAuthState).toHaveBeenCalledWith("sdfsdg", "BAV_CRI_VC_ISSUED");
-		expect(mockBavService.sendToTXMA).toHaveBeenCalledTimes(2);
-		expect(mockBavService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
+		expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "MYQUEUE", {
 			"client_id":"ipv-core-stub",
 			"component_id":"https://XXX-c.env.account.gov.uk",
 			"event_name":"BAV_CRI_VC_ISSUED",
@@ -127,24 +128,47 @@ describe("UserInfoRequestProcessor", () => {
 						],
 					},
 				],
+				"bankAccount": [
+					{
+						"sortCode": "111111",
+						"accountNumber": "10199283",
+					},
+				],
 			},
 			"timestamp":1585695600,
 			"user":{
 				"ip_address":"127.0.0.1",
-				"persistent_session_id":"sdgsdg",
+				"govuk_signin_journey_id": "sdfssg",
 				"session_id":"sdfsdg",
 				"user_id":"sub",
 			},
+		 "extensions": {
+				"evidence": [
+					 {
+						"txn": "1c756b7e-b5b8-4f33-966d-4aeee9bb0000",
+						"strengthScore": 3,
+						"validityScore": 2,
+						"attemptNum": 1,
+						"ci": undefined,
+						"ciReasons": [
+							{
+								"ci": undefined,
+								"reason": "FULL_MATCH",
+							},
+						],
+					 },
+				],
+		 },
 		});
-		expect(mockBavService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
+		expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(2, "MYQUEUE", {
 			"client_id":"ipv-core-stub",
 			"component_id":"https://XXX-c.env.account.gov.uk",
 			"event_name":"BAV_CRI_END",
 			"timestamp":1585695600,
 			"user":{
 				"ip_address":"127.0.0.1",
-				"persistent_session_id":"sdgsdg",
 				"session_id":"sdfsdg",
+				"govuk_signin_journey_id": "sdfssg",
 				"user_id":"sub",
 			},
 		});
@@ -153,7 +177,7 @@ describe("UserInfoRequestProcessor", () => {
 			"https://vocab.account.gov.uk/v1/credentialJWT": ["signedJwt-test"],
 		}));
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
-		expect(logger.info).toHaveBeenCalledTimes(3);
+		expect(logger.info).toHaveBeenCalledTimes(2);
 		expect(logger.appendKeys).toHaveBeenCalledWith({
 			govuk_signin_journey_id: "sdfssg",
 		});

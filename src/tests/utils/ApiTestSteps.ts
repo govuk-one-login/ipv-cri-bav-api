@@ -8,6 +8,8 @@ import wellKnownGetSchema from "../data/wellKnownJwksResponseSchema.json";
 import { constants } from "./ApiConstants";
 import { ISessionItem } from "../../models/ISessionItem";
 import { jwtUtils } from "../../utils/JwtUtils";
+import { BankDetailsPayload } from "../models/BankDetailsPayload";
+import NodeRSA = require("node-rsa");
 
 const API_INSTANCE = axios.create({ baseURL: constants.DEV_CRI_BAV_API_URL });
 const ajv = new Ajv({ strict: false });
@@ -63,10 +65,34 @@ export async function sessionPost(clientId: any, request: any): Promise<any> {
 	}
 }
 
-export async function verifyAccountPost(bankDetails: any, sessionId: any): Promise<any> {
+export async function personInfoGet(sessionId: string): Promise<any> {
+	const path = "/person-info";
+	try {
+		const getRequest = await API_INSTANCE.get(path, { headers: { "x-govuk-signin-session-id": sessionId } });
+		expect(getRequest.status).toBe(200);
+		return getRequest;
+	} catch (error: any) {
+		console.log(`Error response from ${path} endpoint: ${error}.`);
+		return error.response;
+	}
+}
+
+export async function personInfoKeyGet(): Promise<any> {
+	const path = "/person-info-key";
+	try {
+		const getRequest = await API_INSTANCE.get(path);
+		expect(getRequest.status).toBe(200);
+		return getRequest;
+	} catch (error: any) {
+		console.log(`Error response from ${path} endpoint: ${error}.`);
+		return error.response;
+	}
+}
+
+export async function verifyAccountPost(bankDetails: BankDetailsPayload, sessionId: any): Promise<any> {
 	const path = "/verify-account";
 	try {
-		const postRequest = await API_INSTANCE.post(path, bankDetails, { headers: { "x-govuk-signin-session-id": sessionId } });
+		const postRequest = await API_INSTANCE.post(path, JSON.stringify(bankDetails), { headers: { "x-govuk-signin-session-id": sessionId } });
 		return postRequest;
 	} catch (error: any) {
 		console.log(`Error response from ${path} endpoint: ${error}`);
@@ -151,6 +177,15 @@ export async function getSessionById(sessionId: string, tableName: string): Prom
 	}
 
 	return session;
+}
+
+export async function getKeyFromSession(sessionId: string, tableName: string, key: string): Promise<any> {
+	const sessionInfo = await getSessionById(sessionId, tableName);
+	try {
+		return sessionInfo![key as keyof ISessionItem];
+	} catch (e: any) {
+		throw new Error("getKeyFromSession - Failed to get " + key + " value: " + e);
+	}
 }
 
 export async function getSessionAndVerifyKey(sessionId: string, tableName: string, key: string, expectedValue: string): Promise<void> {
@@ -273,10 +308,14 @@ function validateRawHead(rawHead: any): void {
 }
 
 function validateRawBody(rawBody: any): void {
-	const decodedBody = JSON.parse(jwtUtils.base64DecodeToString(rawBody.replace(/\W/g, "")));
+	const decodedBody = decodeRawBody(rawBody);
 	expect(decodedBody.jti).toBeTruthy();
 	expect(decodedBody.vc.evidence[0].strengthScore).toBe(3);
 	expect(decodedBody.vc.evidence[0].validityScore).toBe(2);
+}
+
+export function decodeRawBody(rawBody: any): any {
+	return JSON.parse(jwtUtils.base64DecodeToString(rawBody.replace(/\W/g, "")));
 }
 
 export async function abortPost(sessionId: string): Promise<any> {
@@ -288,4 +327,11 @@ export async function abortPost(sessionId: string): Promise<any> {
 		console.log(`Error response from ${path} endpoint: ${error}`);
 		return error.response;
 	}
+}
+
+export function validatePersonInfoResponse(personInfoKey: string, personInfoResponse: any, firstName: string, lastName: string): void {
+	const privateKey = new NodeRSA(personInfoKey);
+	const encryptedValue = personInfoResponse.data;
+	const decryptedValue = privateKey.decrypt(encryptedValue, "utf8");
+	expect(decryptedValue).toBe("{\"name\":\"" + firstName + " " + lastName + "\"}");
 }

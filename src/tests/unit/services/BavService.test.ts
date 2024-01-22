@@ -48,7 +48,6 @@ function getTXMAEventPayload(): TxmaEvent {
 		event_name: "BAV_CRI_START",
 		user: {
 			user_id: "sessionCliendId",
-			persistent_session_id: "sessionPersistentSessionId",
 			session_id: "sessionID",
 			govuk_signin_journey_id: "clientSessionId",
 			ip_address: "sourceIp",
@@ -268,7 +267,7 @@ describe("BAV Service", () => {
 		it("saves account information to dynamo", async () => {
 			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
 
-			await bavService.updateAccountDetails(sessionId, accountNumber, sortCode);
+			await bavService.updateAccountDetails({ sessionId, accountNumber, sortCode });
 
 			expect(UpdateCommand).toHaveBeenCalledWith({
 				TableName: tableName,
@@ -284,10 +283,11 @@ describe("BAV Service", () => {
 		it("returns an error when account information cannot be saved to dynamo", async () => {
 			mockDynamoDbClient.send = jest.fn().mockRejectedValueOnce("Error!");
 
-			await expect(bavService.updateAccountDetails(sessionId, accountNumber, sortCode)).rejects.toThrow(expect.objectContaining({
-				statusCode: HttpCodesEnum.SERVER_ERROR,
-				message: "Error updating record",
-			}));
+			await expect(bavService.updateAccountDetails({ sessionId, accountNumber, sortCode }))
+				.rejects.toThrow(expect.objectContaining({
+					statusCode: HttpCodesEnum.SERVER_ERROR,
+					message: "Error updating record",
+				}));
 			expect(logger.error).toHaveBeenCalledWith({ message: "Error updating record with account details", messageCode: MessageCodes.FAILED_UPDATING_PERSON_IDENTITY, error: "Error!" });
 		});
 	});
@@ -298,7 +298,24 @@ describe("BAV Service", () => {
 		it("saves account information to dynamo", async () => {
 			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
 
-			await bavService.saveCopCheckResult(sessionId, copCheckResult);
+			await bavService.saveCopCheckResult(sessionId, copCheckResult, 1);
+
+			expect(UpdateCommand).toHaveBeenCalledWith({
+				TableName: tableName,
+				Key: { sessionId },
+				UpdateExpression: "SET copCheckResult = :copCheckResult, authSessionState = :authSessionState, retryCount = :retryCount",
+				ExpressionAttributeValues: {
+					":copCheckResult": copCheckResult,
+					":retryCount": 1,
+					":authSessionState": AuthSessionState.BAV_DATA_RECEIVED,
+				},
+			});
+		});
+
+		it("saves account information to dynamo without retryCount", async () => {
+			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+
+			await bavService.saveCopCheckResult(sessionId, copCheckResult, undefined);
 
 			expect(UpdateCommand).toHaveBeenCalledWith({
 				TableName: tableName,
@@ -316,9 +333,38 @@ describe("BAV Service", () => {
 
 			await expect(bavService.saveCopCheckResult(sessionId, copCheckResult)).rejects.toThrow(expect.objectContaining({
 				statusCode: HttpCodesEnum.SERVER_ERROR,
-				message: "setCopCheckResult failed: got error saving copCheckResult",
+				message: "saveCopCheckResult failed: got error saving copCheckResult",
 			}));
 			expect(logger.error).toHaveBeenCalledWith({ message: "Got error saving copCheckResult", messageCode: MessageCodes.FAILED_UPDATING_SESSION, error: "Error!" });
+		});
+	});
+
+	describe("#saveHmrcUuid", () => {
+		const hmrcUuid = "hmrcUuid";
+
+		it("saves account information to dynamo", async () => {
+			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+
+			await bavService.saveHmrcUuid(sessionId, hmrcUuid);
+
+			expect(UpdateCommand).toHaveBeenCalledWith({
+				TableName: tableName,
+				Key: { sessionId },
+				UpdateExpression: "SET hmrcUuid = :hmrcUuid",
+				ExpressionAttributeValues: {
+					":hmrcUuid": hmrcUuid,
+				},
+			});
+		});
+
+		it("returns an error when account information cannot be saved to dynamo", async () => {
+			mockDynamoDbClient.send = jest.fn().mockRejectedValueOnce("Error!");
+
+			await expect(bavService.saveHmrcUuid(sessionId, hmrcUuid)).rejects.toThrow(expect.objectContaining({
+				statusCode: HttpCodesEnum.SERVER_ERROR,
+				message: "saveHmrcUuid failed: got error saving hmrcUuid",
+			}));
+			expect(logger.error).toHaveBeenCalledWith({ message: "Got error saving hmrcUuid", messageCode: MessageCodes.FAILED_UPDATING_SESSION, error: "Error!" });
 		});
 	});
 
@@ -479,6 +525,87 @@ describe("BAV Service", () => {
 				UpdateExpression: "SET authSessionState = :authSessionState",
 			}));
 		});
-			
+	});
+
+	describe("obfuscateJSONValues", () => {
+		it("should obfuscate all fields except those in txmaFieldsToShow", async () => {
+			const inputObject = {
+				field1: "sensitive1",
+				field2: "sensitive2",
+				field3: "non-sensitive",
+				nested: {
+					field4: "sensitive3",
+					field5: "non-sensitive",
+					field6: null,
+					field7: undefined,
+				},
+			};
+	
+			const txmaFieldsToShow = ["field3", "field5"];
+	
+			const obfuscatedObject = await bavService.obfuscateJSONValues(inputObject, txmaFieldsToShow);
+	
+			// Check that sensitive fields are obfuscated and non-sensitive fields are not
+			expect(obfuscatedObject.field1).toBe("***");
+			expect(obfuscatedObject.field2).toBe("***");
+			expect(obfuscatedObject.field3).toBe("non-sensitive");
+			expect(obfuscatedObject.nested.field4).toBe("***");
+			expect(obfuscatedObject.nested.field5).toBe("non-sensitive");
+			expect(obfuscatedObject.nested.field6).toBeNull();
+			expect(obfuscatedObject.nested.field7).toBeUndefined();
+		});
+	
+		it("should handle arrays correctly", async () => {
+			const inputObject = {
+				field1: "sensitive1",
+				arrayField: [
+					{
+						field2: "sensitive2",
+						field3: "non-sensitive",
+					},
+					{
+						field2: "sensitive3",
+						field3: "non-sensitive",
+					},
+				],
+			};
+	
+			const txmaFieldsToShow = ["field3"];
+	
+			const obfuscatedObject = await bavService.obfuscateJSONValues(inputObject, txmaFieldsToShow);
+	
+			// Check that sensitive fields are obfuscated and non-sensitive fields are not
+			expect(obfuscatedObject.field1).toBe("***");
+			expect(obfuscatedObject.arrayField[0].field2).toBe("***");
+			expect(obfuscatedObject.arrayField[0].field3).toBe("non-sensitive");
+			expect(obfuscatedObject.arrayField[1].field2).toBe("***");
+			expect(obfuscatedObject.arrayField[1].field3).toBe("non-sensitive");
+		});
+	
+		it("should obfuscate values of different types", async () => {
+			const inputObject = {
+				stringField: "sensitive-string",
+				numberField: 42,
+				booleanField: true,
+			};
+	
+			const txmaFieldsToShow: string[] | undefined = [];
+	
+			const obfuscatedObject = await bavService.obfuscateJSONValues(inputObject, txmaFieldsToShow);
+	
+			// Check that all fields are obfuscated
+			expect(obfuscatedObject.stringField).toBe("***");
+			expect(obfuscatedObject.numberField).toBe("***");
+			expect(obfuscatedObject.booleanField).toBe("***");
+		});
+	
+		it('should return "***" for non-object input', async () => {
+			const input = "string-input";
+	
+			const obfuscatedValue = await bavService.obfuscateJSONValues(input);
+	
+			// Check that non-object input is obfuscated as '***'
+			expect(obfuscatedValue).toBe("***");
+		});
 	});
 });

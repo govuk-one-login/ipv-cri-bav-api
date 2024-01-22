@@ -34,7 +34,7 @@ export class HmrcService {
 
     // eslint-disable-next-line max-lines-per-function
     async verify(
-    	{ accountNumber, sortCode, name }: { accountNumber: string; sortCode: string; name: string }, token: string,
+    	{ accountNumber, sortCode, name, uuid }: { accountNumber: string; sortCode: string; name: string; uuid: string }, token: string,
     ): Promise<HmrcVerifyResponse | undefined> {
     	const params = {
     		account: { accountNumber, sortCode },
@@ -43,6 +43,7 @@ export class HmrcService {
     	const headers = {
     		"User-Agent": Constants.HMRC_USER_AGENT,
     		"Authorization": `Bearer ${token}`,
+    		"X-Tracking-Id": uuid,
     	};
 
     	let retryCount = 0;
@@ -50,7 +51,7 @@ export class HmrcService {
     	while (retryCount <= this.maxRetries) {
     		try {
     			const endpoint = `${this.hmrcBaseUrl}/${Constants.HMRC_VERIFY_ENDPOINT_PATH}`;
-    			this.logger.info("Sending COP verify request to HMRC", { endpoint, retryCount });
+    			this.logger.info("Sending COP verify request to HMRC", { uuid, endpoint, retryCount });
     			const { data }: { data: HmrcVerifyResponse } = await axios.post(endpoint, params, { headers });
 
     			this.logger.debug({
@@ -67,7 +68,7 @@ export class HmrcService {
     			return data;
     		} catch (error: any) {
     			const message = "Error sending COP verify request to HMRC";
-    			this.logger.error({ message, messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT });
+    			this.logger.error({ message, messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT, statusCode: error?.response?.status });
 
     			if ((error?.response?.status === 500 || error?.response?.status === 429) && retryCount < this.maxRetries) {
     				this.logger.error(`Sleeping for ${exponentialBackOffPeriod} ms before retrying verification`, { retryCount });

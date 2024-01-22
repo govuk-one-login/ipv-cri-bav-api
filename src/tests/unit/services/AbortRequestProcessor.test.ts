@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/unbound-method */
+/* eslint-disable max-lines-per-function */
 import { mock } from "jest-mock-extended";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { AbortRequestProcessor } from "../../../services/AbortRequestProcessor";
 import { BavService } from "../../../services/BavService";
 import { ISessionItem } from "../../../models/ISessionItem";
-import { MessageCodes } from "../../../models/enums/MessageCodes";
 import { AuthSessionState } from "../../../models/enums/AuthSessionState";
 import { Response } from "../../../utils/Response";
 import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
@@ -30,7 +31,6 @@ const session: ISessionItem = {
 	subject: "sub",
 	persistentSessionId: "sdgsdg",
 	clientIpAddress: "127.0.0.1",
-	attemptCount: 1,
 	authSessionState: AuthSessionState.BAV_DATA_RECEIVED,
 };
 
@@ -67,7 +67,6 @@ describe("AbortRequestProcessor", () => {
 
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 		expect(out.body).toBe("Session has already been aborted");
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(logger.info).toHaveBeenCalledWith("Session has already been aborted");
 	});
 
@@ -76,7 +75,6 @@ describe("AbortRequestProcessor", () => {
 
 		const out: Response = await abortRequestProcessor.processRequest(sessionId);
 
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockBavService.updateSessionAuthState).toHaveBeenCalledWith(sessionId, AuthSessionState.BAV_SESSION_ABORTED);
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 		expect(out.body).toBe("Session has been aborted");
@@ -90,7 +88,6 @@ describe("AbortRequestProcessor", () => {
 
 		const out: Response = await abortRequestProcessor.processRequest(sessionId);
 
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockBavService.updateSessionAuthState).toHaveBeenCalledWith(sessionId, AuthSessionState.BAV_SESSION_ABORTED);
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 		expect(out.body).toBe("Session has been aborted");
@@ -102,7 +99,6 @@ describe("AbortRequestProcessor", () => {
 
 		await abortRequestProcessor.processRequest(sessionId);
 
-		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockBavService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
 			event_name: "BAV_CRI_SESSION_ABORTED",
 			client_id: session.clientId,
@@ -110,9 +106,9 @@ describe("AbortRequestProcessor", () => {
 			timestamp: 1585695600,
 			user: {
 			  ip_address: session.clientIpAddress,
-			  persistent_session_id: session.persistentSessionId,
 			  session_id: sessionId,
 			  user_id: session.subject,
+			  govuk_signin_journey_id: session.clientSessionId,
 			},
 		});
 	});

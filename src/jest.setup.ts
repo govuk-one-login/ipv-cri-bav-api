@@ -7,11 +7,15 @@ process.env.AUTH_SESSION_TTL_SECS = '950400'
 process.env.ISSUER = 'https://XXX-c.env.account.gov.uk'
 process.env.ENCRYPTION_KEY_IDS = 'EncryptionKeyArn'
 process.env.CLIENT_CONFIG = '[{"jwksEndpoint":"https://api.identity.account.gov.uk/.well-known/jwks.json","clientId":"ipv-core-stub","redirectUri":"http://localhost:8085/callback"}]'
-process.env.HMRC_TOKEN_SSM_PATH = "dev/HMRC/TOKEN"
+process.env.HMRC_TOKEN_SSM_PATH = "/dev/HMRC/TOKEN"
 process.env.HMRC_CLIENT_ID_SSM_PATH = '/dev/HMRC/CLIENT_ID'
 process.env.HMRC_CLIENT_SECRET_SSM_PATH = '/dev/HMRC/CLIENT_SECRET'
+process.env.PUBLIC_KEY_SSM_PATH = "dev/person-info/PUBLIC_KEY"
 process.env.HMRC_BASE_URL = "https://hmrc"
 process.env.HMRC_CLIENT_ID = "hmrc client ID"
 process.env.HMRC_CLIENT_SECRET = "hmrc client secret"
 process.env.HMRC_TOKEN_BACKOFF_PERIOD_MS = "2000"
 process.env.HMRC_MAX_RETRIES = "3"
+// pragma: allowlist secret
+process.env.PRIVATE_KEY_SSM_PATH = "person-info/PRIVATE_KEY"
+process.env.PARTIAL_MATCHES_QEUEUE_URL = "PARTIALMATCH_QUEUE"

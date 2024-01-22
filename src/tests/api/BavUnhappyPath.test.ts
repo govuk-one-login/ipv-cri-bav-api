@@ -3,6 +3,7 @@ import verifyAccountYesPayload from "../data/bankDetailsYes.json";
 import {
 	authorizationGet,
 	sessionPost,
+	personInfoGet,
 	startStubServiceAndReturnSessionId,
 	stubStartPost,
 	userInfoPost,
@@ -11,6 +12,9 @@ import {
 	getSessionAndVerifyKey,
 } from "../utils/ApiTestSteps";
 import { constants } from "../utils/ApiConstants";
+import { BankDetailsPayload } from "../models/BankDetailsPayload";
+import { randomUUID } from "crypto";
+
 
 describe("BAV CRI: /session Endpoint Unhappy Path Tests", () => {
 	let stubResponse: any;
@@ -35,11 +39,25 @@ describe("BAV CRI: /session Endpoint Unhappy Path Tests", () => {
 	});
 });
 
+describe("BAV CRI: /person-info Endpoint Unhappy Path Tests", () => {
+
+	it("Invalid Session Id Test", async () => {
+		const sessionId = randomUUID();
+
+		// Person Info
+		const personInfoResponse = await personInfoGet(sessionId);
+		expect(personInfoResponse.status).toBe(401);
+		expect(personInfoResponse.data).toBe("No session found with the session id: " + sessionId);
+
+	});
+});
+
+
 describe("BAV CRI: /verify-account Endpoint Unhappy Path Tests", () => {
 	let sessionId: string;
 
 	it("HMRC Multiple Retries Test - Error Code 5XX", async () => {
-		const newBavStubPayload = structuredClone(bavStubPayload); 
+		const newBavStubPayload = structuredClone(bavStubPayload);
 		newBavStubPayload.shared_claims.name[0].nameParts[0].value = "Evan";
 		newBavStubPayload.shared_claims.name[0].nameParts[1].value = "Erickson";
 
@@ -47,7 +65,7 @@ describe("BAV CRI: /verify-account Endpoint Unhappy Path Tests", () => {
 		sessionId = await startStubServiceAndReturnSessionId(newBavStubPayload);
 
 		// Verify-account request
-		const verifyAccountResponse = await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		const verifyAccountResponse = await verifyAccountPost(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number), sessionId);
 		expect(verifyAccountResponse.status).toBe(500);
 
 		// Make sure authSession state is NOT BAV_DATA_RECEIVED
@@ -63,11 +81,37 @@ describe("BAV CRI: /verify-account Endpoint Unhappy Path Tests", () => {
 		sessionId = await startStubServiceAndReturnSessionId(newBavStubPayload);
 
 		// Verify-account request
-		const verifyAccountResponse = await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		const verifyAccountResponse = await verifyAccountPost(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number), sessionId);
 		expect(verifyAccountResponse.status).toBe(500);
 
 		// Make sure authSession state is NOT BAV_DATA_RECEIVED
 		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_SESSION_CREATED");
+	});
+
+	it.each([
+		["Ashley", "Allen"],
+		["Deborah", "Dawson"],
+		["Nigel", "Newton"],
+		["Yasmine", "Dawson"],
+		["Yasmine", "Newton"],
+		["Yasmine", "Palmer"],
+	])("Name Retry Tests - Too many retries rejection", async (firstName: string, lastName: any) => {
+		const newBavStubPayload = structuredClone(bavStubPayload); 
+		newBavStubPayload.shared_claims.name[0].nameParts[0].value = firstName;
+		newBavStubPayload.shared_claims.name[0].nameParts[1].value = lastName;
+
+		sessionId = await startStubServiceAndReturnSessionId(newBavStubPayload);
+
+		// Verify-account first name mismatch
+		await verifyAccountPost(verifyAccountYesPayload, sessionId);
+
+		// Verify-account second name mismatch
+		await verifyAccountPost(verifyAccountYesPayload, sessionId);
+
+		// Verify-account third name mismatch
+		const verifyAccountResponseSecondRetry = await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		expect(verifyAccountResponseSecondRetry.status).toBe(401);
+		expect(verifyAccountResponseSecondRetry.data).toBe("Too many attempts");
 	});
 });
 
@@ -85,7 +129,7 @@ describe("BAV CRI: /authorization Endpoint Unhappy Path Tests", () => {
 
 	it("Repeated Request Made Test", async () => {
 		const origSessionId = sessionId;
-		await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		await verifyAccountPost(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number), sessionId);
 		const authResponse = await authorizationGet(sessionId);
 		const authCode = authResponse.data.authorizationCode;
 		const authRepeatResponse = await authorizationGet(origSessionId);
@@ -103,7 +147,7 @@ describe("BAV CRI: /token Endpoint Unhappy Path Tests", () => {
 
 	it("Invalid Session State Test", async () => {
 		// Verify-account request
-		await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		await verifyAccountPost(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number), sessionId);
 
 		// Authorization request
 		const authResponse = await authorizationGet(sessionId);
@@ -124,7 +168,7 @@ describe("BAV CRI: /userinfo Endpoint Unhappy Path Tests", () => {
 		const sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
 
 		// Verify-account request
-		await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		await verifyAccountPost(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number), sessionId);
 
 		// Authorization
 		const authResponse = await authorizationGet(sessionId);

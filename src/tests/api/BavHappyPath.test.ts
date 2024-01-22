@@ -5,6 +5,8 @@ import {
 	authorizationGet,
 	getSessionAndVerifyKey,
 	getSessionAndVerifyKeyExists,
+	personInfoGet,
+	personInfoKeyGet,
 	getSqsEventList,
 	startStubServiceAndReturnSessionId,
 	verifyAccountPost,
@@ -15,8 +17,12 @@ import {
 	validateWellKnownResponse,
 	wellKnownGet,
 	abortPost,
+	validatePersonInfoResponse,
+	decodeRawBody,
+	getKeyFromSession,
 }
 	from "../utils/ApiTestSteps";
+import { BankDetailsPayload } from "../models/BankDetailsPayload";
 
 describe("BAV CRI: /session Endpoint Happy Path Tests", () => {
 	let sessionId: string;
@@ -37,6 +43,31 @@ describe("BAV CRI: /session Endpoint Happy Path Tests", () => {
 	});
 });
 
+describe("BAV CRI: /person-info Endpoint Happy Path Tests", () => {
+
+	it.each([
+		["Yasmine", "Dawson"],
+		["Yasmine", "Palmer"],
+		["Nigel", "Newton"],
+	])("Successful Request Tests", async (firstName: string, lastName: string) => {
+
+		const newBavStubPayload = structuredClone(bavStubPayload);
+		newBavStubPayload.shared_claims.name[0].nameParts[0].value = firstName;
+		newBavStubPayload.shared_claims.name[0].nameParts[1].value = lastName;
+
+		const sessionId = await startStubServiceAndReturnSessionId(newBavStubPayload);
+		expect(sessionId).toBeTruthy();
+
+		// Person Info
+		const personInfoResponse = await personInfoGet(sessionId);
+		expect(personInfoResponse.status).toBe(200);
+
+		// Person Info Key
+		const personInfoKey = await personInfoKeyGet();
+		validatePersonInfoResponse(personInfoKey.data.key, personInfoResponse, firstName, lastName);
+	});
+});
+
 describe("BAV CRI: /verify-account Endpoint Happy Path Tests", () => {
 	let sessionId: string;
 	beforeEach(async () => {
@@ -52,20 +83,52 @@ describe("BAV CRI: /verify-account Endpoint Happy Path Tests", () => {
 		expect(sessionId).toBeTruthy();
 
 		// Assign a new valid account number to the payload
-		verifyAccountYesPayload.account_number = accountNumber;
+		const bankDetails = new BankDetailsPayload(verifyAccountYesPayload.sort_code, accountNumber);
 
 		// Verify-account request
-		const verifyAccountResponse = await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		const verifyAccountResponse = await verifyAccountPost(bankDetails, sessionId);
 		expect(verifyAccountResponse.status).toBe(200);
 
 		// Make sure authSession state is as expected
 		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_DATA_RECEIVED");
 
 		// Verify that the accountNumber and sortCode exist and have the correct value
-		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_PERSONAL_IDENTITY_TABLE_NAME, "accountNumber", verifyAccountYesPayload.account_number.padStart(8, "0"));
-		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_PERSONAL_IDENTITY_TABLE_NAME, "sortCode", verifyAccountYesPayload.sort_code);
+		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_PERSONAL_IDENTITY_TABLE_NAME, "accountNumber", bankDetails.account_number.padStart(8, "0"));
+		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_PERSONAL_IDENTITY_TABLE_NAME, "sortCode", bankDetails.sort_code);
+
+		// Make sure txma event is present & valid
+		const sqsMessage = await getSqsEventList("txma/", sessionId, 3);
+		await validateTxMAEventData(sqsMessage);
 	});
 });
+
+describe("BAV CRI: /verify-account Retry Happy Path Tests", () => {
+	it.each([
+		["Ashley", "Allen"],
+		["Deborah", "Dawson"],
+		["Nigel", "Newton"],
+		["Yasmine", "Dawson"],
+		["Yasmine", "Newton"],
+		["Yasmine", "Palmer"],
+	])("Name Retry Tests", async (firstName: string, lastName: any) => {
+		const newBavStubPayload = structuredClone(bavStubPayload);
+		newBavStubPayload.shared_claims.name[0].nameParts[0].value = firstName;
+		newBavStubPayload.shared_claims.name[0].nameParts[1].value = lastName;
+
+		const sessionId = await startStubServiceAndReturnSessionId(newBavStubPayload);
+
+		// Verify-account first name mismatch
+		const verifyAccountResponse = await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		expect(verifyAccountResponse.status).toBe(200);
+		expect(verifyAccountResponse.data.message).toBe("Success");
+		expect(verifyAccountResponse.data.retryCount).toBe(1);
+
+		// Make sure txma event is present & valid
+		const sqsMessage = await getSqsEventList("txma/", sessionId, 3);
+		await validateTxMAEventData(sqsMessage);
+	});
+});
+
 
 describe("BAV CRI: /authorization Endpoint Happy Path Tests", () => {
 	let sessionId: string;
@@ -78,7 +141,7 @@ describe("BAV CRI: /authorization Endpoint Happy Path Tests", () => {
 		expect(sessionId).toBeTruthy();
 
 		// Verify-account request
-		await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		await verifyAccountPost(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number), sessionId);
 
 		// Authorization request
 		const authResponse = await authorizationGet(sessionId);
@@ -89,10 +152,6 @@ describe("BAV CRI: /authorization Endpoint Happy Path Tests", () => {
 
 		// Make sure authSession state is as expected
 		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_AUTH_CODE_ISSUED");
-
-		// Make sure txma event is present & valid
-		const sqsMessage = await getSqsEventList("txma/", sessionId, 2);
-		await validateTxMAEventData(sqsMessage);
 	});
 });
 
@@ -106,8 +165,8 @@ describe("BAV CRI: /token Endpoint Happy Path Tests", () => {
 	it("Successful Request Test", async () => {
 		expect(sessionId).toBeTruthy();
 
-		// Verify Account request
-		await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		// Verify-account request
+		await verifyAccountPost(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number), sessionId);
 
 		// Authorization request
 		const authResponse = await authorizationGet(sessionId);
@@ -126,8 +185,10 @@ describe("BAV CRI: /token Endpoint Happy Path Tests", () => {
 
 describe("BAV CRI: /userinfo Endpoint Happy Path Tests", () => {
 	let sessionId: string;
+	let bankDetails: BankDetailsPayload;
 	beforeEach(async () => {
 		// Session Request
+		bankDetails = new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number);
 		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
 	});
 
@@ -135,7 +196,7 @@ describe("BAV CRI: /userinfo Endpoint Happy Path Tests", () => {
 		expect(sessionId).toBeTruthy();
 
 		// Verify Account request
-		await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		await verifyAccountPost(bankDetails, sessionId);
 
 		// Authorization request
 		const authResponse = await authorizationGet(sessionId);
@@ -147,8 +208,20 @@ describe("BAV CRI: /userinfo Endpoint Happy Path Tests", () => {
 		const userInfoResponse = await userInfoPost("Bearer " + tokenResponse.data.access_token);
 		expect(userInfoResponse.status).toBe(200);
 
-		// Check to make sure VC JWT is present in the response and validate its contentss
+		// Check to make sure VC JWT is present in the response and validate its contents
 		validateJwtToken(userInfoResponse.data["https://vocab.account.gov.uk/v1/credentialJWT"][0]);
+
+		// Extract the raw body from the user info response and decode it
+		const rawBody = userInfoResponse.data["https://vocab.account.gov.uk/v1/credentialJWT"][0].split(".")[1];
+		const decodedBody = decodeRawBody(rawBody);
+
+		// Get the hmrcUuid value from the database and verify that the txn in the decoded body is of the same value
+		const hmrcUuid = await getKeyFromSession(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "hmrcUuid");
+		expect(decodedBody.vc.evidence[0].txn).toBe(hmrcUuid);
+
+		// Finally verify that the sort code and account number in the decoded body are the values we expect
+		expect(decodedBody.vc.credentialSubject.bankAccount[0].sortCode).toBe(bankDetails.sort_code);
+		expect(decodedBody.vc.credentialSubject.bankAccount[0].accountNumber).toBe(bankDetails.account_number.padStart(8, "0"));
 
 		// Verify authSessionState
 		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_CRI_VC_ISSUED");
@@ -193,7 +266,7 @@ describe("BAV CRI: /abort Endpoint Happy Path Tests", () => {
 	});
 
 	it("Successful Request Test - Abort After Verify Account Request", async () => {
-		await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		await verifyAccountPost(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number), sessionId);
 
 		const response = await abortPost(sessionId);
 		expect(response.status).toBe(200);

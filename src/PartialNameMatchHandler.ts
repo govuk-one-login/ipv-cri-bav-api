@@ -4,7 +4,6 @@ import { Metrics } from "@aws-lambda-powertools/metrics";
 import { LambdaInterface } from "@aws-lambda-powertools/commons";
 import { Constants, EnvironmentVariables } from "./utils/Constants";
 import { failEntireBatch, passEntireBatch } from "./utils/SqsBatchResponseHelper";
-import { PartialNameProcessor } from "./services/PartialNameProcessor";
 import { PutObjectCommand, PutObjectCommandInput, S3Client } from "@aws-sdk/client-s3";
 import { NodeHttpHandler } from "@aws-sdk/node-http-handler";
 import { checkEnvironmentVariable } from "./utils/EnvironmentVariables";
@@ -19,7 +18,7 @@ export const logger = new Logger({
 
 const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE, serviceName: POWERTOOLS_SERVICE_NAME });
 
-let s3Client: S3Client;
+export let s3Client: S3Client;
 
 class PartialNameMatchHandler implements LambdaInterface {
 	@metrics.logMetrics({ throwOnEmptyMetrics: false, captureColdStartMetric: true })
@@ -40,40 +39,48 @@ class PartialNameMatchHandler implements LambdaInterface {
 		logger.setPersistentLogAttributes({});
 		logger.addContext(context);
 
-		if (event.Records.length === 1) {
-			const partialMatchesBucketName = checkEnvironmentVariable(EnvironmentVariables.PARTIAL_MATCHES_BUCKET, logger);
-			const partialMatchesBucketKey = checkEnvironmentVariable(EnvironmentVariables.PARTIAL_MATCHES_BUCKET_KEY, logger);
-			const record: SQSRecord = event.Records[0];
-			logger.debug("Starting to process record");
+		const partialMatchesBucketName = checkEnvironmentVariable(EnvironmentVariables.PARTIAL_MATCHES_BUCKET, logger);
+		const partialMatchesBucketKey = checkEnvironmentVariable(EnvironmentVariables.PARTIAL_MATCHES_BUCKET_KEY, logger);
+		logger.debug("Starting to process records");
 
+		let successfulRecords = 0;
+		let failedRecords = 0;
+
+		for (const record of event.Records) {
 			try {
 				const body = JSON.parse(record.body);
 				logger.debug("Parsed SQS event body");
-				
-				const uploadParams: PutObjectCommandInput = {
+
+				const uploadParams = {
 					Bucket: partialMatchesBucketName,
-					Key: `${absoluteTimeNow()}.json`,
+					Key: `${absoluteTimeNow()}-${record.messageId}.json`, // Using record.messageId to avoid overwriting files
 					Body: JSON.stringify(body),
 					ContentType: "application/json",
 					ServerSideEncryption: "aws:kms",
 					SSEKMSKeyId: partialMatchesBucketKey,
 				};
-		
+
 				try {
 					await s3Client.send(new PutObjectCommand(uploadParams));
+					successfulRecords++;
 				} catch (err) {
-					logger.error({ message: "Error writing partialMatch to S3 bucket" + err });
-					throw new Error("Error writing partialMatch to S3 bucket");
+					logger.error({ message: "Error writing partialMatch to S3 bucket: " + err });
+					failedRecords++;
 				}
-				return passEntireBatch;
-
 			} catch (error) {
-				return failEntireBatch;
+				logger.error({ message: "Error processing record: " + error });
+				failedRecords++;
 			}
-		} else {
-			logger.warn("Unexpected no of records received");
-			return failEntireBatch;
 		}
+
+		if (failedRecords > 0) {
+			logger.warn(`Processed with errors. Successful: ${successfulRecords}, Failed: ${failedRecords}`);
+			return failEntireBatch;
+		} else {
+			logger.info(`All records processed successfully. Count: ${successfulRecords}`);
+			return passEntireBatch;
+		}
+
 	}
 
 }

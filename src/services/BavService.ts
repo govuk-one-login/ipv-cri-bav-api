@@ -6,14 +6,14 @@ import { randomUUID } from "crypto";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { ISessionItem, CopCheckResult } from "../models/ISessionItem";
-import { SharedClaimsPersonIdentity, PersonIdentityItem, PersonIdentityName, PersonIdentityDateOfBirth } from "../models/PersonIdentityItem";
+import { SharedClaimsPersonIdentity, PersonIdentityItem, PersonIdentityName } from "../models/PersonIdentityItem";
 import { AppError } from "../utils/AppError";
 import { absoluteTimeNow, getAuthorizationCodeExpirationEpoch } from "../utils/DateTimeUtils";
 import { sqsClient } from "../utils/SqsClient";
 import { TxmaEvent } from "../utils/TxmaEvent";
 import { Constants } from "../utils/Constants";
 import { AuthSessionState } from "../models/enums/AuthSessionState";
-// import { PartialNameSQSRecord } from "../type/partialNameSQSRecord";
+import { PartialNameSQSRecord } from "../models/IHmrcResponse";
 
 export class BavService {
 	readonly tableName: string;
@@ -120,6 +120,9 @@ export class BavService {
 
 			this.logger.info({ message: "Sending message to TxMA", eventName: event.event_name });
 
+			const obfuscatedObject = await this.obfuscateJSONValues(event, Constants.TXMA_FIELDS_TO_SHOW);
+			this.logger.info({ message: "Obfuscated TxMA Event", txmaEvent: JSON.stringify(obfuscatedObject, null, 2) });
+
 			await sqsClient.send(new SendMessageCommand(params));
 			this.logger.info("Sent message to TxMA");
 		} catch (error) {
@@ -130,7 +133,7 @@ export class BavService {
 		}
 	}
 
-	async savePartialNameInfo(QueueUrl: string, event: any): Promise<void> {
+	async savePartialNameInfo(QueueUrl: string, event: PartialNameSQSRecord): Promise<void> {
 		try {
 			const messageBody = JSON.stringify(event);
 			const params = {
@@ -144,7 +147,7 @@ export class BavService {
 			this.logger.info("Sent message to PartialName Queue");
 		} catch (error) {
 			this.logger.error({
-				message: `Error when sending event partial name info to SQS Queue`,
+				message: "Error when sending event partial name info to SQS Queue",
 				messageCode: MessageCodes.FAILED_TO_WRITE_PARTIAL_NAME_INFO,
 			});
 		}
@@ -239,7 +242,10 @@ export class BavService {
 		}
 	}
 
-	async updateAccountDetails(sessionId: string, accountNumber: string, sortCode: string, tableName = this.tableName): Promise<void> {
+	async updateAccountDetails(
+		{ sessionId, accountNumber, sortCode }: { sessionId: string; accountNumber: string; sortCode: string },
+		tableName = this.tableName,
+	): Promise<void> {
 		this.logger.info({ message: `Updating ${tableName} with account details` });
 
 		const updateStateCommand = new UpdateCommand({
@@ -261,15 +267,16 @@ export class BavService {
 		}
 	}
 
-	async saveCopCheckResult(sessionId: string, copCheckResult: CopCheckResult): Promise<void> {
-		this.logger.info({ message: "Saving session table with copCheckResult", copCheckResult });
+	async saveCopCheckResult(sessionId: string, copCheckResult: CopCheckResult, retryCount?: number): Promise<void> {
+		this.logger.info({ message: `Updating ${this.tableName} table with copCheckResult`, copCheckResult });
 
 		const updateStateCommand = new UpdateCommand({
 			TableName: this.tableName,
 			Key: { sessionId },
-			UpdateExpression: "SET copCheckResult = :copCheckResult, authSessionState = :authSessionState",
+			UpdateExpression: `SET copCheckResult = :copCheckResult, authSessionState = :authSessionState${retryCount ? ", retryCount = :retryCount" : ""}`,
 			ExpressionAttributeValues: {
 				":copCheckResult": copCheckResult,
+				...(retryCount && { ":retryCount": retryCount }),
 				":authSessionState": AuthSessionState.BAV_DATA_RECEIVED,
 			},
 		});
@@ -279,7 +286,28 @@ export class BavService {
 			this.logger.info({ message: "Saved copCheckResult in dynamodb" });
 		} catch (error) {
 			this.logger.error({ message: "Got error saving copCheckResult", messageCode: MessageCodes.FAILED_UPDATING_SESSION, error });
-			throw new AppError(HttpCodesEnum.SERVER_ERROR, "setCopCheckResult failed: got error saving copCheckResult");
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "saveCopCheckResult failed: got error saving copCheckResult");
+		}
+	}
+
+	async saveHmrcUuid(sessionId: string, hmrcUuid: string): Promise<void> {
+		this.logger.info({ message: `Updating ${this.tableName} table with hmrcUuid`, hmrcUuid });
+
+		const updateStateCommand = new UpdateCommand({
+			TableName: this.tableName,
+			Key: { sessionId },
+			UpdateExpression: "SET hmrcUuid = :hmrcUuid",
+			ExpressionAttributeValues: {
+				":hmrcUuid": hmrcUuid,
+			},
+		});
+
+		try {
+			await this.dynamo.send(updateStateCommand);
+			this.logger.info({ message: "Saved hmrcUuid in dynamodb" });
+		} catch (error) {
+			this.logger.error({ message: "Got error saving hmrcUuid", messageCode: MessageCodes.FAILED_UPDATING_SESSION, error });
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "saveHmrcUuid failed: got error saving hmrcUuid");
 		}
 	}
 
@@ -392,6 +420,28 @@ export class BavService {
 				{ messageCode: MessageCodes.FAILED_UPDATING_SESSION },
 			);
 			throw new AppError(HttpCodesEnum.SERVER_ERROR, "updateItem - failed: got error updating Access token details");
+		}
+	}
+
+	async obfuscateJSONValues(input: any, txmaFieldsToShow: string[] = []): Promise<any> {
+		if (typeof input === "object" && input !== null) {
+			if (Array.isArray(input)) {
+				return Promise.all(input.map((element) => this.obfuscateJSONValues(element, txmaFieldsToShow)));
+			} else {
+				const obfuscatedObject: any = {};
+				for (const key in input) {
+					if (Object.prototype.hasOwnProperty.call(input, key)) {
+						if (txmaFieldsToShow.includes(key)) {
+							obfuscatedObject[key] = input[key];
+						} else {
+							obfuscatedObject[key] = await this.obfuscateJSONValues(input[key], txmaFieldsToShow);
+						}
+					}
+				}
+				return obfuscatedObject;
+			}
+		} else {
+			return input === null || input === undefined ? input : "***";
 		}
 	}
 }

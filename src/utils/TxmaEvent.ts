@@ -1,52 +1,70 @@
-import { VerifiedCredentialSubject } from "../models/IVeriCredential";
 import { ISessionItem } from "../models/ISessionItem";
+import { PersonIdentityName } from "../models/PersonIdentityItem";
 import { absoluteTimeNow } from "./DateTimeUtils";
 
 export type TxmaEventName =
 	"BAV_CRI_START" | 
-	"BAV_CRI_AUTH_CODE_ISSUED" | 
+	"BAV_COP_REQUEST_SENT" | 
+	"BAV_COP_RESPONSE_RECEIVED" | 
 	"BAV_CRI_VC_ISSUED" |
 	"BAV_CRI_END" | 
 	"BAV_CRI_SESSION_ABORTED";
 
 export interface TxmaUser {
-	"user_id": string;
-	"persistent_session_id": string;
-	"session_id": string;
-	"govuk_signin_journey_id"?: string;
-	"ip_address"?: string | undefined;
+	user_id: string;
+	session_id: string;
+	govuk_signin_journey_id: string;
+	ip_address?: string | undefined;
 }
 
 export interface BaseTxmaEvent {
-	"user": TxmaUser;
-	"client_id": string;
-	"timestamp": number;
-	"component_id": string;
+	user: TxmaUser;
+	client_id: string;
+	timestamp: number;
+	component_id: string;
+}
+
+export interface BankAccountDetails {
+	sortCode: string;
+	accountNumber: string;
+}
+
+export interface CopRequestDetails {
+	name: string;
+	sortCode: string;
+	accountNumber: string;
+	attemptNum: number;
 }
 
 export interface RestrictedObject {
-	"user"?: VerifiedCredentialSubject;
-	"name"?: object[];
+	name?: PersonIdentityName[];
+	bankAccount?: BankAccountDetails[];
+	CoP_request_details?: CopRequestDetails[];
+}
+
+export interface CiReasons {
+	ci?: string;
+	reason?: string;
 }
 
 export type VerifiedCredentialEvidenceTxMA = Array<{
-	type?: string;
 	txn: string;
+	attemptNum?: number;
 	strengthScore?: number;
 	validityScore?: number;
 	verificationScore?: number;
 	ci?: string[];
+	ciReasons?: CiReasons[];
 }>;
 
 export interface ExtensionObject {
-	"evidence"?: VerifiedCredentialEvidenceTxMA;
-	"previous_govuk_signin_journey_id"?: string;
+	evidence?: VerifiedCredentialEvidenceTxMA;
 }
 
 export interface TxmaEvent extends BaseTxmaEvent {
-	"event_name": TxmaEventName;
-	"restricted"?: RestrictedObject;
-	"extensions"?: ExtensionObject;
+	event_name: TxmaEventName;
+	restricted?: RestrictedObject;
+	extensions?: ExtensionObject;
 }
 
 export const buildCoreEventFields = (
@@ -58,8 +76,8 @@ export const buildCoreEventFields = (
 	return {
 		user: {
 			user_id: session.subject,
-			persistent_session_id: session.persistentSessionId,
 			session_id: session.sessionId,
+			govuk_signin_journey_id: session.clientSessionId,
 			ip_address: sourceIp,
 		},
 		client_id: session.clientId,

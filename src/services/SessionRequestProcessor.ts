@@ -1,3 +1,5 @@
+/* eslint-disable complexity */
+/* eslint-disable max-lines-per-function */
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
@@ -8,6 +10,7 @@ import { MessageCodes } from "../models/enums/MessageCodes";
 import { TxmaEventNames } from "../models/enums/TxmaEvents";
 import { ISessionItem } from "../models/ISessionItem";
 import { JwtPayload, Jwt } from "../models/IVeriCredential";
+import { SessionRequest } from "../models/SessionRequest";
 import { EnvironmentVariables } from "../utils/Constants";
 import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
@@ -70,7 +73,7 @@ export class SessionRequestProcessor {
   }
 
   async processRequest(event: APIGatewayProxyEvent): Promise<Response> {
-  	const deserialisedRequestBody = JSON.parse(event.body as string);
+  	const deserialisedRequestBody = JSON.parse(event.body as string) as SessionRequest;
   	const requestBodyClientId = deserialisedRequestBody.client_id;
   	const clientIpAddress = event.requestContext.identity?.sourceIp;
 
@@ -175,7 +178,6 @@ export class SessionRequestProcessor {
   		subject: jwtPayload.sub ? jwtPayload.sub : "",
   		persistentSessionId: jwtPayload.persistent_session_id,
   		clientIpAddress,
-  		attemptCount: 0,
   		authSessionState: AuthSessionState.BAV_SESSION_CREATED,
   		evidence_requested: jwtPayload.evidence_requested,
   	};
@@ -195,10 +197,6 @@ export class SessionRequestProcessor {
   		{
   			event_name: TxmaEventNames.BAV_CRI_START,
   			...coreEventFields,
-  			user: {
-  				...coreEventFields.user,
-  				govuk_signin_journey_id: session.clientSessionId,
-  		},
   	});
 
   	this.logger.info("Session created successfully. Returning 200OK");

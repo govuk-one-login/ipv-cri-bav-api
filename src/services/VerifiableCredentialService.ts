@@ -32,10 +32,10 @@ export class VerifiableCredentialService {
 		return VerifiableCredentialService.instance;
 	}
 
-	getSuccessEvidenceBlock(journeyId: string): VerifiedCredentialEvidence {
+	getSuccessEvidenceBlock(hmrcUuid: string): VerifiedCredentialEvidence {
 		return {
 			type: Constants.IDENTITY_CHECK,
-			txn: journeyId,
+			txn: hmrcUuid,
 			strengthScore: 3,
 			validityScore: 2,
 			checkDetails: [
@@ -47,10 +47,10 @@ export class VerifiableCredentialService {
 		};
 	}
 
-	getFailureEvidenceBlock(journeyId: string): VerifiedCredentialEvidence {
+	getFailureEvidenceBlock(hmrcUuid: string): VerifiedCredentialEvidence {
 		return {
 			type: Constants.IDENTITY_CHECK,
-			txn: journeyId,
+			txn: hmrcUuid,
 			strengthScore: 3,
 			validityScore: 0,
 			failedCheckDetails: [
@@ -66,11 +66,13 @@ export class VerifiableCredentialService {
 	}
 	
 
-	async generateSignedVerifiableCredentialJwt(sessionItem: ISessionItem, nameParts: PersonIdentityNamePart[], bankAccountInfo: BankAccountInfo, getNow: () => number): Promise<string> {
+	async generateSignedVerifiableCredentialJwt(
+		sessionItem: ISessionItem, nameParts: PersonIdentityNamePart[], bankAccountInfo: BankAccountInfo, getNow: () => number,
+	): Promise<{ signedJWT: string; evidenceInfo: VerifiedCredentialEvidence }> {
 		const now = getNow();
 		const subject = sessionItem.subject;
 		const evidenceInfo = sessionItem.copCheckResult === CopCheckResult.FULL_MATCH ?
-			this.getSuccessEvidenceBlock(sessionItem.clientSessionId) : this.getFailureEvidenceBlock(sessionItem.clientSessionId);
+			this.getSuccessEvidenceBlock(sessionItem.hmrcUuid!) : this.getFailureEvidenceBlock(sessionItem.hmrcUuid!);
 		const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, bankAccountInfo, evidenceInfo)
 			.build();
 		const result = {
@@ -82,12 +84,11 @@ export class VerifiableCredentialService {
 			vc: verifiedCredential,
 		};
 
-		this.logger.info("Generated VerifiableCredential jwt", {
-    		jti: result.jti,
-    	});
+		this.logger.info("Generated VerifiableCredential jwt", { jti: result.jti });
+
 		try {
-			// Sign the VC
-			return await this.kmsJwtAdapter.sign(result);
+			const signedJWT = await this.kmsJwtAdapter.sign(result);
+			return { signedJWT, evidenceInfo };
 		} catch (error) {
 			this.logger.error("Error generating signed verifiable credential jwt", {
 				error,

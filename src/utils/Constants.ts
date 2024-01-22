@@ -18,6 +18,8 @@ export class Constants {
 
 	static readonly ABORT_LOGGER_SVC_NAME : "AbortHandler";
 
+	static readonly PERSON_INFO_KEY_LOGGER_SVC_NAME : "PersonInfoKeyHandler";
+
 	static readonly PARTIAL_NAME_MATCH_HANDLER : "PartialNameMatchHandler";
 
 	static readonly BAV_METRICS_NAMESPACE = "BAV-CRI";
@@ -64,15 +66,15 @@ export class Constants {
 
   static readonly HMRC_TOKEN_ENDPOINT_PATH = "/oauth/token";
 
-  static readonly HMRC_TOKEN_SSM_PATH = "/dev/HMRC/TOKEN";
-
   static readonly HMRC_EXPECTED_TOKEN_EXPIRES_IN = 14400;
 
   static readonly HMRC_VERIFY_ENDPOINT_PATH = "verify/personal";
 
   static readonly HMRC_USER_AGENT = "one-login-bav-cri";
   
-  
+  static readonly MAX_RETRIES = 1;
+
+  static readonly TXMA_FIELDS_TO_SHOW = ["event_name", "session_id", "govuk_signin_journey_id", "attemptNum"];
 }
 
 export const EnvironmentVariables = {
@@ -97,5 +99,7 @@ export const EnvironmentVariables = {
 	HMRC_TOKEN_SSM_PATH: "HMRC_TOKEN_SSM_PATH",
 	HMRC_MAX_RETRIES: "HMRC_MAX_RETRIES",
 	HMRC_TOKEN_BACKOFF_PERIOD_MS: "HMRC_TOKEN_BACKOFF_PERIOD_MS",
+	PRIVATE_KEY_SSM_PATH: "PRIVATE_KEY_SSM_PATH",
+	PUBLIC_KEY_SSM_PATH: "PUBLIC_KEY_SSM_PATH",
 };
 

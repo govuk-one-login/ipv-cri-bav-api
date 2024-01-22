@@ -20,6 +20,8 @@ export class HmrcTokenRequestProcessor {
 
 	private readonly hmrcClientSecret: string;
 
+	private readonly hmrcTokenSsmPath: string;
+
 	constructor(logger: Logger, metrics: Metrics, HMRC_CLIENT_ID: string, HMRC_CLIENT_SECRET: string) {
 		this.logger = logger;
 		this.metrics = metrics;
@@ -29,6 +31,7 @@ export class HmrcTokenRequestProcessor {
 		const hmrcBaseUrl = checkEnvironmentVariable(EnvironmentVariables.HMRC_BASE_URL, logger);
 		const maxRetries = +checkEnvironmentVariable(EnvironmentVariables.HMRC_MAX_RETRIES, logger);
 		const hmrcBackoffPeriodMs = +checkEnvironmentVariable(EnvironmentVariables.HMRC_TOKEN_BACKOFF_PERIOD_MS, logger);
+		this.hmrcTokenSsmPath = checkEnvironmentVariable(EnvironmentVariables.HMRC_TOKEN_SSM_PATH, logger);
 		this.hmrcService = HmrcService.getInstance(this.logger, hmrcBaseUrl, hmrcBackoffPeriodMs, maxRetries);
 	}
 
@@ -54,7 +57,7 @@ export class HmrcTokenRequestProcessor {
 			}
 
 			this.logger.info("Storing the HMRC access token to SSM");
-			await putParameter(Constants.HMRC_TOKEN_SSM_PATH, data.access_token, "String", "HMRC Access token");
+			await putParameter(this.hmrcTokenSsmPath, data.access_token, "String", "HMRC Access token");
 			this.logger.info("Successfully Stored the HMRC token to SSM");
 		} catch (error) {
 			this.logger.error("Server Error", { error });

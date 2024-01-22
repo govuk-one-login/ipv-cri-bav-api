@@ -1,53 +1,189 @@
 {
-    "event_name":"BAV_CRI_VC_ISSUED",
-    "user":{
-       "user_id":"5eba8106-bda4-4277-8ac7-e60676f68ac3",
-       "session_id":"e2ff21d0-ef0f-4def-b802-c7ff63a074d4",
-       "govuk_signin_journey_id":"ff29faa1f2c09b68f9c5f911a6688855",
-       "ip_address": "12.12.12.12"
-    },
-    "client_id":"5C584572",
-    "timestamp":1688480078,
-    "component_id":"https://review-c.dev.account.gov.uk",
-    "restricted":{
-       "name":[
-          {
-             "nameParts":[
-                {
-                   "type":"GivenName",
-                   "value":"Frederick"
-                },
-                {
-                   "type":"FamilyName",
-                   "value":"Flinstone"
-                }
-             ]
-          }
-       ],
-       "bankAccount": [
-         {
-           "sortCode": "103233",
-           "accountNumber": "12345678"
+   "type": "object",
+   "properties": {
+     "event_name": {
+       "type": "string"
+     },
+     "user": {
+       "type": "object",
+       "properties": {
+         "user_id": {
+           "type": "string"
+         },
+         "session_id": {
+           "type": "string"
+         },
+         "govuk_signin_journey_id": {
+           "type": "string"
+         },
+         "ip_address": {
+           "type": "string"
          }
+       },
+       "required": [
+         "user_id",
+         "session_id",
+         "govuk_signin_journey_id",
+         "ip_address"
        ]
-    },
-    "extensions":{
-       "evidence":[
-          {
-             "txn":"1c756b7e-b5b8-4f33-966d-4aeee9bb0000",
-             "strengthScore":3,
-             "validityScore":2,
-             "attemptNum": 1,
-             "ci":[
-                     "D15"
-                   ],
-             "ciReasons": [
-               {
-                 "ci": "D15",
-                 "reason": "partial_match"
-               }
-             ]
-          }
+     },
+     "client_id": {
+       "type": "string"
+     },
+     "timestamp": {
+       "type": "integer"
+     },
+     "component_id": {
+       "type": "string"
+     },
+     "restricted": {
+       "type": "object",
+       "properties": {
+         "name": {
+           "type": "array",
+           "items": [
+             {
+               "type": "object",
+               "properties": {
+                 "nameParts": {
+                   "type": "array",
+                   "items": [
+                     {
+                       "type": "object",
+                       "properties": {
+                         "type": {
+                           "type": "string"
+                         },
+                         "value": {
+                           "type": "string"
+                         }
+                       },
+                       "required": [
+                         "type",
+                         "value"
+                       ]
+                     },
+                     {
+                       "type": "object",
+                       "properties": {
+                         "type": {
+                           "type": "string"
+                         },
+                         "value": {
+                           "type": "string"
+                         }
+                       },
+                       "required": [
+                         "type",
+                         "value"
+                       ]
+                     }
+                   ]
+                 }
+               },
+               "required": [
+                 "nameParts"
+               ]
+             }
+           ]
+         },
+         "bankAccount": {
+           "type": "array",
+           "items": [
+             {
+               "type": "object",
+               "properties": {
+                 "sortCode": {
+                   "type": "string"
+                 },
+                 "accountNumber": {
+                   "type": "string"
+                 }
+               },
+               "required": [
+                 "sortCode",
+                 "accountNumber"
+               ]
+             }
+           ]
+         }
+       },
+       "required": [
+         "name",
+         "bankAccount"
        ]
-    }
+     },
+     "extensions": {
+       "type": "object",
+       "properties": {
+         "evidence": {
+           "type": "array",
+           "items": [
+             {
+               "type": "object",
+               "properties": {
+                 "txn": {
+                   "type": "string"
+                 },
+                 "strengthScore": {
+                   "type": "integer"
+                 },
+                 "validityScore": {
+                   "type": "integer"
+                 },
+                 "attemptNum": {
+                   "type": "integer"
+                 },
+                 "ci": {
+                   "type": "array",
+                   "items": [
+                     {
+                       "type": "string"
+                     }
+                   ]
+                 },
+                 "ciReasons": {
+                   "type": "array",
+                   "items": [
+                     {
+                       "type": "object",
+                       "properties": {
+                         "ci": {
+                           "type": "string"
+                         },
+                         "reason": {
+                           "type": "string"
+                         }
+                       },
+                       "required": [
+                         "reason"
+                       ]
+                     }
+                   ]
+                 }
+               },
+               "required": [
+                 "txn",
+                 "strengthScore",
+                 "validityScore",
+                 "attemptNum"
+               ]
+             }
+           ]
+         }
+       },
+       "required": [
+         "evidence"
+       ]
+     }
+   },
+   "required": [
+     "event_name",
+     "user",
+     "client_id",
+     "timestamp",
+     "component_id",
+     "restricted",
+     "extensions"
+   ]
  }

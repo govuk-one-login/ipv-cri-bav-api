@@ -104,7 +104,7 @@ Mappings:
       DNSSUFFIX: review-bav.dev.account.gov.uk
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
-      PARTIALMATCHESRENTIONPERIODDAYS: 259200 # Default: 3 days
+      PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: '[{"jwksEndpoint":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/redirect?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
@@ -116,7 +116,7 @@ Mappings:
       DNSSUFFIX: review-bav.build.account.gov.uk
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
-      PARTIALMATCHESRENTIONPERIODDAYS: 259200 # Default: 3 days
+      PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-bav.build.account.gov.uk/.well-known/jwks.json","clientId":"BD7B2A5D","redirectUri":"https://ipvstub.review-bav.build.account.gov.uk/redirect?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
@@ -128,34 +128,34 @@ Mappings:
       DNSSUFFIX: review-bav.staging.account.gov.uk
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
-      PARTIALMATCHESRENTIONPERIODDAYS: 259200 # Default: 3 days
+      PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.staging.account.gov.uk/.well-known/jwks.json","clientId":"03A5A659-17AA-453F-B905-95D2804823D1","redirectUri":"https://identity.staging.account.gov.uk/credential-issuer/callback?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
-      HMRCBASEURL: "https://bav-cri-outbound-proxy-proxy.review-bav.staging.account.gov.uk/hmrc"
-      HMRCVERIFYBASEURL: "https://bav-cri-outbound-proxy-proxy.review-bav.staging.account.gov.uk/hmrc/misc/bank-account"
+      HMRCBASEURL: "https://proxy.review-bav.staging.account.gov.uk/hmrc"
+      HMRCVERIFYBASEURL: "https://proxy.review-bav.staging.account.gov.uk/hmrc/misc/bank-account"
     integration:
       ISSUER: 'https://review-bav.integration.account.gov.uk'
       DNSSUFFIX: review-bav.integration.account.gov.uk
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
-      PARTIALMATCHESRENTIONPERIODDAYS: 259200 # Default: 3 days
+      PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.integration.account.gov.uk/.well-known/jwks.json","clientId":"AE140E43-1987-4EE8-86CC-BEF19FC9FF3F","redirectUri":"https://identity.integration.account.gov.uk/credential-issuer/callback?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
-      HMRCBASEURL: "https://bav-cri-outbound-proxy-proxy.review-bav.integration.account.gov.uk/hmrc"
-      HMRCVERIFYBASEURL: "https://bav-cri-outbound-proxy-proxy.review-bav.integration.account.gov.uk/hmrc/misc/bank-account"
+      HMRCBASEURL: "https://proxy.review-bav.integration.account.gov.uk/hmrc"
+      HMRCVERIFYBASEURL: "https://proxy.review-bav.integration.account.gov.uk/hmrc/misc/bank-account"
     production:
       ISSUER: 'https://review-bav.account.gov.uk'
       DNSSUFFIX: review-bav.account.gov.uk
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
-      PARTIALMATCHESRENTIONPERIODDAYS: 259200 # Default: 3 days
+      PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.account.gov.uk/.well-known/jwks.json","clientId":"C910A762-4BB2-400D-8F3D-4D7E6C84E342","redirectUri":"https://identity.account.gov.uk/credential-issuer/callback?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
-      HMRCBASEURL: "https://bav-cri-outbound-proxy-proxy.review-bav.account.gov.uk/hmrc"
-      HMRCVERIFYBASEURL: "https://bav-cri-outbound-proxy-proxy.review-bav.account.gov.uk/misc/bank-account/hmrc"
+      HMRCBASEURL: "https://proxy.review-bav.account.gov.uk/hmrc"
+      HMRCVERIFYBASEURL: "https://proxy.review-bav.account.gov.uk/misc/bank-account/hmrc"
   TxMAAccounts:
     # EVENTS is used to egress to TxMA.
     dev:
@@ -448,7 +448,7 @@ Resources:
     Type: AWS::S3::Bucket
     DeletionPolicy: Delete
     Properties:
-      BucketName: !Sub ${AWS::StackName}-partial-name-match-athena-results-${Environment}
+      BucketName: !Sub ${AWS::StackName}-partial-name-athena-results-${Environment}
       VersioningConfiguration:
         Status: "Enabled"
       PublicAccessBlockConfiguration:
@@ -1017,7 +1017,328 @@ Resources:
       DatapointsToAlarm: 1
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
-  
+
+  ## PersonInfoHandler
+  PersonInfoFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: PersonInfoFunctionLogGroup
+    Properties:
+      FunctionName: !Sub "BAV-person-info-${AWS::StackName}"
+      Handler: PersonInfoHandler.lambdaHandler
+      CodeUri: ../src/
+      ReservedConcurrentExecutions: !If
+        - ApplyReservedConcurrency
+        - !Ref LambdaConcurrency
+        - !Ref AWS::NoValue
+      Environment:
+        Variables:
+          POWERTOOLS_SERVICE_NAME: PersonInfoHandler
+          PUBLIC_KEY_SSM_PATH: !Sub "/${Environment}/person-info/PUBLIC_KEY"
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSXrayWriteOnlyAccess
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub "${Environment}/person-info/PUBLIC_KEY"
+        - DynamoDBReadPolicy:
+            TableName:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-name"
+        - DynamoDBReadPolicy:
+            TableName:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+        - KMSDecryptPolicy:
+            KeyId:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-key-id"
+        - KMSDecryptPolicy:
+            KeyId:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-key-id"
+        - Statement:
+            - Sid: KMSPolicy
+              Effect: Allow
+              Action:
+                - kms:*
+              Resource:
+                "*"
+      Events:
+        personInfo:
+          Type: Api
+          Properties:
+            Path: /person-info
+            Method: get
+            RestApiId: !Ref BAVRestApi
+
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: false
+        EntryPoints:
+          - PersonInfoHandler.ts
+
+  PersonInfoFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/BAV-person-info-${AWS::StackName}"
+      RetentionInDays:
+        !FindInMap [
+          EnvironmentConfiguration,
+          !Ref Environment,
+          logretentionindays,
+        ]
+
+  # PersonInfoFunctionLogsSubscriptionFilterCSLS:
+  #   Type: AWS::Logs::SubscriptionFilter
+  #   Properties:
+  #     DestinationArn:
+  #       !FindInMap [ PlatformConfiguration, !Ref Environment, CSLSEGRESS ]
+  #     FilterPattern: ""
+  #     LogGroupName: !Ref PersonInfoFunctionLogGroup
+
+  PersonInfoFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref PersonInfoFunction
+      Principal: apigateway.amazonaws.com
+
+  PersonInfoFunctionFatalErorMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref PersonInfoFunctionLogGroup
+      FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
+      MetricTransformations:
+        -
+          MetricValue: "1"
+          MetricNamespace: !Sub "${AWS::StackName}/LogMessages"
+          MetricName: "PersonInfoFunction-Fatalerror"
+
+  PersonInfoFunctionFatalErrorAlarm:
+    DependsOn:
+      - "PersonInfoFunctionFatalErorMetricFilter"
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-PersonInfoFunction-FatalErrorAlarm"
+      AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
+      ActionsEnabled: true
+      OKActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      InsufficientDataActions: [ ]
+      MetricName: PersonInfoFunction-Fatalerror
+      Namespace: !Sub "${AWS::StackName}/LogMessages"
+      Statistic: Sum
+      Dimensions: [ ]
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  PersonInfoConcurrency80Alarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployConcurrencyAlarms"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: []
+      AlarmDescription: !Sub "Trigger the alarm if over 80% of PersonInfo is used. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-PersonInfoFunction-concurrency"
+      MetricName: ConcurrentExecutions
+      Namespace: AWS/Lambda
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref PersonInfoFunction
+      Statistic: Maximum
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: !Ref LambdaConcurrencyThreshold
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+
+  PersonInfoThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: []
+      AlarmDescription: !Sub "Trigger if the ${PersonInfoFunction} lambda throttles. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-PersonInfoFunction-throttles"
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref PersonInfoFunction
+      TreatMissingData: notBreaching
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+
+  ## PersonInfoKeyHandler
+  PersonInfoKeyFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: PersonInfoKeyFunctionLogGroup
+    Properties:
+      FunctionName: !Sub "BAV-Person-Info-Key-${AWS::StackName}"
+      Handler: PersonInfoKeyHandler.lambdaHandler
+      CodeUri: ../src/
+      ReservedConcurrentExecutions: !If
+        - ApplyReservedConcurrency
+        - !Ref LambdaConcurrency
+        - !Ref AWS::NoValue
+      Environment:
+        Variables:
+          POWERTOOLS_SERVICE_NAME: PersonInfoKeyHandler
+          PRIVATE_KEY_SSM_PATH: !Sub "/${Environment}/person-info/PRIVATE_KEY"
+          KMS_KEY_ARN:
+            Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSXrayWriteOnlyAccess
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub "${Environment}/person-info/PRIVATE_KEY"
+      Events:
+        personInfoKey:
+          Type: Api
+          Properties:
+            Path: /person-info-key
+            Method: get
+            RestApiId: !Ref BAVRestApi
+
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: false
+        EntryPoints:
+          - PersonInfoKeyHandler.ts
+
+  PersonInfoKeyFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/BAV-Person-Info-Key-${AWS::StackName}"
+      RetentionInDays:
+        !FindInMap [
+          EnvironmentConfiguration,
+          !Ref Environment,
+          logretentionindays,
+        ]
+
+  # PersonInfoKeyFunctionLogsSubscriptionFilterCSLS:
+  #   Type: AWS::Logs::SubscriptionFilter
+  #   Properties:
+  #     DestinationArn:
+  #       !FindInMap [ PlatformConfiguration, !Ref Environment, CSLSEGRESS ]
+  #     FilterPattern: ""
+  #     LogGroupName: !Ref PersonInfoKeyFunctionLogGroup
+
+  PersonInfoKeyFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref PersonInfoKeyFunction
+      Principal: apigateway.amazonaws.com
+
+  PersonInfoKeyFunctionFatalErorMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref PersonInfoKeyFunctionLogGroup
+      FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
+      MetricTransformations:
+        -
+          MetricValue: "1"
+          MetricNamespace: !Sub "${AWS::StackName}/LogMessages"
+          MetricName: "PersonInfoKeyFunction-Fatalerror"
+
+  PersonInfoKeyFunctionFatalErrorAlarm:
+    DependsOn:
+      - "PersonInfoKeyFunctionFatalErorMetricFilter"
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-PersonInfoKeyFunction-FatalErrorAlarm"
+      AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
+      ActionsEnabled: true
+      OKActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      InsufficientDataActions: [ ]
+      MetricName: PersonInfoKeyFunction-Fatalerror
+      Namespace: !Sub "${AWS::StackName}/LogMessages"
+      Statistic: Sum
+      Dimensions: [ ]
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  PersonInfoKeyConcurrency80Alarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployConcurrencyAlarms"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: []
+      AlarmDescription: !Sub "Trigger the alarm if over 80% of PersonInfoKey is used. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-PersonInfoKeyFunction-concurrency"
+      MetricName: ConcurrentExecutions
+      Namespace: AWS/Lambda
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref PersonInfoKeyFunction
+      Statistic: Maximum
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: !Ref LambdaConcurrencyThreshold
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+
+  PersonInfoKeyThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: "DeployAlarms"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-critical-alert
+      InsufficientDataActions: []
+      AlarmDescription: !Sub "Trigger if the ${PersonInfoKeyFunction} lambda throttles. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-PersonInfoKeyFunction-throttles"
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref PersonInfoKeyFunction
+      TreatMissingData: notBreaching
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+
   ## UserInfoHandler
   UserInfoFunction:
     Type: AWS::Serverless::Function
@@ -1378,7 +1699,6 @@ Resources:
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: AuthorizationHandler
-          TXMA_QUEUE_URL: !Ref TxMASQSQueue
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
@@ -1541,6 +1861,28 @@ Resources:
               Effect: Allow
               Resource: !GetAtt PartialMatchesQueue.Arn
             - Effect: Allow
+              Action:
+                - kms:*
+              Resource:
+                "*"
+            - Effect: Allow
+              Action:
+                - "sqs:SendMessage"
+              Resource: !GetAtt TxMASQSQueue.Arn
+            - Effect: Allow
+              Action:
+                - "kms:Encrypt"
+                - "kms:Decrypt"
+                - "kms:GenerateDataKey"
+              Resource: !GetAtt TxMAKMSEncryptionKey.Arn
+        - Statement:
+            - Sid: AllowSendMessageToPartialNameQueue
+              Effect: Allow
+              Action:
+                - "sqs:SendMessage"
+              Resource: !GetAtt PartialMatchesQueue.Arn
+            - Sid: AllowEncryptMessageSendingToPartialNameQueue
+              Effect: Allow
               Action:
                 - "kms:Encrypt"
                 - "kms:Decrypt"
@@ -1762,21 +2104,21 @@ Resources:
         - alias/TxMAKMSEncryptionKey
       TargetKeyId: !Ref TxMAKMSEncryptionKey
 
-  ## PartialMatches SQS Queue
+  ## PartialNameMatch SQS Queue
   PartialMatchesQueue:
     Type: AWS::SQS::Queue
     Properties:
-      MessageRetentionPeriod: !FindInMap [EnvironmentVariables, !Ref Environment, PARTIALMATCHESRENTIONPERIODDAYS]
+      MessageRetentionPeriod: !FindInMap [EnvironmentVariables, !Ref Environment, PARTIALNAMEMATCHRENTIONPERIODDAYS]
       VisibilityTimeout: 60
       KmsMasterKeyId: !Ref PartialNameMatchKeyAlias
       RedrivePolicy:
         deadLetterTargetArn:
           Fn::GetAtt:
-            - "PartialMatchesQueueDeadLetterQueue"
+            - "PartialNameMatchQueueDeadLetterQueue"
             - "Arn"
         maxReceiveCount: 5
 
-  PartialMatchesQueuePolicy:
+  namePolicy:
     Type: AWS::SQS::QueuePolicy
     Properties:
       Queues:
@@ -1794,7 +2136,7 @@ Resources:
             Resource:
               - !GetAtt PartialMatchesQueue.Arn
 
-  PartialMatchesQueueDeadLetterQueue:
+  PartialNameMatchQueueDeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
       MessageRetentionPeriod: 259200 # three days
@@ -1831,7 +2173,7 @@ Resources:
     Type: AWS::KMS::Alias
     Properties:
       AliasName: !If
-        -  CreateDevResources    
+        -  CreateDevResources
         - !Sub "alias/PartialMatchesEncryptionKey-${AWS::StackName}"
         - alias/PartialMatchesEncryptionKey
       TargetKeyId: !Ref PartialMatchesEncryptionKey
@@ -1868,12 +2210,15 @@ Resources:
                         "case.insensitive": "TRUE",
                         "mapping": "TRUE"
           }
-          # TODO: update schema below to reflect full item schema
           Columns:
             - Name: itemNumber
               Type: string
             - Name: timeStamp
               Type: int
+            - Name: cicName
+              Type: string
+            - Name: accountName
+              Type: string
             - Name: accountExists
               Type: string
             - Name: nameMatches
@@ -2061,6 +2406,7 @@ Resources:
           POWERTOOLS_SERVICE_NAME: HmrcTokenHandler
           HMRC_CLIENT_ID_SSM_PATH: !Sub "/${Environment}/HMRC/CLIENT_ID"
           HMRC_CLIENT_SECRET_SSM_PATH: !Sub "/${Environment}/HMRC/CLIENT_SECRET"
+          HMRC_TOKEN_SSM_PATH: !Sub "/${Environment}/HMRC/TOKEN"
           HMRC_BASE_URL: !FindInMap [ EnvironmentVariables, !Ref Environment, HMRCBASEURL ]
           HMRC_MAX_RETRIES: 10
           HMRC_TOKEN_BACKOFF_PERIOD_MS: 30000 # 30 seconds
@@ -2202,12 +2548,12 @@ Resources:
       ComparisonOperator: GreaterThanOrEqualToThreshold
 
   ## PartialNameMatchHandler
-  SavePartialMatchesFunction:
+  PartialNameMatchFunction:
     Type: AWS::Serverless::Function
-    DependsOn: SavePartialMatchesFunctionLogGroup
+    DependsOn: PartialNameMatchFunctionLogGroup
     Properties:
-      FunctionName: !Sub "BAV-SavePartialMatches-${AWS::StackName}"
-      Handler: SavePartialMatchesHandler.lambdaHandler
+      FunctionName: !Sub "BAV-PartialNameMatch-${AWS::StackName}"
+      Handler: PartialNameMatchHandler.lambdaHandler
       CodeUri: ../src/
       ReservedConcurrentExecutions: !If
         - ApplyReservedConcurrency
@@ -2236,7 +2582,7 @@ Resources:
               Action:
                 - "kms:Decrypt"
                 - "kms:GenerateDataKey"
-              Resource: !GetAtt PartialNameMatchEncryptionKey.Arn
+              Resource: !GetAtt PartialMatchesEncryptionKey.Arn
         - Statement:
             - Effect: Allow
               Action:
@@ -2252,7 +2598,7 @@ Resources:
           Type: SQS
           Properties:
             Queue: !GetAtt PartialMatchesQueue.Arn
-            BatchSize: 1
+            BatchSize: 10
 
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -2261,12 +2607,12 @@ Resources:
         Target: "es2020"
         Sourcemap: false
         EntryPoints:
-          - SavePartialMatchesHandler.ts
+          - PartialNameMatchHandler.ts
 
-  SavePartialMatchesFunctionLogGroup:
+  PartialNameMatchFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/BAV-SavePartialMatches-${AWS::StackName}"
+      LogGroupName: !Sub "/aws/lambda/BAV-PartialNameMatch-${AWS::StackName}"
       RetentionInDays:
         !FindInMap [
           EnvironmentConfiguration,
@@ -2274,39 +2620,39 @@ Resources:
           logretentionindays,
         ]
 
-  # SavePartialMatchesFunctionLogsSubscriptionFilterCSLS:
+  # PartialNameMatchFunctionLogsSubscriptionFilterCSLS:
   #   Type: AWS::Logs::SubscriptionFilter
   #   Properties:
   #     DestinationArn:
   #       !FindInMap [ PlatformConfiguration, !Ref Environment, CSLSEGRESS ]
   #     FilterPattern: ""
-  #     LogGroupName: !Ref SavePartialMatchesFunctionLogGroup
+  #     LogGroupName: !Ref PartialNameMatchFunctionLogGroup
 
-  SavePartialMatchesFunctionPermission:
+  PartialNameMatchFunctionPermission:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: !Ref SavePartialMatchesFunction
+      FunctionName: !Ref PartialNameMatchFunction
       Principal: apigateway.amazonaws.com
 
-  SavePartialMatchesFunctionFatalErorMetricFilter:
+  PartialNameMatchFunctionFatalErorMetricFilter:
     Type: AWS::Logs::MetricFilter
     Properties:
-      LogGroupName: !Ref SavePartialMatchesFunctionLogGroup
+      LogGroupName: !Ref PartialNameMatchFunctionLogGroup
       FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
       MetricTransformations:
         -
           MetricValue: "1"
           MetricNamespace: !Sub "${AWS::StackName}/LogMessages"
-          MetricName: "SavePartialMatchesFunction-Fatalerror"
+          MetricName: "PartialNameMatchFunction-Fatalerror"
 
-  SavePartialMatchesFunctionFatalErrorAlarm:
+  PartialNameMatchFunctionFatalErrorAlarm:
     DependsOn:
-      - "SavePartialMatchesFunctionFatalErorMetricFilter"
+      - "PartialNameMatchFunctionFatalErorMetricFilter"
     Type: AWS::CloudWatch::Alarm
     Condition: "DeployAlarms"
     Properties:
-      AlarmName: !Sub "${AWS::StackName}-SavePartialMatchesFunction-FatalErrorAlarm"
+      AlarmName: !Sub "${AWS::StackName}-PartialNameMatchFunction-FatalErrorAlarm"
       AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
       ActionsEnabled: true
       OKActions:
@@ -2314,7 +2660,7 @@ Resources:
       AlarmActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
       InsufficientDataActions: [ ]
-      MetricName: SavePartialMatchesFunction-Fatalerror
+      MetricName: PartialNameMatchFunction-Fatalerror
       Namespace: !Sub "${AWS::StackName}/LogMessages"
       Statistic: Sum
       Dimensions: [ ]
@@ -2325,7 +2671,7 @@ Resources:
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
 
-  SavePartialMatchesConcurrency80Alarm:
+  PartialNameMatchConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
     Condition: "DeployConcurrencyAlarms"
     Properties:
@@ -2336,12 +2682,12 @@ Resources:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
       AlarmDescription: !Sub "Trigger the alarm if over 80% of Session is used. ${SupportManualURL}"
-      AlarmName: !Sub "${AWS::StackName}-SavePartialMatchesFunction-concurrency"
+      AlarmName: !Sub "${AWS::StackName}-PartialNameMatchFunction-concurrency"
       MetricName: ConcurrentExecutions
       Namespace: AWS/Lambda
       Dimensions:
         - Name: FunctionName
-          Value: !Ref SavePartialMatchesFunction
+          Value: !Ref PartialNameMatchFunction
       Statistic: Maximum
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1
@@ -2350,7 +2696,7 @@ Resources:
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
 
-  SavePartialMatchesThrottleAlarm:
+  PartialNameMatchThrottleAlarm:
     Type: AWS::CloudWatch::Alarm
     Condition: "DeployAlarms"
     Properties:
@@ -2360,14 +2706,14 @@ Resources:
       OKActions:
         - !ImportValue platform-alarm-topic-critical-alert
       InsufficientDataActions: []
-      AlarmDescription: !Sub "Trigger if the ${SavePartialMatchesFunction} lambda throttles. ${SupportManualURL}"
-      AlarmName: !Sub "${AWS::StackName}-SavePartialMatchesFunction-throttles"
+      AlarmDescription: !Sub "Trigger if the ${PartialNameMatchFunction} lambda throttles. ${SupportManualURL}"
+      AlarmName: !Sub "${AWS::StackName}-PartialNameMatchFunction-throttles"
       MetricName: Throttles
       Namespace: AWS/Lambda
       Statistic: Sum
       Dimensions:
         - Name: FunctionName
-          Value: !Ref SavePartialMatchesFunction
+          Value: !Ref PartialNameMatchFunction
       TreatMissingData: notBreaching
       Period: 60 # This is the minimum value for the AWS Namespace
       EvaluationPeriods: 1

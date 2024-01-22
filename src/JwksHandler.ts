@@ -1,5 +1,4 @@
 import { Logger } from "@aws-lambda-powertools/logger";
-import { AppError } from "./utils/AppError";
 import { LambdaInterface } from "@aws-lambda-powertools/commons";
 import { Constants, EnvironmentVariables } from "./utils/Constants";
 import { Jwk, JWKSBody, Algorithm } from "./utils/IVeriCredential";
@@ -7,7 +6,6 @@ import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { NodeHttpHandler } from "@aws-sdk/node-http-handler";
 import crypto from "crypto";
 import * as AWS from "@aws-sdk/client-kms";
-import { HttpCodesEnum } from "./models/enums/HttpCodesEnum";
 import { checkEnvironmentVariable } from "./utils/EnvironmentVariables";
 
 const POWERTOOLS_LOG_LEVEL = process.env.POWERTOOLS_LOG_LEVEL ? process.env.POWERTOOLS_LOG_LEVEL : "DEBUG";

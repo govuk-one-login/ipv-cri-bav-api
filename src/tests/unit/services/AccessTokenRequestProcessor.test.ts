@@ -44,7 +44,6 @@ function getMockSessionItem(): ISessionItem {
 		subject: "sub",
 		persistentSessionId: "sdgsdg",
 		clientIpAddress: "127.0.0.1",
-		attemptCount: 1,
 		authSessionState: AuthSessionState.BAV_AUTH_CODE_ISSUED,
 	};
 	return sess;

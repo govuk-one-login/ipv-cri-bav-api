@@ -7,9 +7,6 @@ export interface PersonIdentityName {
 	nameParts: PersonIdentityNamePart[];
 }
 
-export interface PersonIdentityDateOfBirth {
-	value: string;
-}
 
 export interface PersonIdentityItem {
 	sessionId: string;
