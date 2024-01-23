@@ -109,8 +109,8 @@ Mappings:
       CLIENTS: '[{"jwksEndpoint":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/redirect?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
       TESTHARNESSURL: "https://bav-test-harness-testharness.review-bav.dev.account.gov.uk"
-      HMRCBASEURL: "https://szxkgvdy5j.execute-api.eu-west-2.amazonaws.com/dev"
-      HMRCVERIFYBASEURL: "https://szxkgvdy5j.execute-api.eu-west-2.amazonaws.com/dev/misc/bank-account"
+      HMRCBASEURL: "https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev"
+      HMRCVERIFYBASEURL: "https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev/misc/bank-account"
     build:
       ISSUER: 'https://review-bav.build.account.gov.uk'
       DNSSUFFIX: review-bav.build.account.gov.uk
@@ -120,8 +120,8 @@ Mappings:
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-bav.build.account.gov.uk/.well-known/jwks.json","clientId":"BD7B2A5D","redirectUri":"https://ipvstub.review-bav.build.account.gov.uk/redirect?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
-      HMRCBASEURL: "https://kcdflis5zl.execute-api.eu-west-2.amazonaws.com/build"
-      HMRCVERIFYBASEURL: "https://kcdflis5zl.execute-api.eu-west-2.amazonaws.com/build/misc/bank-account"
+      HMRCBASEURL: "https://ndlgsc0bi8.execute-api.eu-west-2.amazonaws.com/build"
+      HMRCVERIFYBASEURL: "https://ndlgsc0bi8.execute-api.eu-west-2.amazonaws.com/build/misc/bank-account"
       TESTHARNESSURL: "https://testharness.review-bav.build.account.gov.uk"
     staging:
       ISSUER: 'https://review-bav.staging.account.gov.uk'
