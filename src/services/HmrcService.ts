@@ -112,7 +112,7 @@ export class HmrcService {
     			this.logger.info("Received response from HMRC token endpoint");
     			return data;
     		} catch (error: any) {
-    			this.logger.error({ message: "An error occurred when generating HMRC token", error, messageCode: MessageCodes.FAILED_GENERATING_HMRC_TOKEN });
+    			this.logger.error({ message: "An error occurred when generating HMRC token", statusCode: error?.response?.status, messageCode: MessageCodes.FAILED_GENERATING_HMRC_TOKEN });
 
     			if (error?.response?.status === 500 && retryCount < this.maxRetries) {
     				this.logger.error(`generateToken - Retrying to generate hmrcToken. Sleeping for ${this.backoffPeriodMs} ms ${HmrcService.name} ${new Date().toISOString()}`, { retryCount });
