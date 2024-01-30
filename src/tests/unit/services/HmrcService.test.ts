@@ -194,7 +194,7 @@ describe("HMRC Service", () => {
 				new AppError(HttpCodesEnum.SERVER_ERROR, "Error generating HMRC token"),
 			);
 			expect(logger.error).toHaveBeenCalledWith(
-				{ message: "An error occurred when generating HMRC token", error, messageCode: MessageCodes.FAILED_GENERATING_HMRC_TOKEN },
+				{ message: "An error occurred when generating HMRC token", statusCode: 400, messageCode: MessageCodes.FAILED_GENERATING_HMRC_TOKEN },
 			);
 			expect(axios.post).toHaveBeenCalledTimes(1);
 			expect(axios.post).toHaveBeenCalledWith(`${hmrcBaseUrl}${Constants.HMRC_TOKEN_ENDPOINT_PATH}`, expectedParams, config);
@@ -212,7 +212,7 @@ describe("HMRC Service", () => {
 				new AppError(HttpCodesEnum.SERVER_ERROR, "Error generating HMRC token"),
 			);
 			expect(logger.error).toHaveBeenCalledWith(
-				{ message: "An error occurred when generating HMRC token", error, messageCode: MessageCodes.FAILED_GENERATING_HMRC_TOKEN },
+				{ message: "An error occurred when generating HMRC token", statusCode: 500, messageCode: MessageCodes.FAILED_GENERATING_HMRC_TOKEN },
 			);
 			expect(axios.post).toHaveBeenCalledTimes(4);
 			expect(axios.post).toHaveBeenCalledWith(`${hmrcBaseUrl}${Constants.HMRC_TOKEN_ENDPOINT_PATH}`,
