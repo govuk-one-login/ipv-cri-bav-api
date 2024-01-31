@@ -32,9 +32,8 @@ jobs:
       - name: Test and coverage
         run: npm run test:unit -- --coverage
       - name: "Run SonarCloud Scan"
-        if: ${{ success() }}
+        if: ${{ success() && github.actor != 'dependabot[bot]' }}
         uses: SonarSource/sonarcloud-github-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
