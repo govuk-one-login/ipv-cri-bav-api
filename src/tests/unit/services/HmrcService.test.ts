@@ -42,7 +42,7 @@ describe("HMRC Service", () => {
 
 			const response = await hmrcServiceTest.verify({ accountNumber, sortCode, name, uuid }, hmrcTokenSsmPath);
 
-			expect(logger.info).toHaveBeenCalledWith("Sending COP verify request to HMRC", { uuid, endpoint, attemptCount: 0 });
+			expect(logger.info).toHaveBeenCalledWith("Sending COP verify request to HMRC", { uuid, endpoint, retryCount: 0 });
 			expect(axios.post).toHaveBeenCalledWith(
 				endpoint,
 				{

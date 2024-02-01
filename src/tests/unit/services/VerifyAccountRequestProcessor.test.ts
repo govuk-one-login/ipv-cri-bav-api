@@ -100,13 +100,13 @@ describe("VerifyAccountRequestProcessor", () => {
       
 		it("returns error response if session has exceeded attemptCount", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
-			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, attemptCount: Constants.MAX_RETRIES });
+			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, attemptCount: Constants.MAX_VERIFY_ATTEMPTS });
 
 			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress);
 
 			expect(response.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 			expect(response.body).toBe("Too many attempts");
-			expect(logger.error).toHaveBeenCalledWith(`Session retry count is ${Constants.MAX_RETRIES}, cannot have another attempt`, {
+			expect(logger.error).toHaveBeenCalledWith(`Session attempt count is ${Constants.MAX_VERIFY_ATTEMPTS}, cannot have another attempt`, {
 				messageCode: MessageCodes.TOO_MANY_RETRIES,
 			});
 		});
@@ -209,7 +209,7 @@ describe("VerifyAccountRequestProcessor", () => {
 			expect(response.body).toBe(JSON.stringify({ message:"Success" }));
 		});
 
-		it("saves saveCopCheckResult with increased attemptCount if there was no match", async () => {
+		it("saves saveCopCheckResult with increased attemptCount if there was no match and returns success", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
 			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, attemptCount: 0 });
 			mockHmrcService.verify.mockResolvedValueOnce({ ...hmrcVerifyResponse, nameMatches: "partial" });
@@ -219,6 +219,17 @@ describe("VerifyAccountRequestProcessor", () => {
 			expect(mockBavService.saveCopCheckResult).toHaveBeenCalledWith(sessionId, CopCheckResults.PARTIAL_MATCH, 1);
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
 			expect(response.body).toBe(JSON.stringify({ message:"Success", attemptCount: 1 }));
+		});
+
+		it("returns success without attemptCount when there has been a FULL_MATCH", async () => {
+			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
+			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, attemptCount: 1 });
+			mockHmrcService.verify.mockResolvedValueOnce({ ...hmrcVerifyResponse, nameMatches: "yes" });
+
+			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress);
+
+			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
+			expect(response.body).toBe(JSON.stringify({ message:"Success" }));
 		});
 
 		it("returns error response if cop check result is MATCH_ERROR", async () => {

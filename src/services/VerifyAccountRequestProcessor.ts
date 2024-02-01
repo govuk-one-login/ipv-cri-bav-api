@@ -85,7 +85,7 @@ export class VerifyAccountRequestProcessor {
   		return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
   	}
 
-  	if (session.attemptCount && session.attemptCount >= Constants.MAX_RETRIES) {
+  	if (session.attemptCount && session.attemptCount >= Constants.MAX_VERIFY_ATTEMPTS) {
   		this.logger.error(`Session attempt count is ${session.attemptCount}, cannot have another attempt`, { messageCode: MessageCodes.TOO_MANY_RETRIES });
   		return new Response(HttpCodesEnum.UNAUTHORIZED, "Too many attempts");
   	}
@@ -165,6 +165,7 @@ export class VerifyAccountRequestProcessor {
   	}
 
   	let attemptCount;
+  	// If there is a full match attemptCount will be undefined because it doesn't matter
   	if (copCheckResult !== CopCheckResults.FULL_MATCH) {
   		attemptCount = session.attemptCount ? session.attemptCount + 1 : 1;
   	}

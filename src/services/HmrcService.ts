@@ -46,12 +46,12 @@ export class HmrcService {
     		"X-Tracking-Id": uuid,
     	};
 
-    	let attemptCount = 0;
+    	let retryCount = 0;
     	let exponentialBackOffPeriod = this.backoffPeriodMs;
-    	while (attemptCount <= this.maxRetries) {
+    	while (retryCount <= this.maxRetries) {
     		try {
     			const endpoint = `${this.hmrcBaseUrl}/${Constants.HMRC_VERIFY_ENDPOINT_PATH}`;
-    			this.logger.info("Sending COP verify request to HMRC", { uuid, endpoint, attemptCount });
+    			this.logger.info("Sending COP verify request to HMRC", { uuid, endpoint, retryCount });
     			const { data }: { data: HmrcVerifyResponse } = await axios.post(endpoint, params, { headers });
 
     			this.logger.debug({
@@ -70,10 +70,10 @@ export class HmrcService {
     			const message = "Error sending COP verify request to HMRC";
     			this.logger.error({ message, messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT, statusCode: error?.response?.status });
 
-    			if ((error?.response?.status === 500 || error?.response?.status === 429) && attemptCount < this.maxRetries) {
-    				this.logger.error(`Sleeping for ${exponentialBackOffPeriod} ms before retrying verification`, { attemptCount });
+    			if ((error?.response?.status === 500 || error?.response?.status === 429) && retryCount < this.maxRetries) {
+    				this.logger.error(`Sleeping for ${exponentialBackOffPeriod} ms before retrying verification`, { retryCount });
     				await sleep(exponentialBackOffPeriod);
-    				attemptCount++;
+    				retryCount++;
     				exponentialBackOffPeriod = exponentialBackOffPeriod * 2;
     			} else {
     				throw new AppError(HttpCodesEnum.SERVER_ERROR, message);
@@ -86,10 +86,10 @@ export class HmrcService {
     async generateToken(clientSecret: string, clientId: string): Promise<HmrcTokenResponse | undefined> {
     	this.logger.debug("generateToken", HmrcService.name);
 
-    	let attemptCount = 0;
-    	while (attemptCount <= this.maxRetries) {
+    	let retryCount = 0;
+    	while (retryCount <= this.maxRetries) {
     		this.logger.debug(`generateToken - trying to generate hmrcToken ${new Date().toISOString()}`, {
-    			attemptCount,
+    			retryCount,
     		});
     		try {
     			const params = {
@@ -114,10 +114,10 @@ export class HmrcService {
     		} catch (error: any) {
     			this.logger.error({ message: "An error occurred when generating HMRC token", statusCode: error?.response?.status, messageCode: MessageCodes.FAILED_GENERATING_HMRC_TOKEN });
 
-    			if (error?.response?.status === 500 && attemptCount < this.maxRetries) {
-    				this.logger.error(`generateToken - Retrying to generate hmrcToken. Sleeping for ${this.backoffPeriodMs} ms ${HmrcService.name} ${new Date().toISOString()}`, { attemptCount });
+    			if (error?.response?.status === 500 && retryCount < this.maxRetries) {
+    				this.logger.error(`generateToken - Retrying to generate hmrcToken. Sleeping for ${this.backoffPeriodMs} ms ${HmrcService.name} ${new Date().toISOString()}`, { retryCount });
     				await sleep(this.backoffPeriodMs);
-    				attemptCount++;
+    				retryCount++;
     			} else {
     				throw new AppError(HttpCodesEnum.SERVER_ERROR, "Error generating HMRC token");
     			}
