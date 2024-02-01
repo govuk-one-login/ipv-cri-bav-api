@@ -132,8 +132,8 @@ Mappings:
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.staging.account.gov.uk/.well-known/jwks.json","clientId":"03A5A659-17AA-453F-B905-95D2804823D1","redirectUri":"https://identity.staging.account.gov.uk/credential-issuer/callback?id=bav"}]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
-      HMRCBASEURL: "https://proxy.review-bav.staging.account.gov.uk/hmrc"
-      HMRCVERIFYBASEURL: "https://proxy.review-bav.staging.account.gov.uk/hmrc/misc/bank-account"
+      HMRCBASEURL: "https://x0ch9rvyhe.execute-api.eu-west-2.amazonaws.com/staging"
+      HMRCVERIFYBASEURL: "https://x0ch9rvyhe.execute-api.eu-west-2.amazonaws.com/staging/misc/bank-account"
     integration:
       ISSUER: 'https://review-bav.integration.account.gov.uk'
       DNSSUFFIX: review-bav.integration.account.gov.uk
