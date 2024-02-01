@@ -267,16 +267,16 @@ export class BavService {
 		}
 	}
 
-	async saveCopCheckResult(sessionId: string, copCheckResult: CopCheckResult, retryCount?: number): Promise<void> {
+	async saveCopCheckResult(sessionId: string, copCheckResult: CopCheckResult, attemptCount?: number): Promise<void> {
 		this.logger.info({ message: `Updating ${this.tableName} table with copCheckResult`, copCheckResult });
 
 		const updateStateCommand = new UpdateCommand({
 			TableName: this.tableName,
 			Key: { sessionId },
-			UpdateExpression: `SET copCheckResult = :copCheckResult, authSessionState = :authSessionState${retryCount ? ", retryCount = :retryCount" : ""}`,
+			UpdateExpression: `SET copCheckResult = :copCheckResult, authSessionState = :authSessionState${attemptCount ? ", attemptCount = :attemptCount" : ""}`,
 			ExpressionAttributeValues: {
 				":copCheckResult": copCheckResult,
-				...(retryCount && { ":retryCount": retryCount }),
+				...(attemptCount && { ":attemptCount": attemptCount }),
 				":authSessionState": AuthSessionState.BAV_DATA_RECEIVED,
 			},
 		});
