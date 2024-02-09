@@ -123,7 +123,7 @@ describe("VerifiableCredentialService", () => {
 
 		it("should generate a signed JWT for a full match result", async () => {
 			const signedJWT = "mockSignedJwt";
-			const kid = process.env.KMS_KEY_ARN
+			const kid = process.env.KMS_KEY_ARN;
 			mockKmsJwtAdapter.sign.mockResolvedValue(signedJWT);
 			
 			const result = await service.generateSignedVerifiableCredentialJwt(
@@ -153,7 +153,7 @@ describe("VerifiableCredentialService", () => {
 		it("should throw an error when KMS signing fails", async () => {
 			const signError = new Error("KMS signing failed");
 			mockKmsJwtAdapter.sign.mockRejectedValue(signError);
-			const kid = process.env.KMS_KEY_ARN
+			const kid = process.env.KMS_KEY_ARN;
 			await expect(
 				service.generateSignedVerifiableCredentialJwt(mockSessionItem, mockNameParts, mockBankAccountInfo, mockNow, kid),
 			).rejects.toThrow(AppError);
