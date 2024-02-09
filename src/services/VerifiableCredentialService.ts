@@ -67,7 +67,7 @@ export class VerifiableCredentialService {
 	
 
 	async generateSignedVerifiableCredentialJwt(
-		sessionItem: ISessionItem, nameParts: PersonIdentityNamePart[], bankAccountInfo: BankAccountInfo, getNow: () => number,
+		sessionItem: ISessionItem, nameParts: PersonIdentityNamePart[], bankAccountInfo: BankAccountInfo, getNow: () => number, signinKeyId: string | undefined
 	): Promise<{ signedJWT: string; evidenceInfo: VerifiedCredentialEvidence }> {
 		const now = getNow();
 		const subject = sessionItem.subject;
@@ -81,6 +81,9 @@ export class VerifiableCredentialService {
 			iss: this.issuer,
 			iat: now,
 			jti: randomUUID(),
+			typ: "JWT",
+			kid: signinKeyId,
+			alg: "ES256",
 			vc: verifiedCredential,
 		};
 

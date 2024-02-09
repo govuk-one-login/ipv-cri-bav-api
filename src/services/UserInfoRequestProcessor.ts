@@ -131,7 +131,8 @@ export class UserInfoRequestProcessor {
 		}
 
 		const names = personInfo.name[0].nameParts;
-
+		const signinKeyId = checkEnvironmentVariable(EnvironmentVariables.KMS_KEY_ARN, this.logger).split("/").pop();
+		
 		if (names && names.length > 0 && personInfo.sortCode && personInfo.accountNumber) {
 			const { signedJWT, evidenceInfo } = await this.verifiableCredentialService.generateSignedVerifiableCredentialJwt(
 				session,
@@ -139,7 +140,8 @@ export class UserInfoRequestProcessor {
 					sortCode: personInfo.sortCode,
 					accountNumber: personInfo.accountNumber,
 				},
-				absoluteTimeNow);
+				absoluteTimeNow,
+				signinKeyId);
 
 			this.metrics.addMetric("Generated signed verifiable credential jwt", MetricUnits.Count, 1);
 
