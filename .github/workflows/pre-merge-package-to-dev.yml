@@ -1,0 +1,28 @@
+name: Pre-merge Deploy Main to Dev Env 
+
+on:
+  label:
+    types:
+      - created
+
+permissions:
+  id-token: write
+  contents: read
+
+env: # Only adding the variables in that are required for
+  AWS_REGION: eu-west-2
+
+jobs:
+  deploy-to-dev:
+    name: Validate & Deploy SAM template to Dev Environment
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./deploy/
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+
+
+
