@@ -31,6 +31,6 @@ export interface ISessionItem extends IBAVSession {
 	evidence_requested?: EvidenceRequested;
 	copCheckResult?: CopCheckResult;
 	hmrcUuid?: string;
-	retryCount?: number;
+	attemptCount?: number;
 }
 

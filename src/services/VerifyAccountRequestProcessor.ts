@@ -85,8 +85,8 @@ export class VerifyAccountRequestProcessor {
   		return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
   	}
 
-  	if (session.retryCount && session.retryCount >= Constants.MAX_RETRIES) {
-  		this.logger.error(`Session retry count is ${session.retryCount}, cannot have another attempt`, { messageCode: MessageCodes.TOO_MANY_RETRIES });
+  	if (session.attemptCount && session.attemptCount >= Constants.MAX_VERIFY_ATTEMPTS) {
+  		this.logger.error(`Session attempt count is ${session.attemptCount}, cannot have another attempt`, { messageCode: MessageCodes.TOO_MANY_RETRIES });
   		return new Response(HttpCodesEnum.UNAUTHORIZED, "Too many attempts");
   	}
 
@@ -119,7 +119,7 @@ export class VerifyAccountRequestProcessor {
   						name,
   						sortCode,
   						accountNumber: paddedAccountNumber,
-  						attemptNum: session.retryCount || 1,
+  						attemptNum: session.attemptCount || 1,
 					 },
   				],
 		 		},
@@ -164,11 +164,12 @@ export class VerifyAccountRequestProcessor {
   		return new Response(HttpCodesEnum.SERVER_ERROR, "Error received in COP verify response");
   	}
 
-  	let retryCount;
+  	let attemptCount;
+  	// If there is a full match attemptCount will be undefined because it doesn't matter
   	if (copCheckResult !== CopCheckResults.FULL_MATCH) {
-  		retryCount = session.retryCount ? session.retryCount + 1 : 1;
+  		attemptCount = session.attemptCount ? session.attemptCount + 1 : 1;
   	}
-  	await this.BavService.saveCopCheckResult(sessionId, copCheckResult, retryCount);
+  	await this.BavService.saveCopCheckResult(sessionId, copCheckResult, attemptCount);
 
 		if (copCheckResult === CopCheckResults.PARTIAL_MATCH) {
 			const partialNameRecord: PartialNameSQSRecord = {
@@ -185,7 +186,7 @@ export class VerifyAccountRequestProcessor {
 
   	return new Response(HttpCodesEnum.OK, JSON.stringify({
   		message: "Success",
-  		retryCount,
+  		attemptCount,
   	}));
 	}
 

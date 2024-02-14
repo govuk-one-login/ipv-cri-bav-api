@@ -163,7 +163,7 @@ export class UserInfoRequestProcessor {
 								txn: session.hmrcUuid!,
 								strengthScore: evidenceInfo.strengthScore,
 								validityScore: evidenceInfo.validityScore,
-								attemptNum: session.retryCount || 1,
+								attemptNum: session.attemptCount || 1,
 								ci: evidenceInfo.ci,
 								ciReasons: [{
 									ci: evidenceInfo.ci?.[0],
