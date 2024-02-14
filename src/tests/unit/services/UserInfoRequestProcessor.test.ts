@@ -45,7 +45,7 @@ function getMockSessionItem(): ISessionItem {
 		clientIpAddress: "127.0.0.1",
 		authSessionState: "BAV_ACCESS_TOKEN_ISSUED",
 		copCheckResult: "FULL_MATCH",
-		attemptCount: 1,
+		retryCount: 1,
 		hmrcUuid: "1c756b7e-b5b8-4f33-966d-4aeee9bb0000",
 	};
 	return sess;

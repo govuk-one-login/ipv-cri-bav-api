@@ -121,7 +121,7 @@ describe("BAV CRI: /verify-account Retry Happy Path Tests", () => {
 		const verifyAccountResponse = await verifyAccountPost(verifyAccountYesPayload, sessionId);
 		expect(verifyAccountResponse.status).toBe(200);
 		expect(verifyAccountResponse.data.message).toBe("Success");
-		expect(verifyAccountResponse.data.attemptCount).toBe(1);
+		expect(verifyAccountResponse.data.retryCount).toBe(1);
 
 		// Make sure txma event is present & valid
 		const sqsMessage = await getSqsEventList("txma/", sessionId, 3);

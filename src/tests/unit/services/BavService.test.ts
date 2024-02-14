@@ -303,16 +303,16 @@ describe("BAV Service", () => {
 			expect(UpdateCommand).toHaveBeenCalledWith({
 				TableName: tableName,
 				Key: { sessionId },
-				UpdateExpression: "SET copCheckResult = :copCheckResult, authSessionState = :authSessionState, attemptCount = :attemptCount",
+				UpdateExpression: "SET copCheckResult = :copCheckResult, authSessionState = :authSessionState, retryCount = :retryCount",
 				ExpressionAttributeValues: {
 					":copCheckResult": copCheckResult,
-					":attemptCount": 1,
+					":retryCount": 1,
 					":authSessionState": AuthSessionState.BAV_DATA_RECEIVED,
 				},
 			});
 		});
 
-		it("saves account information to dynamo without attemptCount", async () => {
+		it("saves account information to dynamo without retryCount", async () => {
 			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
 
 			await bavService.saveCopCheckResult(sessionId, copCheckResult, undefined);
