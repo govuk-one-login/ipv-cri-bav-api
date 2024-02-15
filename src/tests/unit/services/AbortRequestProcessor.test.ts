@@ -104,6 +104,7 @@ describe("AbortRequestProcessor", () => {
 			client_id: session.clientId,
 			component_id: "https://XXX-c.env.account.gov.uk",
 			timestamp: 1585695600,
+			event_timestamp_ms: 1585695600000,
 			user: {
 			  ip_address: session.clientIpAddress,
 			  session_id: sessionId,

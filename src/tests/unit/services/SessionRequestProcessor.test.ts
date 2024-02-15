@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 /* eslint @typescript-eslint/unbound-method: 0 */
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics } from "@aws-lambda-powertools/metrics";
@@ -228,6 +229,7 @@ describe("SessionRequestProcessor", () => {
 				client_id: undefined,
 				component_id: "https://XXX-c.env.account.gov.uk",
 				timestamp: 1585695600000 / 1000,
+				event_timestamp_ms: 1585695600000,
 				user: {
 					govuk_signin_journey_id: "abcdef",
 					ip_address: "",
