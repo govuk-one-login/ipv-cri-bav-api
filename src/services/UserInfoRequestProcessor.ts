@@ -145,7 +145,7 @@ export class UserInfoRequestProcessor {
 
 			await this.BavService.updateSessionAuthState(session.sessionId, AuthSessionState.BAV_CRI_VC_ISSUED);
 
-			const txmaCoreFields = buildCoreEventFields(session, this.issuer, session.clientIpAddress, absoluteTimeNow);
+			const txmaCoreFields = buildCoreEventFields(session, this.issuer, session.clientIpAddress);
 			await this.BavService.sendToTXMA(
 				this.txmaQueueUrl, {
 					event_name: TxmaEventNames.BAV_CRI_VC_ISSUED,
@@ -163,7 +163,7 @@ export class UserInfoRequestProcessor {
 								txn: session.hmrcUuid!,
 								strengthScore: evidenceInfo.strengthScore,
 								validityScore: evidenceInfo.validityScore,
-								attemptNum: session.retryCount || 1,
+								attemptNum: session.attemptCount || 1,
 								ci: evidenceInfo.ci,
 								ciReasons: [{
 									ci: evidenceInfo.ci?.[0],

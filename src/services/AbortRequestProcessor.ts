@@ -6,7 +6,6 @@ import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { TxmaEventNames } from "../models/enums/TxmaEvents";
 import { EnvironmentVariables } from "../utils/Constants";
-import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 import { Response } from "../utils/Response";
@@ -70,7 +69,7 @@ export class AbortRequestProcessor {
   	await this.BavService.sendToTXMA(
   		this.txmaQueueUrl, {
   			event_name: TxmaEventNames.BAV_CRI_SESSION_ABORTED,
-  			...buildCoreEventFields(session, this.issuer, session.clientIpAddress, absoluteTimeNow),
+  			...buildCoreEventFields(session, this.issuer, session.clientIpAddress),
   		});
 
   	return new Response(HttpCodesEnum.OK, "Session has been aborted", { Location: encodeURIComponent(redirectUri) });

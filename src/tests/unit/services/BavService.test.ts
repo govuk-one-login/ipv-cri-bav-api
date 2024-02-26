@@ -54,6 +54,7 @@ function getTXMAEventPayload(): TxmaEvent {
 		},
 		client_id: "clientId",
 		timestamp: 123,
+		event_timestamp_ms: 123000,
 		component_id: "issuer",
 	};
 	return txmaEventPayload;
@@ -303,16 +304,16 @@ describe("BAV Service", () => {
 			expect(UpdateCommand).toHaveBeenCalledWith({
 				TableName: tableName,
 				Key: { sessionId },
-				UpdateExpression: "SET copCheckResult = :copCheckResult, authSessionState = :authSessionState, retryCount = :retryCount",
+				UpdateExpression: "SET copCheckResult = :copCheckResult, authSessionState = :authSessionState, attemptCount = :attemptCount",
 				ExpressionAttributeValues: {
 					":copCheckResult": copCheckResult,
-					":retryCount": 1,
+					":attemptCount": 1,
 					":authSessionState": AuthSessionState.BAV_DATA_RECEIVED,
 				},
 			});
 		});
 
-		it("saves account information to dynamo without retryCount", async () => {
+		it("saves account information to dynamo without attemptCount", async () => {
 			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
 
 			await bavService.saveCopCheckResult(sessionId, copCheckResult, undefined);
