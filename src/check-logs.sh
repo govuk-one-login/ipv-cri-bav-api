@@ -8,7 +8,7 @@ query="fields @timestamp, @message, @logStream, @log | filter @message like \"$f
 
 echo $query
 
-stack_name="bav-cri-api-1674"
+stack_name="bav-cri-api"
 log_groups=(
     "/aws/lambda/BAV-Authorization-$stack_name"
     "/aws/lambda/BAV-person-info-$stack_name"
