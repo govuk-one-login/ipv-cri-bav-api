@@ -145,7 +145,7 @@ export class UserInfoRequestProcessor {
 
 			await this.BavService.updateSessionAuthState(session.sessionId, AuthSessionState.BAV_CRI_VC_ISSUED);
 
-			const txmaCoreFields = buildCoreEventFields(session, this.issuer, session.clientIpAddress, absoluteTimeNow);
+			const txmaCoreFields = buildCoreEventFields(session, this.issuer, session.clientIpAddress);
 			await this.BavService.sendToTXMA(
 				this.txmaQueueUrl, {
 					event_name: TxmaEventNames.BAV_CRI_VC_ISSUED,

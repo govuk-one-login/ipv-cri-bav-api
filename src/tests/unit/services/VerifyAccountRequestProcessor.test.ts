@@ -13,7 +13,6 @@ import { BavService } from "../../../services/BavService";
 import { VerifyAccountRequestProcessor } from "../../../services/VerifyAccountRequestProcessor";
 import { HmrcService } from "../../../services/HmrcService";
 import { Constants } from "../../../utils/Constants";
-import { absoluteTimeNow } from "../../../utils/DateTimeUtils";
 
 const hmrcUuid = "new hmrcUuid";
 jest.mock("crypto", () => ({
@@ -60,6 +59,16 @@ describe("VerifyAccountRequestProcessor", () => {
 		verifyAccountRequestProcessorTest.BavService = mockBavService;
 		// @ts-ignore
 		verifyAccountRequestProcessorTest.HmrcService = mockHmrcService;
+	});
+
+	beforeEach(() => {
+		jest.clearAllMocks();
+		jest.useFakeTimers();
+		jest.setSystemTime(new Date(1585695600000));
+	});
+
+	afterEach(() => {
+		jest.useRealTimers();
 	});
 
 	describe("#processRequest", () => {
@@ -155,7 +164,8 @@ describe("VerifyAccountRequestProcessor", () => {
 					 },
   				],
 		 		},
-				timestamp: absoluteTimeNow(),
+				timestamp: 1585695600,
+				event_timestamp_ms: 1585695600000,
 				user:  {
 					govuk_signin_journey_id: session.clientSessionId,
 					ip_address: clientIpAddress,
@@ -180,7 +190,8 @@ describe("VerifyAccountRequestProcessor", () => {
 					session_id: session.sessionId,
 					user_id: session.subject,
 				},
-				timestamp: absoluteTimeNow(),
+				timestamp: 1585695600,
+				event_timestamp_ms: 1585695600000,
 			});
 		});
 

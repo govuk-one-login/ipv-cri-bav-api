@@ -54,6 +54,7 @@ function getTXMAEventPayload(): TxmaEvent {
 		},
 		client_id: "clientId",
 		timestamp: 123,
+		event_timestamp_ms: 123000,
 		component_id: "issuer",
 	};
 	return txmaEventPayload;

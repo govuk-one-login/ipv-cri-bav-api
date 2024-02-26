@@ -191,7 +191,7 @@ export class SessionRequestProcessor {
 			this.authSessionTtlInSecs,
   	});
 
-  	const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress, absoluteTimeNow);
+  	const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
   	await this.BavService.sendToTXMA(
   		this.txmaQueueUrl,
   		{

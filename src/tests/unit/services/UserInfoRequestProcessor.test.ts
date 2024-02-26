@@ -136,6 +136,7 @@ describe("UserInfoRequestProcessor", () => {
 				],
 			},
 			"timestamp":1585695600,
+			"event_timestamp_ms":1585695600000,
 			"user":{
 				"ip_address":"127.0.0.1",
 				"govuk_signin_journey_id": "sdfssg",
@@ -165,6 +166,7 @@ describe("UserInfoRequestProcessor", () => {
 			"component_id":"https://XXX-c.env.account.gov.uk",
 			"event_name":"BAV_CRI_END",
 			"timestamp":1585695600,
+			"event_timestamp_ms":1585695600000,
 			"user":{
 				"ip_address":"127.0.0.1",
 				"session_id":"sdfsdg",
