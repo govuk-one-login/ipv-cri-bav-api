@@ -1,5 +1,4 @@
 /* eslint-disable max-lines */
-import { SendMessageCommand } from "@aws-sdk/client-sqs";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { DynamoDBDocument, GetCommand, PutCommand, QueryCommandInput, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
@@ -9,11 +8,12 @@ import { ISessionItem, CopCheckResult } from "../models/ISessionItem";
 import { SharedClaimsPersonIdentity, PersonIdentityItem, PersonIdentityName } from "../models/PersonIdentityItem";
 import { AppError } from "../utils/AppError";
 import { absoluteTimeNow, getAuthorizationCodeExpirationEpoch } from "../utils/DateTimeUtils";
-import { sqsClient } from "../utils/SqsClient";
+import { createSqsClient } from "../utils/SqsClient";
 import { TxmaEvent } from "../utils/TxmaEvent";
 import { Constants } from "../utils/Constants";
 import { AuthSessionState } from "../models/enums/AuthSessionState";
 import { PartialNameSQSRecord } from "../models/IHmrcResponse";
+import { SendMessageCommand } from "@aws-sdk/client-sqs";
 
 export class BavService {
 	readonly tableName: string;
@@ -123,7 +123,7 @@ export class BavService {
 			const obfuscatedObject = await this.obfuscateJSONValues(event, Constants.TXMA_FIELDS_TO_SHOW);
 			this.logger.info({ message: "Obfuscated TxMA Event", txmaEvent: JSON.stringify(obfuscatedObject, null, 2) });
 
-			await sqsClient.send(new SendMessageCommand(params));
+			await createSqsClient().send(new SendMessageCommand(params));
 			this.logger.info("Sent message to TxMA");
 		} catch (error) {
 			this.logger.error({
@@ -143,7 +143,7 @@ export class BavService {
 
 			this.logger.info({ message: "Sending partial name info to SQS" });
 
-			await sqsClient.send(new SendMessageCommand(params));
+			await createSqsClient().send(new SendMessageCommand(params));
 			this.logger.info("Sent message to PartialName Queue");
 		} catch (error) {
 			this.logger.error({

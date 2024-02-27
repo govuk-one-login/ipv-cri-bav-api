@@ -1,7 +1,6 @@
 /* eslint-disable max-lines */
 /* eslint-disable max-lines-per-function */
 /* eslint-disable @typescript-eslint/unbound-method */
-import { SendMessageCommand } from "@aws-sdk/client-sqs";
 import { UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { mock } from "jest-mock-extended";
@@ -9,13 +8,14 @@ import { BavService } from "../../../services/BavService";
 import { createDynamoDbClient } from "../../../utils/DynamoDBFactory";
 import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../../../models/enums/MessageCodes";
-import { sqsClient } from "../../../utils/SqsClient";
+import { createSqsClient } from "../../../utils/SqsClient";
 import { TxmaEvent } from "../../../utils/TxmaEvent";
 import { absoluteTimeNow } from "../../../utils/DateTimeUtils";
 import { personIdentityInputRecord, personIdentityOutputRecord } from "../data/personIdentity-records";
 import { AuthSessionState } from "../../../models/enums/AuthSessionState";
 import { ISessionItem } from "../../../models/ISessionItem";
 import { PersonIdentityItem } from "../../../models/PersonIdentityItem";
+import { SendMessageCommand } from "@aws-sdk/client-sqs";
 
 let bavService: BavService;
 const tableName = "SESSIONTABLE";
@@ -37,10 +37,18 @@ jest.mock("@aws-sdk/lib-dynamodb", () => ({
 	...jest.requireActual("@aws-sdk/lib-dynamodb"),
 	UpdateCommand: jest.fn().mockImplementation(() => {}),
 }));
+// jest.mock("../../../utils/SqsClient", () => ({
+// 	sqsClient: {
+// 		send: jest.fn(),
+// 	},
+// }));
+
 jest.mock("../../../utils/SqsClient", () => ({
-	sqsClient: {
-		send: jest.fn(),
-	},
+	createSqsClient: () => ({
+		sqsClient: {
+			send: jest.fn(),
+		},
+	}),
 }));
 
 function getTXMAEventPayload(): TxmaEvent {
@@ -119,6 +127,7 @@ describe("BAV Service", () => {
 
 	describe("#sendToTXMA", () => {
 		it("Should send event to TxMA with the correct details", async () => {
+			createSqsClient().send = jest.fn().mockImplementation(() => {});
 			const messageBody = JSON.stringify(txmaEventPayload);
 
 			await bavService.sendToTXMA("MYQUEUE", txmaEventPayload);
@@ -127,12 +136,12 @@ describe("BAV Service", () => {
 				MessageBody: messageBody,
 				QueueUrl: "MYQUEUE",
 			});
-			expect(sqsClient.send).toHaveBeenCalled();
+			expect(createSqsClient().send).toHaveBeenCalled();
 			expect(bavService.logger.info).toHaveBeenCalledWith("Sent message to TxMA");
 		});
 
 		it("show log error if failed to send to TXMA queue", async () => {
-			sqsClient.send.mockRejectedValueOnce({});
+			createSqsClient().send = jest.fn().mockRejectedValueOnce({});
 			await bavService.sendToTXMA("MYQUEUE", txmaEventPayload);
 	
 			expect(bavService.logger.error).toHaveBeenCalledWith({

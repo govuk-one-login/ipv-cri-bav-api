@@ -83,7 +83,7 @@ export const eventToSubjectIdentifier = async (jwtAdapter: KmsJwtAdapter, event:
 		throw new AppError(HttpCodesEnum.UNAUTHORIZED, "Missing header: Authorization header value is missing or invalid auth_scheme");
 	}
 	
-	if (!headerValue.startsWith(Constants.BEARER)) {
+	if (!headerValue.includes(Constants.BEARER + " ")) {
 		throw new AppError(HttpCodesEnum.UNAUTHORIZED, "Missing header: Authorization header is not of Bearer type access_token");
 	}
 
