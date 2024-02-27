@@ -27,6 +27,8 @@ export class AccessTokenRequestProcessor {
 
 	private readonly issuer: string;
 
+	private readonly dnsSuffix: string;
+
 	constructor(logger: Logger, metrics: Metrics) {
 		this.logger = logger;
 		this.metrics = metrics;
@@ -36,6 +38,7 @@ export class AccessTokenRequestProcessor {
 		const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, this.logger);
   		const signingKeyArn: string = checkEnvironmentVariable(EnvironmentVariables.KMS_KEY_ARN, this.logger);
 		this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, this.logger);
+		this.dnsSuffix = checkEnvironmentVariable(EnvironmentVariables.DNSSUFFIX, this.logger);
 		
 		this.kmsJwtAdapter = new KmsJwtAdapter(signingKeyArn);
 		this.bavService = BavService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
@@ -84,7 +87,7 @@ export class AccessTokenRequestProcessor {
 				};
 				let accessToken;
 				try {
-					accessToken = await this.kmsJwtAdapter.sign(jwtPayload);
+					accessToken = await this.kmsJwtAdapter.sign(jwtPayload, this.dnsSuffix);
 				} catch (error) {
 					this.logger.error("Failed to sign the accessToken Jwt", { messageCode: MessageCodes.FAILED_SIGNING_JWT });
 					return new Response(HttpCodesEnum.SERVER_ERROR, "Failed to sign the accessToken Jwt");
