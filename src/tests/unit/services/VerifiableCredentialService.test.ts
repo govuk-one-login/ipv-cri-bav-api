@@ -128,7 +128,7 @@ describe("VerifiableCredentialService", () => {
 			mockKmsJwtAdapter.sign.mockResolvedValue(signedJWT);
 			
 			const result = await service.generateSignedVerifiableCredentialJwt(
-				mockSessionItem, mockNameParts, mockBankAccountInfo, mockNow, kid,
+				mockSessionItem, mockNameParts, mockBankAccountInfo, mockNow,
 			);
 
 			expect(result).toEqual({ signedJWT, evidenceInfo: successBlock });
@@ -143,7 +143,7 @@ describe("VerifiableCredentialService", () => {
 			mockKmsJwtAdapter.sign.mockResolvedValue(signedJWT);
 
 			const result = await service.generateSignedVerifiableCredentialJwt(
-				mockSessionItem, mockNameParts, mockBankAccountInfo, mockNow, kid,
+				mockSessionItem, mockNameParts, mockBankAccountInfo, mockNow,
 			);
 
 			expect(result).toEqual({ signedJWT, evidenceInfo: failureBlock });
@@ -156,7 +156,7 @@ describe("VerifiableCredentialService", () => {
 			mockKmsJwtAdapter.sign.mockRejectedValue(signError);
 			const kid = process.env.KMS_KEY_ARN;
 			await expect(
-				service.generateSignedVerifiableCredentialJwt(mockSessionItem, mockNameParts, mockBankAccountInfo, mockNow, kid),
+				service.generateSignedVerifiableCredentialJwt(mockSessionItem, mockNameParts, mockBankAccountInfo, mockNow),
 			).rejects.toThrow(AppError);
 
 			expect(mockLogger.error).toHaveBeenCalledWith("Error generating signed verifiable credential jwt", {

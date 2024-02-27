@@ -143,8 +143,7 @@ export class UserInfoRequestProcessor {
 					sortCode: personInfo.sortCode,
 					accountNumber: personInfo.accountNumber,
 				},
-				absoluteTimeNow,
-				signinKeyId);
+				absoluteTimeNow);
 
 			this.metrics.addMetric("Generated signed verifiable credential jwt", MetricUnits.Count, 1);
 

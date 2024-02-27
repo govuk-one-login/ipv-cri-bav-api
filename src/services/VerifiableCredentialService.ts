@@ -70,8 +70,7 @@ export class VerifiableCredentialService {
 	
 
 	async generateSignedVerifiableCredentialJwt(
-		sessionItem: ISessionItem, nameParts: PersonIdentityNamePart[], bankAccountInfo: BankAccountInfo, getNow: () => number, signinKeyId: string | undefined,
-	): Promise<{ signedJWT: string; evidenceInfo: VerifiedCredentialEvidence }> {
+		sessionItem: ISessionItem, nameParts: PersonIdentityNamePart[], bankAccountInfo: BankAccountInfo, getNow: () => number): Promise<{ signedJWT: string; evidenceInfo: VerifiedCredentialEvidence }> {
 		const now = getNow();
 		const subject = sessionItem.subject;
 		const evidenceInfo = sessionItem.copCheckResult === CopCheckResult.FULL_MATCH ?
