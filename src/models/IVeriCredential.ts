@@ -14,7 +14,7 @@ export type Algorithm =
 	"ES256" | "ES384" | "ES512" |
 	"PS256" | "PS384" | "PS512" |
 	"none";
-// Is this interface used anywhere?
+	
 export interface CredentialJwt {
 	iat: number;
 	iss: string;

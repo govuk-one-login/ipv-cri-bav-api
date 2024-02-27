@@ -84,9 +84,6 @@ export class VerifiableCredentialService {
 			iss: this.issuer,
 			iat: now,
 			jti: randomUUID(),
-			typ: "JWT",
-			kid: signinKeyId,
-			alg: "ES256",
 			vc: verifiedCredential,
 		};
 
