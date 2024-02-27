@@ -134,7 +134,6 @@ export class UserInfoRequestProcessor {
 		}
 
 		const names = personInfo.name[0].nameParts;
-		const signinKeyId = checkEnvironmentVariable(EnvironmentVariables.KMS_KEY_ARN, this.logger).split("/").pop();
 		
 		if (names && names.length > 0 && personInfo.sortCode && personInfo.accountNumber) {
 			const { signedJWT, evidenceInfo } = await this.verifiableCredentialService.generateSignedVerifiableCredentialJwt(
