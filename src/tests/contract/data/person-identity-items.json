@@ -1,0 +1,49 @@
+{
+  "sessionId": {
+    "S": "a86489b2-3f3a-4799-9281-30e4b220866d"
+  },
+  "accountNumber": {
+    "S": "12345678"
+  },
+  "createdDate": {
+    "N": "1708351711"
+  },
+  "expiryDate": {
+    "N": "1709302111"
+  },
+  "name": {
+    "L": [
+      {
+        "M": {
+          "nameParts": {
+            "L": [
+              {
+                "M": {
+                  "type": {
+                    "S": "GivenName"
+                  },
+                  "value": {
+                    "S": "Yasmine"
+                  }
+                }
+              },
+              {
+                "M": {
+                  "type": {
+                    "S": "FamilyName"
+                  },
+                  "value": {
+                    "S": "Young"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "sortCode": {
+    "S": "123456"
+  }
+}
