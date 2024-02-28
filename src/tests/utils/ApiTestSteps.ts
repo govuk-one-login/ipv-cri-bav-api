@@ -301,10 +301,15 @@ export function validateJwtToken(jwtToken: any): void {
 	validateRawBody(rawBody);
 }
 
-function validateRawHead(rawHead: any): void {
+async function validateRawHead(rawHead: any): Promise<void> {
 	const decodeRawHead = JSON.parse(jwtUtils.base64DecodeToString(rawHead.replace(/\W/g, "")));
 	expect(decodeRawHead.alg).toBe("ES256");
 	expect(decodeRawHead.typ).toBe("JWT");
+	const msgBuffer = new TextEncoder().encode(constants.VC_SIGNING_KEY_ID);
+	const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+	const hashArray = Array.from(new Uint8Array(hashBuffer));
+	const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+	expect(decodeRawHead.kid).toBe("did:web:review-bav.dev.account.gov.uk#" + hashHex);
 }
 
 function validateRawBody(rawBody: any): void {
