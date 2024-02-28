@@ -2631,7 +2631,7 @@ Resources:
     Type: AWS::Logs::SubscriptionFilter
     Properties:
       DestinationArn:
-        !FindInMap [ PlatformConfiguration, !Ref Environment, PartialNameMatchFunction ]
+        !FindInMap [ PlatformConfiguration, !Ref Environment, CSLSEGRESS ]
       FilterPattern: ""
       LogGroupName: !Ref PartialNameMatchFunctionLogGroup
 
