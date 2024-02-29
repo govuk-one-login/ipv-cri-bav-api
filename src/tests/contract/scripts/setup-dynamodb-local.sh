@@ -66,9 +66,8 @@ aws dynamodb create-table \
 
 # Insert the person-identity-items to person-identity-table
 echo "Inserting a record into the person-identity-table..."
-aws dynamodb put-item \
-    --table-name person-identity-table \
-    --item file://data/person-identity-items.json \
+aws dynamodb batch-write-item \
+    --request-items file://data/person-identity-items.json \
     --return-consumed-capacity TOTAL \
     --endpoint-url http://localhost:8000
 

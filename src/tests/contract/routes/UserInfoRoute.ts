@@ -10,7 +10,7 @@ process.env.TXMA_QUEUE_URL = "txma-queue";
 process.env.USE_MOCKED = "true";
 process.env.KMS_KEY_ARN = "kid";
 process.env.PERSON_IDENTITY_TABLE_NAME = "person-identity-table";
-process.env.ISSUER = "issuer";
+process.env.ISSUER = "dummyBavComponentId";
 
 export const userInfoRouter = asyncify(express.Router());
 

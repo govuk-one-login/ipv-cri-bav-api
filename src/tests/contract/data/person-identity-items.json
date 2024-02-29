@@ -1,49 +1,110 @@
 {
-  "sessionId": {
-    "S": "a86489b2-3f3a-4799-9281-30e4b220866d"
-  },
-  "accountNumber": {
-    "S": "12345678"
-  },
-  "createdDate": {
-    "N": "1708351711"
-  },
-  "expiryDate": {
-    "N": "1709302111"
-  },
-  "name": {
-    "L": [
+  "person-identity-table": [        
       {
-        "M": {
-          "nameParts": {
-            "L": [
-              {
-                "M": {
-                  "type": {
-                    "S": "GivenName"
-                  },
-                  "value": {
-                    "S": "Yasmine"
-                  }
+          "PutRequest": {
+              "Item": {
+                "sessionId": {
+                  "S": "a86489b2-3f3a-4799-9281-30e4b220866d"
+                },
+                "accountNumber": {
+                  "S": "12345678"
+                },
+                "createdDate": {
+                  "N": "1708351711"
+                },
+                "expiryDate": {
+                  "N": "1709302111"
+                },
+                "name": {
+                  "L": [
+                    {
+                      "M": {
+                        "nameParts": {
+                          "L": [
+                            {
+                              "M": {
+                                "type": {
+                                  "S": "GivenName"
+                                },
+                                "value": {
+                                  "S": "Kenneth"
+                                }
+                              }
+                            },
+                            {
+                              "M": {
+                                "type": {
+                                  "S": "FamilyName"
+                                },
+                                "value": {
+                                  "S": "Decerqueira"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                },
+                "sortCode": {
+                  "S": "103233"
                 }
-              },
-              {
-                "M": {
-                  "type": {
-                    "S": "FamilyName"
-                  },
-                  "value": {
-                    "S": "Young"
-                  }
-                }
-              }
-            ]
+              }              
           }
+      },
+      {
+        "PutRequest": {
+            "Item": {
+              "sessionId": {
+                "S": "b86489b2-3f3a-4799-9281-30e4b220866d"
+              },
+              "accountNumber": {
+                "S": "12345678"
+              },
+              "createdDate": {
+                "N": "1708351711"
+              },
+              "expiryDate": {
+                "N": "1709302111"
+              },
+              "name": {
+                "L": [
+                  {
+                    "M": {
+                      "nameParts": {
+                        "L": [
+                          {
+                            "M": {
+                              "type": {
+                                "S": "GivenName"
+                              },
+                              "value": {
+                                "S": "Kenneth"
+                              }
+                            }
+                          },
+                          {
+                            "M": {
+                              "type": {
+                                "S": "FamilyName"
+                              },
+                              "value": {
+                                "S": "Decerqueira"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              },
+              "sortCode": {
+                "S": "103233"
+              }
+            }              
         }
-      }
-    ]
-  },
-  "sortCode": {
-    "S": "123456"
-  }
+    }        
+  ]
 }

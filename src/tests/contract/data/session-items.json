@@ -75,6 +75,9 @@
                 "clientSessionId": {
                   "S": "e597d53bf06d94df4a7b316b9a04a05c"
                 },
+                "copCheckResult": {
+                  "S": "FULL_MATCH"
+                },
                 "createdDate": {
                   "N": "1708954600"
                 },
@@ -82,16 +85,58 @@
                   "N": "1709905000"
                 },
                 "redirectUri": {
-                  "S": "https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/redirect?id=bav"
+                  "S": "https://identity.staging.account.gov.uk/credential-issuer/callback?id=bav"
                 },
                 "state": {
                   "S": "327124d7cccc7d1027b2d7c5d209c623"
                 },
                 "subject": {
-                  "S": "cc7f7705-7ade-401d-af9e-d8acb5f124f1"
+                  "S": "test-subject"
                 }
               }
           }
-      }     
+      },
+      {
+        "PutRequest": {
+            "Item": {
+              "sessionId": {
+                "S": "b86489b2-3f3a-4799-9281-30e4b220866d"
+              },
+              "accessTokenExpiryDate": {
+                "N": "1709057439"
+              },
+              "authorizationCodeExpiryDate": {
+                "N": "1709054403238"
+              },
+              "authSessionState": {
+                "S": "BAV_ACCESS_TOKEN_ISSUED"
+              },
+              "clientId": {
+                "S": "5C584572"
+              },
+              "clientIpAddress": {
+                "S": "18.171.20.21"
+              },
+              "clientSessionId": {
+                "S": "e597d53bf06d94df4a7b316b9a04a05c"
+              },
+              "createdDate": {
+                "N": "1708954600"
+              },
+              "expiryDate": {
+                "N": "1709905000"
+              },
+              "redirectUri": {
+                "S": "https://identity.staging.account.gov.uk/credential-issuer/callback?id=bav"
+              },
+              "state": {
+                "S": "327124d7cccc7d1027b2d7c5d209c623"
+              },
+              "subject": {
+                "S": "test-subject"
+              }
+            }
+        }
+    }        
     ]
 }
