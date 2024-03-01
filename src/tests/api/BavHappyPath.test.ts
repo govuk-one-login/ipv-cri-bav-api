@@ -242,7 +242,7 @@ describe("BAV CRI: /abort Endpoint Happy Path Tests", () => {
 	it("Successful Request Test - Abort After Session Request", async () => {
 		const response = await abortPost(sessionId);
 		expect(response.status).toBe(200);
-		expect(response.data).toBe("Session has already been aborted");
+		expect(response.data).toBe("Session has been aborted");
 
 		// Make sure authSession state is as expected
 		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_SESSION_ABORTED");
@@ -270,7 +270,7 @@ describe("BAV CRI: /abort Endpoint Happy Path Tests", () => {
 
 		const response = await abortPost(sessionId);
 		expect(response.status).toBe(200);
-		expect(response.data).toBe("Session has already been aborted");
+		expect(response.data).toBe("Session has been aborted");
 
 		// Make sure authSession state is as expected
 		await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_SESSION_ABORTED");
