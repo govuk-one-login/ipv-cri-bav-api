@@ -88,15 +88,15 @@ Mappings:
 
   PlatformConfiguration:
     dev:
-      CSLSEGRESS: arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython
+      CSLSEGRESS: arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython-2
     build:
-      CSLSEGRESS: arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython
+      CSLSEGRESS: arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython-2
     staging:
-      CSLSEGRESS: arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython
+      CSLSEGRESS: arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython-2
     integration:
-      CSLSEGRESS: arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython
+      CSLSEGRESS: arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython-2
     production:
-      CSLSEGRESS: arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython
+      CSLSEGRESS: arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython-2
 
   EnvironmentVariables: # This is all the environment specific environment variables that don't belong in globals.
     dev:
@@ -743,13 +743,13 @@ Resources:
           logretentionindays,
         ]
 
-  # SessionFunctionLogsSubscriptionFilterCSLS:
-  #   Type: AWS::Logs::SubscriptionFilter
-  #   Properties:
-  #     DestinationArn:
-  #       !FindInMap [ PlatformConfiguration, !Ref Environment, CSLSEGRESS ]
-  #     FilterPattern: ""
-  #     LogGroupName: !Ref SessionFunctionLogGroup
+  SessionFunctionLogsSubscriptionFilterCSLS:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      DestinationArn:
+        !FindInMap [ PlatformConfiguration, !Ref Environment, CSLSEGRESS ]
+      FilterPattern: ""
+      LogGroupName: !Ref SessionFunctionLogGroup
 
   SessionFunctionPermission:
     Type: AWS::Lambda::Permission
@@ -917,13 +917,13 @@ Resources:
           logretentionindays,
         ]
 
-  # AbortFunctionLogsSubscriptionFilterCSLS:
-  #   Type: AWS::Logs::SubscriptionFilter
-  #   Properties:
-  #     DestinationArn:
-  #       !FindInMap [ PlatformConfiguration, !Ref Environment, CSLSEGRESS ]
-  #     FilterPattern: ""
-  #     LogGroupName: !Ref AbortFunctionLogGroup
+  AbortFunctionLogsSubscriptionFilterCSLS:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      DestinationArn:
+        !FindInMap [ PlatformConfiguration, !Ref Environment, CSLSEGRESS ]
+      FilterPattern: ""
+      LogGroupName: !Ref AbortFunctionLogGroup
 
   AbortFunctionPermission:
     Type: AWS::Lambda::Permission
@@ -1086,13 +1086,13 @@ Resources:
           logretentionindays,
         ]
 
-  # PersonInfoFunctionLogsSubscriptionFilterCSLS:
-  #   Type: AWS::Logs::SubscriptionFilter
-  #   Properties:
-  #     DestinationArn:
-  #       !FindInMap [ PlatformConfiguration, !Ref Environment, CSLSEGRESS ]
-  #     FilterPattern: ""
-  #     LogGroupName: !Ref PersonInfoFunctionLogGroup
+  PersonInfoFunctionLogsSubscriptionFilterCSLS:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      DestinationArn:
+        !FindInMap [ PlatformConfiguration, !Ref Environment, CSLSEGRESS ]
+      FilterPattern: ""
+      LogGroupName: !Ref PersonInfoFunctionLogGroup
 
   PersonInfoFunctionPermission:
     Type: AWS::Lambda::Permission
@@ -1238,13 +1238,13 @@ Resources:
           logretentionindays,
         ]
 
-  # PersonInfoKeyFunctionLogsSubscriptionFilterCSLS:
-  #   Type: AWS::Logs::SubscriptionFilter
-  #   Properties:
-  #     DestinationArn:
-  #       !FindInMap [ PlatformConfiguration, !Ref Environment, CSLSEGRESS ]
-  #     FilterPattern: ""
-  #     LogGroupName: !Ref PersonInfoKeyFunctionLogGroup
+  PersonInfoKeyFunctionLogsSubscriptionFilterCSLS:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      DestinationArn:
+        !FindInMap [ PlatformConfiguration, !Ref Environment, CSLSEGRESS ]
+      FilterPattern: ""
+      LogGroupName: !Ref PersonInfoKeyFunctionLogGroup
 
   PersonInfoKeyFunctionPermission:
     Type: AWS::Lambda::Permission
@@ -1421,13 +1421,13 @@ Resources:
           logretentionindays,
         ]
 
-  # UserInfoFunctionLogsSubscriptionFilterCSLS:
-  #   Type: AWS::Logs::SubscriptionFilter
-  #   Properties:
-  #     DestinationArn:
-  #       !FindInMap [ PlatformConfiguration, !Ref Environment, CSLSEGRESS ]
-  #     FilterPattern: ""
-  #     LogGroupName: !Ref UserInfoFunctionLogGroup
+  UserInfoFunctionLogsSubscriptionFilterCSLS:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      DestinationArn:
+        !FindInMap [ PlatformConfiguration, !Ref Environment, CSLSEGRESS ]
+      FilterPattern: ""
+      LogGroupName: !Ref UserInfoFunctionLogGroup
 
   UserInfoFunctionPermission:
     Type: AWS::Lambda::Permission
@@ -1583,14 +1583,13 @@ Resources:
       LogGroupName: !Sub "/aws/lambda/Access-Token-${AWS::StackName}"
       RetentionInDays: !FindInMap [ EnvironmentConfiguration, !Ref Environment, logretentionindays ]
 
-  # TokenFunctionLogsSubscriptionFilterCSLS:
-  #   Type: AWS::Logs::SubscriptionFilter
-  #  # Condition: IsProdLikeEnvironment
-  #   Properties:
-  #     DestinationArn:
-  #       !FindInMap [PlatformConfiguration, !Ref Environment, CSLSEGRESS]
-  #     FilterPattern: ""
-  #     LogGroupName: !Ref TokenFunctionLogGroup
+  TokenFunctionLogsSubscriptionFilterCSLS:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      DestinationArn:
+        !FindInMap [PlatformConfiguration, !Ref Environment, CSLSEGRESS]
+      FilterPattern: ""
+      LogGroupName: !Ref TokenFunctionLogGroup
 
   TokenFunctionPermission:
     Type: AWS::Lambda::Permission
@@ -1750,14 +1749,13 @@ Resources:
           logretentionindays,
         ]
 
-  # AuthorizationFunctionLogsSubscriptionFilterCSLS:
-  #   Type: AWS::Logs::SubscriptionFilter
-  #   # Condition: IsProdLikeEnvironment
-  #   Properties:
-  #     DestinationArn:
-  #       !FindInMap [PlatformConfiguration, !Ref Environment, CSLSEGRESS]
-  #     FilterPattern: ""
-  #     LogGroupName: !Ref AuthorizationFunctionLogGroup
+  AuthorizationFunctionLogsSubscriptionFilterCSLS:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      DestinationArn:
+        !FindInMap [PlatformConfiguration, !Ref Environment, CSLSEGRESS]
+      FilterPattern: ""
+      LogGroupName: !Ref AuthorizationFunctionLogGroup
 
   AuthorizationFunctionPermission:
     Type: AWS::Lambda::Permission
@@ -1916,13 +1914,13 @@ Resources:
           logretentionindays,
         ]
 
-  # VerifyAccountFunctionLogsSubscriptionFilterCSLS:
-  #   Type: AWS::Logs::SubscriptionFilter
-  #   Properties:
-  #     DestinationArn:
-  #       !FindInMap [ PlatformConfiguration, !Ref Environment, CSLSEGRESS ]
-  #     FilterPattern: ""
-  #     LogGroupName: !Ref VerifyAccountFunctionLogGroup
+  VerifyAccountFunctionLogsSubscriptionFilterCSLS:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      DestinationArn:
+        !FindInMap [ PlatformConfiguration, !Ref Environment, CSLSEGRESS ]
+      FilterPattern: ""
+      LogGroupName: !Ref VerifyAccountFunctionLogGroup
 
   VerifyAccountFunctionPermission:
     Type: AWS::Lambda::Permission
@@ -2295,6 +2293,14 @@ Resources:
       LogGroupName: !Sub "/aws/lambda/JsonWebKeys-${AWS::StackName}"
       RetentionInDays: !FindInMap [ EnvironmentConfiguration, !Ref Environment, logretentionindays ]
 
+  JsonWebKeysFunctionLogsSubscriptionFilterCSLS:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      DestinationArn:
+        !FindInMap [ PlatformConfiguration, !Ref Environment, CSLSEGRESS ]
+      FilterPattern: ""
+      LogGroupName: !Ref JsonWebKeysLogGroup
+
   JsonWebKeysFunctionPermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -2453,6 +2459,14 @@ Resources:
     Properties:
       LogGroupName: !Sub "/aws/lambda/HmrcToken-${AWS::StackName}"
       RetentionInDays: !FindInMap [ EnvironmentConfiguration, !Ref Environment, logretentionindays ]
+
+  HmrcTokenFunctionLogsSubscriptionFilterCSLS:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      DestinationArn:
+        !FindInMap [ PlatformConfiguration, !Ref Environment, CSLSEGRESS ]
+      FilterPattern: ""
+      LogGroupName: !Ref HmrcTokenLogGroup
 
   HmrcTokenFunctionPermission:
     Type: AWS::Lambda::Permission
@@ -2620,13 +2634,13 @@ Resources:
           logretentionindays,
         ]
 
-  # PartialNameMatchFunctionLogsSubscriptionFilterCSLS:
-  #   Type: AWS::Logs::SubscriptionFilter
-  #   Properties:
-  #     DestinationArn:
-  #       !FindInMap [ PlatformConfiguration, !Ref Environment, CSLSEGRESS ]
-  #     FilterPattern: ""
-  #     LogGroupName: !Ref PartialNameMatchFunctionLogGroup
+  PartialNameMatchFunctionLogsSubscriptionFilterCSLS:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      DestinationArn:
+        !FindInMap [ PlatformConfiguration, !Ref Environment, CSLSEGRESS ]
+      FilterPattern: ""
+      LogGroupName: !Ref PartialNameMatchFunctionLogGroup
 
   PartialNameMatchFunctionPermission:
     Type: AWS::Lambda::Permission
