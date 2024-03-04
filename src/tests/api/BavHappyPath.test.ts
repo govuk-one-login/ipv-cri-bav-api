@@ -20,12 +20,11 @@ import {
 	validatePersonInfoResponse,
 	decodeRawBody,
 	getKeyFromSession,
-}
-	from "./ApiTestSteps";
+} from "./ApiTestSteps";
 import { BankDetailsPayload } from "../models/BankDetailsPayload";
 
-describe("BAV CRI", () => {
-	describe("/session Endpoint Happy Path Tests", () => {
+describe("BAV CRI happy path tests", () => {
+	describe("/session Endpoint", () => {
 		let sessionId: string;
 
 		beforeEach(async () => {
@@ -42,7 +41,7 @@ describe("BAV CRI", () => {
 		});
 	});
 
-	describe("/person-info Endpoint Happy Path Tests", () => {
+	describe("/person-info Endpoint", () => {
 		it.each([
 			{ firstName: "Yasmine", lastName: "Dawson" },
 			{ firstName: "Yasmine", lastName: "Palmer" },
@@ -63,7 +62,7 @@ describe("BAV CRI", () => {
 		});
 	});
 
-	describe("/verify-account Endpoint Happy Path Tests", () => {
+	describe("/verify-account Endpoint", () => {
 		it.each([
 			"86473611",
 			"8647361",
@@ -82,6 +81,7 @@ describe("BAV CRI", () => {
 			await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_PERSONAL_IDENTITY_TABLE_NAME, "sortCode", bankDetails.sort_code);
 
 			const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 3);
+
 			validateTxMAEventData({ eventName: "BAV_CRI_START", schemaName: "BAV_CRI_START_SCHEMA" }, allTxmaEventBodies);
 			validateTxMAEventData({ eventName: "BAV_COP_REQUEST_SENT", schemaName: "BAV_COP_REQUEST_SENT_SCHEMA" }, allTxmaEventBodies);
 			validateTxMAEventData({ eventName: "BAV_COP_RESPONSE_RECEIVED", schemaName: "BAV_COP_RESPONSE_RECEIVED_SCHEMA" }, allTxmaEventBodies);
@@ -108,6 +108,7 @@ describe("BAV CRI", () => {
 			expect(verifyAccountResponse.data.attemptCount).toBe(1);
 
 			const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 3);
+
 			validateTxMAEventData({ eventName: "BAV_CRI_START", schemaName: "BAV_CRI_START_SCHEMA" }, allTxmaEventBodies);
 			validateTxMAEventData({ eventName: "BAV_COP_REQUEST_SENT", schemaName: "BAV_COP_REQUEST_SENT_SCHEMA" }, allTxmaEventBodies);
 			validateTxMAEventData({ eventName: "BAV_COP_RESPONSE_RECEIVED", schemaName: "BAV_COP_RESPONSE_RECEIVED_SCHEMA" }, allTxmaEventBodies);
@@ -115,7 +116,7 @@ describe("BAV CRI", () => {
 	});
 
 
-	describe("/authorization Endpoint Happy Path Tests", () => {
+	describe("/authorization Endpoint", () => {
 		let sessionId: string;
 
 		beforeEach(async () => {
@@ -137,7 +138,7 @@ describe("BAV CRI", () => {
 		});
 	});
 
-	describe("/token Endpoint Happy Path Tests", () => {
+	describe("/token Endpoint", () => {
 		let sessionId: string;
 
 		beforeEach(async () => {
@@ -157,7 +158,7 @@ describe("BAV CRI", () => {
 		});
 	});
 
-	describe("/userinfo Endpoint Happy Path Tests", () => {
+	describe("/userinfo Endpoint", () => {
 		let sessionId: string;
 		let bankDetails: BankDetailsPayload;
 
@@ -198,7 +199,7 @@ describe("BAV CRI", () => {
 		});
 	});
 
-	describe("/abort Endpoint Happy Path Tests", () => {
+	describe("/abort Endpoint", () => {
 		let sessionId: string;
 
 		beforeEach(async () => {
@@ -240,8 +241,11 @@ describe("BAV CRI", () => {
 
 			await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_SESSION_ABORTED");
 
-			const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 2);
+			const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 4);
+
 			validateTxMAEventData({ eventName: "BAV_CRI_START", schemaName: "BAV_CRI_START_SCHEMA" }, allTxmaEventBodies);
+			validateTxMAEventData({ eventName: "BAV_COP_REQUEST_SENT", schemaName: "BAV_COP_REQUEST_SENT_SCHEMA" }, allTxmaEventBodies);
+			validateTxMAEventData({ eventName: "BAV_COP_RESPONSE_RECEIVED", schemaName: "BAV_COP_RESPONSE_RECEIVED_SCHEMA" }, allTxmaEventBodies);
 			validateTxMAEventData({ eventName: "BAV_CRI_SESSION_ABORTED", schemaName: "BAV_CRI_SESSION_ABORTED_SCHEMA" }, allTxmaEventBodies);
 
 			expect(response.headers).toBeTruthy();
@@ -280,7 +284,7 @@ describe("BAV CRI", () => {
 	});
 });
 
-describe("/.well-known/jwks.json Endpoint Happy Path Tests", () => {
+describe("/.well-known/jwks.json Endpoint", () => {
 	it("Successful Request Test", async () => {
 		const wellKnownResponse = await wellKnownGet();
 		validateWellKnownResponse(wellKnownResponse.data);

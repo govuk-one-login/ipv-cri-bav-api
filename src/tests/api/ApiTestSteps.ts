@@ -2,7 +2,6 @@
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import axios, { AxiosInstance } from "axios";
 import { aws4Interceptor } from "aws4-axios";
-import { XMLParser } from "fast-xml-parser";
 import Ajv from "ajv";
 import wellKnownGetSchema from "../data/wellKnownJwksResponseSchema.json";
 import { constants } from "./ApiConstants";
@@ -33,9 +32,7 @@ const awsSigv4Interceptor = aws4Interceptor({
 
 HARNESS_API_INSTANCE.interceptors.request.use(awsSigv4Interceptor);
 
-const xmlParser = new XMLParser();
-
-export async function startStubServiceAndReturnSessionId(bavStubPayload: any): Promise<any> {
+export async function startStubServiceAndReturnSessionId(bavStubPayload: any): Promise<string> {
 	const stubResponse = await stubStartPost(bavStubPayload);
 	const postRequest = await sessionPost(stubResponse.data.clientId, stubResponse.data.request);
 	console.log("sessionId", postRequest.data.session_id);
