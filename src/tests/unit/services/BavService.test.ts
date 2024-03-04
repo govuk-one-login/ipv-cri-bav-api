@@ -8,7 +8,7 @@ import { BavService } from "../../../services/BavService";
 import { createDynamoDbClient } from "../../../utils/DynamoDBFactory";
 import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../../../models/enums/MessageCodes";
-import { createSqsClient } from "../../../utils/SqsClient";
+import { sqsClient } from "../../../utils/SqsClient";
 import { TxmaEvent } from "../../../utils/TxmaEvent";
 import { absoluteTimeNow } from "../../../utils/DateTimeUtils";
 import { personIdentityInputRecord, personIdentityOutputRecord } from "../data/personIdentity-records";
@@ -37,19 +37,13 @@ jest.mock("@aws-sdk/lib-dynamodb", () => ({
 	...jest.requireActual("@aws-sdk/lib-dynamodb"),
 	UpdateCommand: jest.fn().mockImplementation(() => {}),
 }));
-// jest.mock("../../../utils/SqsClient", () => ({
-// 	sqsClient: {
-// 		send: jest.fn(),
-// 	},
-// }));
 
 jest.mock("../../../utils/SqsClient", () => ({
-	createSqsClient: () => ({
-		sqsClient: {
-			send: jest.fn(),
-		},
-	}),
+	sqsClient: {
+		send: jest.fn(),
+	},
 }));
+
 
 function getTXMAEventPayload(): TxmaEvent {
 	const txmaEventPayload: TxmaEvent = {
@@ -126,8 +120,7 @@ describe("BAV Service", () => {
 	});
 
 	describe("#sendToTXMA", () => {
-		it("Should send event to TxMA with the correct details", async () => {
-			createSqsClient().send = jest.fn().mockImplementation(() => {});
+		it("Should send event to TxMA with the correct details", async () => {  
 			const messageBody = JSON.stringify(txmaEventPayload);
 
 			await bavService.sendToTXMA("MYQUEUE", txmaEventPayload);
@@ -136,12 +129,12 @@ describe("BAV Service", () => {
 				MessageBody: messageBody,
 				QueueUrl: "MYQUEUE",
 			});
-			expect(createSqsClient().send).toHaveBeenCalled();
+			expect(sqsClient.send).toHaveBeenCalled();
 			expect(bavService.logger.info).toHaveBeenCalledWith("Sent message to TxMA");
 		});
 
 		it("show log error if failed to send to TXMA queue", async () => {
-			createSqsClient().send = jest.fn().mockRejectedValueOnce({});
+			sqsClient.send = jest.fn().mockRejectedValueOnce({});
 			await bavService.sendToTXMA("MYQUEUE", txmaEventPayload);
 	
 			expect(bavService.logger.error).toHaveBeenCalledWith({
