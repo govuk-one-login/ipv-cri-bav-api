@@ -31,6 +31,6 @@ function createSqsClient(): SQSClient {
 
 	}
 	return sqsClient;
-};
+}
 
 export const sqsClient = createSqsClient();
