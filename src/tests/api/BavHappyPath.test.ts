@@ -58,7 +58,7 @@ describe("BAV CRI happy path tests", () => {
 			expect(personInfoResponse.status).toBe(200);
 
 			const personInfoKey = await personInfoKeyGet();
-			validatePersonInfoResponse(personInfoKey.data.key, personInfoResponse, firstName, lastName);
+			validatePersonInfoResponse(personInfoKey.data.key, personInfoResponse.data, firstName, lastName);
 		});
 	});
 
@@ -126,7 +126,10 @@ describe("BAV CRI happy path tests", () => {
 		it("Successful Request Test", async () => {
 			expect(sessionId).toBeTruthy();
 
-			await verifyAccountPost(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number), sessionId);
+			await verifyAccountPost(
+				new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number),
+				sessionId,
+			);
 
 			const authResponse = await authorizationGet(sessionId);
 			expect(authResponse.status).toBe(200);
@@ -146,7 +149,9 @@ describe("BAV CRI happy path tests", () => {
 		});
 
 		it("Successful Request Test", async () => {
-			await verifyAccountPost(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number), sessionId);
+			await verifyAccountPost(new BankDetailsPayload(
+				verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number), sessionId,
+			);
 
 			const authResponse = await authorizationGet(sessionId);
 
