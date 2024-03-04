@@ -9,6 +9,7 @@ import { Constants } from "../utils/Constants";
 import { randomUUID } from "crypto";
 import { CopCheckResult } from "../models/enums/CopCheckResult";
 import { MessageCodes } from "../models/enums/MessageCodes";
+import { mockVcClaims } from "../tests/contract/mocks/VerifiableCredential";
 
 export class VerifiableCredentialService {
 	readonly logger: Logger;
@@ -75,14 +76,24 @@ export class VerifiableCredentialService {
 			this.getSuccessEvidenceBlock(sessionItem.hmrcUuid!) : this.getFailureEvidenceBlock(sessionItem.hmrcUuid!);
 		const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, bankAccountInfo, evidenceInfo)
 			.build();
-		const result = {
-			sub: subject,
-			nbf: now,
-			iss: this.issuer,
-			iat: now,
-			jti: randomUUID(),
-			vc: verifiedCredential,
-		};
+		let result;
+		if (process.env.USE_MOCKED) {
+			this.logger.info("VcService: USING MOCKED");
+			result = {
+				...mockVcClaims,
+				sub: subject,
+				vc: verifiedCredential,
+			};
+		} else {
+				 result = {
+				sub: subject,
+				nbf: now,
+				iss: this.issuer,
+				iat: now,
+				jti: randomUUID(),
+				vc: verifiedCredential,
+			};
+		}
 
 		this.logger.info("Generated VerifiableCredential jwt", { jti: result.jti });
 
