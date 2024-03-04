@@ -9,23 +9,25 @@ const logger = new Logger({
 });
 
 let opts: VerifierOptions;
+const pactFile = path.resolve("./tests/contract/pacts/IpvCoreBack-BavCriProviderAll.json");
 // Verify that the provider meets all consumer expectations
 describe("Pact Verification", () => {
 	beforeAll(() => {  
 		opts = {
 			// we need to know the providers name
-			provider: process.env.PROVIDER_NAME,
+			provider: "BavCriProvider",
 			// we are starting the provider locally
 			providerBaseUrl: `${Constants.LOCAL_HOST}:${Constants.LOCAL_APP_PORT}`,
-			pactBrokerUrl: process.env.PACT_BROKER_URL,
-			pactBrokerUsername: process.env.PACT_BROKER_USER,
-    		pactBrokerPassword: process.env.PACT_BROKER_PASSWORD,
-			consumerVersionSelectors: [
-				{ mainBranch: true },
-				{ deployedOrReleased: true },
-			  ],			
+			// pactBrokerUrl: process.env.PACT_BROKER_URL,
+			// pactBrokerUsername: process.env.PACT_BROKER_USER,
+    		// pactBrokerPassword: process.env.PACT_BROKER_PASSWORD,
+			// consumerVersionSelectors: [
+			// 	{ mainBranch: true },
+			// 	{ deployedOrReleased: true },
+			//   ],			
 			publishVerificationResult: true,
-			providerVersion: process.env.PROVIDER_VERSION,
+			providerVersion: "1.0.0",
+			pactUrls: [pactFile],
 			// You can set the log level here, useful for debugging
 			logLevel: "info",
 		};
