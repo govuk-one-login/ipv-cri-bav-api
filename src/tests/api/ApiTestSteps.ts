@@ -15,7 +15,7 @@ import crypto from "node:crypto";
 const API_INSTANCE = axios.create({ baseURL: constants.DEV_CRI_BAV_API_URL });
 const ajv = new Ajv({ strict: false });
 
-const HARNESS_API_INSTANCE: AxiosInstance = axios.create({ baseURL: constants.DEV_BAV_TEST_HARNESS_URL });
+export const HARNESS_API_INSTANCE: AxiosInstance = axios.create({ baseURL: constants.DEV_BAV_TEST_HARNESS_URL });
 
 const customCredentialsProvider = {
 	getCredentials: fromNodeProviderChain({
@@ -38,7 +38,7 @@ const xmlParser = new XMLParser();
 export async function startStubServiceAndReturnSessionId(bavStubPayload: any): Promise<any> {
 	const stubResponse = await stubStartPost(bavStubPayload);
 	const postRequest = await sessionPost(stubResponse.data.clientId, stubResponse.data.request);
-	console.log(postRequest.data.session_id);
+	console.log("sessionId", postRequest.data.session_id);
 	return postRequest.data.session_id;
 }
 
@@ -205,93 +205,6 @@ export async function getSessionAndVerifyKeyExists(sessionId: string, tableName:
 		expect(sessionInfo![key as keyof ISessionItem]).toBeTruthy;
 	} catch (e: any) {
 		throw new Error("getSessionAndVerifyKeyExists - Failed to verify " + key + " exists: " + e);
-	}
-}
-
-/**
- * Retrieves an object from the bucket with the specified prefix, which is the latest message dequeued from the SQS
- * queue under test
- *
- * @param prefix
- * @returns {any} - returns either the body of the SQS message or undefined if no such message found
- */
-export async function getSqsEventList(folder: string, prefix: string, txmaEventSize: number): Promise<any> {
-	let keys: any[];
-	let keyList: any[];
-	let i: any;
-	do {
-		const listObjectsResponse = await HARNESS_API_INSTANCE.get("/bucket/", {
-			params: {
-				prefix: folder + prefix,
-			},
-		});
-		const listObjectsParsedResponse = xmlParser.parse(listObjectsResponse.data);
-		if (!listObjectsParsedResponse?.ListBucketResult?.Contents) {
-			return undefined;
-		}
-		keys = listObjectsParsedResponse?.ListBucketResult?.Contents;
-		keyList = [];
-
-		if (txmaEventSize === 1) {
-			keyList.push(listObjectsParsedResponse.ListBucketResult.Contents.Key);
-		} else {
-			for (i = 0; i < keys?.length; i++) {
-				keyList.push(listObjectsParsedResponse?.ListBucketResult?.Contents.at(i).Key);
-			}
-		}
-	} while (keys?.length < txmaEventSize);
-	return keyList;
-}
-/**
- * Retrieves an object from the bucket with the specified prefix, which is the latest message dequeued from the SQS
- * queue under test
- *
- * @param prefix
- * @returns {any} - returns either the body of the SQS message or undefined if no such message found
- */
-export async function getDequeuedSqsMessage(prefix: string): Promise<any> {
-	const listObjectsResponse = await HARNESS_API_INSTANCE.get("/bucket/", {
-		params: {
-			prefix: "txma/" + prefix,
-		},
-	});
-	const listObjectsParsedResponse = xmlParser.parse(listObjectsResponse.data);
-	if (!listObjectsParsedResponse?.ListBucketResult?.Contents) {
-		return undefined;
-	}
-	let key: string;
-	if (Array.isArray(listObjectsParsedResponse?.ListBucketResult?.Contents)) {
-		key = listObjectsParsedResponse.ListBucketResult.Contents.at(-1).Key;
-	} else {
-		key = listObjectsParsedResponse.ListBucketResult.Contents.Key;
-	}
-
-	const getObjectResponse = await HARNESS_API_INSTANCE.get("/object/" + key, {});
-	return getObjectResponse.data;
-}
-
-export async function validateTxMAEventData(keyList: any): Promise<any> {
-	let i: any;
-	for (i = 0; i < keyList?.length; i++) {
-		const getObjectResponse = await HARNESS_API_INSTANCE.get("/object/" + keyList[i], {});
-		let valid = true;
-		let error: any = null;
-		import("../data/" + getObjectResponse.data.event_name + "_SCHEMA.json")
-			.then((jsonSchema) => {
-				const validate = ajv.compile(jsonSchema);
-				valid = validate(getObjectResponse.data);
-				if (!valid) {
-					console.error(getObjectResponse.data.event_name + " Event Errors: " + JSON.stringify(validate.errors));
-				}
-			})
-			.catch((err) => {
-				error = err;
-				console.log(err.message);
-			})
-			.finally(() => {
-				expect(error).toBeNull();
-				expect(valid).toBe(true);
-			});
 	}
 }
 

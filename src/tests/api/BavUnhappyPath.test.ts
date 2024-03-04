@@ -10,11 +10,10 @@ import {
 	verifyAccountPost,
 	tokenPost,
 	getSessionAndVerifyKey,
-} from "../utils/ApiTestSteps";
-import { constants } from "../utils/ApiConstants";
+} from "./ApiTestSteps";
+import { constants } from "./ApiConstants";
 import { BankDetailsPayload } from "../models/BankDetailsPayload";
 import { randomUUID } from "crypto";
-
 
 describe("BAV CRI: /session Endpoint Unhappy Path Tests", () => {
 	let stubResponse: any;
@@ -40,7 +39,6 @@ describe("BAV CRI: /session Endpoint Unhappy Path Tests", () => {
 });
 
 describe("BAV CRI: /person-info Endpoint Unhappy Path Tests", () => {
-
 	it("Invalid Session Id Test", async () => {
 		const sessionId = randomUUID();
 
