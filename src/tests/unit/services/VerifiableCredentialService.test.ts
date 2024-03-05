@@ -12,6 +12,7 @@ import { Constants } from "../../../utils/Constants";
 
 const mockKmsJwtAdapter = mock<KmsJwtAdapter>();
 const mockLogger = mock<Logger>();
+const dnsSuffix = "dnsSuffix123";
 
 function getMockSessionItem(): ISessionItem {
 	const sess: ISessionItem = {
@@ -71,18 +72,18 @@ describe("VerifiableCredentialService", () => {
 
 	beforeEach(() => {
 		jest.clearAllMocks();
-		service = new VerifiableCredentialService( mockKmsJwtAdapter, mockIssuer, mockLogger);
+		service = new VerifiableCredentialService( mockKmsJwtAdapter, mockIssuer, mockLogger, dnsSuffix);
 	});
 
 	describe("getInstance", () => {
 		it("should create a new instance if not already created", () => {
-			const newInstance = VerifiableCredentialService.getInstance( mockKmsJwtAdapter, mockIssuer, mockLogger);
+			const newInstance = VerifiableCredentialService.getInstance( mockKmsJwtAdapter, mockIssuer, mockLogger, dnsSuffix);
 			expect(newInstance).toBeDefined();
 		});
 
 		it("should return the same instance of VerifiableCredentialService when called multiple times", () => {
-			const firstInstance = VerifiableCredentialService.getInstance( mockKmsJwtAdapter, mockIssuer, mockLogger);
-			const secondInstance = VerifiableCredentialService.getInstance( mockKmsJwtAdapter, mockIssuer, mockLogger);
+			const firstInstance = VerifiableCredentialService.getInstance( mockKmsJwtAdapter, mockIssuer, mockLogger, dnsSuffix);
+			const secondInstance = VerifiableCredentialService.getInstance( mockKmsJwtAdapter, mockIssuer, mockLogger, dnsSuffix);
 			expect(firstInstance).toBe(secondInstance);
 		});
 	});
@@ -123,8 +124,9 @@ describe("VerifiableCredentialService", () => {
 
 		it("should generate a signed JWT for a full match result", async () => {
 			const signedJWT = "mockSignedJwt";
+			const kid = process.env.KMS_KEY_ARN;
 			mockKmsJwtAdapter.sign.mockResolvedValue(signedJWT);
-
+			
 			const result = await service.generateSignedVerifiableCredentialJwt(
 				mockSessionItem, mockNameParts, mockBankAccountInfo, mockNow,
 			);
@@ -137,6 +139,7 @@ describe("VerifiableCredentialService", () => {
 		it("should generate a signed JWT for a non-full match result", async () => {
 			mockSessionItem.copCheckResult = CopCheckResult.PARTIAL_MATCH;
 			const signedJWT = "mockSignedJwtPartial";
+			const kid = process.env.KMS_KEY_ARN;
 			mockKmsJwtAdapter.sign.mockResolvedValue(signedJWT);
 
 			const result = await service.generateSignedVerifiableCredentialJwt(
@@ -151,7 +154,7 @@ describe("VerifiableCredentialService", () => {
 		it("should throw an error when KMS signing fails", async () => {
 			const signError = new Error("KMS signing failed");
 			mockKmsJwtAdapter.sign.mockRejectedValue(signError);
-
+			const kid = process.env.KMS_KEY_ARN;
 			await expect(
 				service.generateSignedVerifiableCredentialJwt(mockSessionItem, mockNameParts, mockBankAccountInfo, mockNow),
 			).rejects.toThrow(AppError);
