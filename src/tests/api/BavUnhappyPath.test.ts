@@ -57,15 +57,14 @@ describe("BAV CRI: /verify-account Endpoint Unhappy Path Tests", () => {
 	let sessionId: string;
 
 	it("HMRC Multiple Retries Test - Error Code 5XX", async () => {
-		const newBavStubPayload = structuredClone(bavStubPayload);
-		newBavStubPayload.shared_claims.name[0].nameParts[0].value = "Evan";
-		newBavStubPayload.shared_claims.name[0].nameParts[1].value = "Erickson";
+		const newVerifyAccountYesPayload = structuredClone(verifyAccountYesPayload);
+		newVerifyAccountYesPayload.account_number = "55555555";
 
 		// Session Request
-		sessionId = await startStubServiceAndReturnSessionId(newBavStubPayload);
+		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
 
 		// Verify-account request
-		const verifyAccountResponse = await verifyAccountPost(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number), sessionId);
+		const verifyAccountResponse = await verifyAccountPost(new BankDetailsPayload(newVerifyAccountYesPayload.sort_code, newVerifyAccountYesPayload.account_number), sessionId);
 		expect(verifyAccountResponse.status).toBe(500);
 
 		// Make sure authSession state is NOT BAV_DATA_RECEIVED
@@ -73,15 +72,14 @@ describe("BAV CRI: /verify-account Endpoint Unhappy Path Tests", () => {
 	});
 
 	it("HMRC Multiple Retries Test - Error Code 429", async () => {
-		const newBavStubPayload = structuredClone(bavStubPayload);
-		newBavStubPayload.shared_claims.name[0].nameParts[0].value = "Evan Tom Mark";
-		newBavStubPayload.shared_claims.name[0].nameParts[1].value = "Erickson";
+		const newVerifyAccountYesPayload = structuredClone(verifyAccountYesPayload);
+		newVerifyAccountYesPayload.account_number = "66666666";
 
 		// Session Request
-		sessionId = await startStubServiceAndReturnSessionId(newBavStubPayload);
+		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
 
 		// Verify-account request
-		const verifyAccountResponse = await verifyAccountPost(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number), sessionId);
+		const verifyAccountResponse = await verifyAccountPost(new BankDetailsPayload(newVerifyAccountYesPayload.sort_code, newVerifyAccountYesPayload.account_number), sessionId);
 		expect(verifyAccountResponse.status).toBe(500);
 
 		// Make sure authSession state is NOT BAV_DATA_RECEIVED
@@ -89,27 +87,26 @@ describe("BAV CRI: /verify-account Endpoint Unhappy Path Tests", () => {
 	});
 
 	it.each([
-		["Ashley", "Allen"],
-		["Deborah", "Dawson"],
-		["Nigel", "Newton"],
-		["Yasmine", "Dawson"],
-		["Yasmine", "Newton"],
-		["Yasmine", "Palmer"],
-	])("Name Retry Tests - Too many retries rejection", async (firstName: string, lastName: any) => {
-		const newBavStubPayload = structuredClone(bavStubPayload); 
-		newBavStubPayload.shared_claims.name[0].nameParts[0].value = firstName;
-		newBavStubPayload.shared_claims.name[0].nameParts[1].value = lastName;
+		["00111112"],
+		["00111113"],
+		["00111114"],
+		["22222222"],
+		["33333333"],
+		["44444444"],
+	])("Name Retry Tests - Too many retries rejection", async (accountNumber: string) => {
+		const newVerifyAccountYesPayload = structuredClone(verifyAccountYesPayload);
+		newVerifyAccountYesPayload.account_number = accountNumber;
 
-		sessionId = await startStubServiceAndReturnSessionId(newBavStubPayload);
+		sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
 
 		// Verify-account first name mismatch
-		await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		await verifyAccountPost(newVerifyAccountYesPayload, sessionId);
 
 		// Verify-account second name mismatch
-		await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		await verifyAccountPost(newVerifyAccountYesPayload, sessionId);
 
 		// Verify-account third name mismatch
-		const verifyAccountResponseSecondRetry = await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		const verifyAccountResponseSecondRetry = await verifyAccountPost(newVerifyAccountYesPayload, sessionId);
 		expect(verifyAccountResponseSecondRetry.status).toBe(401);
 		expect(verifyAccountResponseSecondRetry.data).toBe("Too many attempts");
 	});

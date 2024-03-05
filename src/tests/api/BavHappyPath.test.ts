@@ -76,9 +76,9 @@ describe("BAV CRI: /verify-account Endpoint Happy Path Tests", () => {
 	});
 
 	it.each([
-		"86473611",
-		"8647361",
-		"864736",
+		"00111111",
+		"0111111",
+		"111111",
 	])("Successful Request Tests", async (accountNumber: string) => {
 		expect(sessionId).toBeTruthy();
 
@@ -104,21 +104,21 @@ describe("BAV CRI: /verify-account Endpoint Happy Path Tests", () => {
 
 describe("BAV CRI: /verify-account Retry Happy Path Tests", () => {
 	it.each([
-		["Ashley", "Allen"],
-		["Deborah", "Dawson"],
-		["Nigel", "Newton"],
-		["Yasmine", "Dawson"],
-		["Yasmine", "Newton"],
-		["Yasmine", "Palmer"],
-	])("Name Retry Tests", async (firstName: string, lastName: any) => {
-		const newBavStubPayload = structuredClone(bavStubPayload);
-		newBavStubPayload.shared_claims.name[0].nameParts[0].value = firstName;
-		newBavStubPayload.shared_claims.name[0].nameParts[1].value = lastName;
+		["00111112"],
+		["00111113"],
+		["00111114"],
+		["22222222"],
+		["33333333"],
+		["44444444"],
+	])("Name Retry Tests", async (accountNumber: string) => {
 
-		const sessionId = await startStubServiceAndReturnSessionId(newBavStubPayload);
+		const sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+
+		const newVerifyAccountYesPayload = structuredClone(verifyAccountYesPayload);
+		newVerifyAccountYesPayload.account_number = accountNumber;
 
 		// Verify-account first name mismatch
-		const verifyAccountResponse = await verifyAccountPost(verifyAccountYesPayload, sessionId);
+		const verifyAccountResponse = await verifyAccountPost(newVerifyAccountYesPayload, sessionId);
 		expect(verifyAccountResponse.status).toBe(200);
 		expect(verifyAccountResponse.data.message).toBe("Success");
 		expect(verifyAccountResponse.data.attemptCount).toBe(1);
