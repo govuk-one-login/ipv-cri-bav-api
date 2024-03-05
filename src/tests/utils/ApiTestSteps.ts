@@ -10,6 +10,7 @@ import { ISessionItem } from "../../models/ISessionItem";
 import { jwtUtils } from "../../utils/JwtUtils";
 import { BankDetailsPayload } from "../models/BankDetailsPayload";
 import NodeRSA = require("node-rsa");
+import crypto from "node:crypto";
 
 const API_INSTANCE = axios.create({ baseURL: constants.DEV_CRI_BAV_API_URL });
 const ajv = new Ajv({ strict: false });
