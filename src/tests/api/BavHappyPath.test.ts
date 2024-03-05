@@ -209,7 +209,7 @@ describe("BAV CRI: /userinfo Endpoint Happy Path Tests", () => {
 		expect(userInfoResponse.status).toBe(200);
 
 		// Check to make sure VC JWT is present in the response and validate its contents
-		validateJwtToken(userInfoResponse.data["https://vocab.account.gov.uk/v1/credentialJWT"][0]);
+		await validateJwtToken(userInfoResponse.data["https://vocab.account.gov.uk/v1/credentialJWT"][0]);
 
 		// Extract the raw body from the user info response and decode it
 		const rawBody = userInfoResponse.data["https://vocab.account.gov.uk/v1/credentialJWT"][0].split(".")[1];

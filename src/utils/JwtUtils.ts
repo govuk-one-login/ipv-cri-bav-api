@@ -1,4 +1,5 @@
 import * as jose from "node-jose";
+import crypto from "crypto";
 
 export const jwtUtils = {
 
@@ -27,5 +28,11 @@ export const jwtUtils = {
 	encode(value: string): Uint8Array {
 		const encoder = new TextEncoder();
 		return encoder.encode(value);
+	},
+
+	getHashedKid(keyId: string): string {
+		const kidBytes = Buffer.from(keyId, "utf8");
+		const hash = crypto.createHash("sha256").update(kidBytes).digest();
+		return Buffer.from(hash).toString("hex");
 	},
 };
