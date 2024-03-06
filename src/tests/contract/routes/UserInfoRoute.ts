@@ -11,6 +11,7 @@ process.env.USE_MOCKED = "true";
 process.env.KMS_KEY_ARN = "kid";
 process.env.PERSON_IDENTITY_TABLE_NAME = "person-identity-table";
 process.env.ISSUER = "dummyBavComponentId";
+process.env.DNSSUFFIX = "dns";
 
 export const userInfoRouter = asyncify(express.Router());
 

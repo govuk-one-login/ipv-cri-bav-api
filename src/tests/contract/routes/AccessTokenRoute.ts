@@ -9,6 +9,7 @@ process.env.SESSION_TABLE = "session-table";
 process.env.ISSUER = "dummyBavComponentId";
 process.env.USE_MOCKED = "true";
 process.env.KMS_KEY_ARN = "kid";
+process.env.DNSSUFFIX = "dns";
 
 export const accessTokenRouter = asyncify(express.Router());
 
