@@ -28,9 +28,9 @@ export class KmsJwtAdapter {
 
 	async sign(jwtPayload: JwtPayload, dnsSuffix: string): Promise<string> {
 		const jwtHeader: JwtHeader = { alg: "ES256", typ: "JWT" };
-		const kid = this.kid.split("/").pop();
+		const kid = this.kid.split("/").pop();		
 		if (kid != null) {
-			jwtHeader.kid = (`did:web:${dnsSuffix}#${jwtUtils.getHashedKid(kid)}`);
+			jwtHeader.kid = process.env.USE_MOCKED ? kid : (`did:web:${dnsSuffix}#${jwtUtils.getHashedKid(kid)}`);			
 		}
 		const tokenComponents = {
 			header: jwtUtils.base64Encode(JSON.stringify(jwtHeader)),
