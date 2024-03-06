@@ -37,6 +37,8 @@ export class UserInfoRequestProcessor {
 
 	private readonly verifiableCredentialService: VerifiableCredentialService;
 
+	private readonly dnsSuffix: string;
+
 	constructor(logger: Logger, metrics: Metrics) {
   	this.logger = logger;
   	this.metrics = metrics;
@@ -48,10 +50,11 @@ export class UserInfoRequestProcessor {
   	this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, this.logger);
   	this.txmaQueueUrl = checkEnvironmentVariable(EnvironmentVariables.TXMA_QUEUE_URL, this.logger);
   	this.personIdentityTableName = checkEnvironmentVariable(EnvironmentVariables.PERSON_IDENTITY_TABLE_NAME, this.logger);
+		this.dnsSuffix = checkEnvironmentVariable(EnvironmentVariables.DNSSUFFIX, this.logger);
 
   	this.BavService = BavService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
   	this.kmsDecryptor = new KmsJwtAdapter(signinKeyIds);
-		this.verifiableCredentialService = VerifiableCredentialService.getInstance(this.kmsDecryptor, this.issuer, this.logger);
+		this.verifiableCredentialService = VerifiableCredentialService.getInstance(this.kmsDecryptor, this.issuer, this.logger, this.dnsSuffix);
 	}
 
 	static getInstance(logger: Logger, metrics: Metrics): UserInfoRequestProcessor {
@@ -131,7 +134,7 @@ export class UserInfoRequestProcessor {
 		}
 
 		const names = personInfo.name[0].nameParts;
-
+		
 		if (names && names.length > 0 && personInfo.sortCode && personInfo.accountNumber) {
 			const { signedJWT, evidenceInfo } = await this.verifiableCredentialService.generateSignedVerifiableCredentialJwt(
 				session,
