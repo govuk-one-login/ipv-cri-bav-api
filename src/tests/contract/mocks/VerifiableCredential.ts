@@ -4,3 +4,5 @@ export const mockVcClaims = {
 	jti: "jti",
 };
 
+export const mockCI = ["dummyCi"];
+

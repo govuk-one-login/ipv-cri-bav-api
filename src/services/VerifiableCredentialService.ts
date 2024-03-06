@@ -9,7 +9,7 @@ import { Constants } from "../utils/Constants";
 import { randomUUID } from "crypto";
 import { CopCheckResult } from "../models/enums/CopCheckResult";
 import { MessageCodes } from "../models/enums/MessageCodes";
-import { mockVcClaims } from "../tests/contract/mocks/VerifiableCredential";
+import { mockCI, mockVcClaims } from "../tests/contract/mocks/VerifiableCredential";
 
 export class VerifiableCredentialService {
 	readonly logger: Logger;
@@ -63,7 +63,7 @@ export class VerifiableCredentialService {
 					identityCheckPolicy: "none",
 				},
 			],
-			ci: [
+			ci: process.env.USE_MOCKED ? mockCI : [
 				"D15",
 			],
 		};
