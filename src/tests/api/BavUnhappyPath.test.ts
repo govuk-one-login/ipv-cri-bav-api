@@ -93,7 +93,7 @@ describe("BAV CRI unhappy path tests", () => {
 			const newVerifyAccountYesPayload = structuredClone(verifyAccountYesPayload);
 			newVerifyAccountYesPayload.account_number = accountNumber;
 
-			const sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+			sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
 
 			await verifyAccountPost(newVerifyAccountYesPayload, sessionId);
 			await verifyAccountPost(newVerifyAccountYesPayload, sessionId);
