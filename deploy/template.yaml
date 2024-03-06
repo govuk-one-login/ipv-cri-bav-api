@@ -1356,6 +1356,7 @@ Resources:
           POWERTOOLS_SERVICE_NAME: UserInfoHandler
           KMS_KEY_ARN:
             Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
+          DNSSUFFIX: !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
@@ -1539,6 +1540,7 @@ Resources:
           POWERTOOLS_SERVICE_NAME: AccessTokenHandler
           KMS_KEY_ARN:
             Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
+          DNSSUFFIX: !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
@@ -2790,3 +2792,12 @@ Outputs:
     Condition: IsNotProdLikeEnvironment
     Description: "BAV Test Harness"
     Value: !FindInMap [EnvironmentVariables, !Ref Environment, TESTHARNESSURL]
+  DNSSuffix:
+    Condition: IsNotProdLikeEnvironment
+    Description: "F2F DNS Suffix"
+    Value: !FindInMap [EnvironmentVariables, !Ref Environment, DNSSUFFIX]
+  VcSigningKeyId:
+    Condition: IsNotProdLikeEnvironment
+    Description: "Signing Key used to sign VC"
+    Value:
+      Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key-id"
