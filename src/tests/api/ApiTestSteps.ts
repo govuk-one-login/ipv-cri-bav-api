@@ -42,20 +42,22 @@ const awsSigv4Interceptor = aws4Interceptor({
 
 HARNESS_API_INSTANCE.interceptors.request.use(awsSigv4Interceptor);
 
-export async function startStubServiceAndReturnSessionId(bavStubPayload: StubStartRequest): Promise<string> {
+export async function startStubServiceAndReturnSessionId(bavStubPayload?: StubStartRequest): Promise<string> {
 	const stubResponse = await stubStartPost(bavStubPayload);
 	const postRequest = await sessionPost(stubResponse.data.clientId, stubResponse.data.request);
-
 	console.log("sessionId", postRequest.data.session_id);
-
 	return postRequest.data.session_id;
 }
 
-export async function stubStartPost(bavStubPayload: StubStartRequest): Promise<AxiosResponse<StubStartResponse>> {
+export async function stubStartPost(bavStubPayload?: StubStartRequest): Promise<AxiosResponse<StubStartResponse>> {
+	let postRequest: AxiosResponse<StubStartResponse>;
 	const path = constants.DEV_IPV_BAV_STUB_URL;
-
 	try {
-		const postRequest = await axios.post(`${path}`, bavStubPayload);
+		if (bavStubPayload) {
+			postRequest = await axios.post(`${path}`, bavStubPayload);
+		} else {
+			postRequest = await axios.post(`${path}`);
+		}
 		expect(postRequest.status).toBe(201);
 		return postRequest;
 	} catch (error: any) {

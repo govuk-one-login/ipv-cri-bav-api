@@ -28,7 +28,7 @@ describe("BAV CRI happy path tests", () => {
 		let sessionId: string;
 
 		beforeEach(async () => {
-			sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+			sessionId = await startStubServiceAndReturnSessionId();
 		});
 
 		it("Successful Request Test", async () => {
@@ -64,11 +64,11 @@ describe("BAV CRI happy path tests", () => {
 
 	describe("/verify-account Endpoint", () => {
 		it.each([
-			"86473611",
-			"8647361",
-			"864736",
+			"00111111",
+			"0111111",
+			"111111",
 		])("Successful Request Test for $accountNumber", async (accountNumber: string) => {
-			const sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+			const sessionId = await startStubServiceAndReturnSessionId();
 			expect(sessionId).toBeTruthy();
 
 			const bankDetails = new BankDetailsPayload(verifyAccountYesPayload.sort_code, accountNumber);
@@ -86,22 +86,20 @@ describe("BAV CRI happy path tests", () => {
 			validateTxMAEventData({ eventName: "BAV_COP_REQUEST_SENT", schemaName: "BAV_COP_REQUEST_SENT_SCHEMA" }, allTxmaEventBodies);
 			validateTxMAEventData({ eventName: "BAV_COP_RESPONSE_RECEIVED", schemaName: "BAV_COP_RESPONSE_RECEIVED_SCHEMA" }, allTxmaEventBodies);
 		});
-
 		it.each([
-			{ firstName: "Ashley", lastName: "Allen" },
-			{ firstName: "Deborah", lastName: "Dawson" },
-			{ firstName: "Nigel", lastName: "Newton" },
-			{ firstName: "Yasmine", lastName: "Dawson" },
-			{ firstName: "Yasmine", lastName: "Newton" },
-			{ firstName: "Yasmine", lastName: "Palmer" },
-		])("Name Retry Test for $firstName $lastName", async ({ firstName, lastName }: { firstName: string; lastName: string }) => {
-			const newBavStubPayload = structuredClone(bavStubPayload);
-			newBavStubPayload.shared_claims.name[0].nameParts[0].value = firstName;
-			newBavStubPayload.shared_claims.name[0].nameParts[1].value = lastName;
+			["00111112"],
+			["00111113"],
+			["00111114"],
+			["22222222"],
+			["33333333"],
+			["44444444"],
+		])("Name Retry Test for Account Number: $accountNumber", async (accountNumber: string) => {
+			const newVerifyAccountYesPayload = structuredClone(verifyAccountYesPayload);
+			newVerifyAccountYesPayload.account_number = accountNumber;
 
-			const sessionId = await startStubServiceAndReturnSessionId(newBavStubPayload);
+			const sessionId = await startStubServiceAndReturnSessionId();
 
-			const verifyAccountResponse = await verifyAccountPost(verifyAccountYesPayload, sessionId);
+			const verifyAccountResponse = await verifyAccountPost(newVerifyAccountYesPayload, sessionId);
 
 			expect(verifyAccountResponse.status).toBe(200);
 			expect(verifyAccountResponse.data.message).toBe("Success");
@@ -120,7 +118,7 @@ describe("BAV CRI happy path tests", () => {
 		let sessionId: string;
 
 		beforeEach(async () => {
-			sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+			sessionId = await startStubServiceAndReturnSessionId();
 		});
 
 		it("Successful Request Test", async () => {
@@ -145,7 +143,7 @@ describe("BAV CRI happy path tests", () => {
 		let sessionId: string;
 
 		beforeEach(async () => {
-			sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+			sessionId = await startStubServiceAndReturnSessionId();
 		});
 
 		it("Successful Request Test", async () => {
@@ -169,7 +167,7 @@ describe("BAV CRI happy path tests", () => {
 
 		beforeEach(async () => {
 			bankDetails = new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number);
-			sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+			sessionId = await startStubServiceAndReturnSessionId();
 		});
 
 		it("Successful Request Test", async () => {
@@ -208,7 +206,7 @@ describe("BAV CRI happy path tests", () => {
 		let sessionId: string;
 
 		beforeEach(async () => {
-			sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+			sessionId = await startStubServiceAndReturnSessionId();
 		});
 
 		it("Successful Request Test - Abort After Session Request", async () => {
