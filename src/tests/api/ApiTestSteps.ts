@@ -42,17 +42,13 @@ const awsSigv4Interceptor = aws4Interceptor({
 
 HARNESS_API_INSTANCE.interceptors.request.use(awsSigv4Interceptor);
 
-export async function startStubServiceAndReturnSessionId(): Promise<string> {
-	const stubResponse = await stubStartPost();
-	const postRequest = await sessionPost(stubResponse.data.clientId, stubResponse.data.request);
-
-	console.log("sessionId", postRequest.data.session_id);
-
-	return postRequest.data.session_id;
-}
-
-export async function stubStartSharedClaimsReturnSessionId(bavStubPayload: StubStartRequest): Promise<string> {
-	const stubResponse = await stubStartPostWithSharedClaims(bavStubPayload);
+export async function startStubServiceAndReturnSessionId(bavStubPayload?: StubStartRequest): Promise<string> {
+	let stubResponse: AxiosResponse<StubStartResponse>;
+	if (bavStubPayload) {
+		stubResponse = await stubStartPostWithSharedClaims(bavStubPayload);
+	} else {
+		stubResponse = await stubStartPost();
+	}
 	const postRequest = await sessionPost(stubResponse.data.clientId, stubResponse.data.request);
 
 	console.log("sessionId", postRequest.data.session_id);
@@ -62,7 +58,6 @@ export async function stubStartSharedClaimsReturnSessionId(bavStubPayload: StubS
 
 export async function stubStartPost(): Promise<AxiosResponse<StubStartResponse>> {
 	const path = constants.DEV_IPV_BAV_STUB_URL;
-
 	try {
 		const postRequest = await axios.post(`${path}`);
 		expect(postRequest.status).toBe(201);
@@ -75,7 +70,6 @@ export async function stubStartPost(): Promise<AxiosResponse<StubStartResponse>>
 
 export async function stubStartPostWithSharedClaims(bavStubPayload: StubStartRequest): Promise<AxiosResponse<StubStartResponse>> {
 	const path = constants.DEV_IPV_BAV_STUB_URL;
-
 	try {
 		const postRequest = await axios.post(`${path}`, bavStubPayload);
 		expect(postRequest.status).toBe(201);

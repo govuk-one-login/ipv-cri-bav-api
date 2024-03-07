@@ -10,7 +10,6 @@ import {
 	personInfoGet,
 	personInfoKeyGet,
 	startStubServiceAndReturnSessionId,
-	stubStartSharedClaimsReturnSessionId,
 	verifyAccountPost,
 	tokenPost,
 	userInfoPost,
@@ -52,7 +51,7 @@ describe("BAV CRI happy path tests", () => {
 			newBavStubPayload.shared_claims.name[0].nameParts[0].value = firstName;
 			newBavStubPayload.shared_claims.name[0].nameParts[1].value = lastName;
 
-			const sessionId = await stubStartSharedClaimsReturnSessionId(newBavStubPayload);
+			const sessionId = await startStubServiceAndReturnSessionId(newBavStubPayload);
 			expect(sessionId).toBeTruthy();
 
 			const personInfoResponse = await personInfoGet(sessionId);
