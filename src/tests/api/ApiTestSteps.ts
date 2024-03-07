@@ -42,8 +42,8 @@ const awsSigv4Interceptor = aws4Interceptor({
 
 HARNESS_API_INSTANCE.interceptors.request.use(awsSigv4Interceptor);
 
-export async function startStubServiceAndReturnSessionId(bavStubPayload: StubStartRequest): Promise<string> {
-	const stubResponse = await stubStartPost(bavStubPayload);
+export async function startStubServiceAndReturnSessionId(): Promise<string> {
+	const stubResponse = await stubStartPost();
 	const postRequest = await sessionPost(stubResponse.data.clientId, stubResponse.data.request);
 
 	console.log("sessionId", postRequest.data.session_id);
@@ -51,7 +51,29 @@ export async function startStubServiceAndReturnSessionId(bavStubPayload: StubSta
 	return postRequest.data.session_id;
 }
 
-export async function stubStartPost(bavStubPayload: StubStartRequest): Promise<AxiosResponse<StubStartResponse>> {
+export async function stubStartSharedClaimsReturnSessionId(bavStubPayload: StubStartRequest): Promise<string> {
+	const stubResponse = await stubStartPostWithSharedClaims(bavStubPayload);
+	const postRequest = await sessionPost(stubResponse.data.clientId, stubResponse.data.request);
+
+	console.log("sessionId", postRequest.data.session_id);
+
+	return postRequest.data.session_id;
+}
+
+export async function stubStartPost(): Promise<AxiosResponse<StubStartResponse>> {
+	const path = constants.DEV_IPV_BAV_STUB_URL;
+
+	try {
+		const postRequest = await axios.post(`${path}`);
+		expect(postRequest.status).toBe(201);
+		return postRequest;
+	} catch (error: any) {
+		console.log(`Error response from ${path} endpoint: ${error}.`);
+		return error.response;
+	}
+}
+
+export async function stubStartPostWithSharedClaims(bavStubPayload: StubStartRequest): Promise<AxiosResponse<StubStartResponse>> {
 	const path = constants.DEV_IPV_BAV_STUB_URL;
 
 	try {
@@ -63,6 +85,7 @@ export async function stubStartPost(bavStubPayload: StubStartRequest): Promise<A
 		return error.response;
 	}
 }
+
 
 export async function sessionPost(clientId: string, request: string): Promise<AxiosResponse<SessionResponse>> {
 	const path = "/session";

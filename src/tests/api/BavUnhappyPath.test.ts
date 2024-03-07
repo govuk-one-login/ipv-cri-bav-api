@@ -1,5 +1,4 @@
 /* eslint-disable max-lines-per-function */
-import bavStubPayload from "../data/exampleStubPayload.json";
 import verifyAccountYesPayload from "../data/bankDetailsYes.json";
 import {
 	authorizationGet,
@@ -20,7 +19,7 @@ describe("BAV CRI unhappy path tests", () => {
 	describe("/session Endpoint Unhappy Path Tests", () => {
 		let stubResponse: any;
 		beforeEach(async () => {
-			stubResponse = await stubStartPost(bavStubPayload);
+			stubResponse = await stubStartPost();
 		});
 
 		it("Empty Request Test", async () => {
@@ -56,7 +55,7 @@ describe("BAV CRI unhappy path tests", () => {
 			const newVerifyAccountYesPayload = structuredClone(verifyAccountYesPayload);
 			newVerifyAccountYesPayload.account_number = "55555555";
 
-			sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+			sessionId = await startStubServiceAndReturnSessionId();
 
 			const verifyAccountResponse = await verifyAccountPost(
 				new BankDetailsPayload(newVerifyAccountYesPayload.sort_code, newVerifyAccountYesPayload.account_number),
@@ -71,7 +70,7 @@ describe("BAV CRI unhappy path tests", () => {
 			const newVerifyAccountYesPayload = structuredClone(verifyAccountYesPayload);
 			newVerifyAccountYesPayload.account_number = "66666666";
 
-			sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+			sessionId = await startStubServiceAndReturnSessionId();
 
 			const verifyAccountResponse = await verifyAccountPost(
 				new BankDetailsPayload(newVerifyAccountYesPayload.sort_code, newVerifyAccountYesPayload.account_number),
@@ -93,7 +92,7 @@ describe("BAV CRI unhappy path tests", () => {
 			const newVerifyAccountYesPayload = structuredClone(verifyAccountYesPayload);
 			newVerifyAccountYesPayload.account_number = accountNumber;
 
-			sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+			sessionId = await startStubServiceAndReturnSessionId();
 
 			await verifyAccountPost(newVerifyAccountYesPayload, sessionId);
 			await verifyAccountPost(newVerifyAccountYesPayload, sessionId);
@@ -108,7 +107,7 @@ describe("BAV CRI unhappy path tests", () => {
 		let sessionId: string;
 
 		beforeEach(async () => {
-			sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+			sessionId = await startStubServiceAndReturnSessionId();
 		});
 
 		it("Incorrect Session State Test", async () => {
@@ -131,7 +130,7 @@ describe("BAV CRI unhappy path tests", () => {
 		let sessionId: string;
 
 		beforeEach(async () => {
-			sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+			sessionId = await startStubServiceAndReturnSessionId();
 		});
 
 		it("Invalid Session State Test", async () => {
@@ -152,7 +151,7 @@ describe("BAV CRI unhappy path tests", () => {
 
 	describe("/userinfo Endpoint Unhappy Path Tests", () => {
 		it("Non-bearer Type Authentication Test", async () => {
-			const sessionId = await startStubServiceAndReturnSessionId(bavStubPayload);
+			const sessionId = await startStubServiceAndReturnSessionId();
 
 			await verifyAccountPost(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number), sessionId);
 
