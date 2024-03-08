@@ -4,8 +4,7 @@ test_data="./tests/data/exampleStubPayload.json"
 firstName=$(jq -r '.shared_claims.name[0].nameParts[0].value' "$test_data")
 lastName=$(jq -r '.shared_claims.name[0].nameParts[1].value' "$test_data")
 
-query="fields @timestamp, @message, @logStream, @log | filter @message like \"$firstName\" or @message like \"$lastName\""
-
+query="fields @timestamp, @message, @logStream, @log | filter @message like \"$firstName\" or @message like \"$lastName\" or @message like \"123456\" or @message like \"00111111\""
 echo $query
 
 stack_name="bav-cri-api"
