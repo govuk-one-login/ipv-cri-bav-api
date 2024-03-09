@@ -15,6 +15,7 @@ export DEV_IPV_BAV_STUB_URL=$(remove_quotes $CFN_BAVIPVStubExecuteURL)/start
 export DEV_BAV_TEST_HARNESS_URL=$(remove_quotes "$CFN_BAVTestHarnessURL")
 export DEV_BAV_SESSION_TABLE_NAME=$(remove_quotes "$CFN_SessionTableName")
 export VC_SIGNING_KEY_ID=$(remove_quotes "$CFN_VcSigningKeyId")
+export DNS_SUFFIX=$(remove_quotes "$CFN_DNSSuffix")
 
 cd /src; npm run test:api
 error_code=$?
