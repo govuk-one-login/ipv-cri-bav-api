@@ -391,6 +391,81 @@ Resources:
       # noinspection YamlUnresolvedReferences
       Stage: !Ref TestHarnessRestApi.Stage
 
+  # AthenaQueryFunction
+  AthenaQueryFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: AthenaQueryFunctionLogGroup
+    Properties:
+      FunctionName: !Sub "BAV-Athena-Query-${AWS::StackName}"
+      Handler: AthenaQueryHandler.lambdaHandler
+      CodeUri: ./src/
+      Timeout: 300
+      Environment:
+        Variables:
+          POWERTOOLS_SERVICE_NAME: AthenaQueryFunction
+      Events:
+        query:
+          Type: Api
+          Properties:
+            Path: /athena/query
+            Method: get
+            RestApiId: !Ref TestHarnessRestApi
+      VpcConfig: {}
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSXrayWriteOnlyAccess
+        - S3ReadPolicy:
+            BucketName:
+              Fn::ImportValue: !Sub "${BackendStack}-PartialNameMatchBucket"
+        - Statement:
+          - Sid: AthenaResultsBucketAccess
+            Effect: Allow
+            Action:
+              - "s3:*"
+            Resource:
+              - Fn::Join:
+                  - ""
+                  - - "arn:aws:s3:::"
+                    - Fn::ImportValue: !Sub "${BackendStack}-PartialNameMatchAthenaResultsBucket"
+                    - "/*"
+              - Fn::Join:
+                  - ""
+                  - - "arn:aws:s3:::"
+                    - Fn::ImportValue: !Sub "${BackendStack}-PartialNameMatchAthenaResultsBucket"
+        - Statement:
+          - Sid: AllowAllAthena
+            Effect: Allow
+            Action:
+              - "athena:*"
+              - "glue:*"
+            Resource: "*"
+        - Statement:
+            - Sid: KMSPolicy
+              Effect: Allow
+              Action:
+                - kms:*
+              Resource:
+                "*"
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
+        EntryPoints:
+          - AthenaQueryHandler.ts
+
+  AthenaQueryFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/BAV-Athena-Query-${AWS::StackName}"
+      RetentionInDays:
+        !FindInMap [
+          EnvironmentConfiguration,
+          !Ref Environment,
+          logretentionindays,
+        ]
+
 Outputs:
   TestHarnessExecuteUrl:
     Description: "API Gateway endpoint URL for the test harness endpoints"
