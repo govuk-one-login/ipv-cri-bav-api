@@ -403,6 +403,8 @@ Resources:
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: AthenaQueryFunction
+          ATHENA_TABLE:
+            Fn::ImportValue: !Sub "${BackendStack}-PartialNameMatchGlueTable"
       Events:
         query:
           Type: Api

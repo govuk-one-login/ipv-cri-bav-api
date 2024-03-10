@@ -1,7 +1,8 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { LambdaInterface } from "@aws-lambda-powertools/commons";
-import { Logger } from "@aws-lambda-powertools/logger";
-import { Constants } from "./utils/Constants";
+import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
+import {LambdaInterface} from "@aws-lambda-powertools/commons";
+import {Metrics} from "@aws-lambda-powertools/metrics";
+import {Logger} from "@aws-lambda-powertools/logger";
+import {Constants} from "./utils/Constants";
 import {
 	AthenaClient,
 	GetQueryExecutionCommand,
@@ -9,55 +10,54 @@ import {
 	GetQueryExecutionInput,
 	GetQueryResultsCommand,
 	GetQueryResultsInput,
-	QueryExecutionState, Row,
+	QueryExecutionState,
 	StartQueryExecutionCommand,
 	StartQueryExecutionInput
 } from "@aws-sdk/client-athena";
-import { setTimeout } from "timers/promises";
+import {setTimeout} from "timers/promises";
+import {convertAthenaResultsToListOfRecords} from "./utils/ConvertAthenaResultToListOfRecords";
 
-const POWERTOOLS_LOG_LEVEL = process.env.POWERTOOLS_LOG_LEVEL
-	? process.env.POWERTOOLS_LOG_LEVEL
-	: Constants.DEBUG;
-const POWERTOOLS_SERVICE_NAME = process.env.POWERTOOLS_SERVICE_NAME
-	? process.env.POWERTOOLS_SERVICE_NAME
-	: Constants.DEQUEUE_LOGGER_SVC_NAME;
+const POWERTOOLS_METRICS_NAMESPACE = process.env.POWERTOOLS_METRICS_NAMESPACE ?? Constants.BAV_METRICS_NAMESPACE;
+const POWERTOOLS_LOG_LEVEL = process.env.POWERTOOLS_LOG_LEVEL ?? Constants.DEBUG;
+const POWERTOOLS_SERVICE_NAME = process.env.POWERTOOLS_SERVICE_NAME ?? Constants.DEQUEUE_LOGGER_SVC_NAME;
 
 export const logger = new Logger({
 	logLevel: POWERTOOLS_LOG_LEVEL,
 	serviceName: POWERTOOLS_SERVICE_NAME,
 });
 
+const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE, serviceName: POWERTOOLS_SERVICE_NAME });
+
 const athenaClient = new AthenaClient({region: process.env.REGION});
 
-function convertAthenaResultsToListOfMaps(data: Row[]) : Record<string,string>[] {
-	if (data.length === 0) { return [] }
-	const mappedData: Record<string,string>[] = [];
-	const columns: string []  = data[0].Data!.map((column) => {
-		return column.VarCharValue ?? "";
-	});
-	data.forEach((item, i) => {
-		if (i === 0) { return; }
-		if (columns[i] == undefined) { return; }
-		const mappedObject:Record<string,string> = {};
-		item.Data?.forEach((value, i) => {
-			mappedObject[columns[i]] = value.VarCharValue ?? "";
-		});
-		mappedData.push(mappedObject);
-	})
-	return mappedData
-}
-
 class AthenaQueryHandler implements LambdaInterface {
-	async handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+
+	@metrics.logMetrics({ throwOnEmptyMetrics: false, captureColdStartMetric: true })
+	async handler(event: APIGatewayProxyEvent, context: any): Promise<APIGatewayProxyResult> {
+
+		logger.setPersistentLogAttributes({});
+		logger.addContext(context);
 		logger.info("Starting AthenaQueryHandler");
 
-		const sqlString = 'select * from "partialnamematch-backend-ddunford-bav"';
+		if (!event.queryStringParameters) {
+			logger.error("Missing Query String Parameters");
+			return {
+				statusCode: 500,
+				body: "ERROR",
+			};
+		}
+
+			const sqlString = "SELECT itemnumber FROM \"" + (process.env["ATHENA_TABLE"] ?? "") + "\" WHERE timestamp > ? AND cicname LIKE ? ORDER BY timestamp DESC";
 		const queryExecutionInput : StartQueryExecutionInput = {
 			QueryString: sqlString,
 			QueryExecutionContext: {
 				Database: 'partialnamematch-backend-ddunford-bav',
 				Catalog: 'AwsDataCatalog'
 			},
+			ExecutionParameters: [
+				event.queryStringParameters['min-timestamp'] ?? "1",
+				event.queryStringParameters['name-prefix'] + "%" ?? "%",
+			],
 			WorkGroup: 'PartialNameMatch-backend-ddunford-bav',
 		}
 
@@ -80,22 +80,20 @@ class AthenaQueryHandler implements LambdaInterface {
 		} while (queryState === QueryExecutionState.QUEUED || queryState === QueryExecutionState.RUNNING)
 
 		if(queryState === QueryExecutionState.SUCCEEDED) {
-			logger.debug("Succeeded");
 			const getQueryResultsInput : GetQueryResultsInput = {
 				QueryExecutionId: startQueryExecutionCommandOutput.QueryExecutionId,
 				MaxResults: 1000,
 			};
 
 			const getQueryResultsCommand = new GetQueryResultsCommand(getQueryResultsInput);
-
 			const getQueryResultsCommandOutput = await athenaClient.send(getQueryResultsCommand);
-
 			logger.info("GetQueryResultsCommandOutput : ", {output: getQueryResultsCommandOutput.ResultSet?.Rows});
+			const rowsReturned = getQueryResultsCommandOutput.ResultSet?.Rows ?? [];
 
 			return {
 				statusCode: 200,
-				body: JSON.stringify(convertAthenaResultsToListOfMaps(getQueryResultsCommandOutput.ResultSet?.Rows ?? []))
-			}
+				body: JSON.stringify(convertAthenaResultsToListOfRecords(rowsReturned)),
+			};
 
 		} else if(queryState === QueryExecutionState.FAILED) {
 			logger.error(`Query failed: ${getQueryExecutionCommandOutput.QueryExecution?.Status?.StateChangeReason}`);
@@ -112,9 +110,10 @@ class AthenaQueryHandler implements LambdaInterface {
 			};
 		}
 
+		logger.error("Unknown query state - exiting", { queryState });
 		return {
-			statusCode: 200,
-			body: "OK",
+			statusCode: 500,
+			body: "ERROR",
 		};
 	}
 }

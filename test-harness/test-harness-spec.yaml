@@ -270,6 +270,12 @@ paths:
           required: true
           schema:
             type: integer
+        - name: name-prefix
+          in: query
+          description: prefix value to filter name column on
+          required: true
+          schema:
+            type: string
       responses:
         "200":
           description: OK

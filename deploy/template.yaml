@@ -2811,6 +2811,12 @@ Outputs:
     Value: !Ref PartialNameMatchAthenaResultsBucket
     Export:
       Name: !Sub ${AWS::StackName}-PartialNameMatchAthenaResultsBucket
+  PartialNameMatchGlueTable:
+    Condition: IsNotProdLikeEnvironment
+    Description: "PartialNameMatchGlueTable"
+    Value: !Ref PartialNameMatchGlueTable
+    Export:
+      Name: !Sub ${AWS::StackName}-PartialNameMatchGlueTable
   DNSSuffix:
     Condition: IsNotProdLikeEnvironment
     Description: "F2F DNS Suffix"
