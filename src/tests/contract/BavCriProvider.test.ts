@@ -9,7 +9,7 @@ const logger = new Logger({
 });
 
 let opts: VerifierOptions;
-const pactFile = path.resolve("./tests/contract/pacts/IpvCoreBack-BavCriProviderAll.json");
+const pactFile = path.resolve("./tests/contract/pacts/IpvCoreBack-BavCriProvider.json");
 // Verify that the provider meets all consumer expectations
 describe("Pact Verification", () => {
 	beforeAll(() => {  
