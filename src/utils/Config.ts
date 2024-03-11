@@ -1,7 +1,7 @@
-import { GetParameterCommand, PutParameterCommand, SSMClient } from "@aws-sdk/client-ssm";
+import { createSsmClient, GetParameterCommand, PutParameterCommand } from "./SSMClient";
 
 export const getParameter = async (path: string): Promise<string> => {
-	const client = new SSMClient({ region: process.env.REGION });
+	const client = createSsmClient();
 	const command = new GetParameterCommand({ Name: path });
 	const response = await client.send(command);
 
@@ -11,7 +11,7 @@ export const getParameter = async (path: string): Promise<string> => {
 };
 
 export const putParameter = async (parameterName: string, parameterValue: string, type: string, description: string): Promise<void | undefined> => {
-	const client = new SSMClient({ region: process.env.REGION });
+	const client = createSsmClient();
 	const input = { 
 		Name: parameterName, 
 		Type: type,

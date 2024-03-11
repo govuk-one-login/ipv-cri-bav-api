@@ -1,5 +1,4 @@
 /* eslint-disable max-lines */
-import { SendMessageCommand } from "@aws-sdk/client-sqs";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { DynamoDBDocument, GetCommand, PutCommand, QueryCommandInput, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
@@ -14,6 +13,7 @@ import { TxmaEvent } from "../utils/TxmaEvent";
 import { Constants } from "../utils/Constants";
 import { AuthSessionState } from "../models/enums/AuthSessionState";
 import { PartialNameSQSRecord } from "../models/IHmrcResponse";
+import { SendMessageCommand } from "@aws-sdk/client-sqs";
 
 export class BavService {
 	readonly tableName: string;
