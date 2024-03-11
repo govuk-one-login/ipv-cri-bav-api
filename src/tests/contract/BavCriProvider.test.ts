@@ -28,7 +28,6 @@ describe("Pact Verification", () => {
 			publishVerificationResult: true,
 			providerVersion: "1.0.0",
 			pactUrls: [pactFile],
-			// You can set the log level here, useful for debugging
 			logLevel: "info",
 		};
 	});  
