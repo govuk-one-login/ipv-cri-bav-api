@@ -1,0 +1,142 @@
+{
+    "session-table": [        
+        {
+            "PutRequest": {
+                "Item": {
+                  "sessionId": {
+                    "S": "f3a08259-6d1f-49a4-8bd7-9aadef06e150"
+                  },
+                  "accessTokenExpiryDate": {
+                    "N": "1709057035"
+                  },
+                  "authorizationCode": {
+                    "S": "1e93b714-4838-4ced-9567-6da749f1c616"
+                  },
+                  "authorizationCodeExpiryDate": {
+                    "N": "1709054191901"
+                  },
+                  "authSessionState": {
+                    "S": "BAV_AUTH_CODE_ISSUED"
+                  },
+                  "clientId": {
+                    "S": "5C584572"
+                  },
+                  "clientIpAddress": {
+                    "S": "35.176.92.36"
+                  },
+                  "clientSessionId": {
+                    "S": "e2397d6021b732ac0cef3cfe24105733"
+                  },
+                  "copCheckResult": {
+                    "S": "FULL_MATCH"
+                  },
+                  "createdDate": {
+                    "N": "1708351711"
+                  },
+                  "expiryDate": {
+                    "N": "4865226539"
+                  },
+                  "hmrcUuid": {
+                    "S": "a4c91d5c-b125-4475-8c34-ed07ee1622be"
+                  },
+                  "redirectUri": {
+                    "S": "https://identity.staging.account.gov.uk/credential-issuer/callback?id=bav"
+                  },
+                  "state": {
+                    "S": "48153a98225775e80f84de495665e3e6"
+                  },
+                  "subject": {
+                    "S": "e13513bc-6d96-45cc-b72d-072ded6ab8e3"
+                  }
+                }
+            }
+        },
+        {
+          "PutRequest": {
+              "Item": {
+                "sessionId": {
+                  "S": "a86489b2-3f3a-4799-9281-30e4b220866d"
+                },
+                "accessTokenExpiryDate": {
+                  "N": "1709057439"
+                },
+                "authorizationCodeExpiryDate": {
+                  "N": "1709054403238"
+                },
+                "authSessionState": {
+                  "S": "BAV_ACCESS_TOKEN_ISSUED"
+                },
+                "clientId": {
+                  "S": "5C584572"
+                },
+                "clientIpAddress": {
+                  "S": "18.171.20.21"
+                },
+                "clientSessionId": {
+                  "S": "e597d53bf06d94df4a7b316b9a04a05c"
+                },
+                "copCheckResult": {
+                  "S": "FULL_MATCH"
+                },
+                "createdDate": {
+                  "N": "1708954600"
+                },
+                "expiryDate": {
+                  "N": "4865226539"
+                },
+                "redirectUri": {
+                  "S": "https://identity.staging.account.gov.uk/credential-issuer/callback?id=bav"
+                },
+                "state": {
+                  "S": "327124d7cccc7d1027b2d7c5d209c623"
+                },
+                "subject": {
+                  "S": "test-subject"
+                }
+              }
+          }
+      },
+      {
+        "PutRequest": {
+            "Item": {
+              "sessionId": {
+                "S": "b86489b2-3f3a-4799-9281-30e4b220866d"
+              },
+              "accessTokenExpiryDate": {
+                "N": "1709057439"
+              },
+              "authorizationCodeExpiryDate": {
+                "N": "1709054403238"
+              },
+              "authSessionState": {
+                "S": "BAV_ACCESS_TOKEN_ISSUED"
+              },
+              "clientId": {
+                "S": "5C584572"
+              },
+              "clientIpAddress": {
+                "S": "18.171.20.21"
+              },
+              "clientSessionId": {
+                "S": "e597d53bf06d94df4a7b316b9a04a05c"
+              },
+              "createdDate": {
+                "N": "1708954600"
+              },
+              "expiryDate": {
+                "N": "4865226539"
+              },
+              "redirectUri": {
+                "S": "https://identity.staging.account.gov.uk/credential-issuer/callback?id=bav"
+              },
+              "state": {
+                "S": "327124d7cccc7d1027b2d7c5d209c623"
+              },
+              "subject": {
+                "S": "test-subject"
+              }
+            }
+        }
+    }        
+    ]
+}
