@@ -27,6 +27,12 @@ export class AbortHandler implements LambdaInterface {
 		logger.setPersistentLogAttributes({});
 		logger.addContext(context);
 
+		console.log("EVENT", JSON.stringify(event));
+		console.log("EVENT", event);
+		console.log("EVENT", { event });
+		console.log("HEADERS", event.headers);
+		console.log("HEADERS", JSON.stringify(event.headers));
+
 		try {
 			const sessionId = this.validateEvent(event);
 			logger.info("Starting AbortRequestProcessor");
