@@ -23,6 +23,12 @@ class AuthorizationHandler implements LambdaInterface {
 	@metrics.logMetrics({ throwOnEmptyMetrics: false, captureColdStartMetric: true })
 	async handler(event: APIGatewayProxyEvent, context: any): Promise<APIGatewayProxyResult> {
 
+		console.log("EVENT", JSON.stringify(event));
+		console.log("EVENT", event);
+		console.log("EVENT", { event });
+		console.log("HEADERS", event.headers);
+		console.log("HEADERS", JSON.stringify(event.headers));
+
 		logger.setPersistentLogAttributes({});
 		logger.addContext(context);
 				
