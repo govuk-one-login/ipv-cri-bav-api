@@ -20,6 +20,7 @@ import { SendMessageCommand } from "@aws-sdk/client-sqs";
 let bavService: BavService;
 const tableName = "SESSIONTABLE";
 const sessionId = "SESSIONID";
+const encodedTxmaHeader = "ABCDEFG";
 const fakeTime = 1684933200.123;
 const SESSION_RECORD = require("../data/db_record.json") as ISessionItem;
 const PERSON_IDENTITY_RECORD = require("../data/person_identity_record.json") as PersonIdentityItem;
@@ -45,6 +46,22 @@ jest.mock("../../../utils/SqsClient", () => ({
 }));
 
 
+function createBaseTXMAEventPayload(): TxmaEvent {
+	return {
+		event_name: "BAV_CRI_START",
+		user: {
+			user_id: "sessionCliendId",
+			session_id: "sessionID",
+			govuk_signin_journey_id: "clientSessionId",
+			ip_address: "sourceIp",
+		},
+		client_id: "clientId",
+		timestamp: 123,
+		event_timestamp_ms: 123000,
+		component_id: "issuer",
+	};
+}
+
 function getTXMAEventPayload(): TxmaEvent {
 	const txmaEventPayload: TxmaEvent = {
 		event_name: "BAV_CRI_START",
@@ -62,11 +79,91 @@ function getTXMAEventPayload(): TxmaEvent {
 	return txmaEventPayload;
 }
 
+function getTXMAEventPayloadWithHeader(): TxmaEvent {
+	const txmaEventPayload: TxmaEvent = {
+		event_name: "BAV_CRI_START",
+		user: {
+			user_id: "sessionCliendId",
+			session_id: "sessionID",
+			govuk_signin_journey_id: "clientSessionId",
+			ip_address: "sourceIp",
+		},
+		client_id: "clientId",
+		timestamp: 123,
+		event_timestamp_ms: 123000,
+		component_id: "issuer",
+		restricted:{
+			device_information:{
+				encoded: "ABCDEFG",
+			},
+		},
+	};
+	return txmaEventPayload;
+}
+
+function getTXMAEventPayloadWithRestricted(): TxmaEvent {
+	const txmaEventPayload: TxmaEvent = {
+		event_name: "BAV_CRI_START",
+		user: {
+			user_id: "sessionCliendId",
+			session_id: "sessionID",
+			govuk_signin_journey_id: "clientSessionId",
+			ip_address: "sourceIp",
+		},
+		client_id: "clientId",
+		timestamp: 123,
+		event_timestamp_ms: 123000,
+		component_id: "issuer",
+		restricted:{
+			"CoP_request_details": [
+			 {
+					name: "Frederick Joseph Flintstone",
+					sortCode: "111111",
+					accountNumber: "111111",
+					attemptNum: 1,
+			 },
+			],
+		 },
+	};
+	return txmaEventPayload;
+}
+
+function getTXMAEventPayloadWithRestrictedWithHeader(): TxmaEvent {
+	const txmaEventPayload: TxmaEvent = {
+		event_name: "BAV_CRI_START",
+		user: {
+			user_id: "sessionCliendId",
+			session_id: "sessionID",
+			govuk_signin_journey_id: "clientSessionId",
+			ip_address: "sourceIp",
+		},
+		client_id: "clientId",
+		timestamp: 123,
+		event_timestamp_ms: 123000,
+		component_id: "issuer",
+		restricted:{
+			"CoP_request_details": [
+			 {
+					name: "Frederick Joseph Flintstone",
+					sortCode: "111111",
+					accountNumber: "111111",
+					attemptNum: 1,
+			 },
+			],
+			device_information:{
+				encoded: "ABCDEFG",
+			},
+		 },
+	};
+	return txmaEventPayload;
+}
+
 describe("BAV Service", () => {
-	let txmaEventPayload: TxmaEvent;
+	let txmaEventPayload: TxmaEvent, txmaEventPayloadWithHeader: TxmaEvent;
 
 	beforeAll(() => {
-		txmaEventPayload = getTXMAEventPayload();
+		txmaEventPayload = createBaseTXMAEventPayload();
+		txmaEventPayloadWithHeader = getTXMAEventPayloadWithHeader();
 	});
 
 	beforeEach(() => {
@@ -120,11 +217,46 @@ describe("BAV Service", () => {
 	});
 
 	describe("#sendToTXMA", () => {
-		it("Should send event to TxMA with the correct details", async () => {  
-			const messageBody = JSON.stringify(txmaEventPayload);
+		it("Should send event to TxMA with the correct details for a payload with restricted present", async () => {  
+			await bavService.sendToTXMA("MYQUEUE", "ABCDEFG", txmaEventPayload);
+	
+			const messageBody = JSON.stringify({
+				...createBaseTXMAEventPayload(),
+				restricted: {
+					device_information: {
+						encoded: "ABCDEFG",
+					},
+				},
+			});
+	
+			expect(SendMessageCommand).toHaveBeenCalledWith({
+				MessageBody: messageBody,
+				QueueUrl: "MYQUEUE",
+			});
+			expect(sqsClient.send).toHaveBeenCalled();
+			expect(bavService.logger.info).toHaveBeenCalledWith("Sent message to TxMA");
+		});
 
-			await bavService.sendToTXMA("MYQUEUE", txmaEventPayload);
-
+		it("Should send event to TxMA with the correct details for a payload without restricted present", async () => {  
+			const restrictedDetails = {
+				CoP_request_details: [{
+					name: "Frederick Joseph Flintstone",
+					sortCode: "111111",
+					accountNumber: "111111",
+					attemptNum: 1,
+				}],
+				device_information: {
+					encoded: "ABCDEFG",
+				},
+			};
+	
+			const payload = createBaseTXMAEventPayload();
+			payload.restricted = restrictedDetails;
+	
+			await bavService.sendToTXMA("MYQUEUE", "ABCDEFG", payload);
+	
+			const messageBody = JSON.stringify(payload);
+	
 			expect(SendMessageCommand).toHaveBeenCalledWith({
 				MessageBody: messageBody,
 				QueueUrl: "MYQUEUE",
@@ -135,7 +267,7 @@ describe("BAV Service", () => {
 
 		it("show log error if failed to send to TXMA queue", async () => {
 			sqsClient.send = jest.fn().mockRejectedValueOnce({});
-			await bavService.sendToTXMA("MYQUEUE", txmaEventPayload);
+			await bavService.sendToTXMA("MYQUEUE", "ABCDEFG", txmaEventPayload);
 	
 			expect(bavService.logger.error).toHaveBeenCalledWith({
 				message: "Error when sending event BAV_CRI_START to TXMA Queue",
