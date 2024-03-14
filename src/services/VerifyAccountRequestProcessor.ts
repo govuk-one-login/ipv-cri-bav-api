@@ -69,7 +69,7 @@ export class VerifyAccountRequestProcessor {
 	}
 
 	// eslint-disable-next-line max-lines-per-function, complexity
-	async processRequest(sessionId: string, body: VerifyAccountPayload, clientIpAddress: string): Promise<Response> {
+	async processRequest(sessionId: string, body: VerifyAccountPayload, clientIpAddress: string, encodedHeader: string): Promise<Response> {
   	const { account_number: accountNumber, sort_code: sortCode } = body;
   	const paddedAccountNumber = accountNumber.padStart(8, "0");
   	const person: PersonIdentityItem | undefined = await this.BavService.getPersonIdentityById(sessionId, this.personIdentityTableName);
@@ -103,6 +103,7 @@ export class VerifyAccountRequestProcessor {
   	const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
   	await this.BavService.sendToTXMA(
   		this.txmaQueueUrl,
+			encodedHeader,
   		{
   			event_name: TxmaEventNames.BAV_COP_REQUEST_SENT,
   			...coreEventFields,
@@ -138,6 +139,7 @@ export class VerifyAccountRequestProcessor {
 
   	await this.BavService.sendToTXMA(
   		this.txmaQueueUrl,
+			encodedHeader,
   		{
   			event_name: TxmaEventNames.BAV_COP_RESPONSE_RECEIVED,
   			...coreEventFields,

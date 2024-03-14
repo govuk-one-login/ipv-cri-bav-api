@@ -1,7 +1,7 @@
 export const VALID_USERINFO = {
 	body:"",
 	httpMethod: "POST",
-	headers: { Authorization: "Bearer AbCdEf123456" },
+	headers: { Authorization: "Bearer AbCdEf123456", "txma-audit-encoded": "ABCDEFG" },
 	isBase64Encoded: false,
 	multiValueHeaders: {},
 	multiValueQueryStringParameters: {},
