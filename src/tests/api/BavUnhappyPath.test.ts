@@ -9,11 +9,13 @@ import {
 	userInfoPost,
 	verifyAccountPost,
 	tokenPost,
-	getSessionAndVerifyKey,
+	getSessionAndVerifyKey, HARNESS_API_INSTANCE,
 } from "./ApiTestSteps";
 import { constants } from "./ApiConstants";
 import { BankDetailsPayload } from "../models/BankDetailsPayload";
 import { randomUUID } from "crypto";
+import exampleStubPayload from "../data/exampleStubPayload.json";
+import {absoluteTimeNow} from "../../utils/DateTimeUtils";
 
 describe("BAV CRI unhappy path tests", () => {
 	describe("/session Endpoint Unhappy Path Tests", () => {
@@ -103,7 +105,37 @@ describe("BAV CRI unhappy path tests", () => {
 		});
 	});
 
-	describe("/authorization Endpoint Unhappy Path Tests", () => {
+describe("BAV CRI: /verify-account Endpoint Partial Match Athena Output Test", () => {
+	it("Triggers Partial Match and checks for object in Athena", async () => {
+		// ARRANGE
+		const firstName = randomUUID().slice(-8)
+		const newStubPayload = structuredClone(exampleStubPayload);
+		newStubPayload.shared_claims.name[0].nameParts[0].value = firstName
+
+		const sessionId = await startStubServiceAndReturnSessionId(newStubPayload);
+
+		const newVerifyAccountYesPayload = structuredClone(verifyAccountYesPayload);
+		newVerifyAccountYesPayload.account_number = "00111114"
+		const startTime = absoluteTimeNow()
+
+		// ACT
+		// Verify-account request
+		const verifyAccountResponse = await verifyAccountPost(newVerifyAccountYesPayload, sessionId);
+
+		// ASSERT
+		expect(verifyAccountResponse.status).toBe(200);
+		const athenaResult = await HARNESS_API_INSTANCE.get("/athena/query",{params:{
+				"min-timestamp": startTime,
+				"name-prefix": firstName,
+			}});
+		expect(athenaResult.data.length).toBeGreaterThan(0);
+
+		// Make sure authSession state is NOT BAV_DATA_RECEIVED
+		// await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_SESSION_CREATED");
+	});
+});
+
+describe("BAV CRI: /authorization Endpoint Unhappy Path Tests", () => {
 		let sessionId: string;
 
 		beforeEach(async () => {
