@@ -2,7 +2,7 @@ openapi: 3.0.1
 
 info:
   title:
-     Fn::Sub: "${AWS::StackName} - BAV Return Credential Issuer Private API"
+    Fn::Sub: "${AWS::StackName} - BAV Test Harness Private API"
   version: "1.0"
   description: BAV Return Test automation harness API specification
 
@@ -256,6 +256,58 @@ paths:
           default:
             statusCode: "200"
         type: aws
+
+  /athena/query:
+    get:
+      operationId: getAthenaQuery
+      summary: run a query on Athena setup and return result set
+      description: >-
+        Endpoint returns the result set from a simple Athena query against the deployed virtual table
+      parameters:
+        - name: min-timestamp
+          in: query
+          description: minimum timestamp of rows to return
+          required: true
+          schema:
+            type: integer
+        - name: name-prefix
+          in: query
+          description: prefix value to filter name column on
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+            Content-Type:
+              schema:
+                type: string
+            Strict-Transport-Security:
+              schema:
+                type: string
+            X-Content-Type-Options:
+              schema:
+                type: string
+            X-Frame-Options:
+              schema:
+                type: string
+      security:
+        - sigv4Reference: []
+      x-amazon-apigateway-request-validator: "requestParamsOnly"
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AthenaQueryFunction.Arn}:live/invocations
+        responses:
+          default:
+            statusCode: "200"
+        passthroughBehavior: "when_no_match"
+        contentHandling: "CONVERT_TO_TEXT"
+        type: "aws_proxy"
 
 components:
   securitySchemes:

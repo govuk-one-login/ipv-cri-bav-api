@@ -2792,6 +2792,24 @@ Outputs:
     Condition: IsNotProdLikeEnvironment
     Description: "BAV Test Harness"
     Value: !FindInMap [EnvironmentVariables, !Ref Environment, TESTHARNESSURL]
+  PartialNameMatchBucket:
+    Condition: IsNotProdLikeEnvironment
+    Description: "PartialNameMatchBucket Bucket Name"
+    Value: !Ref PartialNameMatchBucket
+    Export:
+      Name: !Sub ${AWS::StackName}-PartialNameMatchBucket
+  PartialNameMatchAthenaResultsBucket:
+    Condition: IsNotProdLikeEnvironment
+    Description: "PartialNameMatchBucket Bucket Name"
+    Value: !Ref PartialNameMatchAthenaResultsBucket
+    Export:
+      Name: !Sub ${AWS::StackName}-PartialNameMatchAthenaResultsBucket
+  PartialNameMatchGlueTable:
+    Condition: IsNotProdLikeEnvironment
+    Description: "PartialNameMatchGlueTable"
+    Value: !Ref PartialNameMatchGlueTable
+    Export:
+      Name: !Sub ${AWS::StackName}-PartialNameMatchGlueTable
   DNSSuffix:
     Condition: IsNotProdLikeEnvironment
     Description: "F2F DNS Suffix"
