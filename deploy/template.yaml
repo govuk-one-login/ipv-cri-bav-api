@@ -38,10 +38,10 @@ Parameters:
     Type: String
     Default: "bav-cri-kms"
     Description: The name of the L2 DynamoDB stack deployed.
-  DeployAlarmsInNonProdLikeEnvironment:
+  DeployAlarmsInDev:
     Description: "Set to the string value `true` to deploy alarms in a DEV environment"
     Type: String
-    Default: true
+    Default: false
   SupportManualURL:
     Description: "Link to the BAV support manual"
     Type: String
@@ -178,14 +178,15 @@ Conditions:
   CreateDevResources: !Equals
     - !Ref Environment
     - dev
-  ApplyReservedConcurrency: !Or
-    - !Not
-      - !Condition CreateDevResources
-    - !Equals [!Ref ApplyReservedConcurrencyInDev, "true"]
   IsProdLikeEnvironment: !Or
     - !Equals [!Ref Environment, staging]
     - !Equals [!Ref Environment, integration]
     - !Equals [!Ref Environment, production]
+  IsNotDevelopment: !Or
+    - !Equals [ !Ref Environment, build ]
+    - !Equals [ !Ref Environment, staging ]
+    - !Equals [ !Ref Environment, integration ]
+    - !Equals [ !Ref Environment, production ]
   IsNotProdLikeEnvironment: !Not
     - !Condition IsProdLikeEnvironment
   IsPersonalIdentifiableInformationEnvironment: !Or
@@ -211,11 +212,11 @@ Conditions:
           - !Ref SecretPrefix
           - "none"
   DeployAlarms: !Or
-    - Condition: IsProdLikeEnvironment
-    - !Equals [!Ref DeployAlarmsInNonProdLikeEnvironment, true]
-  DeployConcurrencyAlarms: !And
-    - Condition: DeployAlarms
-    - Condition: ApplyReservedConcurrency
+    - Condition: IsNotDevelopment
+    - !Equals [!Ref DeployAlarmsInDev, true]
+  ApplyReservedConcurrency: !Or
+    - Condition: IsNotDevelopment
+    - !Equals [!Ref ApplyReservedConcurrencyInDev, true]
   NotLocalTestStack:
     Fn::Not:
       - Fn::And:
@@ -622,6 +623,7 @@ Resources:
 
   BAVRestAPIFatalErorMetricFilter:
     Type: AWS::Logs::MetricFilter
+    Condition: "DeployAlarms"
     Properties:
       LogGroupName: !Ref BAVAPIGatewayAccessLogGroup
       FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
@@ -760,6 +762,7 @@ Resources:
 
   SessionFunctionFatalErorMetricFilter:
     Type: AWS::Logs::MetricFilter
+    Condition: "DeployAlarms"
     Properties:
       LogGroupName: !Ref SessionFunctionLogGroup
       FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
@@ -794,9 +797,89 @@ Resources:
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
 
+  VerifyAuthorizeRequestMessageCodeMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Condition: "DeployAlarms"
+    Properties:
+      LogGroupName: !Ref SessionFunctionLogGroup
+      FilterPattern: "{ $.messageCode =* }"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: !Sub "${AWS::StackName}/LogMessages"
+          MetricName: "VerifyAuthorizeRequest-lambda-messageCode"
+          Dimensions:
+            - Key: MessageCode
+              Value: $.messageCode
+
+  VerifyAuthorizeRequestFailedVerifyingJwtLowThresholdAlarm:
+    DependsOn:
+      - "VerifyAuthorizeRequestMessageCodeMetricFilter"
+    Type: AWS::CloudWatch::Alarm
+    Condition: DeployAlarms
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-VerifyAuthorizeRequestFailedVerifyingJwtAlarm"
+      AlarmDescription: !Sub "There has been an error verifying the JWT using the RP's public key. This is likely an issue with the RP. ${SupportManualURL}"
+      ActionsEnabled: true
+      OKActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      InsufficientDataActions: [ ]
+      Dimensions: [ ]
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: error
+          ReturnData: true
+          MetricStat:
+            Metric:
+              Namespace: !Sub "${AWS::StackName}/LogMessages"
+              MetricName: VerifyAuthorizeRequest-lambda-messageCode
+              Dimensions:
+                - Name: MessageCode
+                  Value: BAV_FAILED_VERIFYING_JWT
+            Period: 60
+            Stat: Sum
+
+  VerifyAuthorizeRequestFailedVerifyingJwtCriticalAlarm:
+    DependsOn:
+      - "VerifyAuthorizeRequestMessageCodeMetricFilter"
+    Type: AWS::CloudWatch::Alarm
+    Condition: DeployAlarms
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-VerifyAuthorizeRequestFailedVerifyingJwtCriticalAlarm"
+      AlarmDescription: !Sub "There has been an error verifying the JWT using the RP's public key. This is likely an issue with the RP. ${SupportManualURL}"
+      ActionsEnabled: true
+      OKActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      InsufficientDataActions: [ ]
+      Dimensions: [ ]
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 10
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: error
+          ReturnData: true
+          MetricStat:
+            Metric:
+              Namespace: !Sub "${AWS::StackName}/LogMessages"
+              MetricName: VerifyAuthorizeRequest-lambda-messageCode
+              Dimensions:
+                - Name: MessageCode
+                  Value: BAV_FAILED_VERIFYING_JWT
+            Period: 300
+            Stat: Sum
+
   SessionConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployConcurrencyAlarms"
+    Condition: "ApplyReservedConcurrency"
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -934,6 +1017,7 @@ Resources:
 
   AbortFunctionFatalErorMetricFilter:
     Type: AWS::Logs::MetricFilter
+    Condition: "DeployAlarms"
     Properties:
       LogGroupName: !Ref AbortFunctionLogGroup
       FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
@@ -970,7 +1054,7 @@ Resources:
 
   AbortConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployConcurrencyAlarms"
+    Condition: "ApplyReservedConcurrency"
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -1103,6 +1187,7 @@ Resources:
 
   PersonInfoFunctionFatalErorMetricFilter:
     Type: AWS::Logs::MetricFilter
+    Condition: "DeployAlarms"
     Properties:
       LogGroupName: !Ref PersonInfoFunctionLogGroup
       FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
@@ -1139,7 +1224,7 @@ Resources:
 
   PersonInfoConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployConcurrencyAlarms"
+    Condition: "ApplyReservedConcurrency"
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -1255,6 +1340,7 @@ Resources:
 
   PersonInfoKeyFunctionFatalErorMetricFilter:
     Type: AWS::Logs::MetricFilter
+    Condition: "DeployAlarms"
     Properties:
       LogGroupName: !Ref PersonInfoKeyFunctionLogGroup
       FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
@@ -1291,7 +1377,7 @@ Resources:
 
   PersonInfoKeyConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployConcurrencyAlarms"
+    Condition: "ApplyReservedConcurrency"
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -1439,6 +1525,7 @@ Resources:
 
   UserInfoFunctionFatalErorMetricFilter:
     Type: AWS::Logs::MetricFilter
+    Condition: "DeployAlarms"
     Properties:
       LogGroupName: !Ref UserInfoFunctionLogGroup
       FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
@@ -1475,7 +1562,7 @@ Resources:
 
   UserInfoConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployConcurrencyAlarms"
+    Condition: "ApplyReservedConcurrency"
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -1602,6 +1689,7 @@ Resources:
 
   TokenFunctionFatalErorMetricFilter:
     Type: AWS::Logs::MetricFilter
+    Condition: "DeployAlarms"
     Properties:
       LogGroupName: !Ref TokenFunctionLogGroup
       FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
@@ -1638,7 +1726,7 @@ Resources:
 
   TokenConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployConcurrencyAlarms"
+    Condition: "ApplyReservedConcurrency"
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -1768,6 +1856,7 @@ Resources:
 
   AuthorizationFunctionFatalErorMetricFilter:
     Type: AWS::Logs::MetricFilter
+    Condition: "DeployAlarms"
     Properties:
       LogGroupName: !Ref AuthorizationFunctionLogGroup
       FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
@@ -1926,6 +2015,7 @@ Resources:
 
   VerifyAccountFunctionFatalErorMetricFilter:
     Type: AWS::Logs::MetricFilter
+    Condition: "DeployAlarms"
     Properties:
       LogGroupName: !Ref VerifyAccountFunctionLogGroup
       FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
@@ -1962,7 +2052,7 @@ Resources:
 
   VerifyAccountConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployConcurrencyAlarms"
+    Condition: "ApplyReservedConcurrency"
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -2305,6 +2395,7 @@ Resources:
 
   JsonWebKeysFunctionFatalErorMetricFilter:
     Type: AWS::Logs::MetricFilter
+    Condition: "DeployAlarms"
     Properties:
       LogGroupName: !Ref JsonWebKeysLogGroup
       FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
@@ -2341,7 +2432,7 @@ Resources:
 
   JsonWebKeysConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployConcurrencyAlarms"
+    Condition: "ApplyReservedConcurrency"
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -2472,6 +2563,7 @@ Resources:
 
   HmrcTokenFunctionFatalErorMetricFilter:
     Type: AWS::Logs::MetricFilter
+    Condition: "DeployAlarms"
     Properties:
       LogGroupName: !Ref HmrcTokenLogGroup
       FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
@@ -2508,7 +2600,7 @@ Resources:
 
   HmrcTokenConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployConcurrencyAlarms"
+    Condition: "ApplyReservedConcurrency"
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -2646,6 +2738,7 @@ Resources:
 
   PartialNameMatchFunctionFatalErorMetricFilter:
     Type: AWS::Logs::MetricFilter
+    Condition: "DeployAlarms"
     Properties:
       LogGroupName: !Ref PartialNameMatchFunctionLogGroup
       FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
@@ -2682,7 +2775,7 @@ Resources:
 
   PartialNameMatchConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployConcurrencyAlarms"
+    Condition: "ApplyReservedConcurrency"
     Properties:
       ActionsEnabled: true
       AlarmActions:
