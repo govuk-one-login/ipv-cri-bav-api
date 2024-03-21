@@ -110,12 +110,8 @@ export class BavService {
 		}
 	}
 
-	async sendToTXMA(QueueUrl: string, encodedHeader: string, event: TxmaEvent): Promise<void> {
+	async sendToTXMA(QueueUrl: string, event: TxmaEvent): Promise<void> {
 		try {
-			
-			event.restricted = event.restricted ?? { device_information: { encoded: "" } };
-			event.restricted.device_information = { encoded: encodedHeader };
-
 			const messageBody = JSON.stringify(event);
 			const params = {
 				MessageBody: messageBody,

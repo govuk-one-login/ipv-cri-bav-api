@@ -33,7 +33,7 @@ export class VerifyAccountHandler implements LambdaInterface {
 		logger.addContext(context);
 
 		try {
-			const { sessionId, body, encodedHeader } = this.validateEvent(event);
+			const { sessionId, body } = this.validateEvent(event);
 			const clientIpAddress = event.requestContext.identity?.sourceIp;
 
 			const hmrcTokenSsmPath = checkEnvironmentVariable(EnvironmentVariables.HMRC_TOKEN_SSM_PATH, logger);
@@ -42,7 +42,7 @@ export class VerifyAccountHandler implements LambdaInterface {
 			logger.appendKeys({ sessionId });
 			logger.info("Starting VerifyAccountRequestProcessor");
 
-			return await VerifyAccountRequestProcessor.getInstance(logger, metrics, HMRC_TOKEN).processRequest(sessionId, body, clientIpAddress, encodedHeader);
+			return await VerifyAccountRequestProcessor.getInstance(logger, metrics, HMRC_TOKEN).processRequest(sessionId, body, clientIpAddress);
 		} catch (error: any) {
 			logger.error({ message: "An error has occurred.", error, messageCode: MessageCodes.SERVER_ERROR });
 			if (error instanceof AppError) {
@@ -52,7 +52,7 @@ export class VerifyAccountHandler implements LambdaInterface {
 		}
 	}
 
-	validateEvent(event: APIGatewayProxyEvent): { sessionId: string; body: VerifyAccountPayload; encodedHeader: string } {
+	validateEvent(event: APIGatewayProxyEvent): { sessionId: string; body: VerifyAccountPayload } {
 		if (!event.headers) {
 			const message = "Invalid request: missing headers";
 			logger.error({ message, messageCode: MessageCodes.MISSING_HEADER });
@@ -84,7 +84,6 @@ export class VerifyAccountHandler implements LambdaInterface {
 		return {
 			sessionId,
 			body: deserialisedRequestBody,
-			encodedHeader: event.headers[Constants.ENCODED_AUDIT_HEADER] ?? "",
 		};
 	}
 }

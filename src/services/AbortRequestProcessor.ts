@@ -41,7 +41,7 @@ export class AbortRequestProcessor {
   	return AbortRequestProcessor.instance;
   }
 
-  async processRequest(sessionId: string, encodedHeader: string): Promise<Response> {
+  async processRequest(sessionId: string): Promise<Response> {
   	const session = await this.BavService.getSessionById(sessionId);
 
   	if (!session) {
@@ -67,9 +67,7 @@ export class AbortRequestProcessor {
   	await this.BavService.updateSessionAuthState(session.sessionId, AuthSessionState.BAV_SESSION_ABORTED);
 
   	await this.BavService.sendToTXMA(
-  		this.txmaQueueUrl, 
-  		encodedHeader,
-  		{
+  		this.txmaQueueUrl, {
   			event_name: TxmaEventNames.BAV_CRI_SESSION_ABORTED,
   			...buildCoreEventFields(session, this.issuer, session.clientIpAddress),
   		});
