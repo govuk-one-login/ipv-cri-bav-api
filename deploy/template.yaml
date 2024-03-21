@@ -107,7 +107,7 @@ Mappings:
       PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: '[{"jwksEndpoint":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/redirect?id=bav"}]'
-      AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
+      AUTHSESSIONTTLSECS: 86400 # 1 day in seconds
       TESTHARNESSURL: "https://bav-test-harness-testharness.review-bav.dev.account.gov.uk"
       HMRCBASEURL: "https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev"
       HMRCVERIFYBASEURL: "https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev/misc/bank-account"
