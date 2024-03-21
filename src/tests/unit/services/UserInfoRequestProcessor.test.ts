@@ -105,7 +105,7 @@ describe("UserInfoRequestProcessor", () => {
 		expect(mockBavService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
 		expect(mockBavService.updateSessionAuthState).toHaveBeenCalledTimes(1);
 		expect(mockBavService.updateSessionAuthState).toHaveBeenCalledWith("sdfsdg", "BAV_CRI_VC_ISSUED");
-		expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "MYQUEUE", {
+		expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "MYQUEUE", "ABCDEFG", {
 			"client_id":"ipv-core-stub",
 			"component_id":"https://XXX-c.env.account.gov.uk",
 			"event_name":"BAV_CRI_VC_ISSUED",
@@ -161,7 +161,7 @@ describe("UserInfoRequestProcessor", () => {
 				],
 		 },
 		});
-		expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(2, "MYQUEUE", {
+		expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(2, "MYQUEUE", "ABCDEFG", {
 			"client_id":"ipv-core-stub",
 			"component_id":"https://XXX-c.env.account.gov.uk",
 			"event_name":"BAV_CRI_END",

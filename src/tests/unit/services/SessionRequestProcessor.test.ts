@@ -224,6 +224,7 @@ describe("SessionRequestProcessor", () => {
 
 		expect(mockBavService.sendToTXMA).toHaveBeenCalledWith(
 			process.env.TXMA_QUEUE_URL,
+			"ABCDEFG",
 			{
 				event_name: "BAV_CRI_START",
 				client_id: undefined,
