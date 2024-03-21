@@ -103,7 +103,7 @@ Mappings:
       ISSUER: 'https://review-bav.dev.account.gov.uk'
       DNSSUFFIX: review-bav.dev.account.gov.uk
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
-      TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
+      TXMAMESSAGERETENTIONPERIODDAYS: 1209600 # Default: 14 days
       PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: '[{"jwksEndpoint":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/redirect?id=bav"}]'
@@ -115,7 +115,7 @@ Mappings:
       ISSUER: 'https://review-bav.build.account.gov.uk'
       DNSSUFFIX: review-bav.build.account.gov.uk
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
-      TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
+      TXMAMESSAGERETENTIONPERIODDAYS: 1209600 # Default: 14 days
       PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-bav.build.account.gov.uk/.well-known/jwks.json","clientId":"BD7B2A5D","redirectUri":"https://ipvstub.review-bav.build.account.gov.uk/redirect?id=bav"}]'
@@ -127,7 +127,7 @@ Mappings:
       ISSUER: 'https://review-bav.staging.account.gov.uk'
       DNSSUFFIX: review-bav.staging.account.gov.uk
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
-      TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
+      TXMAMESSAGERETENTIONPERIODDAYS: 1209600 # Default: 14 days
       PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.staging.account.gov.uk/.well-known/jwks.json","clientId":"03A5A659-17AA-453F-B905-95D2804823D1","redirectUri":"https://identity.staging.account.gov.uk/credential-issuer/callback?id=bav"}]'
@@ -138,7 +138,7 @@ Mappings:
       ISSUER: 'https://review-bav.integration.account.gov.uk'
       DNSSUFFIX: review-bav.integration.account.gov.uk
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
-      TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
+      TXMAMESSAGERETENTIONPERIODDAYS: 1209600 # Default: 14 days
       PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.integration.account.gov.uk/.well-known/jwks.json","clientId":"AE140E43-1987-4EE8-86CC-BEF19FC9FF3F","redirectUri":"https://identity.integration.account.gov.uk/credential-issuer/callback?id=bav"}]'
@@ -149,7 +149,7 @@ Mappings:
       ISSUER: 'https://review-bav.account.gov.uk'
       DNSSUFFIX: review-bav.account.gov.uk
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
-      TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
+      TXMAMESSAGERETENTIONPERIODDAYS: 1209600 # Default: 14 days
       PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: '[{"jwksEndpoint":"https://api.identity.account.gov.uk/.well-known/jwks.json","clientId":"C910A762-4BB2-400D-8F3D-4D7E6C84E342","redirectUri":"https://identity.account.gov.uk/credential-issuer/callback?id=bav"}]'
@@ -2015,7 +2015,7 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       MessageRetentionPeriod: !FindInMap [EnvironmentVariables, !Ref Environment, TXMAMESSAGERETENTIONPERIODDAYS]
-      VisibilityTimeout: 60
+      VisibilityTimeout: 70
       KmsMasterKeyId: !Ref TxMAKeyAlias
       RedrivePolicy:
         deadLetterTargetArn:
