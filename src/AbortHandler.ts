@@ -28,9 +28,9 @@ export class AbortHandler implements LambdaInterface {
 		logger.addContext(context);
 
 		try {
-			const { sessionId, encodedHeader } = this.validateEvent(event);
+			const sessionId = this.validateEvent(event);
 			logger.info("Starting AbortRequestProcessor");
-			return await AbortRequestProcessor.getInstance(logger, metrics).processRequest(sessionId, encodedHeader);
+			return await AbortRequestProcessor.getInstance(logger, metrics).processRequest(sessionId);
 		} catch (error: any) {
 			logger.error({ message: "AbortRequestProcessor encountered an error.", error, messageCode: MessageCodes.SERVER_ERROR });
 			if (error instanceof AppError) {
@@ -40,7 +40,7 @@ export class AbortHandler implements LambdaInterface {
 		}
 	}
 
-	validateEvent(event: APIGatewayProxyEvent): { sessionId: string; encodedHeader: string } {
+	validateEvent(event: APIGatewayProxyEvent): string {
 		if (!event.headers) {
 			const message = "Invalid request: missing headers";
 			logger.error({ message, messageCode: MessageCodes.MISSING_HEADER });
@@ -53,10 +53,7 @@ export class AbortHandler implements LambdaInterface {
 			throw new AppError(HttpCodesEnum.BAD_REQUEST, sessionIdError);
 		}
 
-		return {
-			sessionId: event.headers[Constants.X_SESSION_ID]!,
-			encodedHeader: event.headers[Constants.ENCODED_AUDIT_HEADER] ?? "",
-		};
+		return event.headers[Constants.X_SESSION_ID]!;
 	}
 }
 

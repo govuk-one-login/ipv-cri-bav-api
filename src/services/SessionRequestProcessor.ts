@@ -11,7 +11,7 @@ import { TxmaEventNames } from "../models/enums/TxmaEvents";
 import { ISessionItem } from "../models/ISessionItem";
 import { JwtPayload, Jwt } from "../models/IVeriCredential";
 import { SessionRequest } from "../models/SessionRequest";
-import { Constants, EnvironmentVariables } from "../utils/Constants";
+import { EnvironmentVariables } from "../utils/Constants";
 import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
@@ -73,11 +73,9 @@ export class SessionRequestProcessor {
   }
 
   async processRequest(event: APIGatewayProxyEvent): Promise<Response> {
-  	const encodedHeader = event.headers[Constants.ENCODED_AUDIT_HEADER] ?? "";
   	const deserialisedRequestBody = JSON.parse(event.body as string) as SessionRequest;
   	const requestBodyClientId = deserialisedRequestBody.client_id;
   	const clientIpAddress = event.requestContext.identity?.sourceIp;
-		
 
   	let configClient: ClientConfig | undefined;
   	try {
@@ -196,7 +194,6 @@ export class SessionRequestProcessor {
   	const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
   	await this.BavService.sendToTXMA(
   		this.txmaQueueUrl,
-  		encodedHeader,
   		{
   			event_name: TxmaEventNames.BAV_CRI_START,
   			...coreEventFields,

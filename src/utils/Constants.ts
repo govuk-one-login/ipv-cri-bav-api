@@ -4,8 +4,6 @@ export class Constants {
 
 	static readonly X_SESSION_ID = "x-govuk-signin-session-id";
 
-	static readonly ENCODED_AUDIT_HEADER = "txma-audit-encoded";
-
 	static readonly SESSION_ID = "session-id";
 
 	static readonly SESSION_LOGGER_SVC_NAME : "SessionHandler";

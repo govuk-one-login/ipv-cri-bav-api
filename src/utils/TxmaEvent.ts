@@ -40,9 +40,6 @@ export interface RestrictedObject {
 	name?: PersonIdentityName[];
 	bankAccount?: BankAccountDetails[];
 	CoP_request_details?: CopRequestDetails[];
-	device_information?: {
-		encoded: string;
-	};
 }
 
 export interface CiReasons {

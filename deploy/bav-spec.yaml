@@ -130,7 +130,6 @@ paths:
         - Backend - Common CRI Lambda
       parameters:
         - $ref: "#/components/parameters/SessionHeader"
-        - $ref: '#/components/parameters/AuditHeader'
       responses:
         "200":
           description: "Issue an authorization code. Note - currently persists the code against the session as a side effect"
@@ -221,7 +220,6 @@ paths:
         - Backend - CI CRI specific
       parameters:
         - $ref: '#/components/parameters/Authorization'
-        - $ref: '#/components/parameters/AuditHeader'
       responses:
         "200":
           description: >-
@@ -318,7 +316,6 @@ paths:
               $ref: '#/components/schemas/VerifyAccountRequest'
       parameters:
         - $ref: '#/components/parameters/SessionId'
-        - $ref: '#/components/parameters/AuditHeader'
       responses:
         "201":
           description: >-
@@ -600,7 +597,6 @@ paths:
               $ref: "#/components/schemas/AbortRequest"
       parameters:
         - $ref: '#/components/parameters/SessionId'
-        - $ref: '#/components/parameters/AuditHeader'
       tags:
         - Backend - CI CRI specific
       responses:
@@ -714,7 +710,6 @@ paths:
         Return encrypted personal information needed to pre populate information on the frontend
       parameters:
         - $ref: '#/components/parameters/SessionId'
-        - $ref: '#/components/parameters/AuditHeader'
       tags:
         - Backend - CI CRI specific
       responses:
@@ -1217,11 +1212,3 @@ components:
       description: >-
         `sessionId` as returned by `POST /session` endpoint
       required: true
-    AuditHeader:
-      name: txma-audit-encoded
-      in: header
-      description: An encoded header sent by the FE containing info about request origin
-      required: false
-      schema:
-        type: string
-      
