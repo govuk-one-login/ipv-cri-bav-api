@@ -47,7 +47,7 @@ class AthenaQueryHandler implements LambdaInterface {
 			};
 		}
 
-			const sqlString = "SELECT itemnumber FROM \"" + (process.env["ATHENA_TABLE"] ?? "") + "\" WHERE timestamp > ? AND cicname LIKE ? ORDER BY timestamp DESC";
+			const sqlString = "SELECT itemnumber FROM \"" + (process.env["ATHENA_TABLE"] ?? "") + "\" WHERE timestamp >= ? AND cicname LIKE ? ORDER BY timestamp DESC";
 		const queryExecutionInput : StartQueryExecutionInput = {
 			QueryString: sqlString,
 			QueryExecutionContext: {
