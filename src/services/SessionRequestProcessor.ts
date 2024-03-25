@@ -118,6 +118,11 @@ export class SessionRequestProcessor {
   		return UnauthorizedResponse;
   	}
 
+  	const jwtPayload: JwtPayload = parsedJwt.payload;
+  	this.logger.appendKeys({
+  		govuk_signin_journey_id: jwtPayload.govuk_signin_journey_id as string,
+  	});
+
   	try {
   		if (configClient.jwksEndpoint) {
   			const payload = await this.kmsDecryptor.verifyWithJwks(urlEncodedJwt, configClient.jwksEndpoint);
@@ -141,19 +146,14 @@ export class SessionRequestProcessor {
   		});
   		return UnauthorizedResponse;
   	}
-
-  	const jwtPayload: JwtPayload = parsedJwt.payload;
+  	
   	const JwtErrors = isJwtValid(jwtPayload, requestBodyClientId, configClient.redirectUri);
   	if (JwtErrors.length > 0) {
   		this.logger.error(JwtErrors, {
   			messageCode: MessageCodes.FAILED_VALIDATING_JWT,
   		});
   		return UnauthorizedResponse;
-  	}
-
-  	this.logger.appendKeys({
-  		govuk_signin_journey_id: jwtPayload.govuk_signin_journey_id as string,
-  	});
+  	}  	
 
   	const personDetailsError = isPersonNameValid(jwtPayload.shared_claims.name);
   	if (!personDetailsError) {
