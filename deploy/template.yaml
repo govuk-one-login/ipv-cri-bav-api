@@ -490,7 +490,8 @@ Resources:
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Effect: Allow
+          - Sid: "AllowSpecificAccessToGlue"
+            Effect: Allow
             Action:
               - "glue:SearchTables"
               - "glue:GetTables"
@@ -498,10 +499,11 @@ Resources:
               - "glue:GetTable"
               - "glue:GetDatabase"
             Resource:
-              - !Join ["", ["arn:aws:glue:*:*:table/", !Ref PartialNameMatchGlueDatabase, "/", !Ref PartialNameMatchGlueTable]]
-              - !Join ["", ["arn:aws:glue:*:*:database/", !Ref PartialNameMatchGlueDatabase]]
-              - "arn:aws:glue:*:*:catalog"
-          - Effect: Allow
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/${PartialNameMatchGlueDatabase}/${PartialNameMatchGlueTable}"
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/${PartialNameMatchGlueDatabase}"
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog"
+          - Sid: "AllowSpecificAccessToS3Buckets"
+            Effect: Allow
             Action:
               - "s3:ListBucket"
               - "s3:GetBucketAcl"
@@ -513,24 +515,27 @@ Resources:
               - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchBucket, "/*"]]
               - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchAthenaResultsBucket]]
               - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchAthenaResultsBucket, "/*"]]
-          - Effect: Allow
+          - Sid: "AllowKMSAccessToKeyRefByAliasOnly"
+            Effect: Allow
             Action:
               - "kms:Decrypt"
               - "kms:GenerateDataKey"
             Resource:
-              - "arn:aws:kms:*:*:key/*"
+              - !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*"
             Condition:
               ForAnyValue:StringLike:
                 kms:ResourceAliases: !Ref PartialNameMatchBucketKeyAlias
-          - Effect: Allow
+          - Sid: "AllowSpecificAccessToAthena"
+            Effect: Allow
             Action:
               - "athena:GetQueryResults"
               - "athena:StartQueryExecution"
               - "athena:GetQueryExecution"
               - "athena:GetWorkGroup"
             Resource:
-              - !Join ["", [ "arn:aws:athena:*:*:workgroup/", !Ref PartialNameMatchAthenaWorkgroup]]
-          - Effect: Allow
+              - !Sub "arn:aws:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${PartialNameMatchAthenaWorkgroup}"
+          - Sid: "AllowAthenaListAllWorkGroups"
+            Effect: Allow
             Action:
               - "athena:ListWorkGroups"
             Resource:
