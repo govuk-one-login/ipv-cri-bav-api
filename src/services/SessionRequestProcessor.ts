@@ -11,7 +11,7 @@ import { TxmaEventNames } from "../models/enums/TxmaEvents";
 import { ISessionItem } from "../models/ISessionItem";
 import { JwtPayload, Jwt } from "../models/IVeriCredential";
 import { SessionRequest } from "../models/SessionRequest";
-import { EnvironmentVariables } from "../utils/Constants";
+import { Constants, EnvironmentVariables } from "../utils/Constants";
 import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
@@ -73,9 +73,11 @@ export class SessionRequestProcessor {
   }
 
   async processRequest(event: APIGatewayProxyEvent): Promise<Response> {
+  	const encodedHeader = event.headers[Constants.ENCODED_AUDIT_HEADER] ?? "";
   	const deserialisedRequestBody = JSON.parse(event.body as string) as SessionRequest;
   	const requestBodyClientId = deserialisedRequestBody.client_id;
   	const clientIpAddress = event.requestContext.identity?.sourceIp;
+		
 
   	let configClient: ClientConfig | undefined;
   	try {
@@ -118,6 +120,11 @@ export class SessionRequestProcessor {
   		return UnauthorizedResponse;
   	}
 
+  	const jwtPayload: JwtPayload = parsedJwt.payload;
+  	this.logger.appendKeys({
+  		govuk_signin_journey_id: jwtPayload.govuk_signin_journey_id as string,
+  	});
+
   	try {
   		if (configClient.jwksEndpoint) {
   			const payload = await this.kmsDecryptor.verifyWithJwks(urlEncodedJwt, configClient.jwksEndpoint);
@@ -141,19 +148,14 @@ export class SessionRequestProcessor {
   		});
   		return UnauthorizedResponse;
   	}
-
-  	const jwtPayload: JwtPayload = parsedJwt.payload;
+  	
   	const JwtErrors = isJwtValid(jwtPayload, requestBodyClientId, configClient.redirectUri);
   	if (JwtErrors.length > 0) {
   		this.logger.error(JwtErrors, {
   			messageCode: MessageCodes.FAILED_VALIDATING_JWT,
   		});
   		return UnauthorizedResponse;
-  	}
-
-  	this.logger.appendKeys({
-  		govuk_signin_journey_id: jwtPayload.govuk_signin_journey_id as string,
-  	});
+  	}  	
 
   	const personDetailsError = isPersonNameValid(jwtPayload.shared_claims.name);
   	if (!personDetailsError) {
@@ -194,6 +196,7 @@ export class SessionRequestProcessor {
   	const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
   	await this.BavService.sendToTXMA(
   		this.txmaQueueUrl,
+  		encodedHeader,
   		{
   			event_name: TxmaEventNames.BAV_CRI_START,
   			...coreEventFields,

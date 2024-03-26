@@ -109,11 +109,23 @@
               ]
             }
           ]
+        },
+        "device_information": {
+          "type": "object",
+          "properties": {
+            "encoded": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "encoded"
+          ]
         }
       },
       "required": [
         "name",
-        "bankAccount"
+        "bankAccount",
+        "device_information"
       ]
     },
     "extensions": {
@@ -137,23 +149,12 @@
                 "attemptNum": {
                   "type": "integer"
                 },
-                "ci": {
-                  "type": "array",
-                  "items": [
-                    {
-                      "type": "string"
-                    }
-                  ]
-                },
                 "ciReasons": {
                   "type": "array",
                   "items": [
                     {
                       "type": "object",
                       "properties": {
-                        "ci": {
-                          "type": "string"
-                        },
                         "reason": {
                           "type": "string"
                         }
@@ -169,7 +170,8 @@
                 "txn",
                 "strengthScore",
                 "validityScore",
-                "attemptNum"
+                "attemptNum",
+                "ciReasons"
               ]
             }
           ]
