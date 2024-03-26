@@ -16,6 +16,7 @@ const logger = mock<Logger>();
 let abortRequestProcessor: AbortRequestProcessor;
 const metrics = new Metrics({ namespace: "BAV" });
 const sessionId = "session_id";
+const encodedTxmaHeader = "ABCDEFG";
 const session: ISessionItem = {
 	sessionId,
 	clientId: "ipv-core-stub",
@@ -54,7 +55,7 @@ describe("AbortRequestProcessor", () => {
 	it("throws error if session cannot be found", async () => {
 		mockBavService.getSessionById.mockResolvedValue(undefined);
 
-		const response = await abortRequestProcessor.processRequest(sessionId);
+		const response = await abortRequestProcessor.processRequest(sessionId, encodedTxmaHeader);
 
 		expect(response.statusCode).toEqual(HttpCodesEnum.UNAUTHORIZED);
 		expect(response.body).toBe(`No session found with the session id: ${sessionId}`);
@@ -63,7 +64,7 @@ describe("AbortRequestProcessor", () => {
 	it("returns successful response if session has already been aborted", async () => {
 		mockBavService.getSessionById.mockResolvedValueOnce({ ...session, authSessionState: AuthSessionState.BAV_SESSION_ABORTED });
 
-		const out: Response = await abortRequestProcessor.processRequest(sessionId);
+		const out: Response = await abortRequestProcessor.processRequest(sessionId, encodedTxmaHeader);
 
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 		expect(out.body).toBe("Session has already been aborted");
@@ -73,7 +74,7 @@ describe("AbortRequestProcessor", () => {
 	it("updates auth session state and returns successful response if session has not been aborted", async () => {
 		mockBavService.getSessionById.mockResolvedValueOnce(session);
 
-		const out: Response = await abortRequestProcessor.processRequest(sessionId);
+		const out: Response = await abortRequestProcessor.processRequest(sessionId, encodedTxmaHeader);
 
 		expect(mockBavService.updateSessionAuthState).toHaveBeenCalledWith(sessionId, AuthSessionState.BAV_SESSION_ABORTED);
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
@@ -86,7 +87,7 @@ describe("AbortRequestProcessor", () => {
 		bavSessionItemClone.redirectUri = "http://localhost:8085/callback?id=bav";
 		mockBavService.getSessionById.mockResolvedValueOnce(session);
 
-		const out: Response = await abortRequestProcessor.processRequest(sessionId);
+		const out: Response = await abortRequestProcessor.processRequest(sessionId, encodedTxmaHeader);
 
 		expect(mockBavService.updateSessionAuthState).toHaveBeenCalledWith(sessionId, AuthSessionState.BAV_SESSION_ABORTED);
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
@@ -97,9 +98,9 @@ describe("AbortRequestProcessor", () => {
 	it("sends TxMA event after auth session state has been updated", async () => {
 		mockBavService.getSessionById.mockResolvedValueOnce(session);
 
-		await abortRequestProcessor.processRequest(sessionId);
+		await abortRequestProcessor.processRequest(sessionId, encodedTxmaHeader);
 
-		expect(mockBavService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
+		expect(mockBavService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", "ABCDEFG", {
 			event_name: "BAV_CRI_SESSION_ABORTED",
 			client_id: session.clientId,
 			component_id: "https://XXX-c.env.account.gov.uk",

@@ -7,7 +7,7 @@ import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { TxmaEventNames } from "../models/enums/TxmaEvents";
 import { ISessionItem } from "../models/ISessionItem";
-import { EnvironmentVariables } from "../utils/Constants";
+import { Constants, EnvironmentVariables } from "../utils/Constants";
 import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
@@ -66,6 +66,7 @@ export class UserInfoRequestProcessor {
 
 	// eslint-disable-next-line max-lines-per-function, complexity
 	async processRequest(event: APIGatewayProxyEvent): Promise<Response> {
+		const encodedHeader = event.headers[Constants.ENCODED_AUDIT_HEADER] ?? "";
 		let sessionId: string;
 
 		try {
@@ -150,7 +151,9 @@ export class UserInfoRequestProcessor {
 
 			const txmaCoreFields = buildCoreEventFields(session, this.issuer, session.clientIpAddress);
 			await this.BavService.sendToTXMA(
-				this.txmaQueueUrl, {
+				this.txmaQueueUrl,
+				encodedHeader,
+				{
 					event_name: TxmaEventNames.BAV_CRI_VC_ISSUED,
 					...txmaCoreFields,
 					restricted:{
@@ -178,7 +181,9 @@ export class UserInfoRequestProcessor {
 				});
 
 			await this.BavService.sendToTXMA(
-				this.txmaQueueUrl, {
+				this.txmaQueueUrl,
+				encodedHeader,
+				{
 					event_name: TxmaEventNames.BAV_CRI_END,
 					...txmaCoreFields,
 				},
