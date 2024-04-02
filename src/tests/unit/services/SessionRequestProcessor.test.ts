@@ -227,7 +227,6 @@ describe("SessionRequestProcessor", () => {
 			"ABCDEFG",
 			{
 				event_name: "BAV_CRI_START",
-				client_id: undefined,
 				component_id: "https://XXX-c.env.account.gov.uk",
 				timestamp: 1585695600000 / 1000,
 				event_timestamp_ms: 1585695600000,
