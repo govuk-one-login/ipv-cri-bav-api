@@ -110,3 +110,7 @@ export function validateTxMAEventData(
 export function absoluteTimeNow(): number {
 	return Math.floor(Date.now() / 1000);
 }
+
+export function sleep(ms = 0) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
