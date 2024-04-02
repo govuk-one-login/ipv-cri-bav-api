@@ -1,166 +1,167 @@
 /* eslint-disable max-lines-per-function */
 import verifyAccountYesPayload from "../data/bankDetailsYes.json";
 import {
-	authorizationGet,
-	sessionPost,
-	personInfoGet,
-	startStubServiceAndReturnSessionId,
-	stubStartPost,
-	userInfoPost,
-	verifyAccountPost,
-	tokenPost,
-	getSessionAndVerifyKey,
+  authorizationGet,
+  sessionPost,
+  personInfoGet,
+  startStubServiceAndReturnSessionId,
+  stubStartPost,
+  userInfoPost,
+  verifyAccountPost,
+  tokenPost,
+  getSessionAndVerifyKey,
 } from "./ApiTestSteps";
 import { constants } from "./ApiConstants";
 import { BankDetailsPayload } from "../models/BankDetailsPayload";
 import { randomUUID } from "crypto";
 
 describe("BAV CRI unhappy path tests", () => {
-	describe("/session Endpoint Unhappy Path Tests", () => {
-		let stubResponse: any;
-		beforeEach(async () => {
-			stubResponse = await stubStartPost();
-		});
+  describe("/session Endpoint Unhappy Path Tests", () => {
+    let stubResponse: any;
+    beforeEach(async () => {
+      stubResponse = await stubStartPost();
+    });
 
-		it("Empty Request Test", async () => {
-			const sessionResponse = await sessionPost(stubResponse.data.clientId, "");
+    it("Empty Request Test", async () => {
+      const sessionResponse = await sessionPost(stubResponse.data.clientId, "");
 
-			expect(sessionResponse.status).toBe(401);
-			expect(sessionResponse.data).toBe("Unauthorized");
-		});
+      expect(sessionResponse.status).toBe(401);
+      expect(sessionResponse.data).toBe("Unauthorized");
+    });
 
-		it("Empty ClientID Test", async () => {
-			const sessionResponse = await sessionPost("", stubResponse.data.request);
+    it("Empty ClientID Test", async () => {
+      const sessionResponse = await sessionPost("", stubResponse.data.request);
 
-			expect(sessionResponse.status).toBe(400);
-			expect(sessionResponse.data).toBe("Bad Request");
-		});
-	});
+      expect(sessionResponse.status).toBe(400);
+      expect(sessionResponse.data).toBe("Bad Request");
+    });
+  });
 
-	describe("/person-info Endpoint Unhappy Path Tests", () => {
-		it("Invalid Session Id Test", async () => {
-			const sessionId = randomUUID();
+  describe("/person-info Endpoint Unhappy Path Tests", () => {
+    it("Invalid Session Id Test", async () => {
+      const sessionId = randomUUID();
 
-			const personInfoResponse = await personInfoGet(sessionId);
-			expect(personInfoResponse.status).toBe(401);
-			expect(personInfoResponse.data).toBe("No session found with the session id: " + sessionId);
-		});
-	});
+      const personInfoResponse = await personInfoGet(sessionId);
+      expect(personInfoResponse.status).toBe(401);
+      expect(personInfoResponse.data).toBe("No session found with the session id: " + sessionId);
+    });
+  });
 
-	describe("/verify-account Endpoint Unhappy Path Tests", () => {
-		let sessionId: string;
 
-		it("HMRC Multiple Retries Test - Error Code 5XX", async () => {
-			const newVerifyAccountYesPayload = structuredClone(verifyAccountYesPayload);
-			newVerifyAccountYesPayload.account_number = "55555555";
+  describe("/verify-account Endpoint Unhappy Path Tests", () => {
+    let sessionId: string;
 
-			sessionId = await startStubServiceAndReturnSessionId();
+    it("HMRC Multiple Retries Test - Error Code 5XX", async () => {
+      const newVerifyAccountYesPayload = structuredClone(verifyAccountYesPayload);
+      newVerifyAccountYesPayload.account_number = "55555555";
 
-			const verifyAccountResponse = await verifyAccountPost(
-				new BankDetailsPayload(newVerifyAccountYesPayload.sort_code, newVerifyAccountYesPayload.account_number),
-				sessionId,
-			);
-			expect(verifyAccountResponse.status).toBe(500);
+      sessionId = await startStubServiceAndReturnSessionId();
 
-			await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_SESSION_CREATED");
-		});
+      const verifyAccountResponse = await verifyAccountPost(
+        new BankDetailsPayload(newVerifyAccountYesPayload.sort_code, newVerifyAccountYesPayload.account_number),
+        sessionId,
+      );
+      expect(verifyAccountResponse.status).toBe(500);
 
-		it("HMRC Multiple Retries Test - Error Code 429", async () => {
-			const newVerifyAccountYesPayload = structuredClone(verifyAccountYesPayload);
-			newVerifyAccountYesPayload.account_number = "66666666";
+      await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_SESSION_CREATED");
+    });
 
-			sessionId = await startStubServiceAndReturnSessionId();
+    it("HMRC Multiple Retries Test - Error Code 429", async () => {
+      const newVerifyAccountYesPayload = structuredClone(verifyAccountYesPayload);
+      newVerifyAccountYesPayload.account_number = "66666666";
 
-			const verifyAccountResponse = await verifyAccountPost(
-				new BankDetailsPayload(newVerifyAccountYesPayload.sort_code, newVerifyAccountYesPayload.account_number),
-				sessionId,
-			);
-			expect(verifyAccountResponse.status).toBe(500);
+      sessionId = await startStubServiceAndReturnSessionId();
 
-			await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_SESSION_CREATED");
-		});
+      const verifyAccountResponse = await verifyAccountPost(
+        new BankDetailsPayload(newVerifyAccountYesPayload.sort_code, newVerifyAccountYesPayload.account_number),
+        sessionId,
+      );
+      expect(verifyAccountResponse.status).toBe(500);
 
-		it.each([
-			["00111112"],
-			["00111113"],
-			["00111114"],
-			["00111115"],
-			["22222222"],
-			["33333333"],
-			["44444444"],
-		])("Name Retry Tests - Too many retries rejection for Account Number: $accountNumber", async (accountNumber: string) => {
-			const newVerifyAccountYesPayload = structuredClone(verifyAccountYesPayload);
-			newVerifyAccountYesPayload.account_number = accountNumber;
+      await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_SESSION_CREATED");
+    });
 
-			sessionId = await startStubServiceAndReturnSessionId();
+    it.each([
+      ["00111112"],
+      ["00111113"],
+      ["00111114"],
+      ["00111115"],
+      ["22222222"],
+      ["33333333"],
+      ["44444444"],
+    ])("Name Retry Tests - Too many retries rejection for Account Number: $accountNumber", async (accountNumber: string) => {
+      const newVerifyAccountYesPayload = structuredClone(verifyAccountYesPayload);
+      newVerifyAccountYesPayload.account_number = accountNumber;
 
-			await verifyAccountPost(newVerifyAccountYesPayload, sessionId);
-			await verifyAccountPost(newVerifyAccountYesPayload, sessionId);
-			const verifyAccountResponseSecondRetry = await verifyAccountPost(newVerifyAccountYesPayload, sessionId);
+      sessionId = await startStubServiceAndReturnSessionId();
 
-			expect(verifyAccountResponseSecondRetry.status).toBe(401);
-			expect(verifyAccountResponseSecondRetry.data).toBe("Too many attempts");
-		});
-	});
+      await verifyAccountPost(newVerifyAccountYesPayload, sessionId);
+      await verifyAccountPost(newVerifyAccountYesPayload, sessionId);
+      const verifyAccountResponseSecondRetry = await verifyAccountPost(newVerifyAccountYesPayload, sessionId);
 
-	describe("/authorization Endpoint Unhappy Path Tests", () => {
-		let sessionId: string;
+      expect(verifyAccountResponseSecondRetry.status).toBe(401);
+      expect(verifyAccountResponseSecondRetry.data).toBe("Too many attempts");
+    });
+  });
 
-		beforeEach(async () => {
-			sessionId = await startStubServiceAndReturnSessionId();
-		});
+  describe("BAV CRI: /authorization Endpoint Unhappy Path Tests", () => {
+    let sessionId: string;
 
-		it("Incorrect Session State Test", async () => {
-			const authResponse = await authorizationGet(sessionId);
-			expect(authResponse.status).toBe(401);
-		});
+    beforeEach(async () => {
+      sessionId = await startStubServiceAndReturnSessionId();
+    });
 
-		it("Repeated Request Made Test", async () => {
-			const origSessionId = sessionId;
-			await verifyAccountPost(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number), sessionId);
-			const authResponse = await authorizationGet(sessionId);
-			const authCode = authResponse.data.authorizationCode;
-			const authRepeatResponse = await authorizationGet(origSessionId);
-			const authRepeatResponseCode = authRepeatResponse.data.authorizationCode;
-			expect(authCode).not.toEqual(authRepeatResponseCode);
-		});
-	});
+    it("Incorrect Session State Test", async () => {
+      const authResponse = await authorizationGet(sessionId);
+      expect(authResponse.status).toBe(401);
+    });
 
-	describe("/token Endpoint Unhappy Path Tests", () => {
-		let sessionId: string;
+    it("Repeated Request Made Test", async () => {
+      const origSessionId = sessionId;
+      await verifyAccountPost(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number), sessionId);
+      const authResponse = await authorizationGet(sessionId);
+      const authCode = authResponse.data.authorizationCode;
+      const authRepeatResponse = await authorizationGet(origSessionId);
+      const authRepeatResponseCode = authRepeatResponse.data.authorizationCode;
+      expect(authCode).not.toEqual(authRepeatResponseCode);
+    });
+  });
 
-		beforeEach(async () => {
-			sessionId = await startStubServiceAndReturnSessionId();
-		});
+  describe("/token Endpoint Unhappy Path Tests", () => {
+    let sessionId: string;
 
-		it("Invalid Session State Test", async () => {
-			await verifyAccountPost(
-				new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number),
-				sessionId,
-			);
+    beforeEach(async () => {
+      sessionId = await startStubServiceAndReturnSessionId();
+    });
 
-			const authResponse = await authorizationGet(sessionId);
+    it("Invalid Session State Test", async () => {
+      await verifyAccountPost(
+        new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number),
+        sessionId,
+      );
 
-			await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+      const authResponse = await authorizationGet(sessionId);
 
-			// Request to /token endpoint again (which now has an incorrect session state)
-			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
-			expect(tokenResponse.status).toBe(401);
-		});
-	});
+      await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
 
-	describe("/userinfo Endpoint Unhappy Path Tests", () => {
-		it("Non-bearer Type Authentication Test", async () => {
-			const sessionId = await startStubServiceAndReturnSessionId();
+      // Request to /token endpoint again (which now has an incorrect session state)
+      const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+      expect(tokenResponse.status).toBe(401);
+    });
+  });
 
-			await verifyAccountPost(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number), sessionId);
+  describe("/userinfo Endpoint Unhappy Path Tests", () => {
+    it("Non-bearer Type Authentication Test", async () => {
+      const sessionId = await startStubServiceAndReturnSessionId();
 
-			const authResponse = await authorizationGet(sessionId);
+      await verifyAccountPost(new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number), sessionId);
 
-			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+      const authResponse = await authorizationGet(sessionId);
 
-			const userInfoResponse = await userInfoPost("Basic " + tokenResponse.data.access_token);
-			expect(userInfoResponse.status).toBe(401);
-		});
-	});
+      const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+
+      const userInfoResponse = await userInfoPost("Basic " + tokenResponse.data.access_token);
+      expect(userInfoResponse.status).toBe(401);
+    });
+  });
 });
