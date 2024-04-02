@@ -191,11 +191,101 @@ describe("AthenaQueryHandler", () => {
     // ASSERT
     expect(result.statusCode).toEqual(200);
     expect(athenaMock).toHaveReceivedCommandTimes(GetQueryExecutionCommand, 3);
+
   });
 
+  it("should return 500 if the query is cancelled", async () => {
 
+    // ARRANGE
+    athenaMock.on(StartQueryExecutionCommand).resolves({
+      QueryExecutionId: "1234",
+    })
+    athenaMock
+      .on(GetQueryExecutionCommand)
+      .resolvesOnce({
+        QueryExecution: {
+          Status: {
+            State: QueryExecutionState.QUEUED,
+          },
+        },
+      })
+      .resolves({
+        QueryExecution: {
+          Status: {
+            State: QueryExecutionState.CANCELLED,
+          },
+        },
+      });
 
-  // it("should return 500 if the query is cancelled")
-  // it("should return 500 if the query failed")
-  // it("should return 500 if an unknown query state is encountered")
+    // ACT
+    const result = await lambdaHandler(lambdaProxyEvent as unknown as APIGatewayProxyEvent, context);
+
+    // ASSERT
+    expect(result.statusCode).toEqual(500);
+
+  });
+
+  it("should return 500 if the query failed", async () => {
+
+    // ARRANGE
+    athenaMock.on(StartQueryExecutionCommand).resolves({
+      QueryExecutionId: "1234",
+    })
+    athenaMock
+      .on(GetQueryExecutionCommand)
+      .resolvesOnce({
+        QueryExecution: {
+          Status: {
+            State: QueryExecutionState.QUEUED,
+          },
+        },
+      })
+      .resolves({
+        QueryExecution: {
+          Status: {
+            State: QueryExecutionState.FAILED,
+          },
+        },
+      });
+
+    // ACT
+    const result = await lambdaHandler(lambdaProxyEvent as unknown as APIGatewayProxyEvent, context);
+
+    // ASSERT
+    expect(result.statusCode).toEqual(500);
+
+  });
+
+  it("should return 500 if an unknown query state is encountered", async () => {
+
+    // ARRANGE
+    athenaMock.on(StartQueryExecutionCommand).resolves({
+      QueryExecutionId: "1234",
+    })
+    athenaMock
+      .on(GetQueryExecutionCommand)
+      .resolvesOnce({
+        QueryExecution: {
+          Status: {
+            State: QueryExecutionState.QUEUED,
+          },
+        },
+      })
+      .resolves({
+        QueryExecution: {
+          Status: {
+            // @ts-ignore
+            State: "UNKNOWN_STATE",
+          },
+        },
+      });
+
+    // ACT
+    const result = await lambdaHandler(lambdaProxyEvent as unknown as APIGatewayProxyEvent, context);
+
+    // ASSERT
+    expect(result.statusCode).toEqual(500);
+
+  })
+
 })
