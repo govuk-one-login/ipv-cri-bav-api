@@ -2797,19 +2797,31 @@ Outputs:
     Description: "PartialNameMatchBucket Bucket Name"
     Value: !Ref PartialNameMatchBucket
     Export:
-      Name: !Sub ${AWS::StackName}-PartialNameMatchBucket
+      Name: !Sub "${AWS::StackName}-PartialNameMatchBucket"
   PartialNameMatchAthenaResultsBucket:
     Condition: IsNotProdLikeEnvironment
     Description: "PartialNameMatchBucket Bucket Name"
     Value: !Ref PartialNameMatchAthenaResultsBucket
     Export:
-      Name: !Sub ${AWS::StackName}-PartialNameMatchAthenaResultsBucket
+      Name: !Sub "${AWS::StackName}-PartialNameMatchAthenaResultsBucket"
   PartialNameMatchGlueTable:
     Condition: IsNotProdLikeEnvironment
     Description: "PartialNameMatchGlueTable"
     Value: !Ref PartialNameMatchGlueTable
     Export:
-      Name: !Sub ${AWS::StackName}-PartialNameMatchGlueTable
+      Name: !Sub "${AWS::StackName}-PartialNameMatchGlueTable"
+  PartialNameMatchGlueDatabase:
+    Condition: IsNotProdLikeEnvironment
+    Description: "PartialNameMatchGlueDatabase"
+    Value: !Ref PartialNameMatchGlueDatabase
+    Export:
+      Name: !Sub "${AWS::StackName}-PartialNameMatchGlueDatabase"
+  PartialNameMatchAthenaWorkgoup:
+    Condition: IsNotProdLikeEnvironment
+    Description: "PartialNameMatchAthenaWorkgroup"
+    Value: !Ref PartialNameMatchAthenaWorkgroup
+    Export:
+      Name: !Sub "${AWS::StackName}-PartialNameMatchAthenaWorkgroup"
   DNSSuffix:
     Condition: IsNotProdLikeEnvironment
     Description: "F2F DNS Suffix"
