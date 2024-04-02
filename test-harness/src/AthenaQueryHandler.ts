@@ -28,7 +28,7 @@ export const logger = new Logger({
 
 const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE, serviceName: POWERTOOLS_SERVICE_NAME });
 
-const athenaClient = new AthenaClient({region: process.env.REGION});
+export const athenaClient = new AthenaClient({region: process.env.REGION});
 
 class AthenaQueryHandler implements LambdaInterface {
 
@@ -47,18 +47,18 @@ class AthenaQueryHandler implements LambdaInterface {
 			};
 		}
 
-			const sqlString = "SELECT itemnumber FROM \"" + (process.env["ATHENA_TABLE"] ?? "") + "\" WHERE timestamp >= ? AND cicname LIKE ? ORDER BY timestamp DESC";
+		const sqlString = "SELECT itemnumber FROM \"" + (process.env["GLUE_TABLE"] ?? "") + "\" WHERE timestamp >= ? AND cicname LIKE ? ORDER BY timestamp DESC";
 		const queryExecutionInput : StartQueryExecutionInput = {
 			QueryString: sqlString,
 			QueryExecutionContext: {
-				Database: 'partialnamematch-backend-ddunford-bav',
-				Catalog: 'AwsDataCatalog'
+				Database: process.env["GLUE_DATABASE"],
+				Catalog: 'AwsDataCatalog',
 			},
 			ExecutionParameters: [
 				event.queryStringParameters['min-timestamp'] ?? "1",
 				event.queryStringParameters['name-prefix'] + "%" ?? "%",
 			],
-			WorkGroup: 'PartialNameMatch-backend-ddunford-bav',
+			WorkGroup: process.env["ATHENA_WORKGROUP"],
 		}
 
 		logger.debug("Sending query", {input: queryExecutionInput})
