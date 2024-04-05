@@ -102,7 +102,6 @@ describe("AbortRequestProcessor", () => {
 
 		expect(mockBavService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", "ABCDEFG", {
 			event_name: "BAV_CRI_SESSION_ABORTED",
-			client_id: session.clientId,
 			component_id: "https://XXX-c.env.account.gov.uk",
 			timestamp: 1585695600,
 			event_timestamp_ms: 1585695600000,

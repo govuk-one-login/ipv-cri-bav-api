@@ -146,7 +146,6 @@ describe("VerifyAccountRequestProcessor", () => {
 			expect(mockHmrcService.verify).toHaveBeenCalledWith({ accountNumber: body.account_number, sortCode: body.sort_code, name: "Frederick Joseph Flintstone", uuid: hmrcUuid }, TOKEN_SSM_PARAM );
 			expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "MYQUEUE", "ABCDEFG", {
 				event_name: "BAV_COP_REQUEST_SENT",
-				client_id: session.clientId,
 				component_id: "https://XXX-c.env.account.gov.uk",
 				extensions: {
 					evidence: [
@@ -176,7 +175,6 @@ describe("VerifyAccountRequestProcessor", () => {
 			});
 			expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(2, "MYQUEUE", "ABCDEFG", {
 				event_name: "BAV_COP_RESPONSE_RECEIVED",
-				client_id: session.clientId,
 				component_id: "https://XXX-c.env.account.gov.uk",
 				extensions: {
 					evidence: [
