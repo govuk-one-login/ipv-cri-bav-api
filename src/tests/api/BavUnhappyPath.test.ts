@@ -121,7 +121,6 @@ describe("BAV CRI unhappy path tests", () => {
 
 			// ACT
 			await sleep(500);
-			// Verify-account request
 			const verifyAccountResponse = await verifyAccountPost(newVerifyAccountYesPayload, sessionId);
 
 			// ASSERT
