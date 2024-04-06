@@ -9,5 +9,5 @@ export class Constants {
 
   static readonly ERROR = "ERROR";
 
-  static readonly BAV_METRICS_NAMESPACE = "BAV-CRI";
+  static readonly BAV_METRICS_NAMESPACE = "BAV-CRI-HARNESS";
 }
