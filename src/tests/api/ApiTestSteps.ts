@@ -180,9 +180,7 @@ export async function getSessionById(sessionId: string, tableName: string): Prom
 
 	let session: ISessionItem | undefined;
 	try {
-		const response = await HARNESS_API_INSTANCE.get<{
-			Item: OriginalSessionItem;
-		}>(`getRecordBySessionId/${tableName}/${sessionId}`, {});
+		const response = await HARNESS_API_INSTANCE.get<{ Item: OriginalSessionItem }>(`getRecordBySessionId/${tableName}/${sessionId}`, {});
 		const originalSession = response.data.Item;
 		session = Object.fromEntries(
 			Object.entries(originalSession).map(([key, value]) => [key, value.N ?? value.S]),
@@ -194,7 +192,7 @@ export async function getSessionById(sessionId: string, tableName: string): Prom
 	return session;
 }
 
-export async function getAthenaRecordByFirstNameAndTime(startTime: number, firstName: string): Promise<any[]> {
+export async function getAthenaRecordByFirstNameAndTime(startTime: number, firstName: string): Promise<Array<Record<string, string>>> {
 	try {
 		const athenaResult = await HARNESS_API_INSTANCE.get("/athena/query", {
 			params: {
@@ -202,7 +200,7 @@ export async function getAthenaRecordByFirstNameAndTime(startTime: number, first
 				"name-prefix": firstName,
 			},
 		});
-		return athenaResult.data;
+		return athenaResult.data as Array<Record<string, string>>;
 	} catch (error: any) {
 		console.error({ message: "getAthenaRecordByFirstNameAndTime - failed getting Athena records", error });
 	}
