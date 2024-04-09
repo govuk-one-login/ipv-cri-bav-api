@@ -25,6 +25,8 @@ class Session implements LambdaInterface {
 		logger.setPersistentLogAttributes({});
 		logger.addContext(context);
 
+		return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
+
 		try {
 			logger.info("Starting UserInfoProcessor");
 			return await UserInfoRequestProcessor.getInstance(logger, metrics).processRequest(event);

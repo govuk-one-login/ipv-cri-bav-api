@@ -27,6 +27,8 @@ export class AbortHandler implements LambdaInterface {
 		logger.setPersistentLogAttributes({});
 		logger.addContext(context);
 
+		return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
+
 		try {
 			const { sessionId, encodedHeader } = this.validateEvent(event);
 			logger.info("Starting AbortRequestProcessor");

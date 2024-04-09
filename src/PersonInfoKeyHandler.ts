@@ -28,6 +28,8 @@ export class PersonInfoKeyHandler implements LambdaInterface {
 		logger.setPersistentLogAttributes({});
 		logger.addContext(context);
 
+		return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
+
 		try {
 			const privateKeyPath = checkEnvironmentVariable(EnvironmentVariables.PRIVATE_KEY_SSM_PATH, logger);
 			logger.info({ message: "Fetching key", privateKeyPath });

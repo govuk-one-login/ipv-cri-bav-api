@@ -31,6 +31,8 @@ export class PersonInfoHandler implements LambdaInterface {
 		logger.setPersistentLogAttributes({});
 		logger.addContext(context);
 
+		return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
+
 		try {
 			const sessionId = this.validateEvent(event);
 			const publicKeyPath = checkEnvironmentVariable(EnvironmentVariables.PUBLIC_KEY_SSM_PATH, logger);
