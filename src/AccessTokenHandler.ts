@@ -27,7 +27,7 @@ export class AccessToken implements LambdaInterface {
 		logger.setPersistentLogAttributes({});
 		logger.addContext(context);
 
-		return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
+		return new Response(HttpCodesEnum.BAD_REQUEST, "Bad Request");
 
 		try {
 			logger.info("Starting AccessTokenRequestProcessor");

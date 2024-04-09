@@ -29,7 +29,7 @@ class HmrcTokenHandler implements LambdaInterface {
 	async handler(): Promise<void> {
 		logger.setPersistentLogAttributes({});
 
-		throw new AppError(HttpCodesEnum.SERVER_ERROR, "Server Error");
+		throw new AppError(HttpCodesEnum.BAD_REQUEST, "Bad Request");
 		
 		try {
 			logger.info("Generating a new HMRC token");
