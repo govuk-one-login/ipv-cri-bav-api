@@ -23,6 +23,7 @@ export let s3Client: S3Client;
 class PartialNameMatchHandler implements LambdaInterface {
 	@metrics.logMetrics({ throwOnEmptyMetrics: false, captureColdStartMetric: true })
 	async handler(event: SQSEvent, context: Context): Promise<SQSBatchResponse> {
+		
 
 		if (!s3Client) {
 			s3Client = new S3Client({

@@ -25,6 +25,8 @@ class AuthorizationHandler implements LambdaInterface {
 
 		logger.setPersistentLogAttributes({});
 		logger.addContext(context);
+
+		return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
 				
 		let sessionId: string;
 		try {
