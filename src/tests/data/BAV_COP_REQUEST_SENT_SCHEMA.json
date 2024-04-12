@@ -90,22 +90,10 @@
               ]
             }
           ]
-        },
-        "device_information": {
-          "type": "object",
-          "properties": {
-            "encoded": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "encoded"
-          ]
         }
       },
       "required": [
-        "CoP_request_details",
-        "device_information"
+        "CoP_request_details"
       ]
     }
   },
