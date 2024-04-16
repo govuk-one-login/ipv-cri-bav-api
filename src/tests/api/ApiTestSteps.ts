@@ -69,7 +69,7 @@ export async function stubStartPost(bavStubPayload?: StubStartRequest): Promise<
 export async function sessionPost(clientId: string, request: string): Promise<AxiosResponse<SessionResponse>> {
 	const path = "/session";
 	try {
-		const postRequest = await API_INSTANCE.post(path, { client_id: clientId, request });
+		const postRequest = await API_INSTANCE.post(path, { client_id: clientId, request }, { headers: { "txma-audit-encoded": "encoded-header" } });
 		expect(postRequest.status).toBe(200);
 		return postRequest;
 	} catch (error: any) {
@@ -105,7 +105,7 @@ export async function personInfoKeyGet(): Promise<AxiosResponse<{ key: string }>
 export async function verifyAccountPost(bankDetails: BankDetailsPayload, sessionId: string): Promise<AxiosResponse<VerifyAccountResponse>> {
 	const path = "/verify-account";
 	try {
-		const postRequest = await API_INSTANCE.post(path, JSON.stringify(bankDetails), { headers: { "x-govuk-signin-session-id": sessionId } });
+		const postRequest = await API_INSTANCE.post(path, JSON.stringify(bankDetails), { headers: { "x-govuk-signin-session-id": sessionId, "txma-audit-encoded": "encoded-header" } });
 		return postRequest;
 	} catch (error: any) {
 		console.log(`Error response from ${path} endpoint: ${error}`);
@@ -252,7 +252,7 @@ export function decodeRawBody(rawBody: any): any {
 export async function abortPost(sessionId: string): Promise<AxiosResponse<string>> {
 	const path = "/abort";
 	try {
-		const postRequest = await API_INSTANCE.post(path, null, { headers: { "x-govuk-signin-session-id": sessionId } });
+		const postRequest = await API_INSTANCE.post(path, null, { headers: { "x-govuk-signin-session-id": sessionId, "txma-audit-encoded": "encoded-header" } });
 		return postRequest;
 	} catch (error: any) {
 		console.log(`Error response from ${path} endpoint: ${error}`);

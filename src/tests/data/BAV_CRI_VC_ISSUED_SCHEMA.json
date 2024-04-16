@@ -106,23 +106,11 @@
               ]
             }
           ]
-        },
-        "device_information": {
-          "type": "object",
-          "properties": {
-            "encoded": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "encoded"
-          ]
         }
       },
       "required": [
         "name",
-        "bankAccount",
-        "device_information"
+        "bankAccount"
       ]
     },
     "extensions": {
