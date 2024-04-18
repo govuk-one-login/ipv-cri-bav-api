@@ -27,6 +27,8 @@ class Session implements LambdaInterface {
 
 		try {
 			logger.info("Starting SessionRequestProcessor");
+			// Adding a 5-second wait before processing the request
+			await new Promise(resolve => setTimeout(resolve, 5000));
 			return await SessionRequestProcessor.getInstance(logger, metrics).processRequest(event);
 		} catch (error: any) {
 			logger.error("An error has occurred", {

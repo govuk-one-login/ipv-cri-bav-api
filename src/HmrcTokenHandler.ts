@@ -37,6 +37,8 @@ class HmrcTokenHandler implements LambdaInterface {
 			if (!HMRC_CLIENT_SECRET) {
 				HMRC_CLIENT_SECRET = await this.fetchSSMParam(this.HMRC_CLIENT_SECRET_SSM_PATH);
 			}
+			// Adding a 5-second wait before processing the request
+			await new Promise(resolve => setTimeout(resolve, 5000));
 			await HmrcTokenRequestProcessor.getInstance(logger, metrics, HMRC_CLIENT_ID, HMRC_CLIENT_SECRET).processRequest();
 
 		} catch (error: any) {

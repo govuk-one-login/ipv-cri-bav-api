@@ -50,6 +50,8 @@ class AuthorizationHandler implements LambdaInterface {
 				return new Response(HttpCodesEnum.BAD_REQUEST, message);
 			}
 
+			// Adding a 5-second wait before processing the request
+			await new Promise(resolve => setTimeout(resolve, 5000));
 			return await AuthorizationRequestProcessor.getInstance(logger, metrics).processRequest(sessionId);
 
 		} catch (error: any) {

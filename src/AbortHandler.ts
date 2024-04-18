@@ -30,6 +30,8 @@ export class AbortHandler implements LambdaInterface {
 		try {
 			const { sessionId, encodedHeader } = this.validateEvent(event);
 			logger.info("Starting AbortRequestProcessor");
+			// Adding a 5-second wait before processing the request
+			await new Promise(resolve => setTimeout(resolve, 5000));
 			return await AbortRequestProcessor.getInstance(logger, metrics).processRequest(sessionId, encodedHeader);
 		} catch (error: any) {
 			logger.error({ message: "AbortRequestProcessor encountered an error.", error, messageCode: MessageCodes.SERVER_ERROR });

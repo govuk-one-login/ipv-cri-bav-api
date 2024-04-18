@@ -29,6 +29,8 @@ export class AccessToken implements LambdaInterface {
 
 		try {
 			logger.info("Starting AccessTokenRequestProcessor");
+			// Adding a 5-second wait before processing the request
+			await new Promise(resolve => setTimeout(resolve, 5000));
 			return await AccessTokenRequestProcessor.getInstance(logger, metrics).processRequest(event);
 		} catch (error: any) {
 			logger.error({ message: "An error has occurred.", error, messageCode: MessageCodes.SERVER_ERROR });

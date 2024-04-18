@@ -37,6 +37,8 @@ export class PersonInfoHandler implements LambdaInterface {
 			PUBLIC_KEY = PUBLIC_KEY ?? await getParameter(publicKeyPath);
 
 			logger.info("Starting PersonInfoRequestProcessor");
+			// Adding a 5-second wait before processing the request
+			await new Promise(resolve => setTimeout(resolve, 5000));
 			return await PersonInfoRequestProcessor.getInstance(logger, metrics, PUBLIC_KEY).processRequest(sessionId);
 		} catch (error: any) {
 			logger.error({ message: "PersonInfoRequestProcessor encountered an error.", error, messageCode: MessageCodes.SERVER_ERROR });

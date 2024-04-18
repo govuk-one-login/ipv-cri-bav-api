@@ -61,6 +61,8 @@ class PartialNameMatchHandler implements LambdaInterface {
 				};
 
 				try {
+					// Adding a 5-second wait before processing the request
+					await new Promise(resolve => setTimeout(resolve, 5000));
 					await s3Client.send(new PutObjectCommand(uploadParams));
 					successfulRecords++;
 				} catch (err) {
