@@ -76,8 +76,7 @@ export class SessionRequestProcessor {
   	const encodedHeader = event.headers[Constants.ENCODED_AUDIT_HEADER] ?? "";
   	const deserialisedRequestBody = JSON.parse(event.body as string) as SessionRequest;
   	const requestBodyClientId = deserialisedRequestBody.client_id;
-  	const clientIpAddress = event.requestContext.identity?.sourceIp;
-		
+  	const clientIpAddress = event.headers[Constants.X_FORWARDED_FOR] ?? event.requestContext.identity?.sourceIp;
 
   	let configClient: ClientConfig | undefined;
   	try {
@@ -196,11 +195,12 @@ export class SessionRequestProcessor {
   	const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
   	await this.BavService.sendToTXMA(
   		this.txmaQueueUrl,
-  		encodedHeader,
   		{
   			event_name: TxmaEventNames.BAV_CRI_START,
   			...coreEventFields,
-  	});
+  	},
+  		encodedHeader,
+  	);
 
   	this.logger.info("Session created successfully. Returning 200OK");
 

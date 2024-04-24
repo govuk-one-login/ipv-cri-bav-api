@@ -10,6 +10,7 @@ import { MessageCodes } from "../../../models/enums/MessageCodes";
 import { Jwt } from "../../../models/IVeriCredential";
 import { SessionRequestProcessor } from "../../../services/SessionRequestProcessor";
 import { BavService } from "../../../services/BavService";
+import { Constants } from "../../../utils/Constants";
 import { KmsJwtAdapter } from "../../../utils/KmsJwtAdapter";
 import { SECURITY_HEADERS } from "../../../utils/Response";
 import * as Validations from "../../../utils/Validations";
@@ -212,32 +213,65 @@ describe("SessionRequestProcessor", () => {
 		expect(logger.appendKeys).toHaveBeenCalledWith({ sessionId: "mock-session-id" });
 	});
 
-	it("sends BAV_CRI_START event to txma", async () => {
-		mockBavService.generateSessionId.mockResolvedValue("mock-session-id");
-		mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
-		mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
-		mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
-		jest.spyOn(Validations, "isJwtValid").mockReturnValue("");
-		jest.spyOn(Validations, "isPersonNameValid").mockReturnValue(true);
+	describe("sends BAV_CRI_START event to txma", () => {
+		it("ip_address is X_FORWARDED_FOR if header is present", async () => {
+			mockBavService.generateSessionId.mockResolvedValue("mock-session-id");
+			mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
+			mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
+			mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
+			jest.spyOn(Validations, "isJwtValid").mockReturnValue("");
+			jest.spyOn(Validations, "isPersonNameValid").mockReturnValue(true);
 
-		await sessionRequestProcessor.processRequest(VALID_SESSION);
+			await sessionRequestProcessor.processRequest({ ...VALID_SESSION, headers: { ...VALID_SESSION.headers, [Constants.X_FORWARDED_FOR]: "x-forwarded-for" } });
 
-		expect(mockBavService.sendToTXMA).toHaveBeenCalledWith(
-			process.env.TXMA_QUEUE_URL,
-			"ABCDEFG",
-			{
-				event_name: "BAV_CRI_START",
-				component_id: "https://XXX-c.env.account.gov.uk",
-				timestamp: 1585695600000 / 1000,
-				event_timestamp_ms: 1585695600000,
-				user: {
-					govuk_signin_journey_id: "abcdef",
-					ip_address: "",
-					session_id: "mock-session-id",
-					user_id: "",
+
+			expect(mockBavService.sendToTXMA).toHaveBeenCalledWith(
+				process.env.TXMA_QUEUE_URL,
+				{
+					event_name: "BAV_CRI_START",
+					component_id: "https://XXX-c.env.account.gov.uk",
+					timestamp: 1585695600000 / 1000,
+					event_timestamp_ms: 1585695600000,
+					user: {
+						govuk_signin_journey_id: "abcdef",
+						ip_address: "x-forwarded-for",
+						session_id: "mock-session-id",
+						user_id: "",
+					},
 				},
-			});
+				"ABCDEFG",
+			);
+		});
+
+		it("ip_address is source IP if no X_FORWARDED_FOR header is present", async () => {
+			mockBavService.generateSessionId.mockResolvedValue("mock-session-id");
+			mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
+			mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
+			mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
+			jest.spyOn(Validations, "isJwtValid").mockReturnValue("");
+			jest.spyOn(Validations, "isPersonNameValid").mockReturnValue(true);
+
+			await sessionRequestProcessor.processRequest(VALID_SESSION);
+
+			expect(mockBavService.sendToTXMA).toHaveBeenCalledWith(
+				process.env.TXMA_QUEUE_URL,
+				{
+					event_name: "BAV_CRI_START",
+					component_id: "https://XXX-c.env.account.gov.uk",
+					timestamp: 1585695600000 / 1000,
+					event_timestamp_ms: 1585695600000,
+					user: {
+						govuk_signin_journey_id: "abcdef",
+						ip_address: "1.1.1",
+						session_id: "mock-session-id",
+						user_id: "",
+					},
+				},
+				"ABCDEFG",
+			);
+		});
 	});
+
 
 	it("successful response is returned if all processing ahs passed", async () => {
 		mockBavService.generateSessionId.mockResolvedValue("mock-session-id");

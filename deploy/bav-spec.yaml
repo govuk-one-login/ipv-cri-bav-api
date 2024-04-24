@@ -30,6 +30,8 @@ paths:
         caller.
       tags:
         - Backend - Common CRI Lambda
+      parameters:
+        - $ref: '#/components/parameters/AuditHeader'
       requestBody:
         required: true
         content:
@@ -130,7 +132,6 @@ paths:
         - Backend - Common CRI Lambda
       parameters:
         - $ref: "#/components/parameters/SessionHeader"
-        - $ref: '#/components/parameters/AuditHeader'
       responses:
         "200":
           description: "Issue an authorization code. Note - currently persists the code against the session as a side effect"
@@ -221,7 +222,6 @@ paths:
         - Backend - CI CRI specific
       parameters:
         - $ref: '#/components/parameters/Authorization'
-        - $ref: '#/components/parameters/AuditHeader'
       responses:
         "200":
           description: >-
@@ -714,7 +714,6 @@ paths:
         Return encrypted personal information needed to pre populate information on the frontend
       parameters:
         - $ref: '#/components/parameters/SessionId'
-        - $ref: '#/components/parameters/AuditHeader'
       tags:
         - Backend - CI CRI specific
       responses:
