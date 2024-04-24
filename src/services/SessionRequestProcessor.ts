@@ -76,8 +76,7 @@ export class SessionRequestProcessor {
   	const encodedHeader = event.headers[Constants.ENCODED_AUDIT_HEADER] ?? "";
   	const deserialisedRequestBody = JSON.parse(event.body as string) as SessionRequest;
   	const requestBodyClientId = deserialisedRequestBody.client_id;
-  	const clientIpAddress = event.requestContext.identity?.sourceIp;
-		
+  	const clientIpAddress = event.headers[Constants.X_FORWARDED_FOR] ?? event.requestContext.identity?.sourceIp;
 
   	let configClient: ClientConfig | undefined;
   	try {

@@ -31,7 +31,7 @@ export const VALID_SESSION = {
 			cognitoIdentityId: "",
 			cognitoIdentityPoolId: "",
 			principalOrgId: "",
-			sourceIp: "",
+			sourceIp: "1.1.1",
 			user: "",
 			userAgent: "",
 			userArn: "",

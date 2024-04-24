@@ -34,7 +34,7 @@ export class VerifyAccountHandler implements LambdaInterface {
 
 		try {
 			const { sessionId, body, encodedHeader } = this.validateEvent(event);
-			const clientIpAddress = event.requestContext.identity?.sourceIp;
+			const clientIpAddress = event.headers[Constants.X_FORWARDED_FOR] ?? event.requestContext.identity?.sourceIp;
 
 			const hmrcTokenSsmPath = checkEnvironmentVariable(EnvironmentVariables.HMRC_TOKEN_SSM_PATH, logger);
     	HMRC_TOKEN = await getParameter(hmrcTokenSsmPath);
