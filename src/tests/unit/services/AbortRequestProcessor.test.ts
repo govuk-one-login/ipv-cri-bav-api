@@ -100,7 +100,7 @@ describe("AbortRequestProcessor", () => {
 
 		await abortRequestProcessor.processRequest(sessionId, encodedTxmaHeader);
 
-		expect(mockBavService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", "ABCDEFG", {
+		expect(mockBavService.sendToTXMA).toHaveBeenCalledWith("MYQUEUE", {
 			event_name: "BAV_CRI_SESSION_ABORTED",
 			component_id: "https://XXX-c.env.account.gov.uk",
 			timestamp: 1585695600,
@@ -111,6 +111,8 @@ describe("AbortRequestProcessor", () => {
 			  user_id: session.subject,
 			  govuk_signin_journey_id: session.clientSessionId,
 			},
-		});
+		},
+		"ABCDEFG",
+		);
 	});
 });

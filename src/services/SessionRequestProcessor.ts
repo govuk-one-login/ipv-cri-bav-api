@@ -196,11 +196,12 @@ export class SessionRequestProcessor {
   	const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
   	await this.BavService.sendToTXMA(
   		this.txmaQueueUrl,
-  		encodedHeader,
   		{
   			event_name: TxmaEventNames.BAV_CRI_START,
   			...coreEventFields,
-  	});
+  	},
+  		encodedHeader,
+  	);
 
   	this.logger.info("Session created successfully. Returning 200OK");
 

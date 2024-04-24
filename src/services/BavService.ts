@@ -110,7 +110,7 @@ export class BavService {
 		}
 	}
 
-	async sendToTXMA(QueueUrl: string, encodedHeader: string, event: TxmaEvent): Promise<void> {
+	async sendToTXMA(QueueUrl: string, event: TxmaEvent, encodedHeader?: string): Promise<void> {
 		try {
 
 			if (encodedHeader) {

@@ -224,7 +224,6 @@ describe("SessionRequestProcessor", () => {
 
 		expect(mockBavService.sendToTXMA).toHaveBeenCalledWith(
 			process.env.TXMA_QUEUE_URL,
-			"ABCDEFG",
 			{
 				event_name: "BAV_CRI_START",
 				component_id: "https://XXX-c.env.account.gov.uk",
@@ -236,7 +235,9 @@ describe("SessionRequestProcessor", () => {
 					session_id: "mock-session-id",
 					user_id: "",
 				},
-			});
+			},
+			"ABCDEFG",
+		);
 	});
 
 	it("successful response is returned if all processing ahs passed", async () => {

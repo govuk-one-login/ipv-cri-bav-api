@@ -144,7 +144,7 @@ describe("VerifyAccountRequestProcessor", () => {
 			await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress, encodedTxmaHeader);
 
 			expect(mockHmrcService.verify).toHaveBeenCalledWith({ accountNumber: body.account_number, sortCode: body.sort_code, name: "Frederick Joseph Flintstone", uuid: hmrcUuid }, TOKEN_SSM_PARAM );
-			expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "MYQUEUE", "ABCDEFG", {
+			expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "MYQUEUE", {
 				event_name: "BAV_COP_REQUEST_SENT",
 				component_id: "https://XXX-c.env.account.gov.uk",
 				extensions: {
@@ -172,8 +172,10 @@ describe("VerifyAccountRequestProcessor", () => {
 					session_id: session.sessionId,
 					user_id: session.subject,
 				},
-			});
-			expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(2, "MYQUEUE", "ABCDEFG", {
+			},
+			"ABCDEFG",
+			);
+			expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(2, "MYQUEUE", {
 				event_name: "BAV_COP_RESPONSE_RECEIVED",
 				component_id: "https://XXX-c.env.account.gov.uk",
 				extensions: {
@@ -191,7 +193,9 @@ describe("VerifyAccountRequestProcessor", () => {
 				},
 				timestamp: 1585695600,
 				event_timestamp_ms: 1585695600000,
-			});
+			},
+			"ABCDEFG",
+			);
 		});
 
 		it("pads account number if it's too short", async () => {
