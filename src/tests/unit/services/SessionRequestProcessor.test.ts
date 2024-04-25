@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 /* eslint-disable max-lines-per-function */
 /* eslint @typescript-eslint/unbound-method: 0 */
 import { Logger } from "@aws-lambda-powertools/logger";
@@ -11,8 +12,10 @@ import { Jwt } from "../../../models/IVeriCredential";
 import { SessionRequestProcessor } from "../../../services/SessionRequestProcessor";
 import { BavService } from "../../../services/BavService";
 import { Constants } from "../../../utils/Constants";
+import * as envVarUtils from "../../../utils/EnvironmentVariables";
 import { KmsJwtAdapter } from "../../../utils/KmsJwtAdapter";
 import { SECURITY_HEADERS } from "../../../utils/Response";
+import * as TxmaEventUtils from "../../../utils/TxmaEvent";
 import * as Validations from "../../../utils/Validations";
 
 let sessionRequestProcessor: SessionRequestProcessor;
@@ -20,6 +23,7 @@ const mockBavService = mock<BavService>();
 const mockKmsJwtAdapter = mock<KmsJwtAdapter>();
 const logger = mock<Logger>();
 const metrics = mock<Metrics>();
+jest.spyOn(TxmaEventUtils, "buildCoreEventFields");
 
 const decodedJwtFactory = ():Jwt => {
 	return {
@@ -66,7 +70,9 @@ const decryptedJwtPayloadFactory = ():JWTPayload => {
 };
 
 describe("SessionRequestProcessor", () => {
-	beforeAll(() => {
+	beforeEach(() => {
+		jest.useFakeTimers();
+		jest.setSystemTime(new Date(1585695600000)); // == 2020-03-31T23:00:00.000Z
 		sessionRequestProcessor = new SessionRequestProcessor(logger, metrics);
 		// @ts-ignore
 		sessionRequestProcessor.BavService = mockBavService;
@@ -74,14 +80,25 @@ describe("SessionRequestProcessor", () => {
 		sessionRequestProcessor.kmsDecryptor = mockKmsJwtAdapter;
 	});
 
-	beforeEach(() => {
-		jest.useFakeTimers();
-		jest.setSystemTime(new Date(1585695600000)); // == 2020-03-31T23:00:00.000Z
-	});
-
 	afterEach(() => {
 		jest.useRealTimers();
 		jest.resetAllMocks();
+	});
+
+	it("should throw error where client config cannot be processed", async () => {
+		jest.spyOn(envVarUtils, "checkEnvironmentVariable").mockReturnValue("test");
+		sessionRequestProcessor = new SessionRequestProcessor(logger, metrics);
+
+		const response = await sessionRequestProcessor.processRequest(VALID_SESSION);
+
+		expect(response.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);
+		expect(logger.error).toHaveBeenCalledTimes(1);
+		expect(logger.error).toHaveBeenCalledWith(
+			"Invalid or missing client configuration table",
+			expect.objectContaining({
+				messageCode: MessageCodes.MISSING_CONFIGURATION,
+			}),
+		);
 	});
 
 	it("should throw error where there is unrecognised client", async () => {
@@ -90,7 +107,7 @@ describe("SessionRequestProcessor", () => {
 		expect(response.statusCode).toBe(HttpCodesEnum.BAD_REQUEST);
 		expect(logger.error).toHaveBeenCalledTimes(1);
 		expect(logger.error).toHaveBeenCalledWith(
-			expect.anything(),
+			"Unrecognised client in request",
 			expect.objectContaining({
 				messageCode: MessageCodes.UNRECOGNISED_CLIENT,
 			}),
@@ -214,6 +231,75 @@ describe("SessionRequestProcessor", () => {
 	});
 
 	describe("sends BAV_CRI_START event to txma", () => {
+		it("when no headers are included defaults are used", async () => {
+			mockBavService.generateSessionId.mockResolvedValue("mock-session-id");
+			mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
+			mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
+			mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
+			jest.spyOn(Validations, "isJwtValid").mockReturnValue("");
+			jest.spyOn(Validations, "isPersonNameValid").mockReturnValue(true);
+
+			const sessionWithOutHeaders = JSON.parse(JSON.stringify(VALID_SESSION));
+			delete sessionWithOutHeaders.headers;
+
+			await sessionRequestProcessor.processRequest(sessionWithOutHeaders);
+
+			expect(TxmaEventUtils.buildCoreEventFields).toHaveBeenCalledWith(
+				expect.anything(),
+				"https://XXX-c.env.account.gov.uk",
+				sessionWithOutHeaders.requestContext.identity?.sourceIp,
+			);
+			expect(mockBavService.sendToTXMA).toHaveBeenCalledWith(
+				process.env.TXMA_QUEUE_URL,
+				{
+					event_name: "BAV_CRI_START",
+					component_id: "https://XXX-c.env.account.gov.uk",
+					timestamp: 1585695600000 / 1000,
+					event_timestamp_ms: 1585695600000,
+					user: {
+						govuk_signin_journey_id: "abcdef",
+						ip_address: sessionWithOutHeaders.requestContext.identity?.sourceIp,
+						session_id: "mock-session-id",
+						user_id: "",
+					},
+				},
+				undefined,
+			);
+		});
+
+		it("when headers are empty defaults are used", async () => {
+			mockBavService.generateSessionId.mockResolvedValue("mock-session-id");
+			mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
+			mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
+			mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
+			jest.spyOn(Validations, "isJwtValid").mockReturnValue("");
+			jest.spyOn(Validations, "isPersonNameValid").mockReturnValue(true);
+
+			await sessionRequestProcessor.processRequest({ ...VALID_SESSION, headers: {} });
+
+			expect(TxmaEventUtils.buildCoreEventFields).toHaveBeenCalledWith(
+				expect.anything(),
+				"https://XXX-c.env.account.gov.uk",
+				VALID_SESSION.requestContext.identity?.sourceIp,
+			);
+			expect(mockBavService.sendToTXMA).toHaveBeenCalledWith(
+				process.env.TXMA_QUEUE_URL,
+				{
+					event_name: "BAV_CRI_START",
+					component_id: "https://XXX-c.env.account.gov.uk",
+					timestamp: 1585695600000 / 1000,
+					event_timestamp_ms: 1585695600000,
+					user: {
+						govuk_signin_journey_id: "abcdef",
+						ip_address: VALID_SESSION.requestContext.identity?.sourceIp,
+						session_id: "mock-session-id",
+						user_id: "",
+					},
+				},
+				undefined,
+			);
+		});
+
 		it("ip_address is X_FORWARDED_FOR if header is present", async () => {
 			mockBavService.generateSessionId.mockResolvedValue("mock-session-id");
 			mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
@@ -221,38 +307,18 @@ describe("SessionRequestProcessor", () => {
 			mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
 			jest.spyOn(Validations, "isJwtValid").mockReturnValue("");
 			jest.spyOn(Validations, "isPersonNameValid").mockReturnValue(true);
+			const xForwardedFor = "x-forwarded-for";
 
-			await sessionRequestProcessor.processRequest({ ...VALID_SESSION, headers: { ...VALID_SESSION.headers, [Constants.X_FORWARDED_FOR]: "x-forwarded-for" } });
+			await sessionRequestProcessor.processRequest({
+				...VALID_SESSION,
+				headers: { ...VALID_SESSION.headers, [Constants.X_FORWARDED_FOR]: xForwardedFor },
+			});
 
-
-			expect(mockBavService.sendToTXMA).toHaveBeenCalledWith(
-				process.env.TXMA_QUEUE_URL,
-				{
-					event_name: "BAV_CRI_START",
-					component_id: "https://XXX-c.env.account.gov.uk",
-					timestamp: 1585695600000 / 1000,
-					event_timestamp_ms: 1585695600000,
-					user: {
-						govuk_signin_journey_id: "abcdef",
-						ip_address: "x-forwarded-for",
-						session_id: "mock-session-id",
-						user_id: "",
-					},
-				},
-				"ABCDEFG",
+			expect(TxmaEventUtils.buildCoreEventFields).toHaveBeenCalledWith(
+				expect.anything(),
+				"https://XXX-c.env.account.gov.uk",
+				xForwardedFor,
 			);
-		});
-
-		it("ip_address is source IP if no X_FORWARDED_FOR header is present", async () => {
-			mockBavService.generateSessionId.mockResolvedValue("mock-session-id");
-			mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
-			mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
-			mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
-			jest.spyOn(Validations, "isJwtValid").mockReturnValue("");
-			jest.spyOn(Validations, "isPersonNameValid").mockReturnValue(true);
-
-			await sessionRequestProcessor.processRequest(VALID_SESSION);
-
 			expect(mockBavService.sendToTXMA).toHaveBeenCalledWith(
 				process.env.TXMA_QUEUE_URL,
 				{
@@ -262,18 +328,18 @@ describe("SessionRequestProcessor", () => {
 					event_timestamp_ms: 1585695600000,
 					user: {
 						govuk_signin_journey_id: "abcdef",
-						ip_address: "1.1.1",
+						ip_address: xForwardedFor,
 						session_id: "mock-session-id",
 						user_id: "",
 					},
 				},
-				"ABCDEFG",
+				VALID_SESSION.headers[Constants.ENCODED_AUDIT_HEADER],
 			);
 		});
 	});
 
 
-	it("successful response is returned if all processing ahs passed", async () => {
+	it("successful response is returned if all processing has passed", async () => {
 		mockBavService.generateSessionId.mockResolvedValue("mock-session-id");
 		mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
 		mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
