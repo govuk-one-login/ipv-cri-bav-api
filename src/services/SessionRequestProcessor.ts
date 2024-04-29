@@ -73,10 +73,16 @@ export class SessionRequestProcessor {
   }
 
   async processRequest(event: APIGatewayProxyEvent): Promise<Response> {
-  	const encodedHeader = event.headers[Constants.ENCODED_AUDIT_HEADER] ?? "";
   	const deserialisedRequestBody = JSON.parse(event.body as string) as SessionRequest;
   	const requestBodyClientId = deserialisedRequestBody.client_id;
-  	const clientIpAddress = event.headers[Constants.X_FORWARDED_FOR] ?? event.requestContext.identity?.sourceIp;
+
+  	let encodedHeader, clientIpAddress;
+  	if (event.headers) {
+  		encodedHeader = event.headers[Constants.ENCODED_AUDIT_HEADER] ?? undefined;
+  		clientIpAddress = event.headers[Constants.X_FORWARDED_FOR] ?? event.requestContext.identity?.sourceIp;
+  	} else {
+  		clientIpAddress = event.requestContext.identity?.sourceIp;
+  	}
 
   	let configClient: ClientConfig | undefined;
   	try {
@@ -168,20 +174,7 @@ export class SessionRequestProcessor {
   	const sessionId: string = await this.BavService.generateSessionId();
   	this.logger.appendKeys({ sessionId });
 
-  	const session: ISessionItem = {
-  		sessionId,
-  		clientId: jwtPayload.client_id,
-  		clientSessionId: jwtPayload.govuk_signin_journey_id as string,
-  		redirectUri: jwtPayload.redirect_uri,
-  		expiryDate: absoluteTimeNow() + +this.authSessionTtlInSecs,
-  		createdDate: absoluteTimeNow(),
-  		state: jwtPayload.state,
-  		subject: jwtPayload.sub ? jwtPayload.sub : "",
-  		persistentSessionId: jwtPayload.persistent_session_id,
-  		clientIpAddress,
-  		authSessionState: AuthSessionState.BAV_SESSION_CREATED,
-  		evidence_requested: jwtPayload.evidence_requested,
-  	};
+  	const session = this.createSessionItem(sessionId, clientIpAddress, jwtPayload);
 
   	await this.BavService.createAuthSession(session);
   	await this.BavService.savePersonIdentity({
@@ -198,7 +191,7 @@ export class SessionRequestProcessor {
   		{
   			event_name: TxmaEventNames.BAV_CRI_START,
   			...coreEventFields,
-  	},
+  		},
   		encodedHeader,
   	);
 
@@ -212,6 +205,23 @@ export class SessionRequestProcessor {
   			state: jwtPayload.state,
   			redirect_uri: jwtPayload.redirect_uri,
   		}),
+  	};
+  }
+
+  createSessionItem(sessionId: string, clientIpAddress: string, jwtPayload: JwtPayload):ISessionItem {
+		 return {
+  		sessionId,
+  		clientId: jwtPayload.client_id,
+  		clientSessionId: jwtPayload.govuk_signin_journey_id as string,
+  		redirectUri: jwtPayload.redirect_uri,
+  		expiryDate: absoluteTimeNow() + +this.authSessionTtlInSecs,
+  		createdDate: absoluteTimeNow(),
+  		state: jwtPayload.state,
+  		subject: jwtPayload.sub ? jwtPayload.sub : "",
+  		persistentSessionId: jwtPayload.persistent_session_id,
+  		clientIpAddress,
+  		authSessionState: AuthSessionState.BAV_SESSION_CREATED,
+  		evidence_requested: jwtPayload.evidence_requested,
   	};
   }
 }
