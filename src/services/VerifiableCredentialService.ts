@@ -93,7 +93,7 @@ export class VerifiableCredentialService {
 				nbf: now,
 				iss: this.issuer,
 				iat: now,
-				jti: randomUUID(),
+				jti: Constants.URN_UUID_PREFIX + randomUUID(),
 				vc: verifiedCredential,
 			};
 		}

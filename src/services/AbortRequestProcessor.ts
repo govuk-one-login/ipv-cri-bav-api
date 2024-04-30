@@ -68,11 +68,12 @@ export class AbortRequestProcessor {
 
   	await this.BavService.sendToTXMA(
   		this.txmaQueueUrl, 
-  		encodedHeader,
   		{
   			event_name: TxmaEventNames.BAV_CRI_SESSION_ABORTED,
   			...buildCoreEventFields(session, this.issuer, session.clientIpAddress),
-  		});
+  		},
+  		encodedHeader,
+  	);
 
   	return new Response(HttpCodesEnum.OK, "Session has been aborted", { Location: encodeURIComponent(redirectUri) });
   }

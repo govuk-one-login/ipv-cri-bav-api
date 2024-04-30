@@ -5,12 +5,6 @@ import { APIGatewayProxyEvent } from "aws-lambda";
 import { convertUrlEncodedRequestBodyToString, eventRequest } from "../utils/ApiRequestUtils";
 import { Constants } from "../utils/Constants";
 
-process.env.SESSION_TABLE = "session-table";
-process.env.ISSUER = "dummyBavComponentId";
-process.env.USE_MOCKED = "true";
-process.env.KMS_KEY_ARN = "kid";
-process.env.DNSSUFFIX = "dns";
-
 export const accessTokenRouter = asyncify(express.Router());
 
 // eslint-disable-next-line @typescript-eslint/no-misused-promises

@@ -213,7 +213,7 @@ describe("BAV Service", () => {
 
 	describe("#sendToTXMA", () => {
 		it("Should send event to TxMA with the correct details for a payload with restricted present", async () => {  
-			await bavService.sendToTXMA("MYQUEUE", "ABCDEFG", txmaEventPayload);
+			await bavService.sendToTXMA("MYQUEUE", txmaEventPayload, "ABCDEFG");
 	
 			const messageBody = JSON.stringify({
 				...createBaseTXMAEventPayload(),
@@ -248,7 +248,7 @@ describe("BAV Service", () => {
 			const payload = createBaseTXMAEventPayload();
 			payload.restricted = restrictedDetails;
 	
-			await bavService.sendToTXMA("MYQUEUE", "ABCDEFG", payload);
+			await bavService.sendToTXMA("MYQUEUE", payload, "ABCDEFG");
 	
 			const messageBody = JSON.stringify(payload);
 	
@@ -260,9 +260,29 @@ describe("BAV Service", () => {
 			expect(bavService.logger.info).toHaveBeenCalledWith("Sent message to TxMA");
 		});
 
+		it("Should send event to TxMA without encodedHeader if encodedHeader is empty string", async () => {  
+			await bavService.sendToTXMA("MYQUEUE", txmaEventPayload);
+	
+			const messageBody = JSON.stringify({
+				...createBaseTXMAEventPayload(),
+				restricted: {
+					device_information: {
+						encoded: "ABCDEFG",
+					},
+				},
+			});
+	
+			expect(SendMessageCommand).toHaveBeenCalledWith({
+				MessageBody: messageBody,
+				QueueUrl: "MYQUEUE",
+			});
+			expect(sqsClient.send).toHaveBeenCalled();
+			expect(bavService.logger.info).toHaveBeenCalledWith("Sent message to TxMA");
+		});
+
 		it("show log error if failed to send to TXMA queue", async () => {
 			sqsClient.send = jest.fn().mockRejectedValueOnce({});
-			await bavService.sendToTXMA("MYQUEUE", "ABCDEFG", txmaEventPayload);
+			await bavService.sendToTXMA("MYQUEUE", txmaEventPayload, "ABCDEFG");
 	
 			expect(bavService.logger.error).toHaveBeenCalledWith({
 				message: "Error when sending event BAV_CRI_START to TXMA Queue",

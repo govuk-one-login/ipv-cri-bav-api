@@ -99,7 +99,7 @@ export function validateTxMAEventData(
 				throw new Error(`Could not find schema ${schemaName}`);
 			}
 		} catch (error) {
-			console.error("Error validating event", error);
+			console.error(`Error validating event ${eventName}`, error);
 			throw error;
 		}
 	} else {

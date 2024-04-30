@@ -103,7 +103,6 @@ export class VerifyAccountRequestProcessor {
   	const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
   	await this.BavService.sendToTXMA(
   		this.txmaQueueUrl,
-			encodedHeader,
   		{
   			event_name: TxmaEventNames.BAV_COP_REQUEST_SENT,
   			...coreEventFields,
@@ -125,6 +124,7 @@ export class VerifyAccountRequestProcessor {
   				],
 		 		},
   		},
+			encodedHeader,
   	);
 
   	const verifyResponse = await this.HmrcService.verify(
@@ -139,7 +139,6 @@ export class VerifyAccountRequestProcessor {
 
   	await this.BavService.sendToTXMA(
   		this.txmaQueueUrl,
-			encodedHeader,
   		{
   			event_name: TxmaEventNames.BAV_COP_RESPONSE_RECEIVED,
   			...coreEventFields,
@@ -151,6 +150,7 @@ export class VerifyAccountRequestProcessor {
   				],
 			  },
   		},
+			encodedHeader,
   	);
 
   	await this.BavService.updateAccountDetails(
