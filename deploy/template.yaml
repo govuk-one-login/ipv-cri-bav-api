@@ -474,7 +474,7 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       Path: /
-      RoleName: !Sub "${AWS::StackName}-athena-query"
+      RoleName: !Sub "${AWS::StackName}-athena-query-bav-results"
       AssumeRolePolicyDocument:
         Statement:
           - Action: "sts:AssumeRole"
@@ -483,11 +483,13 @@ Resources:
               AWS: "arn:aws:iam::576724867321:root"
         Version: 2012-10-17
 
-  AthenaQueryPolicy:
-    Type: AWS::IAM::RolePolicy
+  AthenaQueryManagedPolicy:
+    Type: AWS::IAM::ManagedPolicy
     Properties:
-      PolicyName: !Sub "${AWS::StackName}-athena-query"
-      RoleName: !Ref AthenaQueryRole
+      Description: "Grants console access to AWS Athena to query the BAV results bucket"
+      ManagedPolicyName: !Sub "${AWS::StackName}-athena-query-bav-results"
+      Roles:
+        - !Ref AthenaQueryRole
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
