@@ -507,7 +507,6 @@ Resources:
               - "s3:GetObject"
               - "s3:GetBucketLocation"
             Resource:
-              - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchBucket, "/*"]]
               - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchAthenaResultsBucket]]
               - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchAthenaResultsBucket, "/*"]]
           - Sid: "AllowKMSAccessToKeyRefByAliasOnly"
