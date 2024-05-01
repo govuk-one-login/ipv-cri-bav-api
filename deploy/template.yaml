@@ -491,13 +491,13 @@ Resources:
               - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/${PartialNameMatchGlueDatabase}"
               - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog"
           - Sid: "AllowSpecificAccessToS3SourceBuckets"
-          Effect: Allow
-          Action:
-            - "s3:ListBucket"
-            - "s3:GetObject"
-          Resource:
-            - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchBucket]]
-            - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchBucket, "/*"]]
+            Effect: Allow
+            Action:
+              - "s3:ListBucket"
+              - "s3:GetObject"
+            Resource:
+              - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchBucket]]
+              - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchBucket, "/*"]]
           - Sid: "AllowSpecificAccessToS3ResultsBuckets"
             Effect: Allow
             Action:
