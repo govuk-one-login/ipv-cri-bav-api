@@ -470,6 +470,71 @@ Resources:
             NoncurrentVersionExpirationInDays: 1
             Status: Enabled
 
+  AthenaQueryManagedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: "Grants console access to AWS Athena to query the BAV results bucket"
+      ManagedPolicyName: !Sub "${AWS::StackName}-athena-query-bav-results"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "AllowSpecificAccessToGlue"
+            Effect: Allow
+            Action:
+              - "glue:SearchTables"
+              - "glue:GetTables"
+              - "glue:GetDatabases"
+              - "glue:GetTable"
+              - "glue:GetDatabase"
+            Resource:
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/${PartialNameMatchGlueDatabase}/${PartialNameMatchGlueTable}"
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/${PartialNameMatchGlueDatabase}"
+              - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog"
+          - Sid: "AllowSpecificAccessToS3SourceBuckets"
+            Effect: Allow
+            Action:
+              - "s3:ListBucket"
+              - "s3:GetObject"
+            Resource:
+              - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchBucket]]
+              - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchBucket, "/*"]]
+          - Sid: "AllowSpecificAccessToS3ResultsBuckets"
+            Effect: Allow
+            Action:
+              - "s3:ListBucket"
+              - "s3:GetBucketAcl"
+              - "s3:PutObject"
+              - "s3:GetObject"
+              - "s3:GetBucketLocation"
+            Resource:
+              - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchAthenaResultsBucket]]
+              - !Join ["", [ "arn:aws:s3:::", !Ref PartialNameMatchAthenaResultsBucket, "/*"]]
+          - Sid: "AllowKMSAccessToKeyRefByAliasOnly"
+            Effect: Allow
+            Action:
+              - "kms:Decrypt"
+              - "kms:GenerateDataKey"
+            Resource:
+              - !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*"
+            Condition:
+              ForAnyValue:StringLike:
+                kms:ResourceAliases: !Ref PartialNameMatchBucketKeyAlias
+          - Sid: "AllowSpecificAccessToAthena"
+            Effect: Allow
+            Action:
+              - "athena:GetQueryResults"
+              - "athena:StartQueryExecution"
+              - "athena:GetQueryExecution"
+              - "athena:GetWorkGroup"
+            Resource:
+              - !Sub "arn:aws:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${PartialNameMatchAthenaWorkgroup}"
+          - Sid: "AllowAthenaListAllWorkGroups"
+            Effect: Allow
+            Action:
+              - "athena:ListWorkGroups"
+            Resource:
+              - "*"
+
   JsonWebKeysBucket:
     Type: "AWS::S3::Bucket"
     DeletionPolicy: Delete
