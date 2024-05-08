@@ -449,9 +449,14 @@ Resources:
             - Sid: KMSPolicy
               Effect: Allow
               Action:
-                - kms:*
+                - "kms:Decrypt"
+                - "kms:Encrypt"
+                - "kms:GenerateDataKey"
               Resource:
-                "*"
+                - Fn::Join:
+                    - ""
+                    - - !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/"
+                      - Fn::ImportValue: !Sub "${BackendStack}-PartialNameMatchBucketKey"
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:

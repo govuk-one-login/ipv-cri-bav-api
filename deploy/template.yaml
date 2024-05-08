@@ -4777,3 +4777,9 @@ Outputs:
     Description: "Signing Key used to sign VC"
     Value:
       Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key-id"
+  PartialNameMatchBucketKey:
+    Condition: IsNotProdLikeEnvironment
+    Description: "Symmetric key for encrypting partial name match and Athena results bucket"
+    Value: !Ref PartialNameMatchBucketKey
+    Export:
+      Name: !Sub "${AWS::StackName}-PartialNameMatchBucketKey"
