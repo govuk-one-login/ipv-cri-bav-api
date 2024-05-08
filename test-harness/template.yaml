@@ -399,7 +399,7 @@ Resources:
       FunctionName: !Sub "BAV-Athena-Query-${AWS::StackName}"
       Handler: AthenaQueryHandler.lambdaHandler
       CodeUri: ./src/
-      Timeout: 300
+      Timeout: 29
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: AthenaQueryFunction
