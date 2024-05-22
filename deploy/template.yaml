@@ -3320,12 +3320,15 @@ Resources:
             KeyId:
               Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-key-id"
         - Statement:
+            - Effect: Allow
+              Action:
+                - "sqs:SendMessage"
+              Resource: !GetAtt TxMASQSQueue.Arn
             - Sid: KMSPolicy
               Effect: Allow
               Action:
                 - kms:*
-              Resource:
-                "*"
+              Resource: "*"
             - Effect: Allow
               Action:
                 - "sqs:SendMessage"
@@ -3871,7 +3874,7 @@ Resources:
     Type: AWS::KMS::Alias
     Properties:
       AliasName: !If
-        -  CreateDevResources    
+        - CreateDevResources
         - !Sub "alias/PartialMatchesEncryptionKey-${AWS::StackName}"
         - alias/PartialMatchesEncryptionKey
       TargetKeyId: !Ref PartialMatchesEncryptionKey
