@@ -5,4 +5,5 @@ export type PartialNameSQSRecord = {
 	accountName: string;
 	accountExists: string;
 	nameMatches: string;
+	sortCodeBankName?: string;
 };
