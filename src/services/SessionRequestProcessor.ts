@@ -1,6 +1,6 @@
 /* eslint-disable complexity */
 /* eslint-disable max-lines-per-function */
-import { APIGatewayProxyEvent } from "aws-lambda";
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { BavService } from "./BavService";
@@ -72,7 +72,7 @@ export class SessionRequestProcessor {
   	return SessionRequestProcessor.instance;
   }
 
-  async processRequest(event: APIGatewayProxyEvent): Promise<Response> {
+  async processRequest(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   	const deserialisedRequestBody = JSON.parse(event.body as string) as SessionRequest;
   	const requestBodyClientId = deserialisedRequestBody.client_id;
 
@@ -93,14 +93,14 @@ export class SessionRequestProcessor {
   			error,
   			messageCode: MessageCodes.MISSING_CONFIGURATION,
   		});
-  		return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
+  		return Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
   	}
 
   	if (!configClient) {
   		this.logger.error("Unrecognised client in request", {
   			messageCode: MessageCodes.UNRECOGNISED_CLIENT,
   		});
-  		return new Response(HttpCodesEnum.BAD_REQUEST, "Bad Request");
+  		return Response(HttpCodesEnum.BAD_REQUEST, "Bad Request");
   	}
 
   	let urlEncodedJwt: string;
@@ -144,7 +144,7 @@ export class SessionRequestProcessor {
   			this.logger.error("Incomplete Client Configuration", {
   				messageCode: MessageCodes.MISSING_CONFIGURATION,
   			});
-  			return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
+  			return Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
   		}
   	} catch (error: any) {
   		this.logger.error("Invalid request: Could not verify jwt", {

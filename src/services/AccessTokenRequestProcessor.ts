@@ -2,7 +2,7 @@ import { Logger } from "@aws-lambda-powertools/logger";
 import { MetricUnits, Metrics } from "@aws-lambda-powertools/metrics";
 import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
-import { APIGatewayProxyEvent } from "aws-lambda";
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { Response } from "../utils/Response";
 import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { Constants, EnvironmentVariables } from "../utils/Constants";
@@ -51,7 +51,7 @@ export class AccessTokenRequestProcessor {
 		return AccessTokenRequestProcessor.instance;
 	}
 
-	async processRequest(event: APIGatewayProxyEvent): Promise<Response> {
+	async processRequest(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
 		try {
 			let requestPayload;
 			try {
@@ -59,15 +59,15 @@ export class AccessTokenRequestProcessor {
 			} catch (error) {
 				this.logger.error("Failed validating the Access token request body.", { error, messageCode: MessageCodes.FAILED_VALIDATING_REQUEST_BODY });
 				if (error instanceof AppError) {
-					return new Response(error.statusCode, error.message);
+					return Response(error.statusCode, error.message);
 				}
-				return new Response(HttpCodesEnum.UNAUTHORIZED, "An error has occurred while validating the Access token request payload.");
+				return Response(HttpCodesEnum.UNAUTHORIZED, "An error has occurred while validating the Access token request payload.");
 			}
 						
 			const session = await this.bavService.getSessionByAuthorizationCode(requestPayload.code);
 			if (!session) {
 				this.logger.info(`No session found by authorization code: : ${requestPayload.code}`, { messageCode: MessageCodes.SESSION_NOT_FOUND });
-				return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found by authorization code: ${requestPayload.code}`);
+				return Response(HttpCodesEnum.UNAUTHORIZED, `No session found by authorization code: ${requestPayload.code}`);
 			}
 			this.logger.appendKeys({ sessionId: session.sessionId });
 			this.logger.info({ message: "Found Session" });
@@ -90,7 +90,7 @@ export class AccessTokenRequestProcessor {
 					accessToken = await this.kmsJwtAdapter.sign(jwtPayload, this.dnsSuffix);
 				} catch (error) {
 					this.logger.error("Failed to sign the accessToken Jwt", { messageCode: MessageCodes.FAILED_SIGNING_JWT });
-					return new Response(HttpCodesEnum.SERVER_ERROR, "Failed to sign the accessToken Jwt");
+					return Response(HttpCodesEnum.SERVER_ERROR, "Failed to sign the accessToken Jwt");
 				}
 
 				// Update the sessionTable with accessTokenExpiryDate and AuthSessionState.
@@ -108,11 +108,11 @@ export class AccessTokenRequestProcessor {
 				};
 			} else {
 				this.logger.warn(`Session is in the wrong state: ${session.authSessionState}, expected state should be ${AuthSessionState.BAV_AUTH_CODE_ISSUED}`, { messageCode: MessageCodes.INCORRECT_SESSION_STATE });
-				return new Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
+				return Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
 			}
 		} catch (err: any) {
 			this.logger.error({ message: "Error processing access token request", err });
-			return new Response(err.statusCode, err.message);
+			return Response(err.statusCode, err.message);
 		}
 	}
 }

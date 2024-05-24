@@ -1,7 +1,7 @@
 import { LambdaInterface } from "@aws-lambda-powertools/commons";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics } from "@aws-lambda-powertools/metrics";
-import { APIGatewayProxyEvent } from "aws-lambda";
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { HttpCodesEnum } from "./models/enums/HttpCodesEnum";
 import { MessageCodes } from "./models/enums/MessageCodes";
 import { getParameter } from "./utils/Config";
@@ -24,7 +24,7 @@ export class PersonInfoKeyHandler implements LambdaInterface {
 
 	@metrics.logMetrics({ throwOnEmptyMetrics: false, captureColdStartMetric: true })
 
-	async handler(event: APIGatewayProxyEvent, context: any): Promise<Response> {
+	async handler(event: APIGatewayProxyEvent, context: any): Promise<APIGatewayProxyResult> {
 		logger.setPersistentLogAttributes({});
 		logger.addContext(context);
 
@@ -33,11 +33,11 @@ export class PersonInfoKeyHandler implements LambdaInterface {
 			logger.info({ message: "Fetching key", privateKeyPath });
 
     	key = await getParameter(privateKeyPath);
-			return new Response(HttpCodesEnum.OK, JSON.stringify({ key }));
+			return Response(HttpCodesEnum.OK, JSON.stringify({ key }));
 
 		} catch (error: any) {
 			logger.error({ message: "Error fetching key", error, messageCode: MessageCodes.SERVER_ERROR });
-			return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
+			return Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
 		}
 	}
 }

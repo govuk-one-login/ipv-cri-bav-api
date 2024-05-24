@@ -9,6 +9,7 @@ import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 import { getFullName } from "../utils/PersonIdentityUtils";
 import { Response } from "../utils/Response";
+import { APIGatewayProxyResult } from "aws-lambda";
 
 export class PersonInfoRequestProcessor {
   private static instance: PersonInfoRequestProcessor;
@@ -40,13 +41,13 @@ export class PersonInfoRequestProcessor {
   	return PersonInfoRequestProcessor.instance;
 	}
 
-	async processRequest(sessionId: string): Promise<Response> {
+	async processRequest(sessionId: string): Promise<APIGatewayProxyResult> {
   	const session = await this.BavService.getSessionById(sessionId);
 		if (!session) {
   		this.logger.error("No session found for session id", {
   			messageCode: MessageCodes.SESSION_NOT_FOUND,
   		});
-  		return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
+  		return Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
   	}
 
 		this.logger.appendKeys({
@@ -58,13 +59,13 @@ export class PersonInfoRequestProcessor {
   		this.logger.error("No person found for session id", {
   			messageCode: MessageCodes.PERSON_NOT_FOUND,
   		});
-  		return new Response(HttpCodesEnum.UNAUTHORIZED, `No person found with the session id: ${sessionId}`);
+  		return Response(HttpCodesEnum.UNAUTHORIZED, `No person found with the session id: ${sessionId}`);
   	}
 
   	const name = getFullName(person.name);
   	const encryptedResponseValue = this.encryptResponse({ name });
 
-  	return new Response(HttpCodesEnum.OK, encryptedResponseValue);
+  	return Response(HttpCodesEnum.OK, encryptedResponseValue);
 	}
 
 	encryptResponse(data: { name: string }): string {

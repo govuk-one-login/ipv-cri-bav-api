@@ -9,6 +9,7 @@ import { ISessionItem } from "../../../models/ISessionItem";
 import { AuthSessionState } from "../../../models/enums/AuthSessionState";
 import { Response } from "../../../utils/Response";
 import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
+import { APIGatewayProxyResult } from "aws-lambda";
 
 const mockBavService = mock<BavService>();
 const logger = mock<Logger>();
@@ -64,7 +65,7 @@ describe("AbortRequestProcessor", () => {
 	it("returns successful response if session has already been aborted", async () => {
 		mockBavService.getSessionById.mockResolvedValueOnce({ ...session, authSessionState: AuthSessionState.BAV_SESSION_ABORTED });
 
-		const out: Response = await abortRequestProcessor.processRequest(sessionId, encodedTxmaHeader);
+		const out: APIGatewayProxyResult = await abortRequestProcessor.processRequest(sessionId, encodedTxmaHeader);
 
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 		expect(out.body).toBe("Session has already been aborted");
@@ -74,7 +75,7 @@ describe("AbortRequestProcessor", () => {
 	it("updates auth session state and returns successful response if session has not been aborted", async () => {
 		mockBavService.getSessionById.mockResolvedValueOnce(session);
 
-		const out: Response = await abortRequestProcessor.processRequest(sessionId, encodedTxmaHeader);
+		const out: APIGatewayProxyResult = await abortRequestProcessor.processRequest(sessionId, encodedTxmaHeader);
 
 		expect(mockBavService.updateSessionAuthState).toHaveBeenCalledWith(sessionId, AuthSessionState.BAV_SESSION_ABORTED);
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
@@ -87,7 +88,7 @@ describe("AbortRequestProcessor", () => {
 		bavSessionItemClone.redirectUri = "http://localhost:8085/callback?id=bav";
 		mockBavService.getSessionById.mockResolvedValueOnce(session);
 
-		const out: Response = await abortRequestProcessor.processRequest(sessionId, encodedTxmaHeader);
+		const out: APIGatewayProxyResult = await abortRequestProcessor.processRequest(sessionId, encodedTxmaHeader);
 
 		expect(mockBavService.updateSessionAuthState).toHaveBeenCalledWith(sessionId, AuthSessionState.BAV_SESSION_ABORTED);
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
