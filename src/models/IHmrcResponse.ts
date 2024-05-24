@@ -24,4 +24,5 @@ export interface PartialNameSQSRecord {
 	accountName: string;
 	accountExists: string;
 	nameMatches: string;
+	sortCodeBankName?: string;
 }
