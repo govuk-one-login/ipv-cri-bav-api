@@ -9,6 +9,7 @@ import { EnvironmentVariables } from "../utils/Constants";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 import { Response } from "../utils/Response";
+import { APIGatewayProxyResult } from "aws-lambda";
 
 export class AuthorizationRequestProcessor {
 	private static instance: AuthorizationRequestProcessor;
@@ -35,14 +36,14 @@ export class AuthorizationRequestProcessor {
 	}
 
 	// eslint-disable-next-line max-lines-per-function
-	async processRequest(sessionId: string): Promise<Response> {
+	async processRequest(sessionId: string): Promise<APIGatewayProxyResult> {
 		const session = await this.BavService.getSessionById(sessionId);
 
 		if (!session) {
 			this.logger.error("No session found for session id", {
 				messageCode: MessageCodes.SESSION_NOT_FOUND,
 			});
-			return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
+			return Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
 		}
 
 		this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
@@ -58,7 +59,7 @@ export class AuthorizationRequestProcessor {
 				this.logger.warn(`Session is in the wrong state: ${session.authSessionState}, expected state should be ${AuthSessionState.BAV_DATA_RECEIVED}`, { 
 					messageCode: MessageCodes.INCORRECT_SESSION_STATE,
 				});
-				return new Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
+				return Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
 		}
 
 		const authorizationCode = randomUUID();
@@ -73,6 +74,6 @@ export class AuthorizationRequestProcessor {
 			state: session.state,
 		};
 
-		return new Response(HttpCodesEnum.OK, JSON.stringify(authResponse));
+		return Response(HttpCodesEnum.OK, JSON.stringify(authResponse));
 	}
 }
