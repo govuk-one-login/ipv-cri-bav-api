@@ -701,7 +701,7 @@ Resources:
 
   BAVRestAPIFatalErorMetricFilter:
     Type: AWS::Logs::MetricFilter
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       LogGroupName: !Ref BAVAPIGatewayAccessLogGroup
       FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
@@ -715,7 +715,7 @@ Resources:
     DependsOn:
       - "BAVRestAPIFatalErorMetricFilter"
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-BAVRestAPI-FatalErrorAlarm"
       AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
@@ -840,7 +840,7 @@ Resources:
 
   SessionFunctionFatalErorMetricFilter:
     Type: AWS::Logs::MetricFilter
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       LogGroupName: !Ref SessionFunctionLogGroup
       FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
@@ -854,7 +854,7 @@ Resources:
     DependsOn:
       - "SessionFunctionFatalErorMetricFilter"
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-SessionFunction-FatalErrorAlarm"
       AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
@@ -877,7 +877,7 @@ Resources:
 
   VerifyAuthorizeRequestMessageCodeMetricFilter:
     Type: AWS::Logs::MetricFilter
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       LogGroupName: !Ref SessionFunctionLogGroup
       FilterPattern: "{ $.messageCode =* }"
@@ -982,7 +982,7 @@ Resources:
 
   SessionThrottleAlarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -1280,7 +1280,7 @@ Resources:
 
   AbortFunctionFatalErorMetricFilter:
     Type: AWS::Logs::MetricFilter
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       LogGroupName: !Ref AbortFunctionLogGroup
       FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
@@ -1294,7 +1294,7 @@ Resources:
     DependsOn:
       - "AbortFunctionFatalErorMetricFilter"
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-AbortFunction-FatalErrorAlarm"
       AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
@@ -1342,7 +1342,7 @@ Resources:
 
   AbortThrottleAlarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -1636,7 +1636,7 @@ Resources:
 
   PersonInfoFunctionFatalErorMetricFilter:
     Type: AWS::Logs::MetricFilter
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       LogGroupName: !Ref PersonInfoFunctionLogGroup
       FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
@@ -1650,7 +1650,7 @@ Resources:
     DependsOn:
       - "PersonInfoFunctionFatalErorMetricFilter"
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-PersonInfoFunction-FatalErrorAlarm"
       AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
@@ -1698,7 +1698,7 @@ Resources:
 
   PersonInfoThrottleAlarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -1975,7 +1975,7 @@ Resources:
 
   PersonInfoKeyFunctionFatalErorMetricFilter:
     Type: AWS::Logs::MetricFilter
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       LogGroupName: !Ref PersonInfoKeyFunctionLogGroup
       FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
@@ -1989,7 +1989,7 @@ Resources:
     DependsOn:
       - "PersonInfoKeyFunctionFatalErorMetricFilter"
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-PersonInfoKeyFunction-FatalErrorAlarm"
       AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
@@ -2037,7 +2037,7 @@ Resources:
 
   PersonInfoKeyThrottleAlarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -2346,7 +2346,7 @@ Resources:
 
   UserInfoFunctionFatalErorMetricFilter:
     Type: AWS::Logs::MetricFilter
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       LogGroupName: !Ref UserInfoFunctionLogGroup
       FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
@@ -2360,7 +2360,7 @@ Resources:
     DependsOn:
       - "UserInfoFunctionFatalErorMetricFilter"
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-UserInfoFunction-FatalErrorAlarm"
       AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
@@ -2408,7 +2408,7 @@ Resources:
 
   UserInfoThrottleAlarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -2696,7 +2696,7 @@ Resources:
 
   TokenFunctionFatalErorMetricFilter:
     Type: AWS::Logs::MetricFilter
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       LogGroupName: !Ref TokenFunctionLogGroup
       FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
@@ -2710,7 +2710,7 @@ Resources:
     DependsOn:
       - "TokenFunctionFatalErorMetricFilter"
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-TokenFunction-FatalErrorAlarm"
       AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
@@ -2758,7 +2758,7 @@ Resources:
 
   TokenThrottleAlarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -3049,7 +3049,7 @@ Resources:
 
   AuthorizationFunctionFatalErorMetricFilter:
     Type: AWS::Logs::MetricFilter
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       LogGroupName: !Ref AuthorizationFunctionLogGroup
       FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
@@ -3063,7 +3063,7 @@ Resources:
     DependsOn:
       - "AuthorizationFunctionFatalErorMetricFilter"
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-AuthorizationFunction-FatalErrorAlarm"
       AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
@@ -3397,7 +3397,7 @@ Resources:
 
   VerifyAccountFunctionFatalErorMetricFilter:
     Type: AWS::Logs::MetricFilter
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       LogGroupName: !Ref VerifyAccountFunctionLogGroup
       FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
@@ -3411,7 +3411,7 @@ Resources:
     DependsOn:
       - "VerifyAccountFunctionFatalErorMetricFilter"
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-VerifyAccountFunction-FatalErrorAlarm"
       AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
@@ -3459,7 +3459,7 @@ Resources:
 
   VerifyAccountThrottleAlarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -3757,7 +3757,7 @@ Resources:
 
   TXMASQSOldMessagesAlarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-TXMASQSOldMessagesAlarm"
       AlarmDescription: !Sub "Trigger an alarm when the age of the oldest TXMA message is 5 or more minutes. ${SupportManualURL}"
@@ -3782,7 +3782,7 @@ Resources:
 
   TXMADLQMessagesVisibleAlarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-TXMADLQMessagesVisibleAlarm"
       AlarmDescription: !Sub "Trigger an alarm when message gets added to TXMA DLQ. ${SupportManualURL}"
@@ -3881,7 +3881,7 @@ Resources:
 
   PartialNameMatchSQSOldMessagesAlarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-PartialNameMatchOldMessagesAlarm"
       AlarmDescription: !Sub "Trigger an alarm when the age of the oldest PartialNameMatch message is 5 or more minutes. ${SupportManualURL}"
@@ -3906,7 +3906,7 @@ Resources:
 
   PartialNameMatchDLQMessagesVisibleAlarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-PartialNameMatchDLQMessagesVisibleAlarm"
       AlarmDescription: !Sub "Trigger an alarm when message gets added to TXMA DLQ. ${SupportManualURL}"
@@ -4063,7 +4063,7 @@ Resources:
 
   JsonWebKeysFunctionFatalErorMetricFilter:
     Type: AWS::Logs::MetricFilter
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       LogGroupName: !Ref JsonWebKeysLogGroup
       FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
@@ -4077,7 +4077,7 @@ Resources:
     DependsOn:
       - "JsonWebKeysFunctionFatalErorMetricFilter"
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-JsonWebKeysFunction-FatalErrorAlarm"
       AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
@@ -4125,7 +4125,7 @@ Resources:
 
   JsonWebKeysThrottleAlarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -4417,7 +4417,7 @@ Resources:
 
   HmrcTokenFunctionFatalErorMetricFilter:
     Type: AWS::Logs::MetricFilter
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       LogGroupName: !Ref HmrcTokenLogGroup
       FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
@@ -4431,7 +4431,7 @@ Resources:
     DependsOn:
       - "HmrcTokenFunctionFatalErorMetricFilter"
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-HmrcTokenFunction-FatalErrorAlarm"
       AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
@@ -4479,7 +4479,7 @@ Resources:
 
   HmrcTokenThrottleAlarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       ActionsEnabled: true
       AlarmActions:
@@ -4592,7 +4592,7 @@ Resources:
 
   PartialNameMatchFunctionFatalErorMetricFilter:
     Type: AWS::Logs::MetricFilter
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       LogGroupName: !Ref PartialNameMatchFunctionLogGroup
       FilterPattern: '{ $.level = "FATAL" || $.message = "Unhandled Exception:*" }'
@@ -4606,7 +4606,7 @@ Resources:
     DependsOn:
       - "PartialNameMatchFunctionFatalErorMetricFilter"
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-PartialNameMatchFunction-FatalErrorAlarm"
       AlarmDescription: !Sub "Trigger an alarm when Fatal Error occurs. ${SupportManualURL}"
@@ -4654,7 +4654,7 @@ Resources:
 
   PartialNameMatchThrottleAlarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: "DeployAlarms"
+    Condition: DeployAlarms
     Properties:
       ActionsEnabled: true
       AlarmActions:

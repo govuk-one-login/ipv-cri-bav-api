@@ -33,7 +33,7 @@ class Session implements LambdaInterface {
 				messageCode: MessageCodes.SERVER_ERROR,
 				error,
 			});
-			return new Response(error.statusCode ?? HttpCodesEnum.SERVER_ERROR, "Server Error");
+			return Response(error.statusCode ?? HttpCodesEnum.SERVER_ERROR, "Server Error");
 		}
 	}
 }
