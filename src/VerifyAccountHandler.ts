@@ -1,4 +1,4 @@
-import { APIGatewayProxyEvent } from "aws-lambda";
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { LambdaInterface } from "@aws-lambda-powertools/commons";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
@@ -28,7 +28,7 @@ export class VerifyAccountHandler implements LambdaInterface {
 
 	@metrics.logMetrics({ throwOnEmptyMetrics: false, captureColdStartMetric: true })
 
-	async handler(event: APIGatewayProxyEvent, context: any): Promise<Response> {
+	async handler(event: APIGatewayProxyEvent, context: any): Promise<APIGatewayProxyResult> {
 		logger.setPersistentLogAttributes({});
 		logger.addContext(context);
 
@@ -46,9 +46,9 @@ export class VerifyAccountHandler implements LambdaInterface {
 		} catch (error: any) {
 			logger.error({ message: "An error has occurred.", error, messageCode: MessageCodes.SERVER_ERROR });
 			if (error instanceof AppError) {
-				return new Response(error.statusCode, error.message);
+				return Response(error.statusCode, error.message);
 			}
-			return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
+			return Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
 		}
 	}
 

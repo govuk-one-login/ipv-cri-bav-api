@@ -32,13 +32,13 @@ class AuthorizationHandler implements LambdaInterface {
 
 			if (!event.headers) {
 				logger.error("Empty headers", { messageCode: MessageCodes.MISSING_HEADER });
-				return new Response(HttpCodesEnum.BAD_REQUEST, "Empty headers");
+				return Response(HttpCodesEnum.BAD_REQUEST, "Empty headers");
 			}
 
 			if (!event.headers[Constants.SESSION_ID]) {
 				const message = `Missing header: ${Constants.SESSION_ID} is required`;
 				logger.error({ message, messageCode: MessageCodes.MISSING_HEADER });
-				return new Response(HttpCodesEnum.BAD_REQUEST, message);
+				return Response(HttpCodesEnum.BAD_REQUEST, message);
 			}
 
 			sessionId = event.headers[Constants.SESSION_ID]!;
@@ -47,7 +47,7 @@ class AuthorizationHandler implements LambdaInterface {
 			if (!Constants.REGEX_UUID.test(sessionId)) {
 				const message = `${Constants.SESSION_ID} header does not contain a valid uuid`;
 				logger.error({ message, messageCode: MessageCodes.INVALID_SESSION_ID });
-				return new Response(HttpCodesEnum.BAD_REQUEST, message);
+				return Response(HttpCodesEnum.BAD_REQUEST, message);
 			}
 
 			return await AuthorizationRequestProcessor.getInstance(logger, metrics).processRequest(sessionId);
@@ -55,9 +55,9 @@ class AuthorizationHandler implements LambdaInterface {
 		} catch (error: any) {
 			logger.error({ message: "An error has occurred.", error, messageCode: MessageCodes.SERVER_ERROR });
 			if (error instanceof  AppError) {
-				return new Response(error.statusCode, error.message);
+				return Response(error.statusCode, error.message);
 			}
-			return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
+			return Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
 		}
 	}
 

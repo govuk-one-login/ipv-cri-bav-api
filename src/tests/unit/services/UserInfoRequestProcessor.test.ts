@@ -5,13 +5,13 @@ import { mock } from "jest-mock-extended";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { MISSING_AUTH_HEADER_USERINFO, VALID_USERINFO } from "../data/userInfo-events";
 import { BavService } from "../../../services/BavService";
-import { Response } from "../../../utils/Response";
 import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
 import { ISessionItem } from "../../../models/ISessionItem";
 import { PersonIdentityItem } from "../../../models/PersonIdentityItem";
 import { absoluteTimeNow } from "../../../utils/DateTimeUtils";
 import { MockKmsJwtAdapter } from "../utils/MockJwtVerifierSigner";
 import * as Validations from "../../../utils/Validations";
+import { APIGatewayProxyResult } from "aws-lambda";
 
 /* eslint @typescript-eslint/unbound-method: 0 */
 /* eslint jest/unbound-method: error */
@@ -100,7 +100,7 @@ describe("UserInfoRequestProcessor", () => {
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 		jest.spyOn(Validations, "eventToSubjectIdentifier").mockResolvedValueOnce("sessionId");
 
-		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 		expect(mockBavService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(mockBavService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
 		expect(mockBavService.updateSessionAuthState).toHaveBeenCalledTimes(1);
@@ -187,7 +187,7 @@ describe("UserInfoRequestProcessor", () => {
 	});
 
 	it("Return 401 when Authorization header is missing in the request", async () => {
-		const out: Response = await userInforequestProcessorTest.processRequest(MISSING_AUTH_HEADER_USERINFO);
+		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(MISSING_AUTH_HEADER_USERINFO);
 
 		// @ts-ignore
 		expect(out.body).toBe("Error Validating Token");
@@ -204,7 +204,7 @@ describe("UserInfoRequestProcessor", () => {
 	it("Return 401 when access_token JWT validation fails", async () => {
 		// @ts-ignore
 		userInforequestProcessorTest.kmsJwtAdapter = failingKmsJwtAdapterFactory();
-		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
 		// @ts-ignore
 		expect(out.body).toBe("Error Validating Token");
@@ -221,7 +221,7 @@ describe("UserInfoRequestProcessor", () => {
 	it("Return 401 when sub is missing from JWT access_token", async () => {
 		// @ts-ignore
 		userInforequestProcessorTest.kmsJwtAdapter.mockJwt.payload.sub = null;
-		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
 		// @ts-ignore
 		expect(out.body).toBe("Error Validating Token");
@@ -238,7 +238,7 @@ describe("UserInfoRequestProcessor", () => {
 	it("Return 401 when we receive expired JWT access_token", async () => {
 		// @ts-ignore
 		userInforequestProcessorTest.kmsJwtAdapter.mockJwt.payload.exp = absoluteTimeNow() - 500;
-		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
 		// @ts-ignore
 		expect(out.body).toBe("Error Validating Token");
@@ -256,7 +256,7 @@ describe("UserInfoRequestProcessor", () => {
 		jest.spyOn(Validations, "eventToSubjectIdentifier").mockResolvedValueOnce("sessionId");
 		mockBavService.getSessionById.mockResolvedValue(undefined);
 
-		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
 		expect(mockBavService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(out.body).toContain("No Session Found");
@@ -275,7 +275,7 @@ describe("UserInfoRequestProcessor", () => {
 		mockBavService.getSessionById.mockResolvedValue(mockSession);
 		mockBavService.getPersonIdentityBySessionId.mockResolvedValue(undefined);
 
-		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
 		expect(mockBavService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
 		expect(out.body).toContain("Missing Person Identity");
@@ -296,7 +296,7 @@ describe("UserInfoRequestProcessor", () => {
 		mockPerson.name[0].nameParts = [];
 		mockBavService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
 
-		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 		expect(mockBavService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(mockBavService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
 
@@ -326,7 +326,7 @@ describe("UserInfoRequestProcessor", () => {
 		jest.spyOn(Validations, "eventToSubjectIdentifier").mockResolvedValueOnce("sessionId");
 		mockBavService.getSessionById.mockResolvedValue(mockSession);
 		mockSession.authSessionState = "BAV_AUTH_CODE_ISSUED";
-		const out: Response = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
 		expect(mockBavService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(out.body).toContain("Invalid Session State");
