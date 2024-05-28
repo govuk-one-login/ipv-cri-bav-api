@@ -97,7 +97,7 @@ export class VerifyAccountRequestProcessor {
   	let { hmrcUuid } = session;
   	if (!hmrcUuid) {
   		hmrcUuid = randomUUID();
-  		await this.BavService.saveHmrcUuid(sessionId, hmrcUuid!);
+  		await this.BavService.saveHmrcUuid(sessionId, hmrcUuid);
   	}
 
   	const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
@@ -128,7 +128,7 @@ export class VerifyAccountRequestProcessor {
   	);
 
   	const verifyResponse = await this.HmrcService.verify(
-  		{ accountNumber: paddedAccountNumber, sortCode, name, uuid: hmrcUuid! },
+  		{ accountNumber: paddedAccountNumber, sortCode, name, uuid: hmrcUuid },
   		this.hmrcToken,
   	);
 
@@ -145,7 +145,7 @@ export class VerifyAccountRequestProcessor {
   			extensions:{
   				evidence:[
 						 {
-  						txn: hmrcUuid!,
+  						txn: hmrcUuid,
   					},
   				],
 			  },
@@ -175,7 +175,7 @@ export class VerifyAccountRequestProcessor {
 
 		if (copCheckResult === CopCheckResults.PARTIAL_MATCH) {
 			const partialNameRecord: PartialNameSQSRecord = {
-				itemNumber: hmrcUuid!,
+				itemNumber: hmrcUuid,
 				timeStamp: timeOfRequest,
 				cicName: name,
 				accountName: verifyResponse.accountName,
