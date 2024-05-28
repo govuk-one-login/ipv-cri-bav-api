@@ -1,4 +1,4 @@
-import { APIGatewayProxyEvent } from "aws-lambda";
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { BavService } from "./BavService";
@@ -65,7 +65,7 @@ export class UserInfoRequestProcessor {
 	}
 
 	// eslint-disable-next-line max-lines-per-function, complexity
-	async processRequest(event: APIGatewayProxyEvent): Promise<Response> {
+	async processRequest(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
 		let sessionId: string;
 
 		try {
@@ -76,13 +76,13 @@ export class UserInfoRequestProcessor {
 					error,
 					messageCode: MessageCodes.INVALID_AUTH_CODE,
 				});
-				return new Response(HttpCodesEnum.UNAUTHORIZED, "Error Validating Token");
+				return Response(HttpCodesEnum.UNAUTHORIZED, "Error Validating Token");
 			}
 			this.logger.error("Unexpected error occurred", {
 				error,
 				messageCode: MessageCodes.SERVER_ERROR,
 			});
-			return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
+			return Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
 		}
 
 		this.logger.appendKeys({ sessionId });
@@ -92,7 +92,7 @@ export class UserInfoRequestProcessor {
 			this.logger.error("No session found", {
 				messageCode: MessageCodes.SESSION_NOT_FOUND,
 			});
-			return new Response(HttpCodesEnum.UNAUTHORIZED, "No Session Found");
+			return Response(HttpCodesEnum.UNAUTHORIZED, "No Session Found");
 		}
 
 		this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
@@ -116,7 +116,7 @@ export class UserInfoRequestProcessor {
 			this.logger.error("No person found with this session ID", {
 				messageCode: MessageCodes.PERSON_NOT_FOUND,
 			});
-			return new Response(HttpCodesEnum.UNAUTHORIZED, "Missing Person Identity");
+			return Response(HttpCodesEnum.UNAUTHORIZED, "Missing Person Identity");
 		}
 
 		this.metrics.addMetric("found person identity data", MetricUnits.Count, 1);
@@ -130,7 +130,7 @@ export class UserInfoRequestProcessor {
 				},
 				messageCode: MessageCodes.INCORRECT_SESSION_STATE,
 			});
-			return new Response(HttpCodesEnum.UNAUTHORIZED, "Invalid Session State");
+			return Response(HttpCodesEnum.UNAUTHORIZED, "Invalid Session State");
 		}
 
 		const names = personInfo.name[0].nameParts;
@@ -186,7 +186,7 @@ export class UserInfoRequestProcessor {
 				},
 			);
 
-			return new Response(HttpCodesEnum.OK, JSON.stringify({
+			return Response(HttpCodesEnum.OK, JSON.stringify({
 				sub: session.subject,
 				"https://vocab.account.gov.uk/v1/credentialJWT": [signedJWT],
 			}));
@@ -198,7 +198,7 @@ export class UserInfoRequestProcessor {
 				sortCode: !!personInfo.sortCode,
 				accountNumber: !!personInfo.accountNumber,
 			});
-			return new Response(HttpCodesEnum.BAD_REQUEST, "Bad Request");
+			return Response(HttpCodesEnum.BAD_REQUEST, "Bad Request");
 		}
 	}
 }

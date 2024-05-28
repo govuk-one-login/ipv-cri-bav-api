@@ -3,13 +3,12 @@
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "jest-mock-extended";
 import { Logger } from "@aws-lambda-powertools/logger";
-import { Response } from "../../../utils/Response";
 import { ISessionItem } from "../../../models/ISessionItem";
 import { AccessTokenRequestProcessor } from "../../../services/AccessTokenRequestProcessor";
 import { AuthSessionState } from "../../../models/enums/AuthSessionState";
 import { MISSING_BODY_ACCESSTOKEN, VALID_ACCESSTOKEN } from "../data/accessToken-events";
 import { Constants } from "../../../utils/Constants";
-import { APIGatewayProxyEvent } from "aws-lambda";
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { randomUUID } from "crypto";
 import { AppError } from "../../../utils/AppError";
 import { BavService } from "../../../services/BavService";
@@ -32,8 +31,8 @@ function getMockSessionItem(): ISessionItem {
 	const sess: ISessionItem = {
 		sessionId: "b0668808-67ce-8jc7-a2fc-132b81612111",
 		clientId: "ipv-core-stub",
-		accessToken: "AbCdEf123456",
 		clientSessionId: "sdfssg",
+		accessToken: "AbCdEf123456",
 		authorizationCode: "",
 		authorizationCodeExpiryDate: 123,
 		redirectUri: "http://localhost:8085/callback",
@@ -71,7 +70,7 @@ describe("AccessTokenRequestProcessor", () => {
 	it("Return bearer access token response when grant_type, code, and redirect_uri parameters are provided", async () => {
 		mockBavService.getSessionByAuthorizationCode.mockResolvedValue(mockSession);
 
-		const out: Response = await accessTokenRequestProcessorTest.processRequest(request);
+		const out: APIGatewayProxyResult = await accessTokenRequestProcessorTest.processRequest(request);
 		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(mockBavService.getSessionByAuthorizationCode).toHaveBeenCalledTimes(1);
 
@@ -87,7 +86,7 @@ describe("AccessTokenRequestProcessor", () => {
 	});
 
 	it("Returns 401 Unauthorized response when body is missing", async () => {
-		const out: Response = await accessTokenRequestProcessorTest.processRequest(MISSING_BODY_ACCESSTOKEN);
+		const out: APIGatewayProxyResult = await accessTokenRequestProcessorTest.processRequest(MISSING_BODY_ACCESSTOKEN);
 
 		expect(out.body).toBe("Invalid request: missing body");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
@@ -99,7 +98,7 @@ describe("AccessTokenRequestProcessor", () => {
 		[`code=${AUTHORIZATION_CODE}&grant_type=authorization_code`, "Invalid request: Missing redirect_uri parameter"],
 	])("When parameters are not provided in the body, it returns 401 Unauthorized response", async (body, errMsg) => {
 		request.body = body;
-		const out: Response = await accessTokenRequestProcessorTest.processRequest(request);
+		const out: APIGatewayProxyResult = await accessTokenRequestProcessorTest.processRequest(request);
 
 		expect(out.body).toBe(errMsg);
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
@@ -108,7 +107,7 @@ describe("AccessTokenRequestProcessor", () => {
 
 	it("Returns 401 Unauthorized response when grant_type parameter is not equal to 'authorization_code'", async () => {
 		request.body = `code=${AUTHORIZATION_CODE}&grant_type=WRONG_CODE&redirect_uri=${ENCODED_REDIRECT_URI}`;
-		const out: Response = await accessTokenRequestProcessorTest.processRequest(request);
+		const out: APIGatewayProxyResult = await accessTokenRequestProcessorTest.processRequest(request);
 
 		expect(out.body).toBe("Invalid grant_type parameter");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
@@ -116,7 +115,7 @@ describe("AccessTokenRequestProcessor", () => {
 
 	it("Returns 401 Unauthorized response when code parameter is not a valid UUID", async () => {
 		request.body = `code=1234&grant_type=authorization_code&redirect_uri=${ENCODED_REDIRECT_URI}`;
-		const out: Response = await accessTokenRequestProcessorTest.processRequest(request);
+		const out: APIGatewayProxyResult = await accessTokenRequestProcessorTest.processRequest(request);
 
 		expect(out.body).toBe("AuthorizationCode must be a valid uuid");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
@@ -125,7 +124,7 @@ describe("AccessTokenRequestProcessor", () => {
 	it("Return 401 Unauthorized response when AuthSessionState is not BAV_AUTH_CODE_ISSUED", async () => {
 		mockSession.authSessionState = AuthSessionState.BAV_ACCESS_TOKEN_ISSUED;
 		mockBavService.getSessionByAuthorizationCode.mockResolvedValue(mockSession);
-		const out: Response = await accessTokenRequestProcessorTest.processRequest(request);
+		const out: APIGatewayProxyResult = await accessTokenRequestProcessorTest.processRequest(request);
 
 		expect(out.body).toBe("Session is in the wrong state: BAV_ACCESS_TOKEN_ISSUED");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
@@ -133,7 +132,7 @@ describe("AccessTokenRequestProcessor", () => {
 
 	it("Returns 401 Unauthorized response when redirect_uri parameter does not match the value in SessionTable", async () => {
 		request.body = `code=${AUTHORIZATION_CODE}&grant_type=authorization_code&redirect_uri=TEST_REDIRECT_URI`;
-		const out: Response = await accessTokenRequestProcessorTest.processRequest(request);
+		const out: APIGatewayProxyResult = await accessTokenRequestProcessorTest.processRequest(request);
 
 		expect(out.body).toBe("Invalid request: redirect uri TEST_REDIRECT_URI does not match configuration uri http://localhost:8085/callback");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
@@ -142,7 +141,7 @@ describe("AccessTokenRequestProcessor", () => {
 	it("Return 401 Unauthorized response when session was not found in the DB for a authorizationCode", async () => {
 		mockBavService.getSessionByAuthorizationCode.mockResolvedValue(undefined);
 
-		const out: Response = await accessTokenRequestProcessorTest.processRequest(request);
+		const out: APIGatewayProxyResult = await accessTokenRequestProcessorTest.processRequest(request);
 
 		expect(out.body).toBe("No session found by authorization code: " + AUTHORIZATION_CODE);
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
@@ -151,7 +150,7 @@ describe("AccessTokenRequestProcessor", () => {
 	it("Return 500 Server Error when Failed to sign the access token Jwt", async () => {
 		// @ts-ignore
 		accessTokenRequestProcessorTest.kmsJwtAdapter = failingKmsJwtSigningAdapterFactory();
-		const out: Response = await accessTokenRequestProcessorTest.processRequest(request);
+		const out: APIGatewayProxyResult = await accessTokenRequestProcessorTest.processRequest(request);
 
 		expect(out.body).toContain("Failed to sign the accessToken Jwt");
 		expect(out.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);
@@ -162,7 +161,7 @@ describe("AccessTokenRequestProcessor", () => {
 		mockBavService.getSessionByAuthorizationCode.mockImplementation(() => {
 			throw new AppError(HttpCodesEnum.UNAUTHORIZED, "Error retrieving Session by authorization code");
 		});
-		const out: Response = await accessTokenRequestProcessorTest.processRequest(request);
+		const out: APIGatewayProxyResult = await accessTokenRequestProcessorTest.processRequest(request);
 
 		expect(out.body).toContain("Error retrieving Session by authorization code");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
@@ -173,7 +172,7 @@ describe("AccessTokenRequestProcessor", () => {
 		mockBavService.updateSessionWithAccessTokenDetails.mockImplementation(() => {
 			throw new AppError(HttpCodesEnum.SERVER_ERROR, "updateItem - failed: got error saving Access token details");
 		});
-		const out: Response = await accessTokenRequestProcessorTest.processRequest(request);
+		const out: APIGatewayProxyResult = await accessTokenRequestProcessorTest.processRequest(request);
 
 		expect(out.body).toContain("updateItem - failed: got error saving Access token details");
 		expect(out.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);

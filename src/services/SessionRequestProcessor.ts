@@ -1,6 +1,6 @@
 /* eslint-disable complexity */
 /* eslint-disable max-lines-per-function */
-import { APIGatewayProxyEvent } from "aws-lambda";
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { BavService } from "./BavService";
@@ -16,7 +16,7 @@ import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
-import { Response, UnauthorizedResponse, SECURITY_HEADERS } from "../utils/Response";
+import { Response, SECURITY_HEADERS } from "../utils/Response";
 import { buildCoreEventFields } from "../utils/TxmaEvent";
 import { isJwtValid, isPersonNameValid } from "../utils/Validations";
 
@@ -72,7 +72,7 @@ export class SessionRequestProcessor {
   	return SessionRequestProcessor.instance;
   }
 
-  async processRequest(event: APIGatewayProxyEvent): Promise<Response> {
+  async processRequest(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   	const deserialisedRequestBody = JSON.parse(event.body as string) as SessionRequest;
   	const requestBodyClientId = deserialisedRequestBody.client_id;
 
@@ -93,14 +93,14 @@ export class SessionRequestProcessor {
   			error,
   			messageCode: MessageCodes.MISSING_CONFIGURATION,
   		});
-  		return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
+  		return Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
   	}
 
   	if (!configClient) {
   		this.logger.error("Unrecognised client in request", {
   			messageCode: MessageCodes.UNRECOGNISED_CLIENT,
   		});
-  		return new Response(HttpCodesEnum.BAD_REQUEST, "Bad Request");
+  		return Response(HttpCodesEnum.BAD_REQUEST, "Bad Request");
   	}
 
   	let urlEncodedJwt: string;
@@ -111,7 +111,7 @@ export class SessionRequestProcessor {
   			error,
   			messageCode: MessageCodes.FAILED_DECRYPTING_JWE,
   		});
-  		return UnauthorizedResponse;
+  		return Response(HttpCodesEnum.UNAUTHORIZED, "Unauthorized");
   	}
 
   	let parsedJwt: Jwt;
@@ -122,7 +122,7 @@ export class SessionRequestProcessor {
   			error,
   			messageCode: MessageCodes.FAILED_DECODING_JWT,
   		});
-  		return UnauthorizedResponse;
+  		return Response(HttpCodesEnum.UNAUTHORIZED, "Unauthorized");
   	}
 
   	const jwtPayload: JwtPayload = parsedJwt.payload;
@@ -138,20 +138,20 @@ export class SessionRequestProcessor {
   				this.logger.error("Failed to verify JWT", {
   					messageCode: MessageCodes.FAILED_VERIFYING_JWT,
   				});
-  				return UnauthorizedResponse;
+  				return Response(HttpCodesEnum.UNAUTHORIZED, "Unauthorized");
   			}
   		} else {
   			this.logger.error("Incomplete Client Configuration", {
   				messageCode: MessageCodes.MISSING_CONFIGURATION,
   			});
-  			return new Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
+  			return Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
   		}
   	} catch (error: any) {
   		this.logger.error("Invalid request: Could not verify jwt", {
   			error,
   			messageCode: MessageCodes.FAILED_VERIFYING_JWT,
   		});
-  		return UnauthorizedResponse;
+  		return Response(HttpCodesEnum.UNAUTHORIZED, "Unauthorized");
   	}
   	
   	const JwtErrors = isJwtValid(jwtPayload, requestBodyClientId, configClient.redirectUri);
@@ -159,7 +159,7 @@ export class SessionRequestProcessor {
   		this.logger.error(JwtErrors, {
   			messageCode: MessageCodes.FAILED_VALIDATING_JWT,
   		});
-  		return UnauthorizedResponse;
+  		return Response(HttpCodesEnum.UNAUTHORIZED, "Unauthorized");
   	}  	
 
   	const personDetailsError = isPersonNameValid(jwtPayload.shared_claims.name);
@@ -168,7 +168,7 @@ export class SessionRequestProcessor {
   			message: "Missing GivenName or FamilyName from shared claims data",
   			messageCode: MessageCodes.INVALID_PERSONAL_DETAILS,
   		});
-  		return UnauthorizedResponse;
+  		return Response(HttpCodesEnum.UNAUTHORIZED, "Unauthorized");
   	}
 
   	const sessionId: string = await this.BavService.generateSessionId();
