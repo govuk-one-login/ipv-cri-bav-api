@@ -19,6 +19,7 @@ import { Response } from "../utils/Response";
 import { buildCoreEventFields } from "../utils/TxmaEvent";
 import { VerifyAccountPayload } from "../type/VerifyAccountPayload";
 import { absoluteTimeNow } from "../utils/DateTimeUtils";
+import { APIGatewayProxyResult } from "aws-lambda";
 
 export class VerifyAccountRequestProcessor {
   private static instance: VerifyAccountRequestProcessor;
@@ -69,7 +70,7 @@ export class VerifyAccountRequestProcessor {
 	}
 
 	// eslint-disable-next-line max-lines-per-function, complexity
-	async processRequest(sessionId: string, body: VerifyAccountPayload, clientIpAddress: string, encodedHeader: string): Promise<Response> {
+	async processRequest(sessionId: string, body: VerifyAccountPayload, clientIpAddress: string, encodedHeader: string): Promise<APIGatewayProxyResult> {
   	const { account_number: accountNumber, sort_code: sortCode } = body;
   	const paddedAccountNumber = accountNumber.padStart(8, "0");
   	const person: PersonIdentityItem | undefined = await this.BavService.getPersonIdentityById(sessionId, this.personIdentityTableName);
@@ -77,17 +78,17 @@ export class VerifyAccountRequestProcessor {
 
   	if (!person) {
   		this.logger.error("No person found for session id", { messageCode: MessageCodes.PERSON_NOT_FOUND });
-  		return new Response(HttpCodesEnum.UNAUTHORIZED, `No person found with the session id: ${sessionId}`);
+  		return Response(HttpCodesEnum.UNAUTHORIZED, `No person found with the session id: ${sessionId}`);
   	}
 
   	if (!session) {
   		this.logger.error("No session found for session id", { messageCode: MessageCodes.SESSION_NOT_FOUND });
-  		return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
+  		return Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
   	}
 
   	if (session.attemptCount && session.attemptCount >= Constants.MAX_VERIFY_ATTEMPTS) {
   		this.logger.error(`Session attempt count is ${session.attemptCount}, cannot have another attempt`, { messageCode: MessageCodes.TOO_MANY_RETRIES });
-  		return new Response(HttpCodesEnum.UNAUTHORIZED, "Too many attempts");
+  		return Response(HttpCodesEnum.UNAUTHORIZED, "Too many attempts");
   	}
 
   	const name = getFullName(person.name);
@@ -134,7 +135,7 @@ export class VerifyAccountRequestProcessor {
 
   	if (!verifyResponse) {
   		this.logger.error("No verify reponse recieved", { messageCode: MessageCodes.NO_VERIFY_RESPONSE });
-  		return new Response(HttpCodesEnum.SERVER_ERROR, "Could not verify account");
+  		return Response(HttpCodesEnum.SERVER_ERROR, "Could not verify account");
   	}
 
   	await this.BavService.sendToTXMA(
@@ -163,7 +164,7 @@ export class VerifyAccountRequestProcessor {
 
   	if (copCheckResult === CopCheckResults.MATCH_ERROR) {
   		this.logger.warn("Error received in COP verify response");
-  		return new Response(HttpCodesEnum.SERVER_ERROR, "Error received in COP verify response");
+  		return Response(HttpCodesEnum.SERVER_ERROR, "Error received in COP verify response");
   	}
 
   	let attemptCount;
@@ -186,7 +187,7 @@ export class VerifyAccountRequestProcessor {
 			await this.BavService.savePartialNameInfo(this.partialNameQueueUrl, partialNameRecord);
 		}
 
-  	return new Response(HttpCodesEnum.OK, JSON.stringify({
+  	return Response(HttpCodesEnum.OK, JSON.stringify({
   		message: "Success",
   		attemptCount,
   	}));

@@ -10,6 +10,7 @@ import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 import { Response } from "../utils/Response";
 import { buildCoreEventFields } from "../utils/TxmaEvent";
+import { APIGatewayProxyResult } from "aws-lambda";
 
 export class AbortRequestProcessor {
   private static instance: AbortRequestProcessor;
@@ -41,14 +42,14 @@ export class AbortRequestProcessor {
   	return AbortRequestProcessor.instance;
   }
 
-  async processRequest(sessionId: string, encodedHeader: string): Promise<Response> {
+  async processRequest(sessionId: string, encodedHeader: string): Promise<APIGatewayProxyResult> {
   	const session = await this.BavService.getSessionById(sessionId);
 
   	if (!session) {
   		this.logger.error("No session found for session id", {
   			messageCode: MessageCodes.SESSION_NOT_FOUND,
   		});
-  		return new Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
+  		return Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
   	}
 
   	this.logger.appendKeys({
@@ -61,7 +62,7 @@ export class AbortRequestProcessor {
 
   	if (session.authSessionState === AuthSessionState.BAV_SESSION_ABORTED) {
   		this.logger.info("Session has already been aborted");
-  		return new Response(HttpCodesEnum.OK, "Session has already been aborted", { Location: encodeURIComponent(redirectUri) });
+  		return Response(HttpCodesEnum.OK, "Session has already been aborted", { Location: encodeURIComponent(redirectUri) });
   	}
 
   	await this.BavService.updateSessionAuthState(session.sessionId, AuthSessionState.BAV_SESSION_ABORTED);
@@ -75,6 +76,6 @@ export class AbortRequestProcessor {
   		encodedHeader,
   	);
 
-  	return new Response(HttpCodesEnum.OK, "Session has been aborted", { Location: encodeURIComponent(redirectUri) });
+  	return Response(HttpCodesEnum.OK, "Session has been aborted", { Location: encodeURIComponent(redirectUri) });
   }
 }
