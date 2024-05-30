@@ -3991,6 +3991,19 @@ Resources:
           ExpectedBucketOwner: !Ref AWS::AccountId
           OutputLocation: !Sub "s3://${PartialNameMatchAthenaResultsBucket}/"
   
+  PartialNameMatchAthenaNamedQuery:
+    Type: AWS::Athena::NamedQuery
+    Properties:
+      Database: !Ref PartialNameMatchGlueDatabase
+      Description: "A query to return all the partial name records in the last 7 days."
+      Name: "PartialNameRecordsInLast7Days"
+      WorkGroup: !Ref PartialNameMatchAthenaWorkgroup
+      QueryString: !Sub SELECT *,from_unixtime(timestamp) AS human_readable_timestamp FROM "partialnamematch-${AWS::StackName}" WHERE timestamp >= to_unixtime(current_date - interval '7' day) order by human_readable_timestamp asc;
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+        
   JsonWebKeysFunction:
     Type: AWS::Serverless::Function
     DependsOn:
