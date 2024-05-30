@@ -3971,6 +3971,8 @@ Resources:
               Type: string
             - Name: nameMatches
               Type: string
+            - Name: sortCodeBankName
+              Type: string
 
   PartialNameMatchAthenaWorkgroup:
     Type: AWS::Athena::WorkGroup

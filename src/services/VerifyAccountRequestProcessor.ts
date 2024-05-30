@@ -182,6 +182,7 @@ export class VerifyAccountRequestProcessor {
 				accountName: verifyResponse.accountName,
 				accountExists: verifyResponse.accountExists,
 				nameMatches: verifyResponse.nameMatches,
+				sortCodeBankName: verifyResponse.sortCodeBankName,
 			};
 			
 			await this.BavService.savePartialNameInfo(this.partialNameQueueUrl, partialNameRecord);

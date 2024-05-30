@@ -7,7 +7,7 @@ export interface HmrcTokenResponse {
 export interface HmrcVerifyResponse {
 	accountNumberIsWellFormatted: string;
 	nonStandardAccountDetailsRequiredForBacs: string;
-	sortCodeBankName: string;
+	sortCodeBankName?: string;
 	sortCodeIsPresentOnEISCD: string;
 	sortCodeSupportsDirectDebit: string;
 	sortCodeSupportsDirectCredit: string;
@@ -24,4 +24,5 @@ export interface PartialNameSQSRecord {
 	accountName: string;
 	accountExists: string;
 	nameMatches: string;
+	sortCodeBankName?: string;
 }
