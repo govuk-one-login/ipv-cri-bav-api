@@ -2,7 +2,7 @@
 import bavStubPayload from "../data/exampleStubPayload.json";
 import verifyAccountYesPayload from "../data/bankDetailsYes.json";
 import { constants } from "./ApiConstants";
-import { getTxmaEventsFromTestHarness, validateTxMAEventData } from "./ApiUtils";
+import { absoluteTimeNow, getTxmaEventsFromTestHarness, validateTxMAEventData } from "./ApiUtils";
 import {
 	authorizationGet,
 	getSessionAndVerifyKey,
@@ -20,8 +20,10 @@ import {
 	validatePersonInfoResponse,
 	decodeRawBody,
 	getKeyFromSession,
+	getAthenaRecordByFirstNameAndTime,
 } from "./ApiTestSteps";
 import { BankDetailsPayload } from "../models/BankDetailsPayload";
+import { randomUUID } from "node:crypto";
 
 describe("BAV CRI happy path tests", () => {
 	describe("/session Endpoint", () => {
@@ -95,23 +97,35 @@ describe("BAV CRI happy path tests", () => {
 			["33333333"],
 			["44444444"],
 		])("Name Retry Test for Account Number: $accountNumber", async (accountNumber: string) => {
-			const newVerifyAccountYesPayload = structuredClone(verifyAccountYesPayload);
-			newVerifyAccountYesPayload.account_number = accountNumber;
+            
+            const firstName = randomUUID().slice(-8);
+            const newStubPayload = structuredClone(bavStubPayload);
+            newStubPayload.shared_claims.name[0].nameParts[0].value = firstName;
+    
+            const sessionId = await startStubServiceAndReturnSessionId(newStubPayload);
+    
+            const newVerifyAccountYesPayload = structuredClone(verifyAccountYesPayload);
+            
+        
+            newVerifyAccountYesPayload.account_number = accountNumber;
+            const startTime = absoluteTimeNow();
 
-			const sessionId = await startStubServiceAndReturnSessionId();
+            const verifyAccountResponse = await verifyAccountPost(newVerifyAccountYesPayload, sessionId);
+    
+            expect(verifyAccountResponse.status).toBe(200);
+            expect(verifyAccountResponse.data.message).toBe("Success");
+            expect(verifyAccountResponse.data.attemptCount).toBe(1);
 
-			const verifyAccountResponse = await verifyAccountPost(newVerifyAccountYesPayload, sessionId);
+            const athenaRecords = await getAthenaRecordByFirstNameAndTime(startTime, firstName);
+            expect(athenaRecords.length).toBeGreaterThan(0);
 
-			expect(verifyAccountResponse.status).toBe(200);
-			expect(verifyAccountResponse.data.message).toBe("Success");
-			expect(verifyAccountResponse.data.attemptCount).toBe(1);
+            const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 3);
 
-			const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 3);
+            validateTxMAEventData({ eventName: "BAV_CRI_START", schemaName: "BAV_CRI_START_SCHEMA" }, allTxmaEventBodies);
+            validateTxMAEventData({ eventName: "BAV_COP_REQUEST_SENT", schemaName: "BAV_COP_REQUEST_SENT_SCHEMA" }, allTxmaEventBodies);
+            validateTxMAEventData({ eventName: "BAV_COP_RESPONSE_RECEIVED", schemaName: "BAV_COP_RESPONSE_RECEIVED_SCHEMA" }, allTxmaEventBodies);
+        });
 
-			validateTxMAEventData({ eventName: "BAV_CRI_START", schemaName: "BAV_CRI_START_SCHEMA" }, allTxmaEventBodies);
-			validateTxMAEventData({ eventName: "BAV_COP_REQUEST_SENT", schemaName: "BAV_COP_REQUEST_SENT_SCHEMA" }, allTxmaEventBodies);
-			validateTxMAEventData({ eventName: "BAV_COP_RESPONSE_RECEIVED", schemaName: "BAV_COP_RESPONSE_RECEIVED_SCHEMA" }, allTxmaEventBodies);
-		});
 	});
 
 
