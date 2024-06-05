@@ -21,6 +21,7 @@ let frontendURL: string;
 export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
+  console.log("----Testing logs (TO be removed.")
   const config = getConfig();
   const overrides = event.body !== null ? JSON.parse(event.body) : null;
   if (overrides?.target != null) {
