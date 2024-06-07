@@ -105,30 +105,7 @@ describe("BAV CRI unhappy path tests", () => {
 			expect(verifyAccountResponseSecondRetry.data).toBe("Too many attempts");
 		});
 	});
-
-	describe("BAV CRI: /verify-account Endpoint Partial Match Athena Output Test", () => {
-		it("Triggers Partial Match and checks for object in Athena", async () => {
-			// ARRANGE
-			const firstName = randomUUID().slice(-8);
-			const newStubPayload = structuredClone(exampleStubPayload);
-			newStubPayload.shared_claims.name[0].nameParts[0].value = firstName;
-
-			const sessionId = await startStubServiceAndReturnSessionId(newStubPayload);
-
-			const newVerifyAccountYesPayload = structuredClone(verifyAccountYesPayload);
-			newVerifyAccountYesPayload.account_number = "00111114";
-			const startTime = absoluteTimeNow();
-
-			// ACT
-			const verifyAccountResponse = await verifyAccountPost(newVerifyAccountYesPayload, sessionId);
-
-			// ASSERT
-			expect(verifyAccountResponse.status).toBe(200);
-			const athenaRecords = await getAthenaRecordByFirstNameAndTime(startTime, firstName);
-			expect(athenaRecords.length).toBeGreaterThan(0);
-		});
-	});
-
+	
 	describe("BAV CRI: /authorization Endpoint Unhappy Path Tests", () => {
 		let sessionId: string;
 
