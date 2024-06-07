@@ -1,0 +1,114 @@
+name: Delete CloudFormation Stacks
+
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" or "develop" branch
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - reopened
+      - ready_for_review
+      - synchronize
+    paths-ignore:
+      - 'infra-l2-dynamo/**'
+      - 'infra-l2-kms/**'
+      - 'infra-l2-outbound-proxy/**'
+      - 'bav-ipv-stub/**'
+      - 'test-harness/**'
+
+  workflow_dispatch:
+    inputs:
+      stacks:
+        description: 'Comma-separated list of CloudFormation stack names'
+        required: true
+        type: string
+
+env: # Only adding the variables in that are required for
+  AWS_REGION: eu-west-2
+
+jobs:
+  delete-stacks:
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: eu-west-2
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Setup SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: Assume temporary AWS role
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: ${{ secrets.CRI_BAV_GH_VALIDATE_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Ensure stack names are provided
+        run: |
+          if [ -z "${{ github.event.inputs.stacks }}" ]; then
+            echo "Error: No stack names provided."
+            exit 1
+          fi
+
+      - name: Delete CloudFormation stacks
+        run: |
+          STACK_NAMES=${{ github.event.inputs.stacks }}
+          delete_stack() {
+            local STACK_NAME=$1
+            local LOG_FILE="delete_${STACK_NAME}.log"
+
+            echo "Processing stack: $STACK_NAME" | tee -a $LOG_FILE
+
+            # Query CloudFormation stack for all resources
+            echo "Querying CloudFormation stack for resources..." | tee -a $LOG_FILE
+            RESOURCES=$(aws cloudformation describe-stack-resources --stack-name $STACK_NAME --query "StackResources[?ResourceType=='AWS::S3::Bucket'].PhysicalResourceId" --output text)
+
+            # Check if there are any S3 buckets
+            if [ -z "$RESOURCES" ]; then
+              echo "No S3 buckets found in the stack." | tee -a $LOG_FILE
+            else
+              # Loop through each S3 bucket and delete it
+              for BUCKET in $RESOURCES; do
+                echo "Deleting S3 bucket: $BUCKET" | tee -a $LOG_FILE
+                ./deleteBucket.sh $BUCKET | tee -a $LOG_FILE
+                if [ $? -ne 0 ]; then
+                  echo "Failed to delete bucket: $BUCKET" | tee -a $LOG_FILE
+                  return 1
+                fi
+                echo "Successfully deleted bucket: $BUCKET" | tee -a $LOG_FILE
+              done
+            fi
+
+            # Delete the CloudFormation stack
+            echo "Deleting CloudFormation stack: $STACK_NAME" | tee -a $LOG_FILE
+            aws cloudformation delete-stack --stack-name $STACK_NAME | tee -a $LOG_FILE
+
+            # Wait for the stack to be deleted
+            echo "Waiting for stack to be deleted..." | tee -a $LOG_FILE
+            aws cloudformation wait stack-delete-complete --stack-name $STACK_NAME | tee -a $LOG_FILE
+
+            if [ $? -eq 0 ]; then
+              echo "Successfully deleted CloudFormation stack: $STACK_NAME" | tee -a $LOG_FILE
+            else
+              echo "Failed to delete CloudFormation stack: $STACK_NAME" | tee -a $LOG_FILE
+              return 1
+            fi
+          }
+
+          export -f delete_stack
+
+          echo "Starting deletion of CloudFormation stacks in parallel..."
+          echo $STACK_NAMES | xargs -n 1 -P 0 bash -c 'delete_stack "$@"' _
+
+          if [ $? -eq 0 ]; then
+            echo "Successfully deleted all specified CloudFormation stacks."
+          else
+            echo "Failed to delete one or more CloudFormation stacks."
+            exit 1
+          fi
