@@ -2,8 +2,7 @@
 import bavStubPayload from "../data/exampleStubPayload.json";
 import verifyAccountYesPayload from "../data/bankDetailsYes.json";
 import { constants } from "./ApiConstants";
-import { absoluteTimeNow } from "./ApiUtils";
-import { getTxmaEventsFromTestHarness, validateTxMAEventData } from "./ApiUtils";
+import { absoluteTimeNow, getTxmaEventsFromTestHarness, validateTxMAEventData } from "./ApiUtils";
 import {
 	authorizationGet,
 	getSessionAndVerifyKey,
