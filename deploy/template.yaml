@@ -474,7 +474,7 @@ Resources:
     Type: AWS::IAM::ManagedPolicy
     Properties:
       Description: "Grants console access to AWS Athena to query the BAV results bucket"
-      ManagedPolicyName: !Sub "${AWS::StackName}-athena-query-bav-results"
+      ManagedPolicyName: !Sub "${AWS::StackName}-athena-query-results"
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
