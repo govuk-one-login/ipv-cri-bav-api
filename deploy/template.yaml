@@ -3999,10 +3999,7 @@ Resources:
       Name: "PartialNameRecordsInLast7Days"
       WorkGroup: !Ref PartialNameMatchAthenaWorkgroup
       QueryString: !Sub SELECT *,from_unixtime(timestamp) AS human_readable_timestamp FROM "partialnamematch-${AWS::StackName}" WHERE timestamp >= to_unixtime(current_date - interval '7' day) order by human_readable_timestamp asc;
-      PermissionsBoundary: !If
-        - UsePermissionsBoundary
-        - !Ref PermissionsBoundary
-        - !Ref AWS::NoValue
+      ClientRequestToken: "PartialNameRecordsInLast7Days"
         
   JsonWebKeysFunction:
     Type: AWS::Serverless::Function
