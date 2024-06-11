@@ -2,6 +2,8 @@ import Ajv from "ajv";
 import { XMLParser } from "fast-xml-parser";
 import { HARNESS_API_INSTANCE } from "./ApiTestSteps";
 import { TxmaEvent, TxmaEventName } from "../../utils/TxmaEvent";
+import { CloudWatchClient, DescribeAlarmsCommand, DescribeAlarmsCommandInput } from "@aws-sdk/client-cloudwatch";
+const client = new CloudWatchClient({ region: "eu-west-2" });
 import * as BAV_COP_REQUEST_SENT_SCHEMA from "../data/BAV_COP_REQUEST_SENT_SCHEMA.json";
 import * as BAV_COP_RESPONSE_RECEIVED_SCHEMA from "../data/BAV_COP_RESPONSE_RECEIVED_SCHEMA.json";
 import * as BAV_CRI_END_SCHEMA from "../data/BAV_CRI_END_SCHEMA.json";
@@ -43,7 +45,7 @@ const getTxMAS3FileNames = async (prefix: string): Promise<any> => {
 };
 
 const getAllTxMAS3FileContents = async (fileNames: any[]): Promise<AllTxmaEvents> => {
-	const allContents  = await fileNames.reduce(
+	const allContents = await fileNames.reduce(
 		async (accumulator: Promise<AllTxmaEvents>, fileName: any) => {
 			const resolvedAccumulator = await accumulator;
 
@@ -86,7 +88,7 @@ export async function getTxmaEventsFromTestHarness(sessionId: string, numberOfTx
 }
 
 export function validateTxMAEventData(
-	{ eventName, schemaName }: { eventName: TxmaEventName; schemaName: string }, allTxmaEventBodies: AllTxmaEvents = {}, 
+	{ eventName, schemaName }: { eventName: TxmaEventName; schemaName: string }, allTxmaEventBodies: AllTxmaEvents = {},
 ): void {
 	const currentEventBody: TxmaEvent | undefined = allTxmaEventBodies[eventName];
 
@@ -106,6 +108,28 @@ export function validateTxMAEventData(
 		throw new Error(`No event found in the test harness for ${eventName} event`);
 	}
 }
+
+export async function describeAlarm(alarmName: string): Promise<any> {
+	try {
+		const params: DescribeAlarmsCommandInput = {
+			AlarmNames: [alarmName]
+		};
+
+		const command = new DescribeAlarmsCommand(params);
+		const response = await client.send(command);
+
+		if (response.MetricAlarms && response.MetricAlarms.length > 0) {
+			return response.MetricAlarms[0];
+		} else {
+			console.error("Alarm not found");
+			return undefined;
+		}
+	} catch (error) {
+		console.error("Error describing alarm:", error);
+		throw error;
+	}
+}
+
 
 export function absoluteTimeNow(): number {
 	return Math.floor(Date.now() / 1000);
