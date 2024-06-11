@@ -15,6 +15,7 @@
   "dependencies": {
     "@aws-lambda-powertools/logger": "^1.5.1",
     "@aws-lambda-powertools/metrics": "^1.5.1",
+    "@aws-sdk/client-athena": "^3.481.0",
     "@aws-sdk/client-s3": "^3.379.1",
     "@aws-sdk/node-http-handler": "^3.374.0",
     "esbuild": "^0.14.14"
@@ -26,6 +27,8 @@
     "@types/node": "^20.4.5",
     "@typescript-eslint/eslint-plugin": "^6.3.0",
     "@typescript-eslint/eslint-plugin-tslint": "^6.3.0",
+    "aws-sdk-client-mock": "^4.0.0",
+    "aws-sdk-client-mock-jest": "^4.0.0",
     "esbuild-jest": "^0.5.0",
     "eslint": "^8.46.0",
     "eslint-config-airbnb-typescript": "^17.1.0",
@@ -46,7 +49,7 @@
   },
   "babel": {
     "presets": [
-        "@babel/preset-typescript"
+      "@babel/preset-typescript"
     ]
   },
   "engines": {

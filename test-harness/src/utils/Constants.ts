@@ -8,4 +8,6 @@ export class Constants {
   static readonly WARN = "WARN";
 
   static readonly ERROR = "ERROR";
+
+  static readonly BAV_METRICS_NAMESPACE = "BAV-CRI-HARNESS";
 }

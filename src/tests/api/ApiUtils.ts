@@ -106,3 +106,11 @@ export function validateTxMAEventData(
 		throw new Error(`No event found in the test harness for ${eventName} event`);
 	}
 }
+
+export function absoluteTimeNow(): number {
+	return Math.floor(Date.now() / 1000);
+}
+
+export function sleep(ms = 0): Promise<void> {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
