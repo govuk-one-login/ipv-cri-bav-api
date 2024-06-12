@@ -111,6 +111,7 @@ describe("AthenaQueryHandler", () => {
         Rows: [],
       },
     });
+    process.env["GLUE_TABLE"]="gluetable"
 
     // ACT
     await lambdaHandler(
@@ -120,7 +121,7 @@ describe("AthenaQueryHandler", () => {
 
     // ASSERT
     expect(athenaMock).toHaveReceivedCommandWith(StartQueryExecutionCommand, {
-      QueryString: "",
+      QueryString: "SELECT itemnumber FROM \"gluetable\" WHERE timestamp >= ? AND cicname LIKE ? ORDER BY timestamp DESC",
       ExecutionParameters: ["1234", "ABCD%"],
     });
   });
