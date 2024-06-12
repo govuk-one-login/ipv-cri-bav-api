@@ -8,7 +8,7 @@ import {
   QueryExecutionState,
   StartQueryExecutionCommand
 } from "@aws-sdk/client-athena";
-import 'aws-sdk-client-mock-jest';
+import "aws-sdk-client-mock-jest";
 
 const athenaMock = mockClient(AthenaClient);
 
@@ -118,9 +118,10 @@ describe("AthenaQueryHandler", () => {
 
     // ASSERT
     expect(athenaMock).toHaveReceivedCommandWith(StartQueryExecutionCommand, {
+      QueryString: "",
       ExecutionParameters: [
         "1234",
-        "ABCD%",
+        "ABCD%"
       ]
     })
 

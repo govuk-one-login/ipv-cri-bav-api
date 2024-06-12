@@ -16,13 +16,14 @@ import {
 } from "@aws-sdk/client-athena";
 import {setTimeout} from "timers/promises";
 import {convertAthenaResultsToListOfRecords} from "./utils/ConvertAthenaResultToListOfRecords";
+import {LogLevel} from "@aws-lambda-powertools/logger/lib/types";
 
 const POWERTOOLS_METRICS_NAMESPACE = process.env.POWERTOOLS_METRICS_NAMESPACE ?? Constants.BAV_METRICS_NAMESPACE;
 const POWERTOOLS_LOG_LEVEL = process.env.POWERTOOLS_LOG_LEVEL ?? Constants.DEBUG;
 const POWERTOOLS_SERVICE_NAME = process.env.POWERTOOLS_SERVICE_NAME ?? Constants.DEQUEUE_LOGGER_SVC_NAME;
 
 export const logger = new Logger({
-	logLevel: POWERTOOLS_LOG_LEVEL,
+	logLevel: POWERTOOLS_LOG_LEVEL as LogLevel,
 	serviceName: POWERTOOLS_SERVICE_NAME,
 });
 

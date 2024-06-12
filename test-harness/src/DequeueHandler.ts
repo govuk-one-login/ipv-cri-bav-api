@@ -5,6 +5,7 @@ import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { NodeHttpHandler } from "@aws-sdk/node-http-handler";
 import { Constants } from "./utils/Constants";
 import { BatchItemFailure } from "./utils/BatchItemFailure";
+import {LogLevel} from "@aws-lambda-powertools/logger/lib/types";
 
 const POWERTOOLS_LOG_LEVEL = process.env.POWERTOOLS_LOG_LEVEL
 	? process.env.POWERTOOLS_LOG_LEVEL
@@ -14,7 +15,7 @@ const POWERTOOLS_SERVICE_NAME = process.env.POWERTOOLS_SERVICE_NAME
 	: Constants.DEQUEUE_LOGGER_SVC_NAME;
 
 export const logger = new Logger({
-	logLevel: POWERTOOLS_LOG_LEVEL,
+	logLevel: POWERTOOLS_LOG_LEVEL as LogLevel,
 	serviceName: POWERTOOLS_SERVICE_NAME,
 });
 
