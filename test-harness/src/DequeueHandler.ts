@@ -5,7 +5,7 @@ import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { NodeHttpHandler } from "@aws-sdk/node-http-handler";
 import { Constants } from "./utils/Constants";
 import { BatchItemFailure } from "./utils/BatchItemFailure";
-import {LogLevel} from "@aws-lambda-powertools/logger/lib/types";
+import { LogLevel } from "@aws-lambda-powertools/logger/lib/types";
 
 const POWERTOOLS_LOG_LEVEL = process.env.POWERTOOLS_LOG_LEVEL
 	? process.env.POWERTOOLS_LOG_LEVEL

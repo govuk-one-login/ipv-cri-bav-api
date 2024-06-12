@@ -1,12 +1,12 @@
-import {lambdaHandler} from "../../AthenaQueryHandler";
-import {APIGatewayProxyEvent} from "aws-lambda";
-import {mockClient} from "aws-sdk-client-mock";
+import { lambdaHandler } from "../../AthenaQueryHandler";
+import { APIGatewayProxyEvent } from "aws-lambda";
+import { mockClient } from "aws-sdk-client-mock";
 import {
   AthenaClient,
   GetQueryExecutionCommand,
   GetQueryResultsCommand,
   QueryExecutionState,
-  StartQueryExecutionCommand
+  StartQueryExecutionCommand,
 } from "@aws-sdk/client-athena";
 import "aws-sdk-client-mock-jest";
 
@@ -25,11 +25,10 @@ jest.mock("@aws-lambda-powertools/logger", () => ({
 jest.mock("@aws-lambda-powertools/metrics", () => ({
   Metrics: jest.fn().mockImplementation(() => ({
     logMetrics: jest.fn(),
-  }))
-}))
+  })),
+}));
 
 describe("AthenaQueryHandler", () => {
-
   const lambdaProxyEvent = {
     queryStringParameters: {
       "min-timestamp": "1234",
@@ -60,16 +59,15 @@ describe("AthenaQueryHandler", () => {
 
   beforeEach(() => {
     athenaMock.reset();
-  })
+  });
 
   const context = {};
 
   it("should return an empty list if no rows are found", async () => {
-
     // ARRANGE
     athenaMock.on(StartQueryExecutionCommand).resolves({
       QueryExecutionId: "1234",
-    })
+    });
     athenaMock.on(GetQueryExecutionCommand).resolves({
       QueryExecution: {
         Status: {
@@ -84,22 +82,23 @@ describe("AthenaQueryHandler", () => {
     });
 
     // ACT
-    const result = await lambdaHandler(lambdaProxyEvent as unknown as APIGatewayProxyEvent, context);
+    const result = await lambdaHandler(
+			lambdaProxyEvent as unknown as APIGatewayProxyEvent,
+			context,
+		);
 
     // ASSERT
     expect(result).toEqual({
       body: JSON.stringify([]),
       statusCode: 200,
     });
-
-  })
+  });
 
   it("should pass the query parameters in to the constructed SQL query", async () => {
-
     // ARRANGE
     athenaMock.on(StartQueryExecutionCommand).resolves({
       QueryExecutionId: "1234",
-    })
+    });
     athenaMock.on(GetQueryExecutionCommand).resolves({
       QueryExecution: {
         Status: {
@@ -114,25 +113,23 @@ describe("AthenaQueryHandler", () => {
     });
 
     // ACT
-    await lambdaHandler(lambdaProxyEvent as unknown as APIGatewayProxyEvent, context);
+    await lambdaHandler(
+			lambdaProxyEvent as unknown as APIGatewayProxyEvent,
+			context,
+		);
 
     // ASSERT
     expect(athenaMock).toHaveReceivedCommandWith(StartQueryExecutionCommand, {
       QueryString: "",
-      ExecutionParameters: [
-        "1234",
-        "ABCD%"
-      ]
-    })
-
-  })
+      ExecutionParameters: ["1234", "ABCD%"],
+    });
+  });
 
   it("should return a result set", async () => {
-
     // ARRANGE
     athenaMock.on(StartQueryExecutionCommand).resolves({
       QueryExecutionId: "1234",
-    })
+    });
     athenaMock.on(GetQueryExecutionCommand).resolves({
       QueryExecution: {
         Status: {
@@ -140,27 +137,30 @@ describe("AthenaQueryHandler", () => {
         },
       },
     });
-    athenaMock.on(GetQueryResultsCommand).resolves(athenaGetQueryResultsMockResponse);
+    athenaMock
+			.on(GetQueryResultsCommand)
+			.resolves(athenaGetQueryResultsMockResponse);
 
     // ACT
-    const result = await lambdaHandler(lambdaProxyEvent as unknown as APIGatewayProxyEvent, context);
+    const result = await lambdaHandler(
+			lambdaProxyEvent as unknown as APIGatewayProxyEvent,
+			context,
+		);
 
     // ASSERT
     expect(JSON.parse(result.body)).toEqual([
-        {
-          itemnumber: "12345678-1234-1234-1234-123456789012",
-        }
+      {
+				itemnumber: "12345678-1234-1234-1234-123456789012",
+      },
     ]);
     expect(result.statusCode).toEqual(200);
-
-  })
+  });
 
   it("should wait until the query has finished running", async () => {
-
     // ARRANGE
     athenaMock.on(StartQueryExecutionCommand).resolves({
       QueryExecutionId: "1234",
-    })
+    });
     athenaMock
       .on(GetQueryExecutionCommand)
       .resolvesOnce({
@@ -184,23 +184,26 @@ describe("AthenaQueryHandler", () => {
           },
         },
       });
-    athenaMock.on(GetQueryResultsCommand).resolves(athenaGetQueryResultsMockResponse);
+    athenaMock
+			.on(GetQueryResultsCommand)
+			.resolves(athenaGetQueryResultsMockResponse);
 
     // ACT
-    const result = await lambdaHandler(lambdaProxyEvent as unknown as APIGatewayProxyEvent, context);
+    const result = await lambdaHandler(
+			lambdaProxyEvent as unknown as APIGatewayProxyEvent,
+			context,
+		);
 
     // ASSERT
     expect(result.statusCode).toEqual(200);
     expect(athenaMock).toHaveReceivedCommandTimes(GetQueryExecutionCommand, 3);
-
   });
 
   it("should return 500 if the query is cancelled", async () => {
-
-    // ARRANGE
+		// ARRANGE
     athenaMock.on(StartQueryExecutionCommand).resolves({
       QueryExecutionId: "1234",
-    })
+    });
     athenaMock
       .on(GetQueryExecutionCommand)
       .resolvesOnce({
@@ -219,19 +222,20 @@ describe("AthenaQueryHandler", () => {
       });
 
     // ACT
-    const result = await lambdaHandler(lambdaProxyEvent as unknown as APIGatewayProxyEvent, context);
+    const result = await lambdaHandler(
+			lambdaProxyEvent as unknown as APIGatewayProxyEvent,
+			context,
+		);
 
     // ASSERT
     expect(result.statusCode).toEqual(500);
-
-  });
+	});
 
   it("should return 500 if the query failed", async () => {
-
     // ARRANGE
     athenaMock.on(StartQueryExecutionCommand).resolves({
       QueryExecutionId: "1234",
-    })
+    });
     athenaMock
       .on(GetQueryExecutionCommand)
       .resolvesOnce({
@@ -250,19 +254,20 @@ describe("AthenaQueryHandler", () => {
       });
 
     // ACT
-    const result = await lambdaHandler(lambdaProxyEvent as unknown as APIGatewayProxyEvent, context);
+    const result = await lambdaHandler(
+			lambdaProxyEvent as unknown as APIGatewayProxyEvent,
+			context,
+		);
 
     // ASSERT
     expect(result.statusCode).toEqual(500);
-
-  });
+	});
 
   it("should return 500 if an unknown query state is encountered", async () => {
-
     // ARRANGE
     athenaMock.on(StartQueryExecutionCommand).resolves({
       QueryExecutionId: "1234",
-    })
+    });
     athenaMock
       .on(GetQueryExecutionCommand)
       .resolvesOnce({
@@ -282,11 +287,12 @@ describe("AthenaQueryHandler", () => {
       });
 
     // ACT
-    const result = await lambdaHandler(lambdaProxyEvent as unknown as APIGatewayProxyEvent, context);
+    const result = await lambdaHandler(
+			lambdaProxyEvent as unknown as APIGatewayProxyEvent,
+			context,
+		);
 
     // ASSERT
     expect(result.statusCode).toEqual(500);
-
-  })
-
-})
+	});
+});
