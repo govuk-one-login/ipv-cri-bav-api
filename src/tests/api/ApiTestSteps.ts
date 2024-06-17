@@ -192,6 +192,21 @@ export async function getSessionById(sessionId: string, tableName: string): Prom
 	return session;
 }
 
+export async function getAthenaRecordByFirstNameAndTime(startTime: number, firstName: string): Promise<Array<Record<string, string>>> {
+	try {
+		const athenaResult = await HARNESS_API_INSTANCE.get("/athena/query", {
+			params: {
+				"min-timestamp": startTime,
+				"name-prefix": firstName,
+			},
+		});
+		return athenaResult.data as Array<Record<string, string>>;
+	} catch (error: any) {
+		console.error({ message: "getAthenaRecordByFirstNameAndTime - failed getting Athena records", error });
+	}
+	return [];
+}
+
 export async function getKeyFromSession(sessionId: string, tableName: string, key: string): Promise<any> {
 	const sessionInfo = await getSessionById(sessionId, tableName);
 	try {
