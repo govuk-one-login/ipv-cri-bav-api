@@ -47,7 +47,6 @@ describe("BAV CRI unhappy path tests", () => {
 		});
 	});
 
-
 	describe("/verify-account Endpoint Unhappy Path Tests", () => {
 		let sessionId: string;
 
@@ -104,7 +103,7 @@ describe("BAV CRI unhappy path tests", () => {
 		});
 	});
 
-	describe("/authorization Endpoint Unhappy Path Tests", () => {
+	describe("BAV CRI: /authorization Endpoint Unhappy Path Tests", () => {
 		let sessionId: string;
 
 		beforeEach(async () => {

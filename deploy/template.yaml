@@ -3320,12 +3320,15 @@ Resources:
             KeyId:
               Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-key-id"
         - Statement:
+            - Effect: Allow
+              Action:
+                - "sqs:SendMessage"
+              Resource: !GetAtt TxMASQSQueue.Arn
             - Sid: KMSPolicy
               Effect: Allow
               Action:
                 - kms:*
-              Resource:
-                "*"
+              Resource: "*"
             - Effect: Allow
               Action:
                 - "sqs:SendMessage"
@@ -3871,7 +3874,7 @@ Resources:
     Type: AWS::KMS::Alias
     Properties:
       AliasName: !If
-        -  CreateDevResources    
+        - CreateDevResources
         - !Sub "alias/PartialMatchesEncryptionKey-${AWS::StackName}"
         - alias/PartialMatchesEncryptionKey
       TargetKeyId: !Ref PartialMatchesEncryptionKey
@@ -4747,6 +4750,36 @@ Outputs:
     Condition: IsNotProdLikeEnvironment
     Description: "BAV Test Harness"
     Value: !FindInMap [EnvironmentVariables, !Ref Environment, TESTHARNESSURL]
+  PartialNameMatchBucket:
+    Condition: IsNotProdLikeEnvironment
+    Description: "PartialNameMatchBucket Bucket Name"
+    Value: !Ref PartialNameMatchBucket
+    Export:
+      Name: !Sub "${AWS::StackName}-PartialNameMatchBucket"
+  PartialNameMatchAthenaResultsBucket:
+    Condition: IsNotProdLikeEnvironment
+    Description: "PartialNameMatchBucket Bucket Name"
+    Value: !Ref PartialNameMatchAthenaResultsBucket
+    Export:
+      Name: !Sub "${AWS::StackName}-PartialNameMatchAthenaResultsBucket"
+  PartialNameMatchGlueTable:
+    Condition: IsNotProdLikeEnvironment
+    Description: "PartialNameMatchGlueTable"
+    Value: !Ref PartialNameMatchGlueTable
+    Export:
+      Name: !Sub "${AWS::StackName}-PartialNameMatchGlueTable"
+  PartialNameMatchGlueDatabase:
+    Condition: IsNotProdLikeEnvironment
+    Description: "PartialNameMatchGlueDatabase"
+    Value: !Ref PartialNameMatchGlueDatabase
+    Export:
+      Name: !Sub "${AWS::StackName}-PartialNameMatchGlueDatabase"
+  PartialNameMatchAthenaWorkgoup:
+    Condition: IsNotProdLikeEnvironment
+    Description: "PartialNameMatchAthenaWorkgroup"
+    Value: !Ref PartialNameMatchAthenaWorkgroup
+    Export:
+      Name: !Sub "${AWS::StackName}-PartialNameMatchAthenaWorkgroup"
   DNSSuffix:
     Condition: IsNotProdLikeEnvironment
     Description: "F2F DNS Suffix"
@@ -4756,3 +4789,9 @@ Outputs:
     Description: "Signing Key used to sign VC"
     Value:
       Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key-id"
+  PartialNameMatchBucketKey:
+    Condition: IsNotProdLikeEnvironment
+    Description: "Symmetric key for encrypting partial name match and Athena results bucket"
+    Value: !Ref PartialNameMatchBucketKey
+    Export:
+      Name: !Sub "${AWS::StackName}-PartialNameMatchBucketKey"
