@@ -9,7 +9,7 @@ import { randomUUID } from "crypto";
 describe("BAV CRI Alarms Tests", () => {
 
     it("/session Endpoint 4xx Api Gateway Alarm", async () => {
-        for (let i = 1; i <= 100; i++) {
+        for (let i = 1; i <= 250; i++) {
             const stubResponse = await stubStartPost();
             await sessionPost("", stubResponse.data.request);
         }
@@ -31,7 +31,7 @@ describe("BAV CRI Alarms Tests", () => {
         console.log("Verify Account Endpoint Alarm State: " + alarm.StateValue);
 	}, 450000);
 
-    it.only("/authorization Endpoint 4xx Api Gateway Alarm", async () => {
+    it("/authorization Endpoint 4xx Api Gateway Alarm", async () => {
         for (let i = 1; i <= 250; i++) {
 			await authorizationGet(randomUUID());
         }
@@ -48,8 +48,9 @@ describe("BAV CRI Alarms Tests", () => {
             verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number), sessionId,
         );
         const authResponse = await authorizationGet(sessionId);
-        for (let i = 1; i <= 100; i++) {
-            await tokenPost("authCode", authResponse.data.redirect_uri);
+        const authCode = randomUUID();
+        for (let i = 1; i <= 250; i++) {
+            await tokenPost(authCode, authResponse.data.redirect_uri);
         }
         await sleep(300000);
 
@@ -57,8 +58,8 @@ describe("BAV CRI Alarms Tests", () => {
         console.log("Token Endpoint Alarm State: " + alarm.StateValue);
 	}, 450000);
 
-    it("/userInfo Endpoint 4xx Api Gateway Alarm", async () => {
-        for (let i = 1; i <= 100; i++) {
+    it.only("/userInfo Endpoint 4xx Api Gateway Alarm", async () => {
+        for (let i = 1; i <= 250; i++) {
             await userInfoPost("Bearer");
         }
         await sleep(300000);
@@ -68,7 +69,7 @@ describe("BAV CRI Alarms Tests", () => {
 	}, 450000);
 
     it("/abort Endpoint 4xx Api Gateway Alarm", async () => {
-        for (let i = 1; i <= 100; i++) {
+        for (let i = 1; i <= 250; i++) {
             await abortPost(randomUUID());
         }
         await sleep(300000);
@@ -78,7 +79,7 @@ describe("BAV CRI Alarms Tests", () => {
 	}, 450000);
 
     it("/personInfo Endpoint 4xx Api Gateway Alarm", async () => {
-        for (let i = 1; i <= 100; i++) {
+        for (let i = 1; i <= 250ß; i++) {
             await personInfoGet(randomUUID());
         }
         await sleep(300000);

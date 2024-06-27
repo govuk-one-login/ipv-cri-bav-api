@@ -1,8 +1,8 @@
 /* eslint-disable max-lines-per-function */
-import bavStubPayload from "../data/exampleStubPayload.json";
-import verifyAccountYesPayload from "../data/bankDetailsYes.json";
-import { constants } from "./ApiConstants";
-import { absoluteTimeNow, getTxmaEventsFromTestHarness, validateTxMAEventData } from "./ApiUtils";
+import bavStubPayload from "../../data/exampleStubPayload.json";
+import verifyAccountYesPayload from "../../data/bankDetailsYes.json";
+import { constants } from "../ApiConstants";
+import { absoluteTimeNow, getTxmaEventsFromTestHarness, validateTxMAEventData } from "../ApiUtils";
 import {
 	authorizationGet,
 	getSessionAndVerifyKey,
@@ -21,8 +21,8 @@ import {
 	decodeRawBody,
 	getKeyFromSession,
 	getAthenaRecordByFirstNameAndTime,
-} from "./ApiTestSteps";
-import { BankDetailsPayload } from "../models/BankDetailsPayload";
+} from "../ApiTestSteps";
+import { BankDetailsPayload } from "../../models/BankDetailsPayload";
 import { randomUUID } from "crypto";
 
 describe("BAV CRI happy path tests", () => {
