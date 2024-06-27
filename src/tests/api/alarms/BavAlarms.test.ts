@@ -58,7 +58,7 @@ describe("BAV CRI Alarms Tests", () => {
 		console.log("Token Endpoint Alarm State: " + alarm.StateValue);
 	}, 450000);
 
-	it.only("/userInfo Endpoint 4xx Api Gateway Alarm", async () => {
+	it("/userInfo Endpoint 4xx Api Gateway Alarm", async () => {
 		for (let i = 1; i <= 250; i++) {
 			await userInfoPost("Bearer");
 		}
