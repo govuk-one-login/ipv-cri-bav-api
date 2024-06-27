@@ -112,7 +112,7 @@ export function validateTxMAEventData(
 export async function describeAlarm(alarmName: string): Promise<any> {
 	try {
 		const params: DescribeAlarmsCommandInput = {
-			AlarmNames: [alarmName]
+			AlarmNames: [alarmName],
 		};
 
 		const command = new DescribeAlarmsCommand(params);

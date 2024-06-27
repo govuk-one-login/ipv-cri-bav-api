@@ -79,7 +79,7 @@ describe("BAV CRI Alarms Tests", () => {
 	}, 450000);
 
     it("/personInfo Endpoint 4xx Api Gateway Alarm", async () => {
-        for (let i = 1; i <= 250ß; i++) {
+        for (let i = 1; i <= 250; i++) {
             await personInfoGet(randomUUID());
         }
         await sleep(300000);
