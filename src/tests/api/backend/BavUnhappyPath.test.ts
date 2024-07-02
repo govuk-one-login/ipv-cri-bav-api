@@ -1,5 +1,5 @@
 /* eslint-disable max-lines-per-function */
-import verifyAccountYesPayload from "../data/bankDetailsYes.json";
+import verifyAccountYesPayload from "../../data/bankDetailsYes.json";
 import {
 	authorizationGet,
 	sessionPost,
@@ -10,9 +10,9 @@ import {
 	verifyAccountPost,
 	tokenPost,
 	getSessionAndVerifyKey,
-} from "./ApiTestSteps";
-import { constants } from "./ApiConstants";
-import { BankDetailsPayload } from "../models/BankDetailsPayload";
+} from "../ApiTestSteps";
+import { constants } from "../ApiConstants";
+import { BankDetailsPayload } from "../../models/BankDetailsPayload";
 import { randomUUID } from "crypto";
 
 describe("BAV CRI unhappy path tests", () => {
