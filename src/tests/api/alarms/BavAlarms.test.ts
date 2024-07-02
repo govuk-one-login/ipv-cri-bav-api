@@ -14,7 +14,7 @@ describe("BAV CRI Alarms Tests", () => {
 			await sessionPost("", stubResponse.data.request);
 		}
 		await sleep(300000);
-		expect(await describeAlarm("bav-cri-api-Session4XXApiGwErrorAlarm")).toBe("ALARM")
+		await expect(describeAlarm("bav-cri-api-Session4XXApiGwErrorAlarm")).resolves.toBe("ALARM");
 
 	}, 450000);
 
@@ -26,7 +26,7 @@ describe("BAV CRI Alarms Tests", () => {
 		}
 		await sleep(300000);
 
-		expect(await describeAlarm("bav-cri-api-VerifyAccount4XXApiGwErrorAlarm")).toBe("ALARM")
+		await expect(describeAlarm("bav-cri-api-VerifyAccount4XXApiGwErrorAlarm")).resolves.toBe("ALARM");
 	}, 450000);
 
 	it("/authorization Endpoint 4xx Api Gateway Alarm", async () => {
@@ -35,7 +35,7 @@ describe("BAV CRI Alarms Tests", () => {
 		}
 		await sleep(300000);
 
-		expect(await describeAlarm("bav-cri-api-Authorization4XXApiGwErrorAlarm")).toBe("ALARM")
+		await expect(describeAlarm("bav-cri-api-Authorization4XXApiGwErrorAlarm")).resolves.toBe("ALARM");
 	}, 450000);
 
 	it("/token Endpoint 4xx Api Gateway Alarm", async () => {
@@ -51,7 +51,7 @@ describe("BAV CRI Alarms Tests", () => {
 		}
 		await sleep(300000);
 
-		expect(await describeAlarm("bav-cri-api-Token4XXApiGwErrorAlarm")).toBe("ALARM")
+		await expect(describeAlarm("bav-cri-api-Token4XXApiGwErrorAlarm")).resolves.toBe("ALARM");
 	}, 450000);
 
 	it("/userInfo Endpoint 4xx Api Gateway Alarm", async () => {
@@ -60,7 +60,7 @@ describe("BAV CRI Alarms Tests", () => {
 		}
 		await sleep(300000);
 
-		expect(await describeAlarm("bav-cri-api-UserInfo4XXApiGwErrorAlarm")).toBe("ALARM")
+		await expect(describeAlarm("bav-cri-api-UserInfo4XXApiGwErrorAlarm")).resolves.toBe("ALARM");
 	}, 450000);
 
 	it("/abort Endpoint 4xx Api Gateway Alarm", async () => {
@@ -69,7 +69,7 @@ describe("BAV CRI Alarms Tests", () => {
 		}
 		await sleep(300000);
 
-		expect(await describeAlarm("bav-cri-api-Abort4XXApiGwErrorAlarm")).toBe("ALARM")
+		await expect(describeAlarm("bav-cri-api-Abort4XXApiGwErrorAlarm")).resolves.toBe("ALARM");
 	}, 450000);
 
 	it("/personInfo Endpoint 4xx Api Gateway Alarm", async () => {
@@ -78,7 +78,7 @@ describe("BAV CRI Alarms Tests", () => {
 		}
 		await sleep(300000);
 
-		expect(await describeAlarm("bav-cri-api-PersonInfo4XXApiGwErrorAlarm")).toBe("ALARM")
+		await expect(describeAlarm("bav-cri-api-PersonInfo4XXApiGwErrorAlarm")).resolves.toBe("ALARM");
 	}, 450000);
 
 });
