@@ -14,9 +14,8 @@ describe("BAV CRI Alarms Tests", () => {
 			await sessionPost("", stubResponse.data.request);
 		}
 		await sleep(300000);
+		expect(await describeAlarm("bav-cri-api-Session4XXApiGwErrorAlarm")).toBe("ALARM")
 
-		const alarm = await describeAlarm("bav-cri-api-Session4XXApiGwErrorAlarm");
-		console.log("Session Endpoint Alarm State: " + alarm.StateValue);
 	}, 450000);
 
 	it("/verify-account Endpoint 4xx Api Gateway Alarm", async () => {
@@ -27,8 +26,7 @@ describe("BAV CRI Alarms Tests", () => {
 		}
 		await sleep(300000);
 
-		const alarm = await describeAlarm("bav-cri-api-VerifyAccount4XXApiGwErrorAlarm");
-		console.log("Verify Account Endpoint Alarm State: " + alarm.StateValue);
+		expect(await describeAlarm("bav-cri-api-VerifyAccount4XXApiGwErrorAlarm")).toBe("ALARM")
 	}, 450000);
 
 	it("/authorization Endpoint 4xx Api Gateway Alarm", async () => {
@@ -37,8 +35,7 @@ describe("BAV CRI Alarms Tests", () => {
 		}
 		await sleep(300000);
 
-		const alarm = await describeAlarm("bav-cri-api-Authorization4XXApiGwErrorAlarm");
-		console.log("Authorization Endpoint Alarm State: " + alarm.StateValue);
+		expect(await describeAlarm("bav-cri-api-Authorization4XXApiGwErrorAlarm")).toBe("ALARM")
 	}, 450000);
 
 	it("/token Endpoint 4xx Api Gateway Alarm", async () => {
@@ -54,8 +51,7 @@ describe("BAV CRI Alarms Tests", () => {
 		}
 		await sleep(300000);
 
-		const alarm = await describeAlarm("bav-cri-api-Token4XXApiGwErrorAlarm");
-		console.log("Token Endpoint Alarm State: " + alarm.StateValue);
+		expect(await describeAlarm("bav-cri-api-Token4XXApiGwErrorAlarm")).toBe("ALARM")
 	}, 450000);
 
 	it("/userInfo Endpoint 4xx Api Gateway Alarm", async () => {
@@ -64,8 +60,7 @@ describe("BAV CRI Alarms Tests", () => {
 		}
 		await sleep(300000);
 
-		const alarm = await describeAlarm("bav-cri-api-UserInfo4XXApiGwErrorAlarm");
-		console.log("User Info Endpoint Alarm State: " + alarm.StateValue);
+		expect(await describeAlarm("bav-cri-api-UserInfo4XXApiGwErrorAlarm")).toBe("ALARM")
 	}, 450000);
 
 	it("/abort Endpoint 4xx Api Gateway Alarm", async () => {
@@ -74,8 +69,7 @@ describe("BAV CRI Alarms Tests", () => {
 		}
 		await sleep(300000);
 
-		const alarm = await describeAlarm("bav-cri-api-Abort4XXApiGwErrorAlarm");
-		console.log("Abort Endpoint Alarm State: " + alarm.StateValue);
+		expect(await describeAlarm("bav-cri-api-Abort4XXApiGwErrorAlarm")).toBe("ALARM")
 	}, 450000);
 
 	it("/personInfo Endpoint 4xx Api Gateway Alarm", async () => {
@@ -84,8 +78,7 @@ describe("BAV CRI Alarms Tests", () => {
 		}
 		await sleep(300000);
 
-		const alarm = await describeAlarm("bav-cri-api-PersonInfo4XXApiGwErrorAlarm");
-		console.log("Person Info Endpoint Alarm State: " + alarm.StateValue);
+		expect(await describeAlarm("bav-cri-api-PersonInfo4XXApiGwErrorAlarm")).toBe("ALARM")
 	}, 450000);
 
 });
