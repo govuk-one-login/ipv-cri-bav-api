@@ -153,6 +153,77 @@ describe("Infra", () => {
 		});
 	});
 
+	it("should define CloudWatch alarms", () => {
+		const alarms = template.findResources("AWS::CloudWatch::Alarm");
+		expect(Object.keys(alarms).length).toBeGreaterThan(0);
+	  });
+	
+	  const validateAlarmProperty = (property: string) => {
+		const alarms = template.findResources("AWS::CloudWatch::Alarm");
+		const alarmList = Object.keys(alarms);
+		const failingAlarms = alarmList.filter((alarmId) => !alarms[alarmId].Properties[property]);
+		return failingAlarms;
+	  };
+	
+	  it("Each CloudWatch alarm should have an AlarmName defined", () => {
+		const alarms = template.findResources("AWS::CloudWatch::Alarm");
+		const alarmList = Object.keys(alarms);
+		alarmList.forEach((alarmId) => {
+		  expect(alarms[alarmId].Properties.AlarmName).toBeTruthy();
+		});
+	  });
+	
+	  it("Each CloudWatch alarm should have a ComparisonOperator defined", () => {
+		const alarms = template.findResources("AWS::CloudWatch::Alarm");
+		const alarmList = Object.keys(alarms);
+		alarmList.forEach((alarmId) => {
+		  expect(alarms[alarmId].Properties.ComparisonOperator).toBeTruthy();
+		});
+	  });
+	
+	  it("Each CloudWatch alarm should have a Threshold defined", () => {
+		const alarms = template.findResources("AWS::CloudWatch::Alarm");
+		const alarmList = Object.keys(alarms);
+		alarmList.forEach((alarmId) => {
+		  expect(alarms[alarmId].Properties.Threshold).toBeTruthy();
+		});
+	  });
+	
+	  it("Each CloudWatch alarm should have an EvaluationPeriods defined", () => {
+		const alarms = template.findResources("AWS::CloudWatch::Alarm");
+		const alarmList = Object.keys(alarms);
+		alarmList.forEach((alarmId) => {
+		  expect(alarms[alarmId].Properties.EvaluationPeriods).toBeTruthy();
+		});
+	  });
+	
+	  it("Each CloudWatch alarm should have AlarmActions defined", () => {
+		const failingAlarms = validateAlarmProperty("AlarmActions");
+		expect(failingAlarms.length).toBe(0);
+		if (failingAlarms.length > 0) {
+		  console.log("Alarms without AlarmActions:", failingAlarms);
+		}
+	  });
+	
+	  it("Each CloudWatch alarm should have OKActions defined", () => {
+		const failingAlarms = validateAlarmProperty("OKActions");
+		expect(failingAlarms.length).toBe(0);
+		if (failingAlarms.length > 0) {
+		  console.log("Alarms without OKActions:", failingAlarms);
+		}
+	  });
+	
+	  it("All CloudWatch alarms should have InsufficientDataActions and DatapointsToAlarm if TreatMissingData is not 'notBreaching'", () => {
+		const alarms = template.findResources("AWS::CloudWatch::Alarm");
+		Object.keys(alarms).forEach((alarmKey) => {
+		  const alarm = alarms[alarmKey];
+		  if (alarm.Properties.TreatMissingData !== "notBreaching") {
+			expect(alarm.Properties.InsufficientDataActions).toBeDefined();
+			expect(alarm.Properties.DatapointsToAlarm).toBeDefined();
+		  }
+		});
+	  });
+
 	describe("Log group retention", () => {
 		it.each`
     environment      | retention
