@@ -71,12 +71,12 @@ export class VerifiableCredentialService {
 	
 
 	async generateSignedVerifiableCredentialJwt(
-		sessionItem: ISessionItem, nameParts: PersonIdentityNamePart[], bankAccountInfo: BankAccountInfo, getNow: () => number): Promise<{ signedJWT: string; evidenceInfo: VerifiedCredentialEvidence }> {
+		sessionItem: ISessionItem, nameParts: PersonIdentityNamePart[], dateOfBirth: string, bankAccountInfo: BankAccountInfo, getNow: () => number): Promise<{ signedJWT: string; evidenceInfo: VerifiedCredentialEvidence }> {
 		const now = getNow();
 		const subject = sessionItem.subject;
 		const evidenceInfo = sessionItem.copCheckResult === CopCheckResult.FULL_MATCH ?
 			this.getSuccessEvidenceBlock(sessionItem.hmrcUuid!) : this.getFailureEvidenceBlock(sessionItem.hmrcUuid!);
-		const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, bankAccountInfo, evidenceInfo)
+		const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, dateOfBirth, bankAccountInfo, evidenceInfo)
 			.build();
 		let result;
 		if (process.env.USE_MOCKED) {
@@ -116,7 +116,7 @@ export class VerifiableCredentialService {
 class VerifiableCredentialBuilder {
 	private readonly credential: VerifiedCredential;
 
-	constructor(nameParts: PersonIdentityNamePart[], bankAccountInfo: BankAccountInfo, evidenceInfo: VerifiedCredentialEvidence) {
+	constructor(nameParts: PersonIdentityNamePart[], dateOfBirth: string, bankAccountInfo: BankAccountInfo, evidenceInfo: VerifiedCredentialEvidence) {
 		this.credential = {
 			"@context": [
 				Constants.W3_BASE_CONTEXT,
@@ -132,6 +132,7 @@ class VerifiableCredentialBuilder {
 						nameParts,
 					},
 				],
+				dateOfBirth: dateOfBirth,
 				bankAccount: [
 					bankAccountInfo,
 				],

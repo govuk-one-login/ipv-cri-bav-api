@@ -134,11 +134,14 @@ export class UserInfoRequestProcessor {
 		}
 
 		const names = personInfo.name[0].nameParts;
+		const dateOfBirth = personInfo.birthDate[0].value;
 		
 		if (names && names.length > 0 && personInfo.sortCode && personInfo.accountNumber) {
 			const { signedJWT, evidenceInfo } = await this.verifiableCredentialService.generateSignedVerifiableCredentialJwt(
 				session,
-				names, {
+				names,
+				dateOfBirth,
+				{
 					sortCode: personInfo.sortCode,
 					accountNumber: personInfo.accountNumber,
 				},

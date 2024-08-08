@@ -14,6 +14,11 @@ export const personIdentityInputRecord: SharedClaimsPersonIdentity = {
 			},
 		],
 	}],
+	birthDate: [
+		{
+		  value: "1960-02-02"
+		}
+	  ],
 };
 
 export const personIdentityOutputRecord = {
