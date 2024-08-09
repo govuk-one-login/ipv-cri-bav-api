@@ -168,15 +168,6 @@ export class BavService {
 		}));
 	}
 
-	private mapBirthDate(birthDate: PersonIdentityBirthDate[]): PersonIdentityBirthDate[] {
-		return birthDate?.map((index) => ({
-			nameParts: index?.nameParts?.map((namePart) => ({
-				type: namePart.type,
-				value: namePart.value,
-			})),
-		}));
-	}
-
 	private createPersonIdentityItem(
 		sharedClaims: SharedClaimsPersonIdentity,
 		sessionId: string,
