@@ -42,6 +42,11 @@ export const handler = async (
         ],
       },
     ],
+    birthDate:[
+         {
+            value: "1985-01-25"
+         }
+      ] 
   };
 
   const iat = Math.floor(Date.now() / 1000);
@@ -60,10 +65,27 @@ export const handler = async (
     iat,
     nbf: iat - 1,
     exp: iat + 3 * 60,
-    shared_claims:
-      overrides?.shared_claims != null
-        ? overrides.shared_claims
-        : defaultClaims,
+    shared_claims: {
+      name: [
+        {
+          nameParts: [
+            {
+              value: "Hard Coded",
+              type: "GivenName",
+            },
+            {
+              value: "Carl",
+              type: "FamilyName",
+            },
+          ],
+        },
+      ],
+      birthDate:[
+           {
+              value: "1985-01-25"
+           }
+        ] 
+    },
     evidence_requested: overrides?.evidence_requested
   };
 
