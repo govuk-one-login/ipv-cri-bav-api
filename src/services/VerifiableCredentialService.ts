@@ -3,6 +3,7 @@ import { BankAccountInfo, VerifiedCredential, VerifiedCredentialEvidence } from 
 import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
 import { ISessionItem } from "../models/ISessionItem";
 import { PersonIdentityNamePart } from "../models/PersonIdentityItem";
+import { PersonIdentityBirthDate } from "../models/PersonIdentityItem"
 import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { Constants } from "../utils/Constants";
@@ -71,12 +72,12 @@ export class VerifiableCredentialService {
 	
 
 	async generateSignedVerifiableCredentialJwt(
-		sessionItem: ISessionItem, nameParts: PersonIdentityNamePart[], dateOfBirth: string, bankAccountInfo: BankAccountInfo, getNow: () => number): Promise<{ signedJWT: string; evidenceInfo: VerifiedCredentialEvidence }> {
+		sessionItem: ISessionItem, nameParts: PersonIdentityNamePart[], birthDate: PersonIdentityBirthDate[], bankAccountInfo: BankAccountInfo, getNow: () => number): Promise<{ signedJWT: string; evidenceInfo: VerifiedCredentialEvidence }> {
 		const now = getNow();
 		const subject = sessionItem.subject;
 		const evidenceInfo = sessionItem.copCheckResult === CopCheckResult.FULL_MATCH ?
 			this.getSuccessEvidenceBlock(sessionItem.hmrcUuid!) : this.getFailureEvidenceBlock(sessionItem.hmrcUuid!);
-		const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, dateOfBirth, bankAccountInfo, evidenceInfo)
+		const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, birthDate, bankAccountInfo, evidenceInfo)
 			.build();
 		let result;
 		if (process.env.USE_MOCKED) {
@@ -116,7 +117,7 @@ export class VerifiableCredentialService {
 class VerifiableCredentialBuilder {
 	private readonly credential: VerifiedCredential;
 
-	constructor(nameParts: PersonIdentityNamePart[], dateOfBirth: string, bankAccountInfo: BankAccountInfo, evidenceInfo: VerifiedCredentialEvidence) {
+	constructor(nameParts: PersonIdentityNamePart[], birthDate: PersonIdentityBirthDate[], bankAccountInfo: BankAccountInfo, evidenceInfo: VerifiedCredentialEvidence) {
 		this.credential = {
 			"@context": [
 				Constants.W3_BASE_CONTEXT,
@@ -132,7 +133,8 @@ class VerifiableCredentialBuilder {
 						nameParts,
 					},
 				],
-				dateOfBirth: dateOfBirth,
+				birthDate: birthDate
+				,
 				bankAccount: [
 					bankAccountInfo,
 				],
