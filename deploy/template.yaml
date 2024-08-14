@@ -2302,7 +2302,7 @@ Resources:
                 - "kms:GenerateDataKey"
               Resource: !GetAtt TxMAKMSEncryptionKey.Arn
       Events:
-        session:
+        userInfo:
           Type: Api
           Properties:
             Path: /userinfo

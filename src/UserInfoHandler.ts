@@ -17,7 +17,7 @@ const logger = new Logger({
 
 const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE, serviceName: POWERTOOLS_SERVICE_NAME });
 
-class Session implements LambdaInterface {
+class UserInfoHandler implements LambdaInterface {
 	@metrics.logMetrics({ throwOnEmptyMetrics: false, captureColdStartMetric: true })
 
 	async handler(event: APIGatewayProxyEvent, context: any): Promise<APIGatewayProxyResult> {
@@ -38,5 +38,5 @@ class Session implements LambdaInterface {
 	}
 }
 
-const handlerClass = new Session();
+const handlerClass = new UserInfoHandler();
 export const lambdaHandler = handlerClass.handler.bind(handlerClass);
