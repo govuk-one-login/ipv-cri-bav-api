@@ -2,8 +2,7 @@ import { Logger } from "@aws-lambda-powertools/logger";
 import { BankAccountInfo, VerifiedCredential, VerifiedCredentialEvidence } from "../models/IVeriCredential";
 import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
 import { ISessionItem } from "../models/ISessionItem";
-import { PersonIdentityNamePart } from "../models/PersonIdentityItem";
-import { PersonIdentityBirthDate } from "../models/PersonIdentityItem"
+import { PersonIdentityNamePart, PersonIdentityBirthDate } from "../models/PersonIdentityItem";
 import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { Constants } from "../utils/Constants";
@@ -133,7 +132,7 @@ class VerifiableCredentialBuilder {
 						nameParts,
 					},
 				],
-				birthDate: birthDate
+				birthDate
 				,
 				bankAccount: [
 					bankAccountInfo,
