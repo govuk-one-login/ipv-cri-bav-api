@@ -131,7 +131,7 @@ describe("UserInfoRequestProcessor", () => {
 					},
 				],
 				"birthDate": [{
-					"value": "12-01-1986"
+					"value": "12-01-1986",
 				}],
 				"bankAccount": [
 					{
