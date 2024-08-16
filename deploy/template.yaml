@@ -987,8 +987,10 @@ Resources:
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue platform-alarm-topic-warning-alert
       OKActions:
         - !ImportValue platform-alarm-topic-critical-alert
+        - !ImportValue platform-alarm-topic-warning-alert
       InsufficientDataActions: []
       AlarmDescription: !Sub "Trigger if the ${SessionFunction} lambda throttles. ${SupportManualURL}"
       AlarmName: !Sub "${AWS::StackName}-SessionFunction-throttles"
