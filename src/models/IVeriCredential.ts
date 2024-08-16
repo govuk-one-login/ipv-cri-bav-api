@@ -113,7 +113,7 @@ export type BankAccountInfo = {
 
 export interface VerifiedCredentialSubject {
 	name: Name[];
-	birthDate: BirthDate[];
+	birthDate?: BirthDate[];
 	bankAccount: BankAccountInfo[];
 }
 

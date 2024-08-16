@@ -15,7 +15,7 @@ export interface PersonIdentityBirthDate {
 export interface PersonIdentityItem {
 	sessionId: string;
 	name: PersonIdentityName[];
-	birthDate: PersonIdentityBirthDate[];
+	birthDate?: PersonIdentityBirthDate[];
 	expiryDate: number;
 	createdDate: number;
 	sortCode?: string;

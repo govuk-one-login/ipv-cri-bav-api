@@ -5,8 +5,9 @@ import { ISessionItem } from "../models/ISessionItem";
 import { PersonIdentityNamePart, PersonIdentityBirthDate } from "../models/PersonIdentityItem";
 import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
-import { Constants } from "../utils/Constants";
+import { Constants, EnvironmentVariables } from "../utils/Constants";
 import { randomUUID } from "crypto";
+import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 import { CopCheckResult } from "../models/enums/CopCheckResult";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { mockCI, mockVcClaims } from "../tests/contract/mocks/VerifiableCredential";
@@ -117,7 +118,8 @@ class VerifiableCredentialBuilder {
 	private readonly credential: VerifiedCredential;
 
 	constructor(nameParts: PersonIdentityNamePart[], birthDate: PersonIdentityBirthDate[], bankAccountInfo: BankAccountInfo, evidenceInfo: VerifiedCredentialEvidence) {
-		this.credential = {
+		const vendor = checkEnvironmentVariable(EnvironmentVariables.CREDENTIAL_VENDOR)
+		let credentialObject = {
 			"@context": [
 				Constants.W3_BASE_CONTEXT,
 				Constants.DI_CONTEXT,
@@ -132,8 +134,6 @@ class VerifiableCredentialBuilder {
 						nameParts,
 					},
 				],
-				birthDate
-				,
 				bankAccount: [
 					bankAccountInfo,
 				],
@@ -142,6 +142,16 @@ class VerifiableCredentialBuilder {
 				evidenceInfo,
 			],
 		};
+
+		if (vendor === "EXPERIAN") {
+			const credentialObjectDOB = {
+				...credentialObject,
+				birthDate
+			}
+			this.credential = credentialObjectDOB
+		} else {
+			this.credential = credentialObject
+		}
 	}
 
 	build(): VerifiedCredential {
