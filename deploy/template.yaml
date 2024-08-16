@@ -982,7 +982,7 @@ Resources:
 
   SessionThrottleAlarm:
     Type: AWS::CloudWatch::Alarm
-    Condition: DeployAlarms
+    # Condition: DeployAlarms
     Properties:
       ActionsEnabled: true
       AlarmActions:
