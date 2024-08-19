@@ -13,6 +13,7 @@ import { Constants } from "../../../utils/Constants";
 const mockKmsJwtAdapter = mock<KmsJwtAdapter>();
 const mockLogger = mock<Logger>();
 const dnsSuffix = "dnsSuffix123";
+const credentialVendor = "EXPERIAN";
 
 function getMockSessionItem(): ISessionItem {
 	const sess: ISessionItem = {
@@ -72,18 +73,18 @@ describe("VerifiableCredentialService", () => {
 
 	beforeEach(() => {
 		jest.clearAllMocks();
-		service = new VerifiableCredentialService( mockKmsJwtAdapter, mockIssuer, mockLogger, dnsSuffix);
+		service = new VerifiableCredentialService( mockKmsJwtAdapter, mockIssuer, mockLogger, dnsSuffix, credentialVendor);
 	});
 
 	describe("getInstance", () => {
 		it("should create a new instance if not already created", () => {
-			const newInstance = VerifiableCredentialService.getInstance( mockKmsJwtAdapter, mockIssuer, mockLogger, dnsSuffix);
+			const newInstance = VerifiableCredentialService.getInstance( mockKmsJwtAdapter, mockIssuer, mockLogger, dnsSuffix, credentialVendor);
 			expect(newInstance).toBeDefined();
 		});
 
 		it("should return the same instance of VerifiableCredentialService when called multiple times", () => {
-			const firstInstance = VerifiableCredentialService.getInstance( mockKmsJwtAdapter, mockIssuer, mockLogger, dnsSuffix);
-			const secondInstance = VerifiableCredentialService.getInstance( mockKmsJwtAdapter, mockIssuer, mockLogger, dnsSuffix);
+			const firstInstance = VerifiableCredentialService.getInstance( mockKmsJwtAdapter, mockIssuer, mockLogger, dnsSuffix, credentialVendor);
+			const secondInstance = VerifiableCredentialService.getInstance( mockKmsJwtAdapter, mockIssuer, mockLogger, dnsSuffix, credentialVendor);
 			expect(firstInstance).toBe(secondInstance);
 		});
 	});

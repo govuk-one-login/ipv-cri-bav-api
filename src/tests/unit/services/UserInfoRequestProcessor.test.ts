@@ -26,6 +26,7 @@ const failingKmsJwtAdapterFactory = (_signingKeys: string) => new MockKmsJwtAdap
 
 const logger = mock<Logger>();
 const metrics = new Metrics({ namespace: "BAV" });
+const credentialVendor = "EXPERIAN";
 
 function getMockSessionItem(): ISessionItem {
 	const sess: ISessionItem = {
@@ -76,7 +77,7 @@ describe("UserInfoRequestProcessor", () => {
 	beforeAll(() => {
 		mockSession = getMockSessionItem();
 		mockPerson = getMockPersonItem();
-		userInforequestProcessorTest = new UserInfoRequestProcessor(logger, metrics);
+		userInforequestProcessorTest = new UserInfoRequestProcessor(logger, metrics, credentialVendor);
 		// @ts-ignore
 		userInforequestProcessorTest.BavService = mockBavService;
 	});
