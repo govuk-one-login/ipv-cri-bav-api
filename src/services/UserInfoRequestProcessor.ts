@@ -39,7 +39,10 @@ export class UserInfoRequestProcessor {
 
 	private readonly dnsSuffix: string;
 
-	constructor(logger: Logger, metrics: Metrics) {
+	private readonly credentialVendor: string;
+
+
+	constructor(logger: Logger, metrics: Metrics, CREDENTIAL_VENDOR: string) {
   	this.logger = logger;
   	this.metrics = metrics;
   	logger.debug("metrics is  " + JSON.stringify(this.metrics));
@@ -54,12 +57,13 @@ export class UserInfoRequestProcessor {
 
   	this.BavService = BavService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
   	this.kmsDecryptor = new KmsJwtAdapter(signinKeyIds);
-		this.verifiableCredentialService = VerifiableCredentialService.getInstance(this.kmsDecryptor, this.issuer, this.logger, this.dnsSuffix);
+	this.credentialVendor= CREDENTIAL_VENDOR;
+		this.verifiableCredentialService = VerifiableCredentialService.getInstance(this.kmsDecryptor, this.issuer, this.logger, this.dnsSuffix, this.credentialVendor);
 	}
 
-	static getInstance(logger: Logger, metrics: Metrics): UserInfoRequestProcessor {
+	static getInstance(logger: Logger, metrics: Metrics, CREDENTIAL_VENDOR: string): UserInfoRequestProcessor {
   	if (!UserInfoRequestProcessor.instance) {
-  		UserInfoRequestProcessor.instance = new UserInfoRequestProcessor(logger, metrics);
+  		UserInfoRequestProcessor.instance = new UserInfoRequestProcessor(logger, metrics, CREDENTIAL_VENDOR);
   	}
   	return UserInfoRequestProcessor.instance;
 	}

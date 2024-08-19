@@ -5,9 +5,8 @@ import { ISessionItem } from "../models/ISessionItem";
 import { PersonIdentityNamePart, PersonIdentityBirthDate } from "../models/PersonIdentityItem";
 import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
-import { Constants, EnvironmentVariables } from "../utils/Constants";
+import { Constants } from "../utils/Constants";
 import { randomUUID } from "crypto";
-import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 import { CopCheckResult } from "../models/enums/CopCheckResult";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { mockCI, mockVcClaims } from "../tests/contract/mocks/VerifiableCredential";
@@ -19,20 +18,23 @@ export class VerifiableCredentialService {
 
 	readonly dnsSuffix: string;	
 
+	readonly credentialVendor: string;
+
 	private readonly kmsJwtAdapter: KmsJwtAdapter;
 
 	private static instance: VerifiableCredentialService;
 
-	constructor(kmsJwtAdapter: KmsJwtAdapter, issuer: string, logger: Logger, dnsSuffix: string) {
+	constructor(kmsJwtAdapter: KmsJwtAdapter, issuer: string, logger: Logger, dnsSuffix: string, credentialVendor: string) {
 		this.issuer = issuer;
 		this.logger = logger;
 		this.kmsJwtAdapter = kmsJwtAdapter;
 		this.dnsSuffix = dnsSuffix;
+		this.credentialVendor = credentialVendor;
 	}
 
-	static getInstance(kmsJwtAdapter: KmsJwtAdapter, issuer: string, logger: Logger, dnsSuffix: string): VerifiableCredentialService {
+	static getInstance(kmsJwtAdapter: KmsJwtAdapter, issuer: string, logger: Logger, dnsSuffix: string, credentialVendor: string): VerifiableCredentialService {
 		if (!VerifiableCredentialService.instance) {
-			VerifiableCredentialService.instance = new VerifiableCredentialService(kmsJwtAdapter, issuer, logger, dnsSuffix);
+			VerifiableCredentialService.instance = new VerifiableCredentialService(kmsJwtAdapter, issuer, logger, dnsSuffix, credentialVendor);
 		}
 		return VerifiableCredentialService.instance;
 	}
@@ -77,7 +79,7 @@ export class VerifiableCredentialService {
 		const subject = sessionItem.subject;
 		const evidenceInfo = sessionItem.copCheckResult === CopCheckResult.FULL_MATCH ?
 			this.getSuccessEvidenceBlock(sessionItem.hmrcUuid!) : this.getFailureEvidenceBlock(sessionItem.hmrcUuid!);
-		const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, birthDate, bankAccountInfo, evidenceInfo)
+		const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, birthDate, bankAccountInfo, evidenceInfo, this.credentialVendor)
 			.build();
 		let result;
 		if (process.env.USE_MOCKED) {
@@ -115,11 +117,12 @@ export class VerifiableCredentialService {
 }
 
 class VerifiableCredentialBuilder {
+
 	private readonly credential: VerifiedCredential;
 
-	constructor(nameParts: PersonIdentityNamePart[], birthDate: PersonIdentityBirthDate[], bankAccountInfo: BankAccountInfo, evidenceInfo: VerifiedCredentialEvidence) {
-		const vendor = checkEnvironmentVariable(EnvironmentVariables.CREDENTIAL_VENDOR)
-		let credentialObject = {
+	constructor(nameParts: PersonIdentityNamePart[], birthDate: PersonIdentityBirthDate[], bankAccountInfo: BankAccountInfo, evidenceInfo: VerifiedCredentialEvidence, credentialVendor: string) {
+		
+		const credentialObject = {
 			"@context": [
 				Constants.W3_BASE_CONTEXT,
 				Constants.DI_CONTEXT,
@@ -143,10 +146,14 @@ class VerifiableCredentialBuilder {
 			],
 		};
 
-		if (vendor === "EXPERIAN") {
+		if (credentialVendor === "EXPERIAN") {
 			const credentialObjectDOB = {
 				...credentialObject,
-				birthDate
+				credentialSubject: {
+					name: [...credentialObject.credentialSubject.name],
+					birthDate,
+					bankAccount: [...credentialObject.credentialSubject.bankAccount]
+				}
 			}
 			this.credential = credentialObjectDOB
 		} else {

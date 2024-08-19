@@ -6,7 +6,9 @@ import { UserInfoRequestProcessor } from "./services/UserInfoRequestProcessor";
 import { HttpCodesEnum } from "./models/enums/HttpCodesEnum";
 import { MessageCodes } from "./models/enums/MessageCodes";
 import { Response } from "./utils/Response";
-import { Constants } from "./utils/Constants";
+import { getParameter } from "./utils/Config";
+import { Constants, EnvironmentVariables } from "./utils/Constants";
+import { checkEnvironmentVariable } from "./utils/EnvironmentVariables";
 
 const { POWERTOOLS_METRICS_NAMESPACE = Constants.BAV_METRICS_NAMESPACE, POWERTOOLS_LOG_LEVEL = "DEBUG", POWERTOOLS_SERVICE_NAME = Constants.USERINFO_LOGGER_SVC_NAME } = process.env;
 
@@ -17,6 +19,7 @@ const logger = new Logger({
 
 const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE, serviceName: POWERTOOLS_SERVICE_NAME });
 
+let CREDENTIAL_VENDOR: string;
 class UserInfoHandler implements LambdaInterface {
 	@metrics.logMetrics({ throwOnEmptyMetrics: false, captureColdStartMetric: true })
 
@@ -27,7 +30,9 @@ class UserInfoHandler implements LambdaInterface {
 
 		try {
 			logger.info("Starting UserInfoProcessor");
-			return await UserInfoRequestProcessor.getInstance(logger, metrics).processRequest(event);
+			const credentialVendorSsmPath = checkEnvironmentVariable(EnvironmentVariables.CREDENTIAL_VENDOR_SSM_PATH, logger);
+			CREDENTIAL_VENDOR = await getParameter(credentialVendorSsmPath);
+			return await UserInfoRequestProcessor.getInstance(logger, metrics, CREDENTIAL_VENDOR).processRequest(event);
 		} catch (error: any) {
 			logger.error("An error has occurred", {
 				messageCode: MessageCodes.SERVER_ERROR,

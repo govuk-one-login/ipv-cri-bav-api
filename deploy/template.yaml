@@ -2263,11 +2263,13 @@ Resources:
           POWERTOOLS_SERVICE_NAME: UserInfoHandler
           KMS_KEY_ARN:
             Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
-          CREDENTIAL_VENDOR_FLAG_SSM_PATH: !Sub "/${Environment}/bav/vendor"
+          CREDENTIAL_VENDOR_SSM_PATH: !Sub "/${Environment}/bav/vendor"
           DNSSUFFIX: !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub "${Environment}/bav/vendor"
         - DynamoDBWritePolicy:
             TableName:
               Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
