@@ -57,7 +57,7 @@ export class UserInfoRequestProcessor {
 
   	this.BavService = BavService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
   	this.kmsDecryptor = new KmsJwtAdapter(signinKeyIds);
-	this.credentialVendor= CREDENTIAL_VENDOR;
+		this.credentialVendor = CREDENTIAL_VENDOR;
 		this.verifiableCredentialService = VerifiableCredentialService.getInstance(this.kmsDecryptor, this.issuer, this.logger, this.dnsSuffix, this.credentialVendor);
 	}
 

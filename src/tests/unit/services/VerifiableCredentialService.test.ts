@@ -171,16 +171,16 @@ describe("VerifiableCredentialService", () => {
 describe("VerifiableCredentialBuilder", () => {
 	describe("build credential", () => {
 		it("should create a credential object with a date of birth if the credential vendor is set to EXPERIAN", () => {
-			const verifiableCredentialDOB = new VerifiableCredentialBuilder(mockNameParts, mockBirthDate, mockBankAccountInfo, successBlock, credentialVendorExperian).build()
+			const verifiableCredentialDOB = new VerifiableCredentialBuilder(mockNameParts, mockBirthDate, mockBankAccountInfo, successBlock, credentialVendorExperian).build();
 			expect(verifiableCredentialDOB.credentialSubject.birthDate).toEqual([{
 				value: "12-01-1986",
-			}])
+			}]);
 		});
 
 		it("should create a credential object with a date of birth if the credential vendor is set to another value", () => {
-			const credentialVendorOther = "OTHER"
+			const credentialVendorOther = "OTHER";
 			const verifiableCredentialNoDOB = new VerifiableCredentialBuilder(mockNameParts, mockBirthDate, mockBankAccountInfo, successBlock, credentialVendorOther).build();
-			expect(verifiableCredentialNoDOB.credentialSubject.birthDate).toEqual(undefined)
+			expect(verifiableCredentialNoDOB.credentialSubject.birthDate).toBeUndefined();
 		});
 	});
 });

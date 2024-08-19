@@ -152,12 +152,12 @@ export class VerifiableCredentialBuilder {
 				credentialSubject: {
 					name: [...credentialObject.credentialSubject.name],
 					birthDate,
-					bankAccount: [...credentialObject.credentialSubject.bankAccount]
-				}
-			}
-			this.credential = credentialObjectDOB
+					bankAccount: [...credentialObject.credentialSubject.bankAccount],
+				},
+			};
+			this.credential = credentialObjectDOB;
 		} else {
-			this.credential = credentialObject
+			this.credential = credentialObject;
 		}
 	}
 
