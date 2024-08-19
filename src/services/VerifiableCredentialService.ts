@@ -116,7 +116,7 @@ export class VerifiableCredentialService {
 	}
 }
 
-class VerifiableCredentialBuilder {
+export class VerifiableCredentialBuilder {
 
 	private readonly credential: VerifiedCredential;
 
