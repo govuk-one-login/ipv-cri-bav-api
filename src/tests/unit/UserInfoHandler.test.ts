@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/unbound-method */
-import { lambdaHandler } from "../../UserInfoHandler";
+import { lambdaHandler, logger } from "../../UserInfoHandler";
 import { mock } from "jest-mock-extended";
 import { VALID_USERINFO } from "./data/userInfo-events";
 import { UserInfoRequestProcessor } from "../../services/UserInfoRequestProcessor";
@@ -7,8 +7,17 @@ import { HttpCodesEnum } from "../../models/enums/HttpCodesEnum";
 import { CONTEXT } from "./data/context";
 
 const mockedUserInfoRequestProcessor = mock<UserInfoRequestProcessor>();
+jest.mock("../../utils/Config", () => ({
+	getParameter: (parameter: string) => parameter,
+}));
 
 describe("UserInfoHandler", () => {
+	let loggerSpy: jest.SpyInstance;
+  
+	beforeEach(() => {
+		loggerSpy = jest.spyOn(logger, "error");
+	});
+
 	it("return success when UserInfoRequestProcessor completes successfully", async () => {
 		UserInfoRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedUserInfoRequestProcessor);
 
