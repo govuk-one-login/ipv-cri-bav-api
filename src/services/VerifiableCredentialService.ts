@@ -132,6 +132,11 @@ class VerifiableCredentialBuilder {
 						nameParts,
 					},
 				],
+				birthDate: [
+                    {
+                      value: "1994-01-25"
+                    }
+                  ],
 				bankAccount: [
 					bankAccountInfo,
 				],
