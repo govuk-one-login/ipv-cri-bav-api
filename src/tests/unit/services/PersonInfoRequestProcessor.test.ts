@@ -39,6 +39,9 @@ const person: PersonIdentityItem = {
 			type: "FamilyName",
 		}],
 	}],
+	birthDate: [{
+		value: "12-01-1986",
+	}],
 	expiryDate: 123456789,
 	createdDate: 123456789,
 };
