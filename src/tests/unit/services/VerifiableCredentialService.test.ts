@@ -85,18 +85,18 @@ describe("VerifiableCredentialService", () => {
 
 	beforeEach(() => {
 		jest.clearAllMocks();
-		service = new VerifiableCredentialService( mockKmsJwtAdapter, mockIssuer, mockLogger, dnsSuffix, credentialVendorExperian);
+		service = new VerifiableCredentialService( mockKmsJwtAdapter, mockIssuer, mockLogger, dnsSuffix);
 	});
 
 	describe("getInstance", () => {
 		it("should create a new instance if not already created", () => {
-			const newInstance = VerifiableCredentialService.getInstance( mockKmsJwtAdapter, mockIssuer, mockLogger, dnsSuffix, credentialVendorExperian);
+			const newInstance = VerifiableCredentialService.getInstance( mockKmsJwtAdapter, mockIssuer, mockLogger, dnsSuffix);
 			expect(newInstance).toBeDefined();
 		});
 
 		it("should return the same instance of VerifiableCredentialService when called multiple times", () => {
-			const firstInstance = VerifiableCredentialService.getInstance( mockKmsJwtAdapter, mockIssuer, mockLogger, dnsSuffix, credentialVendorExperian);
-			const secondInstance = VerifiableCredentialService.getInstance( mockKmsJwtAdapter, mockIssuer, mockLogger, dnsSuffix, credentialVendorExperian);
+			const firstInstance = VerifiableCredentialService.getInstance( mockKmsJwtAdapter, mockIssuer, mockLogger, dnsSuffix);
+			const secondInstance = VerifiableCredentialService.getInstance( mockKmsJwtAdapter, mockIssuer, mockLogger, dnsSuffix);
 			expect(firstInstance).toBe(secondInstance);
 		});
 	});
@@ -171,7 +171,7 @@ describe("VerifiableCredentialService", () => {
 describe("VerifiableCredentialBuilder", () => {
 	describe("build credential", () => {
 		it("should create a credential object with a date of birth if the credential vendor is set to EXPERIAN", () => {
-			const verifiableCredentialDOB = new VerifiableCredentialBuilder(mockNameParts, mockBirthDate, mockBankAccountInfo, successBlock, credentialVendorExperian).build();
+			const verifiableCredentialDOB = new VerifiableCredentialBuilder(mockNameParts, mockBirthDate, mockBankAccountInfo, successBlock).build();
 			expect(verifiableCredentialDOB.credentialSubject.birthDate).toEqual([{
 				value: "12-01-1986",
 			}]);
@@ -179,7 +179,7 @@ describe("VerifiableCredentialBuilder", () => {
 
 		it("should create a credential object with a date of birth if the credential vendor is set to another value", () => {
 			const credentialVendorOther = "OTHER";
-			const verifiableCredentialNoDOB = new VerifiableCredentialBuilder(mockNameParts, mockBirthDate, mockBankAccountInfo, successBlock, credentialVendorOther).build();
+			const verifiableCredentialNoDOB = new VerifiableCredentialBuilder(mockNameParts, mockBirthDate, mockBankAccountInfo, successBlock).build();
 			expect(verifiableCredentialNoDOB.credentialSubject.birthDate).toBeUndefined();
 		});
 	});
