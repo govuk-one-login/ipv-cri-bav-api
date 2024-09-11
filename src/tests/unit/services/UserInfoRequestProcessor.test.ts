@@ -63,6 +63,9 @@ function getMockPersonItem(): PersonIdentityItem {
 				{ type: "FamilyName", value: "Flintstone" },
 			],
 		}],
+		birthDate: [{
+			value: "12-01-1986",
+		}],
 		expiryDate: 123,
 		createdDate: 0,
 	};
