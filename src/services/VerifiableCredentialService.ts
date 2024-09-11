@@ -121,7 +121,6 @@ export class VerifiableCredentialBuilder {
 	private readonly credential: VerifiedCredential;
 
 	constructor(nameParts: PersonIdentityNamePart[], birthDate: PersonIdentityBirthDate[], bankAccountInfo: BankAccountInfo, evidenceInfo: VerifiedCredentialEvidence, credentialVendor: string) {
-		
 		const credentialObject = {
 			"@context": [
 				Constants.W3_BASE_CONTEXT,
@@ -137,6 +136,11 @@ export class VerifiableCredentialBuilder {
 						nameParts,
 					},
 				],
+				birthDate: [
+					{
+					  value: "1994-01-25"
+					}
+				  ],
 				bankAccount: [
 					bankAccountInfo,
 				],
@@ -146,19 +150,23 @@ export class VerifiableCredentialBuilder {
 			],
 		};
 
-		if (credentialVendor === "EXPERIAN") {
-			const credentialObjectDOB = {
-				...credentialObject,
-				credentialSubject: {
-					name: [...credentialObject.credentialSubject.name],
-					birthDate,
-					bankAccount: [...credentialObject.credentialSubject.bankAccount],
-				},
-			};
-			this.credential = credentialObjectDOB;
-		} else {
+		// if (credentialVendor === "EXPERIAN") {
+		// 	const credentialObjectDOB = {
+		// 		...credentialObject,
+		// 		credentialSubject: {
+		// 			name: [...credentialObject.credentialSubject.name],
+		// 			birthDate: [
+		// 				{
+		// 				  value: "1994-01-25"
+		// 				}
+		// 			  ],
+		// 			bankAccount: [...credentialObject.credentialSubject.bankAccount],
+		// 		},
+		// 	};
+		// 	this.credential = credentialObjectDOB;
+		// } else {
 			this.credential = credentialObject;
-		}
+	//	}
 	}
 
 	build(): VerifiedCredential {

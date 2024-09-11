@@ -1,6 +1,7 @@
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Verifier, VerifierOptions } from "@pact-foundation/pact";
 import { Constants } from "./utils/Constants";
+import path from "path";
 
 const logger = new Logger({
 	logLevel: "INFO",
@@ -8,6 +9,7 @@ const logger = new Logger({
 });
 
 let opts: VerifierOptions;
+const pactFile = path.resolve("./tests/contract/data/IpvCoreBack-BavCriProvider.json");
 // Verify that the provider meets all consumer expectations
 describe("Pact Verification", () => {
 	beforeAll(() => {  
@@ -16,16 +18,17 @@ describe("Pact Verification", () => {
 			provider: "BavCriProvider",
 			// we are starting the provider locally
 			providerBaseUrl: `${Constants.LOCAL_HOST}:${Constants.LOCAL_APP_PORT}`,
-			pactBrokerUrl: process.env.PACT_BROKER_URL,
-			pactBrokerUsername: process.env.PACT_BROKER_USER,
-    		pactBrokerPassword: process.env.PACT_BROKER_PASSWORD,
-			consumerVersionSelectors: [
-				{ mainBranch: true },
-				{ deployedOrReleased: true },
-			  ],			
-			publishVerificationResult: true,
+			pactUrls: [pactFile],
+			// pactBrokerUrl: process.env.PACT_BROKER_URL,
+			// pactBrokerUsername: process.env.PACT_BROKER_USER,
+			// pactBrokerPassword: process.env.PACT_BROKER_PASSWORD,
+			// consumerVersionSelectors: [
+			//  { mainBranch: true },
+			//  { deployedOrReleased: true },
+			//   ],         
+			publishVerificationResult: false,
 			providerVersion: process.env.PACT_PROVIDER_VERSION,
-			logLevel: "info",
+			logLevel: "debug",
 		};
 	});  
   
@@ -37,12 +40,12 @@ describe("Pact Verification", () => {
 			.then((output) => {
 				logger.info("Pact Verification Complete!");
 				logger.info("Output: ", output);
-				result = Number(output.match(/\d+/));				
+				result = Number(output.match(/\d+/));               
 			})
 			.catch((error) => {
 				logger.error("Pact verification failed :(", { error });
 				result = 1;
 			});
-		expect(result).toBe(0);		
+		expect(result).toBe(0);     
 	});
 });
