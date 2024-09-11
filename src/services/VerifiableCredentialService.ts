@@ -2,7 +2,7 @@ import { Logger } from "@aws-lambda-powertools/logger";
 import { BankAccountInfo, VerifiedCredential, VerifiedCredentialEvidence } from "../models/IVeriCredential";
 import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
 import { ISessionItem } from "../models/ISessionItem";
-import { PersonIdentityNamePart } from "../models/PersonIdentityItem";
+import { PersonIdentityNamePart, PersonIdentityBirthDate } from "../models/PersonIdentityItem";
 import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { Constants } from "../utils/Constants";
@@ -71,12 +71,12 @@ export class VerifiableCredentialService {
 	
 
 	async generateSignedVerifiableCredentialJwt(
-		sessionItem: ISessionItem, nameParts: PersonIdentityNamePart[], bankAccountInfo: BankAccountInfo, getNow: () => number): Promise<{ signedJWT: string; evidenceInfo: VerifiedCredentialEvidence }> {
+		sessionItem: ISessionItem, nameParts: PersonIdentityNamePart[], birthDate: PersonIdentityBirthDate[], bankAccountInfo: BankAccountInfo, getNow: () => number): Promise<{ signedJWT: string; evidenceInfo: VerifiedCredentialEvidence }> {
 		const now = getNow();
 		const subject = sessionItem.subject;
 		const evidenceInfo = sessionItem.copCheckResult === CopCheckResult.FULL_MATCH ?
 			this.getSuccessEvidenceBlock(sessionItem.hmrcUuid!) : this.getFailureEvidenceBlock(sessionItem.hmrcUuid!);
-		const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, bankAccountInfo, evidenceInfo)
+		const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, birthDate, bankAccountInfo, evidenceInfo)
 			.build();
 		let result;
 		if (process.env.USE_MOCKED) {
@@ -113,11 +113,12 @@ export class VerifiableCredentialService {
 	}
 }
 
-class VerifiableCredentialBuilder {
+export class VerifiableCredentialBuilder {
 	private readonly credential: VerifiedCredential;
 
-	constructor(nameParts: PersonIdentityNamePart[], bankAccountInfo: BankAccountInfo, evidenceInfo: VerifiedCredentialEvidence) {
-		this.credential = {
+	constructor(nameParts: PersonIdentityNamePart[], birthDate: PersonIdentityBirthDate[], bankAccountInfo: BankAccountInfo, evidenceInfo: VerifiedCredentialEvidence) {
+
+		const credentialObject = {
 			"@context": [
 				Constants.W3_BASE_CONTEXT,
 				Constants.DI_CONTEXT,
@@ -132,11 +133,7 @@ class VerifiableCredentialBuilder {
 						nameParts,
 					},
 				],
-				birthDate: [
-					{
-						value: "1994-01-25",
-					},
-				],
+				birthDate,
 				bankAccount: [
 					bankAccountInfo,
 				],
@@ -145,6 +142,20 @@ class VerifiableCredentialBuilder {
 				evidenceInfo,
 			],
 		};
+		console.log("bogbrush", birthDate)
+		//if (credentialVendor === "EXPERIAN") {
+			// const credentialObjectDOB = {
+			// 	...credentialObject,
+			// 	credentialSubject: {
+			// 		name: [...credentialObject.credentialSubject.name],
+			// 		birthDate,
+			// 		bankAccount: [...credentialObject.credentialSubject.bankAccount],
+			// 	},
+			// };
+			// this.credential = credentialObjectDOB;
+		// } else {
+		this.credential = credentialObject;
+		// }
 	}
 
 	build(): VerifiedCredential {

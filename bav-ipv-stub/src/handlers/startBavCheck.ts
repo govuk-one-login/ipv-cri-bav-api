@@ -40,7 +40,7 @@ export const handler = async (
             type: "FamilyName",
           },
         ],
-        birthDate:[
+        birthDate: [
           {
              value: "1985-01-25"
           }

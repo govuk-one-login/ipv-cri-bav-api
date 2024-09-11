@@ -98,13 +98,13 @@ Mappings:
     production:
       CSLSEGRESS: arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython-2
   
-  BAVServiceProviderMapping:
-    Environment:
-      dev: "EXPERIAN"
-      build: "EXPERIAN"
-      staging: "EXPERIAN"
-      integration: "EXPERIAN"
-      production: "EXPERIAN"
+  # BAVServiceProviderMapping:
+  #   Environment:
+  #     dev: "EXPERIAN"
+  #     build: "EXPERIAN"
+  #     staging: "EXPERIAN"
+  #     integration: "EXPERIAN"
+  #     production: "EXPERIAN"
 
   EnvironmentVariables: # This is all the environment specific environment variables that don't belong in globals.
     dev:
@@ -585,13 +585,13 @@ Resources:
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
 
-  BAVServiceProviderParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub "/${Environment}/BAVServiceProvider"
-      Type: String
-      Value: !FindInMap [BAVServiceProviderMapping, Environment, !Ref Environment]
-      Description: Feature flag to set which service is used to verify bank accounts
+  # BAVServiceProviderParameter:
+  #   Type: AWS::SSM::Parameter
+  #   Properties:
+  #     Name: !Sub "/${Environment}/BAVServiceProvider"
+  #     Type: String
+  #     Value: !FindInMap [BAVServiceProviderMapping, Environment, !Ref Environment]
+  #     Description: Feature flag to set which service is used to verify bank accounts
 
   ### Start of API Gateway definition.
 
