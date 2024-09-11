@@ -7,6 +7,7 @@ export const getParameter = async (path: string): Promise<string> => {
 
 	if (!response.Parameter) throw new Error("Parameter not found");
 	if (!response.Parameter?.Value) throw new Error("Parameter value is empty");
+	console.log("-------------------------------FAILURE HERE", path)
 	return response.Parameter?.Value;
 };
 
