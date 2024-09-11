@@ -40,6 +40,11 @@ export const handler = async (
             type: "FamilyName",
           },
         ],
+        birthDate:[
+          {
+             value: "1985-01-25"
+          }
+       ] 
       },
     ],
   };
