@@ -135,10 +135,10 @@ export class UserInfoRequestProcessor {
 
 		const names = personInfo.name[0].nameParts;
 		const birthDate = personInfo.birthDate;
-		console.log("flake", personInfo)
-		console.log("twirl", personInfo.name)
-		console.log("lion", personInfo.name[0])
-		console.log("fudge", personInfo.name[0].nameParts)
+		console.log("flake", personInfo);
+		console.log("twirl", personInfo.name);
+		console.log("lion", personInfo.name[0]);
+		console.log("fudge", personInfo.name[0].nameParts);
 		if (names && names.length > 0 && personInfo.sortCode && personInfo.accountNumber) {
 			const { signedJWT, evidenceInfo } = await this.verifiableCredentialService.generateSignedVerifiableCredentialJwt(
 				session,
