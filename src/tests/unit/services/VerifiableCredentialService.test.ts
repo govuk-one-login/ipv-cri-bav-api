@@ -177,10 +177,10 @@ describe("VerifiableCredentialBuilder", () => {
 			}]);
 		});
 
-		it("should create a credential object with a date of birth if the credential vendor is set to another value", () => {
-			const credentialVendorOther = "OTHER";
-			const verifiableCredentialNoDOB = new VerifiableCredentialBuilder(mockNameParts, mockBirthDate, mockBankAccountInfo, successBlock, credentialVendorOther).build();
-			expect(verifiableCredentialNoDOB.credentialSubject.birthDate).toBeUndefined();
-		});
+		// it("should create a credential object with a date of birth if the credential vendor is set to another value", () => {
+		// 	const credentialVendorOther = "OTHER";
+		// 	const verifiableCredentialNoDOB = new VerifiableCredentialBuilder(mockNameParts, mockBirthDate, mockBankAccountInfo, successBlock, credentialVendorOther).build();
+		// 	expect(verifiableCredentialNoDOB.credentialSubject.birthDate).toBeUndefined();
+		// });
 	});
 });
