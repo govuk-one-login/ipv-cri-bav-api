@@ -146,7 +146,7 @@ export class VerifiableCredentialBuilder {
 			],
 		};
 
-		if (credentialVendor === "EXPERIAN") {
+		// if (credentialVendor === "EXPERIAN") {
 			const credentialObjectDOB = {
 				...credentialObject,
 				credentialSubject: {
@@ -156,9 +156,9 @@ export class VerifiableCredentialBuilder {
 				},
 			};
 			this.credential = credentialObjectDOB;
-		} else {
-			this.credential = credentialObject;
-		}
+		// } else {
+		// 	this.credential = credentialObject;
+		// }
 	}
 
 	build(): VerifiedCredential {
