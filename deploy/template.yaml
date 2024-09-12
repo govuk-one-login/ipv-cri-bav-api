@@ -106,14 +106,6 @@ Mappings:
       integration: "EXPERIAN"
       production: "EXPERIAN"
 
-  BAVServiceProviderMapping:
-    Environment:
-      dev: "EXPERIAN"
-      build: "EXPERIAN"
-      staging: "EXPERIAN"
-      integration: "EXPERIAN"
-      production: "EXPERIAN"
-
   EnvironmentVariables: # This is all the environment specific environment variables that don't belong in globals.
     dev:
       ISSUER: 'https://review-bav.dev.account.gov.uk'
