@@ -1,11 +1,11 @@
 export const mockSsmClient = {
 	send: () => {
 	  return {
-		result: "Success",
-		Parameter: {
-			Value: "EXPERIAN"
-		},
+			result: "Success",
+			Parameter: {
+				Value: "EXPERIAN",
+			},
 	  };
 	},
-  };
+};
   
