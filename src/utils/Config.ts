@@ -5,6 +5,7 @@ export const getParameter = async (path: string): Promise<string> => {
 	const command = new GetParameterCommand({ Name: path });
 	const response = await client.send(command);
 	console.log("PATH HERE", path);
+	console.log("PARAM HERE", response.Parameter);
 
 
 	if (!response.Parameter) throw new Error("Parameter not found");
