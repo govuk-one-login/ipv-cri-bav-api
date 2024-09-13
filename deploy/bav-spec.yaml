@@ -322,7 +322,7 @@ paths:
       responses:
         "201":
           description: >-
-            Success response for either a full or partial bank account match
+            Success! response for either a full or partial bank account match
           headers:
             Cache-Control:
               schema:

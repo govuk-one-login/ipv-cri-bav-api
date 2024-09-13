@@ -1,3 +1,3 @@
 export const mockSqsCient = {
-	send: () => "Success",
+	send: () => "Success!",
 };
