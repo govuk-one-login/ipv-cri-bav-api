@@ -105,7 +105,7 @@ describe("BAV CRI happy path tests", () => {
 			const verifyAccountResponse = await verifyAccountPost(newVerifyAccountYesPayload, sessionId);
 
 			expect(verifyAccountResponse.status).toBe(200);
-			expect(verifyAccountResponse.data.message).toBe("Success!");
+			expect(verifyAccountResponse.data.message).toBe("Success");
 			expect(verifyAccountResponse.data.attemptCount).toBe(1);
 
 			const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 3);

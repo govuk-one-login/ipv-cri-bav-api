@@ -189,7 +189,7 @@ export class VerifyAccountRequestProcessor {
 		}
 
   	return Response(HttpCodesEnum.OK, JSON.stringify({
-  		message: "Success!",
+  		message: "Success",
   		attemptCount,
   	}));
 	}

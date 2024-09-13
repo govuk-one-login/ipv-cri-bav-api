@@ -223,7 +223,7 @@ describe("VerifyAccountRequestProcessor", () => {
 
 			expect(mockBavService.saveCopCheckResult).toHaveBeenCalledWith(sessionId, CopCheckResults.FULL_MATCH, undefined);
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
-			expect(response.body).toBe(JSON.stringify({ message:"Success!" }));
+			expect(response.body).toBe(JSON.stringify({ message:"Success" }));
 		});
 
 		it("saves saveCopCheckResult with increased attemptCount if there was no match and returns success", async () => {
@@ -235,7 +235,7 @@ describe("VerifyAccountRequestProcessor", () => {
 
 			expect(mockBavService.saveCopCheckResult).toHaveBeenCalledWith(sessionId, CopCheckResults.PARTIAL_MATCH, 1);
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
-			expect(response.body).toBe(JSON.stringify({ message:"Success!", attemptCount: 1 }));
+			expect(response.body).toBe(JSON.stringify({ message:"Success", attemptCount: 1 }));
 		});
 
 		it("returns success without attemptCount when there has been a FULL_MATCH", async () => {
@@ -246,7 +246,7 @@ describe("VerifyAccountRequestProcessor", () => {
 			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress, encodedTxmaHeader);
 
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
-			expect(response.body).toBe(JSON.stringify({ message:"Success!" }));
+			expect(response.body).toBe(JSON.stringify({ message:"Success" }));
 		});
 
 		it("returns error response if cop check result is MATCH_ERROR", async () => {
@@ -291,7 +291,7 @@ describe("VerifyAccountRequestProcessor", () => {
 
 			expect(mockBavService.savePartialNameInfo).toHaveBeenCalledWith("PARTIALMATCH_QUEUE", { "accountExists": "yes", "accountName": "Mr Peter Smith", "cicName": "Frederick Joseph Flintstone", "itemNumber": "new hmrcUuid", "nameMatches": "partial", "sortCodeBankName": "THE ROYAL BANK OF SCOTLAND PLC", "timeStamp": 1585695600 });
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
-			expect(response.body).toBe(JSON.stringify({ message:"Success!", attemptCount: 1 }));
+			expect(response.body).toBe(JSON.stringify({ message:"Success", attemptCount: 1 }));
 			jest.useRealTimers();
 		});
 
@@ -306,7 +306,7 @@ describe("VerifyAccountRequestProcessor", () => {
 
 			expect(mockBavService.savePartialNameInfo).toHaveBeenCalledWith("PARTIALMATCH_QUEUE", { "accountExists": "yes", "accountName": "Mr Peter Smith", "cicName": "Frederick Joseph Flintstone", "itemNumber": "new hmrcUuid", "nameMatches": "partial", "sortCodeBankName": undefined, "timeStamp": 1585695600 });
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
-			expect(response.body).toBe(JSON.stringify({ message:"Success!", attemptCount: 1 }));
+			expect(response.body).toBe(JSON.stringify({ message:"Success", attemptCount: 1 }));
 			jest.useRealTimers();
 		});
 	});

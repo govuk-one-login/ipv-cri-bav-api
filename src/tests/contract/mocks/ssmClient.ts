@@ -1,3 +1,3 @@
 export const mockSsmClient = {
-	send: () => "Success!",
+	send: () => "Success",
 };
