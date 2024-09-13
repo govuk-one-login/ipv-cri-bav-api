@@ -1,20 +1,14 @@
 import { createSsmClient, GetParameterCommand, PutParameterCommand } from "./SSMClient";
 
 export const getParameter = async (path: string): Promise<string> => {
-	console.log("-------------------------------FAILURE HERE", path);
 	const client = createSsmClient();
-	console.log("-------------------------------FAILURE HERE", path);
 	const command = new GetParameterCommand({ Name: path });
-	console.log("-------------------------------FAILURE HERE", path);
 	const response = await client.send(command);
-	console.log("-------------------------------FAILURE HERE", path);
 
 
 	if (!response.Parameter) throw new Error("Parameter not found");
-	console.log("-------------------------------FAILURE HERE", path);
 
 	if (!response.Parameter?.Value) throw new Error("Parameter value is empty");
-	console.log("-------------------------------FAILURE HERE", path);
 	return response.Parameter?.Value;
 };
 
