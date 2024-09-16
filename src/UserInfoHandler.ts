@@ -6,18 +6,21 @@ import { UserInfoRequestProcessor } from "./services/UserInfoRequestProcessor";
 import { HttpCodesEnum } from "./models/enums/HttpCodesEnum";
 import { MessageCodes } from "./models/enums/MessageCodes";
 import { Response } from "./utils/Response";
-import { Constants } from "./utils/Constants";
+import { getParameter } from "./utils/Config";
+import { Constants, EnvironmentVariables } from "./utils/Constants";
+import { checkEnvironmentVariable } from "./utils/EnvironmentVariables";
 
 const { POWERTOOLS_METRICS_NAMESPACE = Constants.BAV_METRICS_NAMESPACE, POWERTOOLS_LOG_LEVEL = "DEBUG", POWERTOOLS_SERVICE_NAME = Constants.USERINFO_LOGGER_SVC_NAME } = process.env;
 
-const logger = new Logger({
+export const logger = new Logger({
 	logLevel: POWERTOOLS_LOG_LEVEL,
 	serviceName: POWERTOOLS_SERVICE_NAME,
 });
 
 const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE, serviceName: POWERTOOLS_SERVICE_NAME });
 
-class Session implements LambdaInterface {
+let CREDENTIAL_VENDOR: string;
+class UserInfoHandler implements LambdaInterface {
 	@metrics.logMetrics({ throwOnEmptyMetrics: false, captureColdStartMetric: true })
 
 	async handler(event: APIGatewayProxyEvent, context: any): Promise<APIGatewayProxyResult> {
@@ -26,8 +29,10 @@ class Session implements LambdaInterface {
 		logger.addContext(context);
 
 		try {
+			const credentialVendorSsmPath = checkEnvironmentVariable(EnvironmentVariables.CREDENTIAL_VENDOR_SSM_PATH, logger);
+			CREDENTIAL_VENDOR = await getParameter(credentialVendorSsmPath);
 			logger.info("Starting UserInfoProcessor");
-			return await UserInfoRequestProcessor.getInstance(logger, metrics).processRequest(event);
+			return await UserInfoRequestProcessor.getInstance(logger, metrics, CREDENTIAL_VENDOR).processRequest(event);
 		} catch (error: any) {
 			logger.error("An error has occurred", {
 				messageCode: MessageCodes.SERVER_ERROR,
@@ -38,5 +43,5 @@ class Session implements LambdaInterface {
 	}
 }
 
-const handlerClass = new Session();
+const handlerClass = new UserInfoHandler();
 export const lambdaHandler = handlerClass.handler.bind(handlerClass);

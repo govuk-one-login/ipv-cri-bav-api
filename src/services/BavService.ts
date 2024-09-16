@@ -177,6 +177,7 @@ export class BavService {
 		return {
 			sessionId,
 			name: this.mapNames(sharedClaims.name),
+			birthDate: sharedClaims.birthDate,
 			expiryDate: absoluteTimeNow() + +authSessionTtlInSecs,
 			createdDate: absoluteTimeNow(),
 		};

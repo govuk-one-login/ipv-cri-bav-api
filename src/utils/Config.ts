@@ -6,6 +6,7 @@ export const getParameter = async (path: string): Promise<string> => {
 	const response = await client.send(command);
 
 	if (!response.Parameter) throw new Error("Parameter not found");
+
 	if (!response.Parameter?.Value) throw new Error("Parameter value is empty");
 	return response.Parameter?.Value;
 };

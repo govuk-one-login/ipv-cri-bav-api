@@ -26,6 +26,7 @@ const failingKmsJwtAdapterFactory = (_signingKeys: string) => new MockKmsJwtAdap
 
 const logger = mock<Logger>();
 const metrics = new Metrics({ namespace: "BAV" });
+const credentialVendor = "EXPERIAN";
 
 function getMockSessionItem(): ISessionItem {
 	const sess: ISessionItem = {
@@ -63,6 +64,9 @@ function getMockPersonItem(): PersonIdentityItem {
 				{ type: "FamilyName", value: "Flintstone" },
 			],
 		}],
+		birthDate: [{
+			value: "12-01-1986",
+		}],
 		expiryDate: 123,
 		createdDate: 0,
 	};
@@ -73,7 +77,7 @@ describe("UserInfoRequestProcessor", () => {
 	beforeAll(() => {
 		mockSession = getMockSessionItem();
 		mockPerson = getMockPersonItem();
-		userInforequestProcessorTest = new UserInfoRequestProcessor(logger, metrics);
+		userInforequestProcessorTest = new UserInfoRequestProcessor(logger, metrics, credentialVendor);
 		// @ts-ignore
 		userInforequestProcessorTest.BavService = mockBavService;
 	});
@@ -127,6 +131,9 @@ describe("UserInfoRequestProcessor", () => {
 						],
 					},
 				],
+				"birthDate": [{
+					"value": "12-01-1986",
+				}],
 				"bankAccount": [
 					{
 						"sortCode": "111111",

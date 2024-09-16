@@ -37,12 +37,12 @@ describe("Pact Verification", () => {
 			.then((output) => {
 				logger.info("Pact Verification Complete!");
 				logger.info("Output: ", output);
-				result = Number(output.match(/\d+/));				
+				result = Number(output.match(/\d+/));               
 			})
 			.catch((error) => {
 				logger.error("Pact verification failed :(", { error });
 				result = 1;
 			});
-		expect(result).toBe(0);		
+		expect(result).toBe(0);     
 	});
 });

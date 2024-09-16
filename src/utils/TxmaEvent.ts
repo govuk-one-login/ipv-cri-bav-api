@@ -1,5 +1,5 @@
 import { ISessionItem } from "../models/ISessionItem";
-import { PersonIdentityName } from "../models/PersonIdentityItem";
+import { PersonIdentityName, PersonIdentityBirthDate } from "../models/PersonIdentityItem";
 
 export type TxmaEventName =
 	"BAV_CRI_START" | 
@@ -37,6 +37,7 @@ export interface CopRequestDetails {
 
 export interface RestrictedObject {
 	name?: PersonIdentityName[];
+	birthDate?: PersonIdentityBirthDate[];
 	bankAccount?: BankAccountDetails[];
 	CoP_request_details?: CopRequestDetails[];
 	device_information?: {
