@@ -3296,7 +3296,8 @@ Resources:
           HMRC_TOKEN_SSM_PATH: !Sub "/${Environment}/HMRC/TOKEN"
           HMRC_BASE_URL: !FindInMap [ EnvironmentVariables, !Ref Environment, HMRCVERIFYBASEURL ]
           HMRC_MAX_RETRIES: 2
-          HMRC_TOKEN_BACKOFF_PERIOD_MS: 5000 # 5 seconds
+          EXPERIAN_TOKEN_BACKOFF_PERIOD_MS: 5000 # 5 seconds
+          EXPERIAN_TOKEN_BACKOFF_PERIOD_MS: 5000 # 5 seconds
           PARTIAL_MATCHES_QEUEUE_URL: !Ref PartialMatchesQueue
       Policies:
         - AWSLambdaBasicExecutionRole
@@ -4368,7 +4369,7 @@ Resources:
           HMRC_TOKEN_SSM_PATH: !Sub "/${Environment}/HMRC/TOKEN"
           HMRC_BASE_URL: !FindInMap [ EnvironmentVariables, !Ref Environment, HMRCBASEURL ]
           HMRC_MAX_RETRIES: 10
-          HMRC_TOKEN_BACKOFF_PERIOD_MS: 30000 # 30 seconds
+          EXPERIAN_TOKEN_BACKOFF_PERIOD_MS: 30000 # 30 seconds
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess

@@ -15,7 +15,7 @@ process.env.PUBLIC_KEY_SSM_PATH = "dev/person-info/PUBLIC_KEY"
 process.env.HMRC_BASE_URL = "https://hmrc"
 process.env.HMRC_CLIENT_ID = "hmrc client ID"
 process.env.HMRC_CLIENT_SECRET = "hmrc client secret"
-process.env.HMRC_TOKEN_BACKOFF_PERIOD_MS = "2000"
+process.env.EXPERIAN_TOKEN_BACKOFF_PERIOD_MS = "2000"
 process.env.HMRC_MAX_RETRIES = "3"
 process.env.CREDENTIAL_VENDOR_SSM_PATH = "/dev/bav/vendor"
 // pragma: allowlist secret

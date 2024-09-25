@@ -6,6 +6,11 @@ export type CopCheckResult =
 	"NO_MATCH" |
 	"MATCH_ERROR";
 
+export type ExperianCheckResult =
+	"FULL_MATCH" |
+	"NO_MATCH" |
+	"MATCH_ERROR";
+
 export interface IBAVSession {
 	given_names?: string[];
 	family_names?: string[];

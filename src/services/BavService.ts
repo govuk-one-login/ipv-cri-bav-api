@@ -4,7 +4,7 @@ import { DynamoDBDocument, GetCommand, PutCommand, QueryCommandInput, UpdateComm
 import { randomUUID } from "crypto";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../models/enums/MessageCodes";
-import { ISessionItem, CopCheckResult } from "../models/ISessionItem";
+import { ISessionItem, CopCheckResult, ExperianCheckResult } from "../models/ISessionItem";
 import { SharedClaimsPersonIdentity, PersonIdentityItem, PersonIdentityName } from "../models/PersonIdentityItem";
 import { AppError } from "../utils/AppError";
 import { absoluteTimeNow, getAuthorizationCodeExpirationEpoch } from "../utils/DateTimeUtils";
@@ -274,15 +274,15 @@ export class BavService {
 		}
 	}
 
-	async saveCopCheckResult(sessionId: string, copCheckResult: CopCheckResult, attemptCount?: number): Promise<void> {
-		this.logger.info({ message: `Updating ${this.tableName} table with copCheckResult`, copCheckResult });
+	async saveExperianCheckResult(sessionId: string, experianCheckResult: ExperianCheckResult, attemptCount?: number): Promise<void> {
+		this.logger.info({ message: `Updating ${this.tableName} table with experianCheckResult`, experianCheckResult });
 
 		const updateStateCommand = new UpdateCommand({
 			TableName: this.tableName,
 			Key: { sessionId },
-			UpdateExpression: `SET copCheckResult = :copCheckResult, authSessionState = :authSessionState${attemptCount ? ", attemptCount = :attemptCount" : ""}`,
+			UpdateExpression: `SET experianCheckResult = :experianCheckResult, authSessionState = :authSessionState${attemptCount ? ", attemptCount = :attemptCount" : ""}`,
 			ExpressionAttributeValues: {
-				":copCheckResult": copCheckResult,
+				":experianCheckResult": experianCheckResult,
 				...(attemptCount && { ":attemptCount": attemptCount }),
 				":authSessionState": AuthSessionState.BAV_DATA_RECEIVED,
 			},
