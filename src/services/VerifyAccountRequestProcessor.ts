@@ -8,7 +8,7 @@ import { ExperianCheckResults } from "../models/enums/Experian";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { TxmaEventNames } from "../models/enums/TxmaEvents";
-import { ExperianVerifyResponse } from "../models/IExperianResponse";
+import { ExperianVerifyResponse, ExperianHCResponse } from "../models/IExperianResponse";
 import { PersonIdentityItem } from "../models/PersonIdentityItem";
 import { ISessionItem, ExperianCheckResult} from "../models/ISessionItem";
 import { EnvironmentVariables, Constants } from "../utils/Constants";
@@ -133,6 +133,8 @@ export class VerifyAccountRequestProcessor {
   		this.experianToken,
   	);
 
+	console.log("VERIFY REPSOSNE PRINT", verifyResponse)
+
   	if (!verifyResponse) {
   		this.logger.error("No verify response received", { messageCode: MessageCodes.NO_VERIFY_RESPONSE });
   		return Response(HttpCodesEnum.SERVER_ERROR, "Could not verify account");
@@ -160,7 +162,7 @@ export class VerifyAccountRequestProcessor {
   	);
 
   	const experianCheckResult = this.calculateExperianCheckResult(verifyResponse);
-  	this.logger.debug(`copCheckResult is ${experianCheckResult}`);
+  	this.logger.debug(`experianCheckResult is ${experianCheckResult}`);
 
   	let attemptCount;
   	// If there is a full match attemptCount will be undefined because it doesn't matter
@@ -170,16 +172,16 @@ export class VerifyAccountRequestProcessor {
   	await this.BavService.saveExperianCheckResult(sessionId, experianCheckResult, attemptCount);
 
   	return Response(HttpCodesEnum.OK, JSON.stringify({
-  		message: "Success",
+  		message: "Success1951",
   		attemptCount,
   	}));
 	}
 
-	calculateExperianCheckResult(verifyResponse: ExperianVerifyResponse): ExperianCheckResult {
-  	if (verifyResponse.personalDataScore === 9) {
-  		return ExperianCheckResults.FULL_MATCH;
-  	} else {
-  		return ExperianCheckResults.NO_MATCH;
-  	}
+	calculateExperianCheckResult(verifyResponse: string): ExperianCheckResult {
+		if (verifyResponse === "9") {
+			return ExperianCheckResults.FULL_MATCH;
+		} else {
+			return ExperianCheckResults.NO_MATCH
+		}
 	}
 }

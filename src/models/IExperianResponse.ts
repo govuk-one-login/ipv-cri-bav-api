@@ -11,6 +11,10 @@ export interface ExperianVerifyResponse {
 	originalRequestData: object;
 }
 
+export interface ExperianHCResponse {
+	personalDataScore: number
+}
+
 export interface ClientResponsePayload {
 	decisionElements: DecisionElements[];
 }

@@ -276,6 +276,12 @@ export class BavService {
 
 	async saveExperianCheckResult(sessionId: string, experianCheckResult: ExperianCheckResult, attemptCount?: number): Promise<void> {
 		this.logger.info({ message: `Updating ${this.tableName} table with experianCheckResult`, experianCheckResult });
+		
+		if (attemptCount && attemptCount === 1) {
+			experianCheckResult = ""
+		}
+
+		console.log("EXP CHECK PRINT VARP", experianCheckResult)
 
 		const updateStateCommand = new UpdateCommand({
 			TableName: this.tableName,
