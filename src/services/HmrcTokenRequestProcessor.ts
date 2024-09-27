@@ -30,7 +30,7 @@ export class HmrcTokenRequestProcessor {
 
 		const hmrcBaseUrl = checkEnvironmentVariable(EnvironmentVariables.HMRC_BASE_URL, logger);
 		const maxRetries = +checkEnvironmentVariable(EnvironmentVariables.HMRC_MAX_RETRIES, logger);
-		const hmrcBackoffPeriodMs = +checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_TOKEN_BACKOFF_PERIOD_MS, logger);
+		const hmrcBackoffPeriodMs = +checkEnvironmentVariable(EnvironmentVariables.HMRC_TOKEN_BACKOFF_PERIOD_MS, logger);
 		this.hmrcTokenSsmPath = checkEnvironmentVariable(EnvironmentVariables.HMRC_TOKEN_SSM_PATH, logger);
 		this.hmrcService = HmrcService.getInstance(this.logger, hmrcBaseUrl, hmrcBackoffPeriodMs, maxRetries);
 	}

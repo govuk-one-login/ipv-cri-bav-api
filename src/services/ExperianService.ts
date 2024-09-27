@@ -46,35 +46,25 @@ export class ExperianService {
     		"X-Tracking-Id": uuid,
     	};
 
+		console.log("TOKEN PRINT", token)
+
     	let retryCount = 0;
     	let exponentialBackOffPeriod = this.backoffPeriodMs;
     	while (retryCount <= this.maxRetries) {
     		try {
+				console.log("PARAMS PRINT", params)			
     			const endpoint = `${this.experianBaseUrl}/${Constants.EXPERIAN_VERIFY_ENDPOINT_PATH}`;
+				console.log("ENDPOINT PRINT", endpoint)
     			this.logger.info("Sending verify request to Experian", { uuid, endpoint, retryCount });
-    			const response = {
-					data: {
-					  clientResponsePayload: {
-						decisionElements: [
-						  { scores: [{ score: 5 }] },
-						  { scores: [{ score: 6 }] },
-						  {
-							scores: [
-							  { score: 1 }
-							]
-						  }
-						]
-					  }
-					}
-				  };
-				const data = response.data
+				const { data }: { data: ExperianVerifyResponse } = await axios.post(endpoint, params, { headers });
+				console.log("DATA PRINT", data)
 				const personalDetailsScore = data.clientResponsePayload.decisionElements[2].scores[0].score;
-
+				console.log("PD SCORE", personalDetailsScore)
     			return personalDetailsScore
 
     		} catch (error: any) {
     			const message = "Error sending verify request to Experian";
-    			this.logger.error({ message, messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT, statusCode: error?.response?.status });
+    			this.logger.error({ message, messageCode: MessageCodes.FAILED_VERIFYING_ACCOUNT, statusCode: error?.response?.status });
 
     			if ((error?.response?.status === 500 || error?.response?.status === 429) && retryCount < this.maxRetries) {
     				this.logger.error(`Sleeping for ${exponentialBackOffPeriod} ms before retrying verification`, { retryCount });
@@ -110,7 +100,7 @@ export class ExperianService {
     			};
 				
     			const { data }: { data: ExperianTokenResponse } = await axios.post(
-    				`${this.experianBaseUrl}${Constants.HMRC_TOKEN_ENDPOINT_PATH}`,
+    				`${this.experianBaseUrl}${Constants.EXPERIAN_TOKEN_ENDPOINT_PATH}`,
     				params,
     				config,
     			);

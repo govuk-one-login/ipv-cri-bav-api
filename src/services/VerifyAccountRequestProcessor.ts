@@ -10,7 +10,7 @@ import { MessageCodes } from "../models/enums/MessageCodes";
 import { TxmaEventNames } from "../models/enums/TxmaEvents";
 import { ExperianVerifyResponse } from "../models/IExperianResponse";
 import { PersonIdentityItem } from "../models/PersonIdentityItem";
-import { CopCheckResult, ISessionItem, ExperianCheckResult} from "../models/ISessionItem";
+import { ISessionItem, ExperianCheckResult} from "../models/ISessionItem";
 import { EnvironmentVariables, Constants } from "../utils/Constants";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
@@ -54,12 +54,12 @@ export class VerifyAccountRequestProcessor {
   	this.experianToken = EXPERIAN_TOKEN;
 
   	const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, this.logger);
-  	const hmrcBaseUrl = checkEnvironmentVariable(EnvironmentVariables.HMRC_BASE_URL, this.logger);
-  	const maxRetries = +checkEnvironmentVariable(EnvironmentVariables.HMRC_MAX_RETRIES, logger);
-  	const hmrcBackoffPeriodMs = +checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_TOKEN_BACKOFF_PERIOD_MS, logger);
+  	const experianBaseUrl = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_BASE_URL, this.logger);
+  	const maxRetries = +checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_MAX_RETRIES, logger);
+  	const experianBackoffPeriodMs = +checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_TOKEN_BACKOFF_PERIOD_MS, logger);
 
   	this.BavService = BavService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
-  	this.ExperianService = ExperianService.getInstance(this.logger, hmrcBaseUrl, hmrcBackoffPeriodMs, maxRetries);
+  	this.ExperianService = ExperianService.getInstance(this.logger, experianBaseUrl, experianBackoffPeriodMs, maxRetries);
 	}
 
 	static getInstance(logger: Logger, metrics: Metrics, EXPERIAN_TOKEN: string): VerifyAccountRequestProcessor {

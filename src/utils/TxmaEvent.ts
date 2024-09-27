@@ -29,13 +29,6 @@ export interface BankAccountDetails {
 	accountNumber: string;
 }
 
-export interface CopRequestDetails {
-	name: string;
-	sortCode: string;
-	accountNumber: string;
-	attemptNum: number;
-}
-
 export interface ExperianRequestDetails {
 	name: string;
 	sortCode: string;

@@ -4,8 +4,23 @@ export interface ExperianTokenResponse {
 	expires_in: number;
 	token_type: string;
 }
+
 export interface ExperianVerifyResponse {
-	personalDataScore: number;
+	responseHeader: object;
+	clientResponsePayload: ClientResponsePayload;
+	originalRequestData: object;
+}
+
+export interface ClientResponsePayload {
+	decisionElements: DecisionElements[];
+}
+
+export interface DecisionElements {
+	scores: Scores[];
+}
+
+export interface Scores {
+	score: number;
 }
 
 export interface PartialNameSQSRecord {
