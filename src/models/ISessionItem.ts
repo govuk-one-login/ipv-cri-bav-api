@@ -8,8 +8,7 @@ export type CopCheckResult =
 
 export type ExperianCheckResult =
 	"FULL_MATCH" |
-	"NO_MATCH" |
-	"";
+	"NO_MATCH" ;
 
 export interface IBAVSession {
 	given_names?: string[];

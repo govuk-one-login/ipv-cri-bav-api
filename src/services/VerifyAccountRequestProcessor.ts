@@ -161,10 +161,11 @@ export class VerifyAccountRequestProcessor {
   		this.personIdentityTableName,
   	);
 
+	  
   	const experianCheckResult = this.calculateExperianCheckResult(verifyResponse);
   	this.logger.debug(`experianCheckResult is ${experianCheckResult}`);
-
-  	let attemptCount;
+	  
+  	let attemptCount
   	// If there is a full match attemptCount will be undefined because it doesn't matter
   	if (experianCheckResult !== ExperianCheckResults.FULL_MATCH) {
   		attemptCount = session.attemptCount ? session.attemptCount + 1 : 1;
@@ -181,7 +182,7 @@ export class VerifyAccountRequestProcessor {
 		if (verifyResponse === 9) {
 			return ExperianCheckResults.FULL_MATCH;
 		} else {
-			return ExperianCheckResults.NO_MATCH
+			return ExperianCheckResults.NO_MATCH;
 		}
 	}
 }
