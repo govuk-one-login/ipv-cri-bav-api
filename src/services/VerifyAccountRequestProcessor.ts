@@ -133,7 +133,7 @@ export class VerifyAccountRequestProcessor {
   		this.experianToken,
   	);
 
-	console.log("VERIFY REPSOSNE PRINT", verifyResponse)
+	console.log("VERIFY RESPONSE PRINT", verifyResponse)
 
   	if (!verifyResponse) {
   		this.logger.error("No verify response received", { messageCode: MessageCodes.NO_VERIFY_RESPONSE });
@@ -172,13 +172,13 @@ export class VerifyAccountRequestProcessor {
   	await this.BavService.saveExperianCheckResult(sessionId, experianCheckResult, attemptCount);
 
   	return Response(HttpCodesEnum.OK, JSON.stringify({
-  		message: "Success1951",
+  		message: "Success",
   		attemptCount,
   	}));
 	}
 
-	calculateExperianCheckResult(verifyResponse: string): ExperianCheckResult {
-		if (verifyResponse === "9") {
+	calculateExperianCheckResult(verifyResponse: number): ExperianCheckResult {
+		if (verifyResponse === 9) {
 			return ExperianCheckResults.FULL_MATCH;
 		} else {
 			return ExperianCheckResults.NO_MATCH

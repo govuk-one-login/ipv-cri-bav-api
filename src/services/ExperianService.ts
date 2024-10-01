@@ -36,14 +36,26 @@ export class ExperianService {
     async verify(
     	{ accountNumber, sortCode, name, uuid }: { accountNumber: string; sortCode: string; name: string; uuid: string }, token: string,
     ) {
-    	const params = {
-    		account: { accountNumber, sortCode },
-    		subject: { name },
-    	};
+    	// const params = {
+    	// 	account: { accountNumber, sortCode },
+    	// 	subject: { name },
+    	// };
+
+		const params = {
+			header: {
+			  tenantId: uuid,
+			  requestType: "BAVConsumer-Standard"
+			},
+			account: { accountNumber, sortCode },
+    		subject: { name }
+		  }
+		  
     	const headers = {
     		"User-Agent": Constants.EXPERIAN_USER_AGENT,
     		"Authorization": `Bearer ${token}`,
     		"X-Tracking-Id": uuid,
+			"Content-Type":"application/json",
+			"Accept":"application/json"
     	};
 
 		console.log("PARAMS PRINT", params)
@@ -51,47 +63,35 @@ export class ExperianService {
     	let retryCount = 0;
     	let exponentialBackOffPeriod = this.backoffPeriodMs;
     	while (retryCount <= this.maxRetries) {
-    		try {
-				let score
-				const accountNumberScore = params.account.accountNumber
-				console.log("ACCOUNT NUMBER PRINT", accountNumberScore)
-				const sortCodeScore = params.account.sortCode
-
-				if (accountNumberScore === "99999999") {
-					score = "9"
-				} else {
-					score = "1"
-				}
-
-				if (sortCodeScore === "222222") {
-					score = "2"
-				} else if (sortCodeScore === "333333") {
-					score = "3"
-				} else if (sortCodeScore === "666666") {
-					score = "6"
-				} else if (sortCodeScore === "777777") {
-					score = "7"
-				} else if (sortCodeScore === "111111") {
-					score = "11"
-				} else if (sortCodeScore === "121212") {
-					score = "12"
-				}
-
-				console.log("SCORE PRINT", score)
-				return score
-
-    		} catch (error: any) {
+			
+				try {
+					const endpoint = `${this.experianBaseUrl}/${Constants.EXPERIAN_VERIFY_ENDPOINT_PATH}`;
+					this.logger.info("Sending verify request to Experian", { uuid, endpoint, retryCount });
+				
+					const { data } = await axios.post(endpoint, params, { headers });
+				
+					const cleanedData = data.replace(/,\s*([\]}])/g, '$1');
+					const parsedData = JSON.parse(cleanedData);				
+					const decisionElements = parsedData?.clientResponsePayload?.decisionElements;
+					if (decisionElements && decisionElements.length > 2 && decisionElements[2].scores && decisionElements[2].scores.length > 0) {
+						const personalDetailsScore = decisionElements[2].scores[0].score;
+						return personalDetailsScore;
+					} else {
+						console.error("Decision elements or scores missing");
+						return null;
+					}
+				} catch (error: any) {
     			const message = "Error sending verify request to Experian";
     			this.logger.error({ message, messageCode: MessageCodes.FAILED_VERIFYING_ACCOUNT, statusCode: error?.response?.status });
 
-    			if ((error?.response?.status === 500 || error?.response?.status === 429) && retryCount < this.maxRetries) {
-    				this.logger.error(`Sleeping for ${exponentialBackOffPeriod} ms before retrying verification`, { retryCount });
-    				await sleep(exponentialBackOffPeriod);
-    				retryCount++;
-    				exponentialBackOffPeriod = exponentialBackOffPeriod * 2;
-    			} else {
-    				throw new AppError(HttpCodesEnum.SERVER_ERROR, message);
-    			}
+					if ((error?.response?.status === 500 || error?.response?.status === 429) && retryCount < this.maxRetries) {
+						this.logger.error(`Sleeping for ${exponentialBackOffPeriod} ms before retrying verification`, { retryCount });
+						await sleep(exponentialBackOffPeriod);
+						retryCount++;
+						exponentialBackOffPeriod = exponentialBackOffPeriod * 2;
+					} else {
+						throw new AppError(HttpCodesEnum.SERVER_ERROR, message);
+					}
     		}
     	}
     }
