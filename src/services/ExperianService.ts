@@ -36,11 +36,6 @@ export class ExperianService {
     async verify(
     	{ accountNumber, sortCode, name, uuid }: { accountNumber: string; sortCode: string; name: string; uuid: string }, token: string,
     ) {
-    	// const params = {
-    	// 	account: { accountNumber, sortCode },
-    	// 	subject: { name },
-    	// };
-
 		const params = {
 			header: {
 			  tenantId: uuid,
@@ -53,7 +48,6 @@ export class ExperianService {
     	const headers = {
     		"User-Agent": Constants.EXPERIAN_USER_AGENT,
     		"Authorization": `Bearer ${token}`,
-    		"X-Tracking-Id": uuid,
 			"Content-Type":"application/json",
 			"Accept":"application/json"
     	};
@@ -69,12 +63,15 @@ export class ExperianService {
 					this.logger.info("Sending verify request to Experian", { uuid, endpoint, retryCount });
 				
 					const { data } = await axios.post(endpoint, params, { headers });
+
+					console.log("Raw response data:", data);
 				
-					const cleanedData = data.replace(/,\s*([\]}])/g, '$1');
-					const parsedData = JSON.parse(cleanedData);				
-					const decisionElements = parsedData?.clientResponsePayload?.decisionElements;
+					console.log("PARSED DATA", data)			
+					const decisionElements = data?.clientResponsePayload?.decisionElements;
+					console.log("DEC ELEMENTS", decisionElements)
 					if (decisionElements && decisionElements.length > 2 && decisionElements[2].scores && decisionElements[2].scores.length > 0) {
 						const personalDetailsScore = decisionElements[2].scores[0].score;
+						console.log("PD SCORE", personalDetailsScore);
 						return personalDetailsScore;
 					} else {
 						console.error("Decision elements or scores missing");
