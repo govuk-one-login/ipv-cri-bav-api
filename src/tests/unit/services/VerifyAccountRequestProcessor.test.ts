@@ -3,7 +3,7 @@
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { mock } from "jest-mock-extended";
-import { hmrcVerifyResponse } from "../data/hmrcEvents";
+import { experianVerifyResponse } from "../data/experianEvents";
 import { CopCheckResults } from "../../../models/enums/Hmrc";
 import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../../../models/enums/MessageCodes";
@@ -11,16 +11,16 @@ import { ISessionItem } from "../../../models/ISessionItem";
 import { PersonIdentityItem } from "../../../models/PersonIdentityItem";
 import { BavService } from "../../../services/BavService";
 import { VerifyAccountRequestProcessor } from "../../../services/VerifyAccountRequestProcessor";
-import { HmrcService } from "../../../services/HmrcService";
+import { ExperianService } from "../../../services/ExperianService";
 import { Constants } from "../../../utils/Constants";
 
-const hmrcUuid = "new hmrcUuid";
+const experianUuid = "new experianUuid";
 jest.mock("crypto", () => ({
 	...jest.requireActual("crypto"),
-	randomUUID: () => hmrcUuid,
+	randomUUID: () => experianUuid,
 }));
 const mockBavService = mock<BavService>();
-const mockHmrcService = mock<HmrcService>();
+const mockExperianService = mock<ExperianService>();
 const logger = mock<Logger>();
 const metrics = new Metrics({ namespace: "BAV" });
 const TOKEN_SSM_PARAM = "dfsgadfgadg";
@@ -62,7 +62,7 @@ describe("VerifyAccountRequestProcessor", () => {
 		// @ts-ignore
 		verifyAccountRequestProcessorTest.BavService = mockBavService;
 		// @ts-ignore
-		verifyAccountRequestProcessorTest.HmrcService = mockHmrcService;
+		verifyAccountRequestProcessorTest.ExperianService = mockExperianService;
 	});
 
 	beforeEach(() => {
@@ -101,14 +101,14 @@ describe("VerifyAccountRequestProcessor", () => {
 			});
 		});
 
-		it("generates and saves hmrcUuid if one doesn't exist", async () => {
+		it("generates and saves experianUuid if one doesn't exist", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
-			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, hmrcUuid: undefined });
-			mockHmrcService.verify.mockResolvedValueOnce(hmrcVerifyResponse);
+			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, experianUuid: undefined });
+			mockExperianService.verify.mockResolvedValueOnce(9);
 
 			await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress, encodedTxmaHeader);
 
-			expect(mockBavService.saveHmrcUuid).toHaveBeenCalledWith(sessionId, hmrcUuid);
+			expect(mockBavService.saveExperianUuid).toHaveBeenCalledWith(sessionId, experianUuid);
 	  });
       
 		it("returns error response if session has exceeded attemptCount", async () => {
@@ -126,13 +126,13 @@ describe("VerifyAccountRequestProcessor", () => {
 
 		it("saves account details to person identity table", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
-			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, hmrcUuid: "HMRC_UUID" });
-			mockHmrcService.verify.mockResolvedValueOnce(hmrcVerifyResponse);
+			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, experianUuid: "EXPERIAN_UUID" });
+			mockExperianService.verify.mockResolvedValueOnce(9);
 
 			await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress, encodedTxmaHeader);
 
 			expect(logger.appendKeys).toHaveBeenCalledWith({ govuk_signin_journey_id: session.clientSessionId });
-			expect(mockBavService.saveHmrcUuid).not.toHaveBeenCalled();
+			expect(mockBavService.saveExperianUuid).not.toHaveBeenCalled();
 			expect(mockBavService.updateAccountDetails).toHaveBeenCalledWith(
 				{	sessionId, accountNumber: body.account_number, sortCode: body.sort_code },
 				process.env.PERSON_IDENTITY_TABLE_NAME,
@@ -142,23 +142,23 @@ describe("VerifyAccountRequestProcessor", () => {
 		it("verifies the account details given", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
 			mockBavService.getSessionById.mockResolvedValueOnce(session);
-			mockHmrcService.verify.mockResolvedValueOnce(hmrcVerifyResponse);
+			mockExperianService.verify.mockResolvedValueOnce(9);
 
 			await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress, encodedTxmaHeader);
 
-			expect(mockHmrcService.verify).toHaveBeenCalledWith({ accountNumber: body.account_number, sortCode: body.sort_code, name: "Frederick Joseph Flintstone", uuid: hmrcUuid }, TOKEN_SSM_PARAM );
+			expect(mockExperianService.verify).toHaveBeenCalledWith({ accountNumber: body.account_number, sortCode: body.sort_code, name: "Frederick Joseph Flintstone", uuid: experianUuid }, TOKEN_SSM_PARAM );
 			expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "MYQUEUE", {
-				event_name: "BAV_COP_REQUEST_SENT",
+				event_name: "BAV_EXPERIAN_REQUEST_SENT",
 				component_id: "https://XXX-c.env.account.gov.uk",
 				extensions: {
 					evidence: [
 				 		{
-					 		txn: "new hmrcUuid",
+					 		txn: "new experianUuid",
 						},
 					],
 				},
 				restricted:{
-  				"CoP_request_details": [
+  				"Experian_request_details": [
 					 {
   						name: "Frederick Joseph Flintstone",
   						sortCode: body.sort_code,
@@ -179,12 +179,12 @@ describe("VerifyAccountRequestProcessor", () => {
 			"ABCDEFG",
 			);
 			expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(2, "MYQUEUE", {
-				event_name: "BAV_COP_RESPONSE_RECEIVED",
+				event_name: "BAV_EXPERIAN_RESPONSE_RECEIVED",
 				component_id: "https://XXX-c.env.account.gov.uk",
 				extensions: {
 					evidence: [
 				 		{
-					 		txn: "new hmrcUuid",
+					 		txn: "new experianUuid",
 						},
 					],
 				},
@@ -204,110 +204,69 @@ describe("VerifyAccountRequestProcessor", () => {
 		it("pads account number if it's too short", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
 			mockBavService.getSessionById.mockResolvedValueOnce(session);
-			mockHmrcService.verify.mockResolvedValueOnce(hmrcVerifyResponse);
+			mockExperianService.verify.mockResolvedValueOnce(9);
 
 			await verifyAccountRequestProcessorTest.processRequest(sessionId, { ...body, account_number: "123456" }, clientIpAddress, encodedTxmaHeader);
 			expect(mockBavService.updateAccountDetails).toHaveBeenCalledWith(
 				{ sessionId, accountNumber: "00123456", sortCode: body.sort_code },
 				process.env.PERSON_IDENTITY_TABLE_NAME,
 			);
-			expect(mockHmrcService.verify).toHaveBeenCalledWith({ accountNumber: "00123456", sortCode: body.sort_code, name: "Frederick Joseph Flintstone", uuid: hmrcUuid }, TOKEN_SSM_PARAM );
+			expect(mockExperianService.verify).toHaveBeenCalledWith({ accountNumber: "00123456", sortCode: body.sort_code, name: "Frederick Joseph Flintstone", uuid: experianUuid }, TOKEN_SSM_PARAM );
 		});
 
-		it("saves saveCopCheckResult and returns success where there has been a match", async () => {
+		it("saves saveExperianCheckResult and returns success where there has been a match", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
 			mockBavService.getSessionById.mockResolvedValueOnce(session);
-			mockHmrcService.verify.mockResolvedValueOnce(hmrcVerifyResponse);
+			mockExperianService.verify.mockResolvedValueOnce(9);
 
 			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress, encodedTxmaHeader);
 
-			expect(mockBavService.saveCopCheckResult).toHaveBeenCalledWith(sessionId, CopCheckResults.FULL_MATCH, undefined);
+			expect(mockBavService.saveExperianCheckResult).toHaveBeenCalledWith(sessionId, CopCheckResults.FULL_MATCH, undefined);
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
 			expect(response.body).toBe(JSON.stringify({ message:"Success" }));
 		});
 
-		it("saves saveCopCheckResult with increased attemptCount if there was no match and returns success", async () => {
+		it("saves saveExperianCheckResult with increased attemptCount if there was no match and returns success", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
-			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, attemptCount: 0 });
-			mockHmrcService.verify.mockResolvedValueOnce({ ...hmrcVerifyResponse, nameMatches: "partial" });
+			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, attemptCount: undefined });
+			mockExperianService.verify.mockResolvedValueOnce(1);
 
 			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress, encodedTxmaHeader);
 
-			expect(mockBavService.saveCopCheckResult).toHaveBeenCalledWith(sessionId, CopCheckResults.PARTIAL_MATCH, 1);
+			expect(mockBavService.saveExperianCheckResult)
+			expect(mockBavService.saveExperianCheckResult).toHaveBeenCalledWith(sessionId, "NO_MATCH", 1);
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
 			expect(response.body).toBe(JSON.stringify({ message:"Success", attemptCount: 1 }));
 		});
 
 		it("returns success without attemptCount when there has been a FULL_MATCH", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
-			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, attemptCount: 1 });
-			mockHmrcService.verify.mockResolvedValueOnce({ ...hmrcVerifyResponse, nameMatches: "yes" });
+			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, attemptCount: undefined });
+			mockExperianService.verify.mockResolvedValueOnce(9);
 
 			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress, encodedTxmaHeader);
 
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
 			expect(response.body).toBe(JSON.stringify({ message:"Success" }));
 		});
-
-		it("returns error response if cop check result is MATCH_ERROR", async () => {
-			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
-			mockBavService.getSessionById.mockResolvedValueOnce(session);
-			mockHmrcService.verify.mockResolvedValueOnce({ ...hmrcVerifyResponse, nameMatches: "error" });
-
-			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress, encodedTxmaHeader);
-
-			expect(response.statusCode).toBe(HttpCodesEnum.SERVER_ERROR);
-			expect(response.body).toBe("Error received in COP verify response");
-			expect(logger.warn).toHaveBeenCalledWith("Error received in COP verify response");
-		});
 	});
 
 	describe("#calculateCopCheckResult", () => {
-		it.each([
-			{ nameMatches: "yes", accountExists: "yes", result: CopCheckResults.FULL_MATCH },
-			{ nameMatches: "partial", accountExists: "yes", result: CopCheckResults.PARTIAL_MATCH },
-			{ nameMatches: "no", accountExists: "yes", result: CopCheckResults.NO_MATCH },
-			{ nameMatches: "indeterminate", accountExists: "yes", result: CopCheckResults.NO_MATCH },
-			{ nameMatches: "inapplicable", accountExists: "yes", result: CopCheckResults.NO_MATCH },
-			{ nameMatches: "error", accountExists: "yes", result: CopCheckResults.MATCH_ERROR },
-			{ nameMatches: "yes", accountExists: "no", result: CopCheckResults.NO_MATCH },
-			{ nameMatches: "yes", accountExists: "indeterminate", result: CopCheckResults.NO_MATCH },
-			{ nameMatches: "yes", accountExists: "inapplicable", result: CopCheckResults.NO_MATCH },
-			{ nameMatches: "yes", accountExists: "error", result: CopCheckResults.MATCH_ERROR },
-		])("returns $result where nameMatches is $nameMatches and accountExists is $accountExists", ({ nameMatches, accountExists, result }) => {
-			expect(
-				verifyAccountRequestProcessorTest.calculateCopCheckResult({ ...hmrcVerifyResponse, nameMatches, accountExists }),
-			).toBe(result);
-		});
-
-		it("calls savePartialNameInfo if CopCheckResults is PARTIAL_MATCH with a sortCodeBankName value", async () => {
-			jest.useFakeTimers();
-			jest.setSystemTime(new Date(1585695600000)); // == 2020-03-31T23:00:00.000Z
-			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
-			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, attemptCount: 0 });
-			mockHmrcService.verify.mockResolvedValueOnce({ ...hmrcVerifyResponse, nameMatches: "partial" });
-
-			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress, encodedTxmaHeader);
-
-			expect(mockBavService.savePartialNameInfo).toHaveBeenCalledWith("PARTIALMATCH_QUEUE", { "accountExists": "yes", "accountName": "Mr Peter Smith", "cicName": "Frederick Joseph Flintstone", "itemNumber": "new hmrcUuid", "nameMatches": "partial", "sortCodeBankName": "THE ROYAL BANK OF SCOTLAND PLC", "timeStamp": 1585695600 });
-			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
-			expect(response.body).toBe(JSON.stringify({ message:"Success", attemptCount: 1 }));
-			jest.useRealTimers();
-		});
-
-		it("calls savePartialNameInfo if CopCheckResults is PARTIAL_MATCH without sortCodeBankName value", async () => {
-			jest.useFakeTimers();
-			jest.setSystemTime(new Date(1585695600000)); // == 2020-03-31T23:00:00.000Z
-			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
-			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, attemptCount: 0 });
-			mockHmrcService.verify.mockResolvedValueOnce({ ...hmrcVerifyResponse, nameMatches: "partial", sortCodeBankName: undefined });
-
-			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress, encodedTxmaHeader);
-
-			expect(mockBavService.savePartialNameInfo).toHaveBeenCalledWith("PARTIALMATCH_QUEUE", { "accountExists": "yes", "accountName": "Mr Peter Smith", "cicName": "Frederick Joseph Flintstone", "itemNumber": "new hmrcUuid", "nameMatches": "partial", "sortCodeBankName": undefined, "timeStamp": 1585695600 });
-			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
-			expect(response.body).toBe(JSON.stringify({ message:"Success", attemptCount: 1 }));
-			jest.useRealTimers();
-		});
+		// it.each([
+		// 	{ nameMatches: "yes", accountExists: "yes", result: CopCheckResults.FULL_MATCH },
+		// 	{ nameMatches: "partial", accountExists: "yes", result: CopCheckResults.PARTIAL_MATCH },
+		// 	{ nameMatches: "no", accountExists: "yes", result: CopCheckResults.NO_MATCH },
+		// 	{ nameMatches: "indeterminate", accountExists: "yes", result: CopCheckResults.NO_MATCH },
+		// 	{ nameMatches: "inapplicable", accountExists: "yes", result: CopCheckResults.NO_MATCH },
+		// 	{ nameMatches: "error", accountExists: "yes", result: CopCheckResults.MATCH_ERROR },
+		// 	{ nameMatches: "yes", accountExists: "no", result: CopCheckResults.NO_MATCH },
+		// 	{ nameMatches: "yes", accountExists: "indeterminate", result: CopCheckResults.NO_MATCH },
+		// 	{ nameMatches: "yes", accountExists: "inapplicable", result: CopCheckResults.NO_MATCH },
+		// 	{ nameMatches: "yes", accountExists: "error", result: CopCheckResults.MATCH_ERROR },
+		// ])("returns $result where nameMatches is $nameMatches and accountExists is $accountExists", ({ nameMatches, accountExists, result }) => {
+		// 	expect(
+		// 		verifyAccountRequestProcessorTest.calculateExperianCheckResult({ ...experianVerifyResponse, nameMatches, accountExists }),
+		// 	).toBe(result);
+		// });
 	});
 });

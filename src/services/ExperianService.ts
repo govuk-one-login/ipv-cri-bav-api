@@ -52,31 +52,26 @@ export class ExperianService {
 			"Accept":"application/json"
     	};
 
-		console.log("PARAMS PRINT", params)
-
     	let retryCount = 0;
     	let exponentialBackOffPeriod = this.backoffPeriodMs;
     	while (retryCount <= this.maxRetries) {
 			
 				try {
+
 					const endpoint = `${this.experianBaseUrl}/${Constants.EXPERIAN_VERIFY_ENDPOINT_PATH}`;
 					this.logger.info("Sending verify request to Experian", { uuid, endpoint, retryCount });
-				
 					const { data } = await axios.post(endpoint, params, { headers });
-
-					console.log("Raw response data:", data);
-				
-					console.log("PARSED DATA", data)			
 					const decisionElements = data?.clientResponsePayload?.decisionElements;
-					console.log("DEC ELEMENTS", decisionElements)
-					if (decisionElements && decisionElements.length > 2 && decisionElements[2].scores && decisionElements[2].scores.length > 0) {
-						const personalDetailsScore = decisionElements[2].scores[0].score;
-						console.log("PD SCORE", personalDetailsScore);
-						return personalDetailsScore;
-					} else {
-						console.error("Decision elements or scores missing");
-						return null;
-					}
+
+					// this.logger.debug({
+					// 	message: "Recieved response from Experian verify request",
+					// 	eventType: decisionElements[1].auditLogs[0].eventType,
+					// 	eventOutcome: decisionElements[1].auditLogs[0].eventOutcome
+					// });
+
+					const personalDetailsScore = decisionElements[2].scores[0].score;
+					return personalDetailsScore;
+					
 				} catch (error: any) {
     			const message = "Error sending verify request to Experian";
     			this.logger.error({ message, messageCode: MessageCodes.FAILED_VERIFYING_ACCOUNT, statusCode: error?.response?.status });

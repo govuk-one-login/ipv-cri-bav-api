@@ -63,7 +63,7 @@
     "restricted": {
       "type": "object",
       "properties": {
-        "CoP_request_details": {
+        "Experian_request_details": {
           "type": "array",
           "items": [
             {
@@ -104,7 +104,7 @@
         }
       },
       "required": [
-        "CoP_request_details",
+        "Experian_request_details",
         "device_information"
       ]
     }
