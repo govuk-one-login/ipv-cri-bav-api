@@ -12,7 +12,7 @@ export interface ExperianVerifyResponse {
 }
 
 export interface ExperianHCResponse {
-	personalDataScore: number
+	personalDataScore: number;
 }
 
 export interface ClientResponsePayload {

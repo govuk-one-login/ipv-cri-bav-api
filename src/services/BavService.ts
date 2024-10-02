@@ -276,10 +276,6 @@ export class BavService {
 
 	async saveExperianCheckResult(sessionId: string, experianCheckResult?: ExperianCheckResult, attemptCount?: number): Promise<void> {
 		this.logger.info({ message: `Updating ${this.tableName} table with experianCheckResult`, experianCheckResult });
-
-		if (attemptCount && attemptCount === 1) {
-			experianCheckResult = undefined
-		}
 		
 		const updateStateCommand = new UpdateCommand({
 			TableName: this.tableName,
@@ -292,11 +288,7 @@ export class BavService {
 			},
 		});
 
-		const potato = experianCheckResult
-		
-
 		try {
-			console.log("hello geogre", updateStateCommand)
 			await this.dynamo.send(updateStateCommand);
 			this.logger.info({ message: "Saved experianCheckResult in dynamodb" });
 		} catch (error) {

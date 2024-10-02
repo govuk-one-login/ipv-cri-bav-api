@@ -36,54 +36,54 @@ export class ExperianService {
     async verify(
     	{ accountNumber, sortCode, name, uuid }: { accountNumber: string; sortCode: string; name: string; uuid: string }, token: string,
     ) {
-		const params = {
-			header: {
+    	const params = {
+    		header: {
 			  tenantId: uuid,
-			  requestType: "BAVConsumer-Standard"
-			},
-			account: { accountNumber, sortCode },
-    		subject: { name }
-		  }
+			  requestType: "BAVConsumer-Standard",
+    		},
+    		account: { accountNumber, sortCode },
+    		subject: { name },
+		  };
 		  
     	const headers = {
     		"User-Agent": Constants.EXPERIAN_USER_AGENT,
     		"Authorization": `Bearer ${token}`,
-			"Content-Type":"application/json",
-			"Accept":"application/json"
+    		"Content-Type":"application/json",
+    		"Accept":"application/json",
     	};
 
     	let retryCount = 0;
     	let exponentialBackOffPeriod = this.backoffPeriodMs;
     	while (retryCount <= this.maxRetries) {
 			
-				try {
+    		try {
 
-					const endpoint = `${this.experianBaseUrl}/${Constants.EXPERIAN_VERIFY_ENDPOINT_PATH}`;
-					this.logger.info("Sending verify request to Experian", { uuid, endpoint, retryCount });
-					const { data } = await axios.post(endpoint, params, { headers });
-					const decisionElements = data?.clientResponsePayload?.decisionElements;
+    			const endpoint = `${this.experianBaseUrl}/${Constants.EXPERIAN_VERIFY_ENDPOINT_PATH}`;
+    			this.logger.info("Sending verify request to Experian", { uuid, endpoint, retryCount });
+    			const { data } = await axios.post(endpoint, params, { headers });
+    			const decisionElements = data?.clientResponsePayload?.decisionElements;
 
-					// this.logger.debug({
-					// 	message: "Recieved response from Experian verify request",
-					// 	eventType: decisionElements[1].auditLogs[0].eventType,
-					// 	eventOutcome: decisionElements[1].auditLogs[0].eventOutcome
-					// });
+    			this.logger.debug({
+    				message: "Recieved response from Experian verify request",
+    				eventType: decisionElements[1].auditLogs[0].eventType,
+    				eventOutcome: decisionElements[1].auditLogs[0].eventOutcome,
+    			});
 
-					const personalDetailsScore = decisionElements[2].scores[0].score;
-					return personalDetailsScore;
+    			const personalDetailsScore = decisionElements[2].scores[0].score;
+    			return personalDetailsScore;
 					
-				} catch (error: any) {
+    		} catch (error: any) {
     			const message = "Error sending verify request to Experian";
     			this.logger.error({ message, messageCode: MessageCodes.FAILED_VERIFYING_ACCOUNT, statusCode: error?.response?.status });
 
-					if ((error?.response?.status === 500 || error?.response?.status === 429) && retryCount < this.maxRetries) {
-						this.logger.error(`Sleeping for ${exponentialBackOffPeriod} ms before retrying verification`, { retryCount });
-						await sleep(exponentialBackOffPeriod);
-						retryCount++;
-						exponentialBackOffPeriod = exponentialBackOffPeriod * 2;
-					} else {
-						throw new AppError(HttpCodesEnum.SERVER_ERROR, message);
-					}
+    			if ((error?.response?.status === 500 || error?.response?.status === 429) && retryCount < this.maxRetries) {
+    				this.logger.error(`Sleeping for ${exponentialBackOffPeriod} ms before retrying verification`, { retryCount });
+    				await sleep(exponentialBackOffPeriod);
+    				retryCount++;
+    				exponentialBackOffPeriod = exponentialBackOffPeriod * 2;
+    			} else {
+    				throw new AppError(HttpCodesEnum.SERVER_ERROR, message);
+    			}
     		}
     	}
     }
@@ -118,7 +118,7 @@ export class ExperianService {
     			this.logger.info("Received response from Experian token endpoint");
     			return data;
     		} catch (error: any) {
-    			this.logger.error({ message: "An error occurred when generating Experian token", statusCode: error?.response?.status, messageCode: MessageCodes.FAILED_GENERATING_HMRC_TOKEN });
+    			this.logger.error({ message: "An error occurred when generating Experian token", statusCode: error?.response?.status, messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN });
 
     			if (error?.response?.status === 500 && retryCount < this.maxRetries) {
     				this.logger.error(`generateToken - Retrying to generate experianToken. Sleeping for ${this.backoffPeriodMs} ms ${ExperianService.name} ${new Date().toISOString()}`, { retryCount });

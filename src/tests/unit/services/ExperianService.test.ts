@@ -11,7 +11,7 @@ import { AppError } from "../../../utils/AppError";
 import { Constants } from "../../../utils/Constants";
 import { sleep } from "../../../utils/Sleep";
 
-const experianBaseUrl = process.env.Experian_BASE_URL!;
+const experianBaseUrl = process.env.EXPERIAN_BASE_URL!;
 let experianServiceTest: ExperianService;
 const tokenResponse = {
 	"access_token": "token",
@@ -26,7 +26,7 @@ jest.mock(("../../../utils/Sleep"), () => ({
 
 describe("Experian Service", () => {
 	beforeAll(() => {
-		experianServiceTest = new ExperianService(logger, experianBaseUrl, 2000, 3);
+		experianServiceTest = new ExperianService(logger, experianBaseUrl, 2000, 2);
 	});
 
 	describe("#verify", () => {
@@ -42,28 +42,32 @@ describe("Experian Service", () => {
 
 			const response = await experianServiceTest.verify({ accountNumber, sortCode, name, uuid }, experianTokenSsmPath);
 
-			expect(logger.info).toHaveBeenCalledWith("Sending COP verify request to Experian", { uuid, endpoint, retryCount: 0 });
+			expect(logger.info).toHaveBeenCalledWith("Sending verify request to Experian", { uuid, endpoint, retryCount: 0 });
 			expect(axios.post).toHaveBeenCalledWith(
 				endpoint,
-				{
-					account: { accountNumber, sortCode },
-					subject: { name },
+				{	header: {
+					tenantId: uuid,
+					requestType: "BAVConsumer-Standard",
+				  },
+				account: { accountNumber, sortCode },
+				subject: { name },
 				},
 				{ 
 					headers: {
 						"User-Agent": Constants.EXPERIAN_USER_AGENT,
 						"Authorization": "Bearer dev/Experian/TOKEN",
-						"X-Tracking-Id": uuid,
+						"Content-Type":"application/json",
+						"Accept":"application/json",
 					},
 				},
 			);
 			
 			expect(logger.debug).toHaveBeenCalledWith({
 				message: "Recieved response from Experian verify request",
-				eventType: experianVerifyResponse.clientResponsePayload.decisionElements![1].auditLogs![0].eventType,
-				eventOutcome: experianVerifyResponse.clientResponsePayload.decisionElements![1].auditLogs![0].eventOutcome
+				eventType: experianVerifyResponse.clientResponsePayload.decisionElements[1].auditLogs![0].eventType,
+				eventOutcome: experianVerifyResponse.clientResponsePayload.decisionElements[1].auditLogs![0].eventOutcome,
 			});
-			expect(response).toEqual(experianVerifyResponse);
+			expect(response).toBe(9);
 		});
 
 		it("retries verify call with exponential backoff when 500 response is received", async () => {
@@ -81,24 +85,27 @@ describe("Experian Service", () => {
 			expect(logger.error).toHaveBeenCalledWith(
 				{ message: "Error sending verify request to Experian", messageCode: MessageCodes.FAILED_VERIFYING_ACCOUNT, statusCode: 500 },
 			);
-			expect(axios.post).toHaveBeenCalledTimes(4);
+			expect(axios.post).toHaveBeenCalledTimes(3);
 			expect(axios.post).toHaveBeenCalledWith(
 				endpoint,
-				{
-					account: { accountNumber, sortCode },
-					subject: { name },
+				{	header: {
+					tenantId: uuid,
+					requestType: "BAVConsumer-Standard",
+				  },
+				account: { accountNumber, sortCode },
+				subject: { name },
 				},
 				{ 
 					headers: {
 						"User-Agent": Constants.EXPERIAN_USER_AGENT,
 						"Authorization": "Bearer dev/Experian/TOKEN",
-						"X-Tracking-Id": uuid,
+						"Content-Type":"application/json",
+						"Accept":"application/json",
 					},
 				},
 			);
 			expect(sleep).toHaveBeenNthCalledWith(1, 2000);
 			expect(sleep).toHaveBeenNthCalledWith(2, 4000);
-			expect(sleep).toHaveBeenNthCalledWith(3, 8000);
 		});
 
 		it("retries verify call with exponential backoff when 429 response is received", async () => {
@@ -116,24 +123,27 @@ describe("Experian Service", () => {
 			expect(logger.error).toHaveBeenCalledWith(
 				{ message: "Error sending verify request to Experian", messageCode: MessageCodes.FAILED_VERIFYING_ACCOUNT, statusCode: 429 },
 			);
-			expect(axios.post).toHaveBeenCalledTimes(4);
+			expect(axios.post).toHaveBeenCalledTimes(3);
 			expect(axios.post).toHaveBeenCalledWith(
 				endpoint,
-				{
-					account: { accountNumber, sortCode },
-					subject: { name },
+				{	header: {
+					tenantId: uuid,
+					requestType: "BAVConsumer-Standard",
+				  },
+				account: { accountNumber, sortCode },
+				subject: { name },
 				},
 				{ 
 					headers: {
 						"User-Agent": Constants.EXPERIAN_USER_AGENT,
 						"Authorization": "Bearer dev/Experian/TOKEN",
-						"X-Tracking-Id": uuid,
+						"Content-Type":"application/json",
+						"Accept":"application/json",
 					},
 				},
 			);
 			expect(sleep).toHaveBeenNthCalledWith(1, 2000);
 			expect(sleep).toHaveBeenNthCalledWith(2, 4000);
-			expect(sleep).toHaveBeenNthCalledWith(3, 8000);
 		});
 
 		it("returns error if Experian verify call fails with non 500", async () => {
@@ -210,7 +220,7 @@ describe("Experian Service", () => {
 			expect(logger.error).toHaveBeenCalledWith(
 				{ message: "An error occurred when generating Experian token", statusCode: 500, messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN },
 			);
-			expect(axios.post).toHaveBeenCalledTimes(4);
+			expect(axios.post).toHaveBeenCalledTimes(3);
 			expect(axios.post).toHaveBeenCalledWith(`${experianBaseUrl}${Constants.EXPERIAN_TOKEN_ENDPOINT_PATH}`,
 				expectedParams,
 				config,

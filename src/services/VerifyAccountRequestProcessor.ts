@@ -10,7 +10,7 @@ import { MessageCodes } from "../models/enums/MessageCodes";
 import { TxmaEventNames } from "../models/enums/TxmaEvents";
 import { ExperianVerifyResponse, ExperianHCResponse } from "../models/IExperianResponse";
 import { PersonIdentityItem } from "../models/PersonIdentityItem";
-import { ISessionItem, ExperianCheckResult} from "../models/ISessionItem";
+import { ISessionItem, ExperianCheckResult } from "../models/ISessionItem";
 import { EnvironmentVariables, Constants } from "../utils/Constants";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
@@ -47,25 +47,15 @@ export class VerifyAccountRequestProcessor {
   	this.metrics = metrics;
   	logger.debug("metrics is  " + JSON.stringify(this.metrics));
   	this.metrics.addMetric("Called", MetricUnits.Count, 1);
-	console.log("pig")
 	  this.txmaQueueUrl = checkEnvironmentVariable(EnvironmentVariables.TXMA_QUEUE_URL, this.logger);
-	  console.log("dog")
 	  this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, this.logger);
-	  console.log("cat")
   	this.personIdentityTableName = checkEnvironmentVariable(EnvironmentVariables.PERSON_IDENTITY_TABLE_NAME, this.logger);
-	  console.log("hamster")
 		this.partialNameQueueUrl = checkEnvironmentVariable(EnvironmentVariables.PARTIAL_MATCHES_QEUEUE_URL, logger);
-		console.log("horse")
   	this.experianToken = EXPERIAN_TOKEN;
-	  console.log("pisheepg")
   	const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, this.logger);
-	  console.log("sheep")
   	const experianBaseUrl = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_BASE_URL, this.logger);
-	  console.log("lion")
   	const maxRetries = +checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_MAX_RETRIES, logger);
-	  console.log("tiger")
   	const experianBackoffPeriodMs = +checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_TOKEN_BACKOFF_PERIOD_MS, logger);
-	  console.log("pigooseg")
 
   	this.BavService = BavService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
   	this.ExperianService = ExperianService.getInstance(this.logger, experianBaseUrl, experianBackoffPeriodMs, maxRetries);
@@ -99,24 +89,18 @@ export class VerifyAccountRequestProcessor {
   		this.logger.error(`Session attempt count is ${session.attemptCount}, cannot have another attempt`, { messageCode: MessageCodes.TOO_MANY_RETRIES });
   		return Response(HttpCodesEnum.UNAUTHORIZED, "Too many attempts");
   	}
-	  console.log("mach")
 
   	const name = getFullName(person.name);
   	this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
 		const timeOfRequest = absoluteTimeNow();
-		console.log("poch")
-
   	let { experianUuid } = session;
-	  console.log("floc")
 
   	if (!experianUuid) {
   		experianUuid = randomUUID();
   		await this.BavService.saveExperianUuid(sessionId, experianUuid);
   	}
-	  console.log("twoch")
 
   	const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
-	  console.log("frick")
 
   	await this.BavService.sendToTXMA(
   		this.txmaQueueUrl,
@@ -143,13 +127,11 @@ export class VerifyAccountRequestProcessor {
   		},
 			encodedHeader,
   	);
-	  console.log("boing")
 
   	const verifyResponse = await this.ExperianService.verify(
   		{ accountNumber: paddedAccountNumber, sortCode, name, uuid: experianUuid },
   		this.experianToken,
   	);
-	  console.log("flring")
 
   	if (!verifyResponse) {
   		this.logger.error("No verify response received", { messageCode: MessageCodes.NO_VERIFY_RESPONSE });
@@ -177,11 +159,11 @@ export class VerifyAccountRequestProcessor {
   		this.personIdentityTableName,
   	);
 
+  	let attemptCount = session.attemptCount;
 	  
-  	const experianCheckResult = this.calculateExperianCheckResult(verifyResponse);
+  	const experianCheckResult = this.calculateExperianCheckResult(verifyResponse, attemptCount);
   	this.logger.debug(`experianCheckResult is ${experianCheckResult}`);
 	  
-  	let attemptCount
   	// If there is a full match attemptCount will be undefined because it doesn't matter
   	if (experianCheckResult !== ExperianCheckResults.FULL_MATCH) {
   		attemptCount = session.attemptCount ? session.attemptCount + 1 : 1;
@@ -194,9 +176,11 @@ export class VerifyAccountRequestProcessor {
   	}));
 	}
 
-	calculateExperianCheckResult(verifyResponse: number): ExperianCheckResult {
+	calculateExperianCheckResult(verifyResponse: number, attemptCount?: number): ExperianCheckResult {
 		if (verifyResponse === 9) {
 			return ExperianCheckResults.FULL_MATCH;
+		} else if (verifyResponse !== 9 && attemptCount && attemptCount < 1) {
+			return undefined;
 		} else {
 			return ExperianCheckResults.NO_MATCH;
 		}

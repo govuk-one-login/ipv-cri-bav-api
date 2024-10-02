@@ -146,7 +146,7 @@ describe("VerifyAccountHandler", () => {
 		mockedVerifyAccountRequestProcessor.processRequest.mockRejectedValueOnce("Error");
 
 		const response = await lambdaHandler(VALID_VERIFY_ACCOUNT, CONTEXT);
-
+		
 		expect(mockedVerifyAccountRequestProcessor.processRequest).toHaveBeenCalledTimes(1);
 		expect(response.statusCode).toEqual(HttpCodesEnum.SERVER_ERROR);
 		expect(response.body).toBe("Server Error");
