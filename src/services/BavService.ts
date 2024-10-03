@@ -310,7 +310,7 @@ export class BavService {
 				":authSessionState": AuthSessionState.BAV_DATA_RECEIVED,
 			},
 		});
-
+		
 		try {
 			await this.dynamo.send(updateStateCommand);
 			this.logger.info({ message: "Saved experianCheckResult in dynamodb" });

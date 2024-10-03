@@ -3312,12 +3312,16 @@ Resources:
           EXPERIAN_MAX_RETRIES: 2
           EXPERIAN_TOKEN_BACKOFF_PERIOD_MS: 5000 # 5 seconds
           PARTIAL_MATCHES_QEUEUE_URL: !Ref PartialMatchesQueue
+          CREDENTIAL_VENDOR_SSM_PATH: !Sub "/${Environment}/bav/vendor"
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${Environment}/HMRC/TOKEN"
+        - SSMParameterReadPolicy:
             ParameterName: !Sub "${Environment}/EXPERIAN/TOKEN"
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub "${Environment}/bav/vendor"
         - DynamoDBWritePolicy:
             TableName:
               Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"

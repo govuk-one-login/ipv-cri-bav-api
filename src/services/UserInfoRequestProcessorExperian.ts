@@ -153,7 +153,6 @@ export class UserInfoRequestProcessorExperian {
 			await this.BavService.updateSessionAuthState(session.sessionId, AuthSessionState.BAV_CRI_VC_ISSUED);
 
 			const txmaCoreFields = buildCoreEventFields(session, this.issuer, session.clientIpAddress);
-			console.log("BANANA", session);
 			await this.BavService.sendToTXMA(
 				this.txmaQueueUrl,
 				{

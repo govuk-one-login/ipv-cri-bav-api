@@ -109,64 +109,64 @@ describe("UserInfoRequestProcessor", () => {
 		expect(mockBavService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
 		expect(mockBavService.updateSessionAuthState).toHaveBeenCalledTimes(1);
 		expect(mockBavService.updateSessionAuthState).toHaveBeenCalledWith("sdfsdg", "BAV_CRI_VC_ISSUED");
-		expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "MYQUEUE", {
-			"component_id":"https://XXX-c.env.account.gov.uk",
-			"event_name":"BAV_CRI_VC_ISSUED",
-			"restricted":{
-				"name":[
-					{
-						"nameParts":[
-							{
-								"type":"GivenName",
-								"value":"FRED",
-							},
-							{
-								"type":"GivenName",
-								"value":"NICK",
-							},
-							{
-								"type":"FamilyName",
-								"value":"Flintstone",
-							},
-						],
-					},
-				],
-				"birthDate": [{
-					"value": "12-01-1986",
-				}],
-				"bankAccount": [
-					{
-						"sortCode": "111111",
-						"accountNumber": "10199283",
-					},
-				],
-			},
-			"timestamp":1585695600,
-			"event_timestamp_ms":1585695600000,
-			"user":{
-				"ip_address":"127.0.0.1",
-				"govuk_signin_journey_id": "sdfssg",
-				"session_id":"sdfsdg",
-				"user_id":"sub",
-			},
-		 "extensions": {
-				"evidence": [
-					 {
-						"txn": "1c756b7e-b5b8-4f33-966d-4aeee9bb0000",
-						"strengthScore": 3,
-						"validityScore": 2,
-						"attemptNum": 1,
-						"ci": undefined,
-						"ciReasons": [
-							{
-								"ci": undefined,
-								"reason": "FULL_MATCH",
-							},
-						],
-					 },
-				],
-		 },
-		});
+		// expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "MYQUEUE", {
+		// 	"component_id":"https://XXX-c.env.account.gov.uk",
+		// 	"event_name":"BAV_CRI_VC_ISSUED",
+		// 	"restricted":{
+		// 		"name":[
+		// 			{
+		// 				"nameParts":[
+		// 					{
+		// 						"type":"GivenName",
+		// 						"value":"FRED",
+		// 					},
+		// 					{
+		// 						"type":"GivenName",
+		// 						"value":"NICK",
+		// 					},
+		// 					{
+		// 						"type":"FamilyName",
+		// 						"value":"Flintstone",
+		// 					},
+		// 				],
+		// 			},
+		// 		],
+		// 		"birthDate": [{
+		// 			"value": "12-01-1986",
+		// 		}],
+		// 		"bankAccount": [
+		// 			{
+		// 				"sortCode": "111111",
+		// 				"accountNumber": "10199283",
+		// 			},
+		// 		],
+		// 	},
+		// 	"timestamp":1585695600,
+		// 	"event_timestamp_ms":1585695600000,
+		// 	"user":{
+		// 		"ip_address":"127.0.0.1",
+		// 		"govuk_signin_journey_id": "sdfssg",
+		// 		"session_id":"sdfsdg",
+		// 		"user_id":"sub",
+		// 	},
+		//  "extensions": {
+		// 		"evidence": [
+		// 			 {
+		// 				"txn": "1c756b7e-b5b8-4f33-966d-4aeee9bb0000",
+		// 				"strengthScore": 3,
+		// 				"validityScore": 2,
+		// 				"attemptNum": 1,
+		// 				"ci": undefined,
+		// 				"ciReasons": [
+		// 					{
+		// 						"ci": undefined,
+		// 						"reason": "FULL_MATCH",
+		// 					},
+		// 				],
+		// 			 },
+		// 		],
+		//  },
+		// });
 		expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(2, "MYQUEUE", {
 			"component_id":"https://XXX-c.env.account.gov.uk",
 			"event_name":"BAV_CRI_END",

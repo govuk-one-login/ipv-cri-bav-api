@@ -151,7 +151,6 @@ export class UserInfoRequestProcessorHmrc {
 
 			const txmaCoreFields = buildCoreEventFields(session, this.issuer, session.clientIpAddress);
 
-			console.log("APRICOT", session);
 			await this.BavService.sendToTXMA(
 				this.txmaQueueUrl,
 				{
