@@ -35,7 +35,7 @@ export class ExperianService {
     // eslint-disable-next-line max-lines-per-function
     async verify(
     	{ accountNumber, sortCode, name, uuid }: { accountNumber: string; sortCode: string; name: string; uuid: string }, token: string,
-    ) {
+    ): Promise<any> {
     	const params = {
     		header: {
 			  tenantId: uuid,
