@@ -142,7 +142,7 @@ export class VerifiableCredentialBuilder {
 				evidenceInfo,
 			],
 		};
-	};
+	}
 
 	build(): VerifiedCredential {
 		return this.credential;

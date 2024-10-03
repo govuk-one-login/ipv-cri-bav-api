@@ -42,21 +42,21 @@ export class VerifyAccountHandler implements LambdaInterface {
 			CREDENTIAL_VENDOR = await getParameter(credentialVendorSsmPath);
 
 			if (CREDENTIAL_VENDOR === "EXPERIAN") {
-			const experianTokenSsmPath = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_TOKEN_SSM_PATH, logger);
+				const experianTokenSsmPath = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_TOKEN_SSM_PATH, logger);
     		EXPERIAN_TOKEN = await getParameter(experianTokenSsmPath);
 
-			logger.appendKeys({ sessionId });
-			logger.info("Starting VerifyAccountRequestProcessorExperian");
+				logger.appendKeys({ sessionId });
+				logger.info("Starting VerifyAccountRequestProcessorExperian");
 
-			return await VerifyAccountRequestProcessorExperian.getInstance(logger, metrics, EXPERIAN_TOKEN).processRequest(sessionId, body, clientIpAddress, encodedHeader);
+				return await VerifyAccountRequestProcessorExperian.getInstance(logger, metrics, EXPERIAN_TOKEN).processRequest(sessionId, body, clientIpAddress, encodedHeader);
 			} else {
-			const hmrcTokenSsmPath = checkEnvironmentVariable(EnvironmentVariables.HMRC_TOKEN_SSM_PATH, logger);
+				const hmrcTokenSsmPath = checkEnvironmentVariable(EnvironmentVariables.HMRC_TOKEN_SSM_PATH, logger);
     		HMRC_TOKEN = await getParameter(hmrcTokenSsmPath);
 
-			logger.appendKeys({ sessionId });
-			logger.info("Starting VerifyAccountRequestProcessorHmrc");
+				logger.appendKeys({ sessionId });
+				logger.info("Starting VerifyAccountRequestProcessorHmrc");
 
-			return await VerifyAccountRequestProcessorExperian.getInstance(logger, metrics, HMRC_TOKEN).processRequest(sessionId, body, clientIpAddress, encodedHeader);
+				return await VerifyAccountRequestProcessorExperian.getInstance(logger, metrics, HMRC_TOKEN).processRequest(sessionId, body, clientIpAddress, encodedHeader);
 			}
 			
 			

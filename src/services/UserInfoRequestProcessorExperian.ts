@@ -40,7 +40,6 @@ export class UserInfoRequestProcessorExperian {
 	private readonly dnsSuffix: string;
 
 
-
 	constructor(logger: Logger, metrics: Metrics) {
   	this.logger = logger;
   	this.metrics = metrics;
@@ -154,34 +153,34 @@ export class UserInfoRequestProcessorExperian {
 			await this.BavService.updateSessionAuthState(session.sessionId, AuthSessionState.BAV_CRI_VC_ISSUED);
 
 			const txmaCoreFields = buildCoreEventFields(session, this.issuer, session.clientIpAddress);
-			console.log("BANANA", session)
-				await this.BavService.sendToTXMA(
-					this.txmaQueueUrl,
-					{
-						event_name: TxmaEventNames.BAV_CRI_VC_ISSUED,
-						...txmaCoreFields,
-						restricted:{
-							name: personInfo.name,
-							birthDate: personInfo.birthDate,
-							bankAccount: [{
-								sortCode: personInfo.sortCode,
-								accountNumber: personInfo.accountNumber,
-							}],
+			console.log("BANANA", session);
+			await this.BavService.sendToTXMA(
+				this.txmaQueueUrl,
+				{
+					event_name: TxmaEventNames.BAV_CRI_VC_ISSUED,
+					...txmaCoreFields,
+					restricted:{
+						name: personInfo.name,
+						birthDate: personInfo.birthDate,
+						bankAccount: [{
+							sortCode: personInfo.sortCode,
+							accountNumber: personInfo.accountNumber,
+						}],
 					  },
-						extensions: {
-							evidence: [
-								{
-									txn: session.vendorUuid!,
-									strengthScore: evidenceInfo.strengthScore,
-									validityScore: evidenceInfo.validityScore,
-									attemptNum: session.attemptCount || 1,
-									ci: evidenceInfo.ci,
-									ciReasons: [{
-										ci: evidenceInfo.ci?.[0],
-										reason: session.experianCheckResult,
-									}],
-								},
-							],
+					extensions: {
+						evidence: [
+							{
+								txn: session.vendorUuid!,
+								strengthScore: evidenceInfo.strengthScore,
+								validityScore: evidenceInfo.validityScore,
+								attemptNum: session.attemptCount || 1,
+								ci: evidenceInfo.ci,
+								ciReasons: [{
+									ci: evidenceInfo.ci?.[0],
+									reason: session.experianCheckResult,
+								}],
+							},
+						],
 					 },
 				});
 			
