@@ -35,7 +35,7 @@ export interface ISessionItem extends IBAVSession {
 	authSessionState: string;
 	evidence_requested?: EvidenceRequested;
 	copCheckResult?: CopCheckResult;
-	experianUuid?: string;
+	experianCheckResult?: ExperianCheckResult;
+	vendorUuid?: string;
 	attemptCount?: number;
 }
-

@@ -7,42 +7,39 @@ import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { Constants } from "../utils/Constants";
 import { randomUUID } from "crypto";
-import { CopCheckResult } from "../models/enums/CopCheckResult";
+import { ExperianCheckResult } from "../models/enums/ExperianCheckResult";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { mockCI, mockVcClaims } from "../tests/contract/mocks/VerifiableCredential";
 
-export class VerifiableCredentialService {
+export class VerifiableCredentialServiceExperian {
 	readonly logger: Logger;
 
 	readonly issuer: string;
 
 	readonly dnsSuffix: string;	
 
-	readonly credentialVendor: string;
-
 	private readonly kmsJwtAdapter: KmsJwtAdapter;
 
-	private static instance: VerifiableCredentialService;
+	private static instance: VerifiableCredentialServiceExperian;
 
-	constructor(kmsJwtAdapter: KmsJwtAdapter, issuer: string, logger: Logger, dnsSuffix: string, credentialVendor: string) {
+	constructor(kmsJwtAdapter: KmsJwtAdapter, issuer: string, logger: Logger, dnsSuffix: string) {
 		this.issuer = issuer;
 		this.logger = logger;
 		this.kmsJwtAdapter = kmsJwtAdapter;
 		this.dnsSuffix = dnsSuffix;
-		this.credentialVendor = credentialVendor;
 	}
 
-	static getInstance(kmsJwtAdapter: KmsJwtAdapter, issuer: string, logger: Logger, dnsSuffix: string, credentialVendor: string): VerifiableCredentialService {
-		if (!VerifiableCredentialService.instance) {
-			VerifiableCredentialService.instance = new VerifiableCredentialService(kmsJwtAdapter, issuer, logger, dnsSuffix, credentialVendor);
+	static getInstance(kmsJwtAdapter: KmsJwtAdapter, issuer: string, logger: Logger, dnsSuffix: string): VerifiableCredentialServiceExperian {
+		if (!VerifiableCredentialServiceExperian.instance) {
+			VerifiableCredentialServiceExperian.instance = new VerifiableCredentialServiceExperian(kmsJwtAdapter, issuer, logger, dnsSuffix);
 		}
-		return VerifiableCredentialService.instance;
+		return VerifiableCredentialServiceExperian.instance;
 	}
 
-	getSuccessEvidenceBlock(experianUuid: string): VerifiedCredentialEvidence {
+	getSuccessEvidenceBlock(vendorUuid: string): VerifiedCredentialEvidence {
 		return {
 			type: Constants.IDENTITY_CHECK,
-			txn: experianUuid,
+			txn: vendorUuid,
 			strengthScore: 3,
 			validityScore: 2,
 			checkDetails: [
@@ -54,10 +51,10 @@ export class VerifiableCredentialService {
 		};
 	}
 
-	getFailureEvidenceBlock(experianUuid: string): VerifiedCredentialEvidence {
+	getFailureEvidenceBlock(vendorUuid: string): VerifiedCredentialEvidence {
 		return {
 			type: Constants.IDENTITY_CHECK,
-			txn: experianUuid,
+			txn: vendorUuid,
 			strengthScore: 3,
 			validityScore: 0,
 			failedCheckDetails: [
@@ -77,9 +74,9 @@ export class VerifiableCredentialService {
 		sessionItem: ISessionItem, nameParts: PersonIdentityNamePart[], birthDate: PersonIdentityBirthDate[], bankAccountInfo: BankAccountInfo, getNow: () => number): Promise<{ signedJWT: string; evidenceInfo: VerifiedCredentialEvidence }> {
 		const now = getNow();
 		const subject = sessionItem.subject;
-		const evidenceInfo = sessionItem.copCheckResult === CopCheckResult.FULL_MATCH ?
-			this.getSuccessEvidenceBlock(sessionItem.experianUuid!) : this.getFailureEvidenceBlock(sessionItem.experianUuid!);
-		const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, birthDate, bankAccountInfo, evidenceInfo, this.credentialVendor)
+		const evidenceInfo = sessionItem.experianCheckResult === ExperianCheckResult.FULL_MATCH ?
+			this.getSuccessEvidenceBlock(sessionItem.vendorUuid!) : this.getFailureEvidenceBlock(sessionItem.vendorUuid!);
+		const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, birthDate, bankAccountInfo, evidenceInfo)
 			.build();
 		let result;
 		if (process.env.USE_MOCKED) {
@@ -120,9 +117,9 @@ export class VerifiableCredentialBuilder {
 
 	private readonly credential: VerifiedCredential;
 
-	constructor(nameParts: PersonIdentityNamePart[], birthDate: PersonIdentityBirthDate[], bankAccountInfo: BankAccountInfo, evidenceInfo: VerifiedCredentialEvidence, credentialVendor: string) {
+	constructor(nameParts: PersonIdentityNamePart[], birthDate: PersonIdentityBirthDate[], bankAccountInfo: BankAccountInfo, evidenceInfo: VerifiedCredentialEvidence) {
 		
-		const credentialObject = {
+		this.credential = {
 			"@context": [
 				Constants.W3_BASE_CONTEXT,
 				Constants.DI_CONTEXT,
@@ -137,6 +134,7 @@ export class VerifiableCredentialBuilder {
 						nameParts,
 					},
 				],
+				birthDate,
 				bankAccount: [
 					bankAccountInfo,
 				],
@@ -145,21 +143,7 @@ export class VerifiableCredentialBuilder {
 				evidenceInfo,
 			],
 		};
-
-		if (credentialVendor === "EXPERIAN") {
-			const credentialObjectDOB = {
-				...credentialObject,
-				credentialSubject: {
-					name: [...credentialObject.credentialSubject.name],
-					birthDate,
-					bankAccount: [...credentialObject.credentialSubject.bankAccount],
-				},
-			};
-			this.credential = credentialObjectDOB;
-		} else {
-			this.credential = credentialObject;
-		}
-	}
+	};
 
 	build(): VerifiedCredential {
 		return this.credential;

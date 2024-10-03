@@ -523,20 +523,20 @@ describe("BAV Service", () => {
 		});
 	});
 
-	describe("#saveExperianUuid", () => {
-		const experianUuid = "experianUuid";
+	describe("#saveVendorUuid", () => {
+		const vendorUuid = "vendorUuid";
 
 		it("saves account information to dynamo", async () => {
 			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
 
-			await bavService.saveExperianUuid(sessionId, experianUuid);
+			await bavService.saveVendorUuid(sessionId, vendorUuid);
 
 			expect(UpdateCommand).toHaveBeenCalledWith({
 				TableName: tableName,
 				Key: { sessionId },
-				UpdateExpression: "SET experianUuid = :experianUuid",
+				UpdateExpression: "SET vendorUuid = :vendorUuid",
 				ExpressionAttributeValues: {
-					":experianUuid": experianUuid,
+					":vendorUuid": vendorUuid,
 				},
 			});
 		});
@@ -544,11 +544,11 @@ describe("BAV Service", () => {
 		it("returns an error when account information cannot be saved to dynamo", async () => {
 			mockDynamoDbClient.send = jest.fn().mockRejectedValueOnce("Error!");
 
-			await expect(bavService.saveExperianUuid(sessionId, experianUuid)).rejects.toThrow(expect.objectContaining({
+			await expect(bavService.saveVendorUuid(sessionId, vendorUuid)).rejects.toThrow(expect.objectContaining({
 				statusCode: HttpCodesEnum.SERVER_ERROR,
-				message: "saveExperianUuid failed: got error saving experianUuid",
+				message: "saveVendorUuid failed: got error saving vendorUuid",
 			}));
-			expect(logger.error).toHaveBeenCalledWith({ message: "Got error saving experianUuid", messageCode: MessageCodes.FAILED_UPDATING_SESSION, error: "Error!" });
+			expect(logger.error).toHaveBeenCalledWith({ message: "Got error saving vendorUuid", messageCode: MessageCodes.FAILED_UPDATING_SESSION, error: "Error!" });
 		});
 	});
 

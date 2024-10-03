@@ -3,14 +3,14 @@ import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { randomUUID } from "crypto";
 import { BavService } from "./BavService";
-import { ExperianService } from "./ExperianService";
-import { ExperianCheckResults } from "../models/enums/Experian";
+import { HmrcService } from "./HmrcService";
+import { CopCheckResults } from "../models/enums/Hmrc";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { TxmaEventNames } from "../models/enums/TxmaEvents";
-import { ExperianVerifyResponse, ExperianHCResponse } from "../models/IExperianResponse";
+import { HmrcVerifyResponse, PartialNameSQSRecord } from "../models/IHmrcResponse";
 import { PersonIdentityItem } from "../models/PersonIdentityItem";
-import { ISessionItem, ExperianCheckResult } from "../models/ISessionItem";
+import { CopCheckResult, ISessionItem } from "../models/ISessionItem";
 import { EnvironmentVariables, Constants } from "../utils/Constants";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
@@ -21,8 +21,8 @@ import { VerifyAccountPayload } from "../type/VerifyAccountPayload";
 import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { APIGatewayProxyResult } from "aws-lambda";
 
-export class VerifyAccountRequestProcessor {
-  private static instance: VerifyAccountRequestProcessor;
+export class VerifyAccountRequestProcessorHmrc {
+  private static instance: VerifyAccountRequestProcessorHmrc;
 
   private readonly logger: Logger;
 
@@ -36,13 +36,13 @@ export class VerifyAccountRequestProcessor {
 
   private readonly BavService: BavService;
 
-  private readonly ExperianService: ExperianService;
+  private readonly HmrcService: HmrcService;
 
-  private readonly experianToken: string;
+  private readonly hmrcToken: string;
 
 	private readonly partialNameQueueUrl: string;
 
-	constructor(logger: Logger, metrics: Metrics, EXPERIAN_TOKEN: string) {
+	constructor(logger: Logger, metrics: Metrics, HMRC_TOKEN: string) {
   	this.logger = logger;
   	this.metrics = metrics;
   	logger.debug("metrics is  " + JSON.stringify(this.metrics));
@@ -51,21 +51,22 @@ export class VerifyAccountRequestProcessor {
 	  this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, this.logger);
   	this.personIdentityTableName = checkEnvironmentVariable(EnvironmentVariables.PERSON_IDENTITY_TABLE_NAME, this.logger);
 		this.partialNameQueueUrl = checkEnvironmentVariable(EnvironmentVariables.PARTIAL_MATCHES_QEUEUE_URL, logger);
-  	this.experianToken = EXPERIAN_TOKEN;
+  	this.hmrcToken = HMRC_TOKEN;
+
   	const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, this.logger);
-  	const experianBaseUrl = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_BASE_URL, this.logger);
-  	const maxRetries = +checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_MAX_RETRIES, logger);
-  	const experianBackoffPeriodMs = +checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_TOKEN_BACKOFF_PERIOD_MS, logger);
+  	const hmrcBaseUrl = checkEnvironmentVariable(EnvironmentVariables.HMRC_BASE_URL, this.logger);
+  	const maxRetries = +checkEnvironmentVariable(EnvironmentVariables.HMRC_MAX_RETRIES, logger);
+  	const hmrcBackoffPeriodMs = +checkEnvironmentVariable(EnvironmentVariables.HMRC_TOKEN_BACKOFF_PERIOD_MS, logger);
 
   	this.BavService = BavService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
-  	this.ExperianService = ExperianService.getInstance(this.logger, experianBaseUrl, experianBackoffPeriodMs, maxRetries);
+  	this.HmrcService = HmrcService.getInstance(this.logger, hmrcBaseUrl, hmrcBackoffPeriodMs, maxRetries);
 	}
 
-	static getInstance(logger: Logger, metrics: Metrics, EXPERIAN_TOKEN: string): VerifyAccountRequestProcessor {
-  	if (!VerifyAccountRequestProcessor.instance) {
-  		VerifyAccountRequestProcessor.instance = new VerifyAccountRequestProcessor(logger, metrics, EXPERIAN_TOKEN);
+	static getInstance(logger: Logger, metrics: Metrics, HMRC_TOKEN: string): VerifyAccountRequestProcessorHmrc {
+  	if (!VerifyAccountRequestProcessorHmrc.instance) {
+  		VerifyAccountRequestProcessorHmrc.instance = new VerifyAccountRequestProcessorHmrc(logger, metrics, HMRC_TOKEN);
   	}
-  	return VerifyAccountRequestProcessor.instance;
+  	return VerifyAccountRequestProcessorHmrc.instance;
 	}
 
 	// eslint-disable-next-line max-lines-per-function, complexity
@@ -74,7 +75,7 @@ export class VerifyAccountRequestProcessor {
   	const paddedAccountNumber = accountNumber.padStart(8, "0");
   	const person: PersonIdentityItem | undefined = await this.BavService.getPersonIdentityById(sessionId, this.personIdentityTableName);
   	const session: ISessionItem | undefined = await this.BavService.getSessionById(sessionId);
-	
+
   	if (!person) {
   		this.logger.error("No person found for session id", { messageCode: MessageCodes.PERSON_NOT_FOUND });
   		return Response(HttpCodesEnum.UNAUTHORIZED, `No person found with the session id: ${sessionId}`);
@@ -93,29 +94,28 @@ export class VerifyAccountRequestProcessor {
   	const name = getFullName(person.name);
   	this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
 		const timeOfRequest = absoluteTimeNow();
-  	let { experianUuid } = session;
 
-  	if (!experianUuid) {
-  		experianUuid = randomUUID();
-  		await this.BavService.saveExperianUuid(sessionId, experianUuid);
+  	let { vendorUuid } = session;
+  	if (!vendorUuid) {
+  		vendorUuid = randomUUID();
+  		await this.BavService.saveVendorUuid(sessionId, vendorUuid);
   	}
 
   	const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
-
   	await this.BavService.sendToTXMA(
   		this.txmaQueueUrl,
   		{
-  			event_name: TxmaEventNames.BAV_EXPERIAN_REQUEST_SENT,
+  			event_name: TxmaEventNames.BAV_COP_REQUEST_SENT,
   			...coreEventFields,
   			extensions:{
   				evidence:[
 						 {
-  						txn: experianUuid,
+  						txn: vendorUuid,
   					},
   				],
 			 },
 			 restricted:{
-  				"Experian_request_details": [
+  				"CoP_request_details": [
 					 {
   						name,
   						sortCode,
@@ -128,25 +128,25 @@ export class VerifyAccountRequestProcessor {
 			encodedHeader,
   	);
 
-  	const verifyResponse = await this.ExperianService.verify(
-  		{ accountNumber: paddedAccountNumber, sortCode, name, uuid: experianUuid },
-  		this.experianToken,
+  	const verifyResponse = await this.HmrcService.verify(
+  		{ accountNumber: paddedAccountNumber, sortCode, name, uuid: vendorUuid },
+  		this.hmrcToken,
   	);
 
   	if (!verifyResponse) {
-  		this.logger.error("No verify response received", { messageCode: MessageCodes.NO_VERIFY_RESPONSE });
+  		this.logger.error("No verify reponse recieved", { messageCode: MessageCodes.NO_VERIFY_RESPONSE });
   		return Response(HttpCodesEnum.SERVER_ERROR, "Could not verify account");
   	}
 
   	await this.BavService.sendToTXMA(
   		this.txmaQueueUrl,
   		{
-  			event_name: TxmaEventNames.BAV_EXPERIAN_RESPONSE_RECEIVED,
+  			event_name: TxmaEventNames.BAV_COP_RESPONSE_RECEIVED,
   			...coreEventFields,
   			extensions:{
   				evidence:[
 						 {
-  						txn: experianUuid,
+  						txn: vendorUuid,
   					},
   				],
 			  },
@@ -159,16 +159,34 @@ export class VerifyAccountRequestProcessor {
   		this.personIdentityTableName,
   	);
 
-  	let attemptCount = session.attemptCount;
-	  
-  	const experianCheckResult = this.calculateExperianCheckResult(verifyResponse, attemptCount);
-  	this.logger.debug(`experianCheckResult is ${experianCheckResult}`);
-	  
+  	const copCheckResult = this.calculateCopCheckResult(verifyResponse);
+  	this.logger.debug(`copCheckResult is ${copCheckResult}`);
+
+  	if (copCheckResult === CopCheckResults.MATCH_ERROR) {
+  		this.logger.warn("Error received in COP verify response");
+  		return Response(HttpCodesEnum.SERVER_ERROR, "Error received in COP verify response");
+  	}
+
+  	let attemptCount;
   	// If there is a full match attemptCount will be undefined because it doesn't matter
-  	if (experianCheckResult !== ExperianCheckResults.FULL_MATCH) {
+  	if (copCheckResult !== CopCheckResults.FULL_MATCH) {
   		attemptCount = session.attemptCount ? session.attemptCount + 1 : 1;
   	}
-  	await this.BavService.saveExperianCheckResult(sessionId, experianCheckResult, attemptCount);
+  	await this.BavService.saveCopCheckResult(sessionId, copCheckResult, attemptCount);
+
+		if (copCheckResult === CopCheckResults.PARTIAL_MATCH) {
+			const partialNameRecord: PartialNameSQSRecord = {
+				itemNumber: vendorUuid,
+				timeStamp: timeOfRequest,
+				cicName: name,
+				accountName: verifyResponse.accountName,
+				accountExists: verifyResponse.accountExists,
+				nameMatches: verifyResponse.nameMatches,
+				sortCodeBankName: verifyResponse.sortCodeBankName,
+			};
+			
+			await this.BavService.savePartialNameInfo(this.partialNameQueueUrl, partialNameRecord);
+		}
 
   	return Response(HttpCodesEnum.OK, JSON.stringify({
   		message: "Success",
@@ -176,13 +194,15 @@ export class VerifyAccountRequestProcessor {
   	}));
 	}
 
-	calculateExperianCheckResult(verifyResponse: number, attemptCount?: number): ExperianCheckResult {
-		if (verifyResponse === 9) {
-			return ExperianCheckResults.FULL_MATCH;
-		} else if (verifyResponse !== 9 && attemptCount && attemptCount < 1) {
-			return undefined;
-		} else {
-			return ExperianCheckResults.NO_MATCH;
-		}
+	calculateCopCheckResult(verifyResponse: HmrcVerifyResponse): CopCheckResult {
+  	if (verifyResponse.nameMatches ===  "yes" && verifyResponse.accountExists === "yes") {
+  		return CopCheckResults.FULL_MATCH;
+  	} else if (verifyResponse.nameMatches ===  "partial" && verifyResponse.accountExists === "yes") {
+  		return CopCheckResults.PARTIAL_MATCH;
+  	} else if (verifyResponse.nameMatches ===  "error" || verifyResponse.accountExists === "error") {
+  		return CopCheckResults.MATCH_ERROR;
+  	} else {
+  		return CopCheckResults.NO_MATCH;
+  	}
 	}
 }

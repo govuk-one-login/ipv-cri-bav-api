@@ -143,7 +143,7 @@ describe("HMRC Service", () => {
 		it("returns error if HMRC verify call fails with non 500", async () => {
 			const error = {
 				response: {
-					status: 400, message: "Bad requesr",
+					status: 400, message: "Bad request",
 				},
 			};
 			jest.spyOn(axios, "post").mockRejectedValueOnce(error);

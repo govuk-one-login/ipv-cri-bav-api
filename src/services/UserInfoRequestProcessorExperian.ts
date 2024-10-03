@@ -16,10 +16,10 @@ import { Response } from "../utils/Response";
 import { buildCoreEventFields } from "../utils/TxmaEvent";
 import { eventToSubjectIdentifier } from "../utils/Validations";
 import { AppError } from "../utils/AppError";
-import { VerifiableCredentialService } from "./VerifiableCredentialService";
+import { VerifiableCredentialServiceExperian } from "./VerifiableCredentialServiceExperian";
 
-export class UserInfoRequestProcessor {
-  private static instance: UserInfoRequestProcessor;
+export class UserInfoRequestProcessorExperian {
+  private static instance: UserInfoRequestProcessorExperian;
 
   private readonly logger: Logger;
 
@@ -35,14 +35,13 @@ export class UserInfoRequestProcessor {
 
   private readonly kmsDecryptor: KmsJwtAdapter;
 
-	private readonly verifiableCredentialService: VerifiableCredentialService;
+	private readonly verifiableCredentialService: VerifiableCredentialServiceExperian;
 
 	private readonly dnsSuffix: string;
 
-	private readonly credentialVendor: string;
 
 
-	constructor(logger: Logger, metrics: Metrics, CREDENTIAL_VENDOR: string) {
+	constructor(logger: Logger, metrics: Metrics) {
   	this.logger = logger;
   	this.metrics = metrics;
   	logger.debug("metrics is  " + JSON.stringify(this.metrics));
@@ -57,15 +56,14 @@ export class UserInfoRequestProcessor {
 
   	this.BavService = BavService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
   	this.kmsDecryptor = new KmsJwtAdapter(signinKeyIds);
-		this.credentialVendor = CREDENTIAL_VENDOR;
-		this.verifiableCredentialService = VerifiableCredentialService.getInstance(this.kmsDecryptor, this.issuer, this.logger, this.dnsSuffix, this.credentialVendor);
+		this.verifiableCredentialService = VerifiableCredentialServiceExperian.getInstance(this.kmsDecryptor, this.issuer, this.logger, this.dnsSuffix);
 	}
 
-	static getInstance(logger: Logger, metrics: Metrics, CREDENTIAL_VENDOR: string): UserInfoRequestProcessor {
-  	if (!UserInfoRequestProcessor.instance) {
-  		UserInfoRequestProcessor.instance = new UserInfoRequestProcessor(logger, metrics, CREDENTIAL_VENDOR);
+	static getInstance(logger: Logger, metrics: Metrics): UserInfoRequestProcessorExperian {
+  	if (!UserInfoRequestProcessorExperian.instance) {
+  		UserInfoRequestProcessorExperian.instance = new UserInfoRequestProcessorExperian(logger, metrics);
   	}
-  	return UserInfoRequestProcessor.instance;
+  	return UserInfoRequestProcessorExperian.instance;
 	}
 
 	// eslint-disable-next-line max-lines-per-function, complexity
@@ -156,35 +154,37 @@ export class UserInfoRequestProcessor {
 			await this.BavService.updateSessionAuthState(session.sessionId, AuthSessionState.BAV_CRI_VC_ISSUED);
 
 			const txmaCoreFields = buildCoreEventFields(session, this.issuer, session.clientIpAddress);
-			await this.BavService.sendToTXMA(
-				this.txmaQueueUrl,
-				{
-					event_name: TxmaEventNames.BAV_CRI_VC_ISSUED,
-					...txmaCoreFields,
-					restricted:{
-						name: personInfo.name,
-						birthDate: personInfo.birthDate,
-						bankAccount: [{
-							sortCode: personInfo.sortCode,
-							accountNumber: personInfo.accountNumber,
-						}],
-				  },
-					extensions: {
-						evidence: [
-							{
-								txn: session.experianUuid!,
-								strengthScore: evidenceInfo.strengthScore,
-								validityScore: evidenceInfo.validityScore,
-								attemptNum: session.attemptCount || 1,
-								ci: evidenceInfo.ci,
-								ciReasons: [{
-									ci: evidenceInfo.ci?.[0],
-									reason: session.copCheckResult,
-								}],
-							},
-						],
-				 },
+			console.log("BANANA", session)
+				await this.BavService.sendToTXMA(
+					this.txmaQueueUrl,
+					{
+						event_name: TxmaEventNames.BAV_CRI_VC_ISSUED,
+						...txmaCoreFields,
+						restricted:{
+							name: personInfo.name,
+							birthDate: personInfo.birthDate,
+							bankAccount: [{
+								sortCode: personInfo.sortCode,
+								accountNumber: personInfo.accountNumber,
+							}],
+					  },
+						extensions: {
+							evidence: [
+								{
+									txn: session.vendorUuid!,
+									strengthScore: evidenceInfo.strengthScore,
+									validityScore: evidenceInfo.validityScore,
+									attemptNum: session.attemptCount || 1,
+									ci: evidenceInfo.ci,
+									ciReasons: [{
+										ci: evidenceInfo.ci?.[0],
+										reason: session.experianCheckResult,
+									}],
+								},
+							],
+					 },
 				});
+			
 
 			await this.BavService.sendToTXMA(
 				this.txmaQueueUrl,

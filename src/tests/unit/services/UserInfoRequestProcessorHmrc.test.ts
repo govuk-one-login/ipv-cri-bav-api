@@ -1,5 +1,5 @@
 /* eslint-disable max-lines-per-function */
-import { UserInfoRequestProcessor } from "../../../services/UserInfoRequestProcessor";
+import { UserInfoRequestProcessorHmrc } from "../../../services/UserInfoRequestProcessorHmrc";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "jest-mock-extended";
 import { Logger } from "@aws-lambda-powertools/logger";
@@ -16,7 +16,7 @@ import { APIGatewayProxyResult } from "aws-lambda";
 /* eslint @typescript-eslint/unbound-method: 0 */
 /* eslint jest/unbound-method: error */
 
-let userInforequestProcessorTest: UserInfoRequestProcessor;
+let userInforequestProcessorTest: UserInfoRequestProcessorHmrc;
 const mockBavService = mock<BavService>();
 let mockSession: ISessionItem;
 let mockPerson: PersonIdentityItem;
@@ -26,7 +26,6 @@ const failingKmsJwtAdapterFactory = (_signingKeys: string) => new MockKmsJwtAdap
 
 const logger = mock<Logger>();
 const metrics = new Metrics({ namespace: "BAV" });
-const credentialVendor = "EXPERIAN";
 
 function getMockSessionItem(): ISessionItem {
 	const sess: ISessionItem = {
@@ -47,7 +46,7 @@ function getMockSessionItem(): ISessionItem {
 		authSessionState: "BAV_ACCESS_TOKEN_ISSUED",
 		copCheckResult: "FULL_MATCH",
 		attemptCount: 1,
-		experianUuid: "1c756b7e-b5b8-4f33-966d-4aeee9bb0000",
+		vendorUuid: "1c756b7e-b5b8-4f33-966d-4aeee9bb0000",
 	};
 	return sess;
 }
@@ -77,7 +76,7 @@ describe("UserInfoRequestProcessor", () => {
 	beforeAll(() => {
 		mockSession = getMockSessionItem();
 		mockPerson = getMockPersonItem();
-		userInforequestProcessorTest = new UserInfoRequestProcessor(logger, metrics, credentialVendor);
+		userInforequestProcessorTest = new UserInfoRequestProcessorHmrc(logger, metrics);
 		// @ts-ignore
 		userInforequestProcessorTest.BavService = mockBavService;
 	});
@@ -103,8 +102,9 @@ describe("UserInfoRequestProcessor", () => {
 		// @ts-ignore
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 		jest.spyOn(Validations, "eventToSubjectIdentifier").mockResolvedValueOnce("sessionId");
-
 		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+		//mockHmrcService.verify.mockResolvedValueOnce({ ...hmrcVerifyResponse, nameMatches: "partial" });
+
 		expect(mockBavService.getSessionById).toHaveBeenCalledTimes(1);
 		expect(mockBavService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
 		expect(mockBavService.updateSessionAuthState).toHaveBeenCalledTimes(1);
@@ -131,9 +131,6 @@ describe("UserInfoRequestProcessor", () => {
 						],
 					},
 				],
-				"birthDate": [{
-					"value": "12-01-1986",
-				}],
 				"bankAccount": [
 					{
 						"sortCode": "111111",
