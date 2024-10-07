@@ -154,15 +154,6 @@ Resources:
         EntryPoints:
           - DequeueHandler.ts
 
-    Metadata: # Manage esbuild properties
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: "es2020"
-        Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
-        EntryPoints:
-          - DequeueHandler.ts
-
   EventTestBucket:
     Type: "AWS::S3::Bucket"
     DeletionPolicy: Delete
@@ -286,10 +277,6 @@ Resources:
             - kms:Decrypt
             Resource:
               Fn::ImportValue: !Sub "${BackendStack}-PersonIdentityTableEncryptionKey-arn"
-      PermissionsBoundary: !If
-        - UsePermissionsBoundary
-        - !Ref PermissionsBoundary
-        - !Ref AWS::NoValue
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
