@@ -6,6 +6,11 @@ export type CopCheckResult =
 	"NO_MATCH" |
 	"MATCH_ERROR";
 
+export type ExperianCheckResult =
+	"FULL_MATCH" |
+	"NO_MATCH" |
+	undefined;
+
 export interface IBAVSession {
 	given_names?: string[];
 	family_names?: string[];
@@ -30,7 +35,7 @@ export interface ISessionItem extends IBAVSession {
 	authSessionState: string;
 	evidence_requested?: EvidenceRequested;
 	copCheckResult?: CopCheckResult;
-	hmrcUuid?: string;
+	experianCheckResult?: ExperianCheckResult;
+	vendorUuid?: string;
 	attemptCount?: number;
 }
-

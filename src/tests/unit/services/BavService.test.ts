@@ -111,7 +111,7 @@ function getTXMAEventPayloadWithRestricted(): TxmaEvent {
 		event_timestamp_ms: 123000,
 		component_id: "issuer",
 		restricted:{
-			"CoP_request_details": [
+			"Experian_request_details": [
 			 {
 					name: "Frederick Joseph Flintstone",
 					sortCode: "111111",
@@ -137,7 +137,7 @@ function getTXMAEventPayloadWithRestrictedWithHeader(): TxmaEvent {
 		event_timestamp_ms: 123000,
 		component_id: "issuer",
 		restricted:{
-			"CoP_request_details": [
+			"Experian_request_details": [
 			 {
 					name: "Frederick Joseph Flintstone",
 					sortCode: "111111",
@@ -234,7 +234,7 @@ describe("BAV Service", () => {
 
 		it("Should send event to TxMA with the correct details for a payload without restricted present", async () => {  
 			const restrictedDetails = {
-				CoP_request_details: [{
+				Experian_request_details: [{
 					name: "Frederick Joseph Flintstone",
 					sortCode: "111111",
 					accountNumber: "111111",
@@ -442,37 +442,71 @@ describe("BAV Service", () => {
 		});
 	});
 
-	describe("#saveCopCheckResult", () => {
-		const copCheckResult = "FULL_MATCH";
+	describe("#saveExperianCheckResult", () => {
+		const experianCheckResult = "FULL_MATCH";
 
-		it("saves account information to dynamo", async () => {
+		it("saves account information to dynamo with experianCheckResult and attempt count on second attempt", async () => {
 			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
 
-			await bavService.saveCopCheckResult(sessionId, copCheckResult, 1);
+			await bavService.saveExperianCheckResult(sessionId, experianCheckResult, 2);
 
 			expect(UpdateCommand).toHaveBeenCalledWith({
 				TableName: tableName,
 				Key: { sessionId },
-				UpdateExpression: "SET copCheckResult = :copCheckResult, authSessionState = :authSessionState, attemptCount = :attemptCount",
+				UpdateExpression: "SET experianCheckResult = :experianCheckResult, authSessionState = :authSessionState, attemptCount = :attemptCount",
 				ExpressionAttributeValues: {
-					":copCheckResult": copCheckResult,
+					":experianCheckResult": experianCheckResult,
+					":attemptCount": 2,
+					":authSessionState": AuthSessionState.BAV_DATA_RECEIVED,
+				},
+			});
+		});
+
+		it("saves account information to dynamo with attemptCount but no experianResult on first unsuccessful attempt", async () => {
+			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+
+			await bavService.saveExperianCheckResult(sessionId, undefined, 1);
+
+			expect(UpdateCommand).toHaveBeenCalledWith({
+				TableName: tableName,
+				Key: { sessionId },
+				UpdateExpression:"SET  authSessionState = :authSessionState, attemptCount = :attemptCount",
+				ExpressionAttributeValues: {
+					":experianCheckResult": undefined,
 					":attemptCount": 1,
 					":authSessionState": AuthSessionState.BAV_DATA_RECEIVED,
 				},
 			});
 		});
 
-		it("saves account information to dynamo without attemptCount", async () => {
+		it("saves account information to dynamo", async () => {
 			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
 
-			await bavService.saveCopCheckResult(sessionId, copCheckResult, undefined);
+			await bavService.saveExperianCheckResult(sessionId, experianCheckResult, 2);
 
 			expect(UpdateCommand).toHaveBeenCalledWith({
 				TableName: tableName,
 				Key: { sessionId },
-				UpdateExpression: "SET copCheckResult = :copCheckResult, authSessionState = :authSessionState",
+				UpdateExpression: "SET experianCheckResult = :experianCheckResult, authSessionState = :authSessionState, attemptCount = :attemptCount",
 				ExpressionAttributeValues: {
-					":copCheckResult": copCheckResult,
+					":experianCheckResult": experianCheckResult,
+					":attemptCount": 2,
+					":authSessionState": AuthSessionState.BAV_DATA_RECEIVED,
+				},
+			});
+		});
+
+		it("saves account information to dynamo without attemptCount on first successful attempt", async () => {
+			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+
+			await bavService.saveExperianCheckResult(sessionId, experianCheckResult, undefined);
+
+			expect(UpdateCommand).toHaveBeenCalledWith({
+				TableName: tableName,
+				Key: { sessionId },
+				UpdateExpression: "SET experianCheckResult = :experianCheckResult, authSessionState = :authSessionState",
+				ExpressionAttributeValues: {
+					":experianCheckResult": experianCheckResult,
 					":authSessionState": AuthSessionState.BAV_DATA_RECEIVED,
 				},
 			});
@@ -481,28 +515,28 @@ describe("BAV Service", () => {
 		it("returns an error when account information cannot be saved to dynamo", async () => {
 			mockDynamoDbClient.send = jest.fn().mockRejectedValueOnce("Error!");
 
-			await expect(bavService.saveCopCheckResult(sessionId, copCheckResult)).rejects.toThrow(expect.objectContaining({
+			await expect(bavService.saveExperianCheckResult(sessionId, experianCheckResult)).rejects.toThrow(expect.objectContaining({
 				statusCode: HttpCodesEnum.SERVER_ERROR,
-				message: "saveCopCheckResult failed: got error saving copCheckResult",
+				message: "saveExperianCheckResult failed: got error saving experianCheckResult",
 			}));
-			expect(logger.error).toHaveBeenCalledWith({ message: "Got error saving copCheckResult", messageCode: MessageCodes.FAILED_UPDATING_SESSION, error: "Error!" });
+			expect(logger.error).toHaveBeenCalledWith({ message: "Got error saving experianCheckResult", messageCode: MessageCodes.FAILED_UPDATING_SESSION, error: "Error!" });
 		});
 	});
 
-	describe("#saveHmrcUuid", () => {
-		const hmrcUuid = "hmrcUuid";
+	describe("#saveVendorUuid", () => {
+		const vendorUuid = "vendorUuid";
 
 		it("saves account information to dynamo", async () => {
 			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
 
-			await bavService.saveHmrcUuid(sessionId, hmrcUuid);
+			await bavService.saveVendorUuid(sessionId, vendorUuid);
 
 			expect(UpdateCommand).toHaveBeenCalledWith({
 				TableName: tableName,
 				Key: { sessionId },
-				UpdateExpression: "SET hmrcUuid = :hmrcUuid",
+				UpdateExpression: "SET vendorUuid = :vendorUuid",
 				ExpressionAttributeValues: {
-					":hmrcUuid": hmrcUuid,
+					":vendorUuid": vendorUuid,
 				},
 			});
 		});
@@ -510,11 +544,11 @@ describe("BAV Service", () => {
 		it("returns an error when account information cannot be saved to dynamo", async () => {
 			mockDynamoDbClient.send = jest.fn().mockRejectedValueOnce("Error!");
 
-			await expect(bavService.saveHmrcUuid(sessionId, hmrcUuid)).rejects.toThrow(expect.objectContaining({
+			await expect(bavService.saveVendorUuid(sessionId, vendorUuid)).rejects.toThrow(expect.objectContaining({
 				statusCode: HttpCodesEnum.SERVER_ERROR,
-				message: "saveHmrcUuid failed: got error saving hmrcUuid",
+				message: "saveVendorUuid failed: got error saving vendorUuid",
 			}));
-			expect(logger.error).toHaveBeenCalledWith({ message: "Got error saving hmrcUuid", messageCode: MessageCodes.FAILED_UPDATING_SESSION, error: "Error!" });
+			expect(logger.error).toHaveBeenCalledWith({ message: "Got error saving vendorUuid", messageCode: MessageCodes.FAILED_UPDATING_SESSION, error: "Error!" });
 		});
 	});
 
