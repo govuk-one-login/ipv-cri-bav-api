@@ -26,7 +26,6 @@ const metrics = new Metrics({ namespace: "BAV" });
 const TOKEN_SSM_PARAM = "dfsgadfgadg";
 const sessionId = "sessionId";
 const encodedTxmaHeader = "ABCDEFG";
-const credentialIssuer = "EXPERIAN";
 const body = {
 	sort_code: "123456",
 	account_number: "12345678",
