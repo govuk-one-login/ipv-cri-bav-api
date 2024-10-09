@@ -4,8 +4,7 @@ import { Metrics } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { MessageCodes } from "./models/enums/MessageCodes";
 import { HttpCodesEnum } from "./models/enums/HttpCodesEnum";
-import { VerifyAccountRequestProcessorExperian } from "./services/VerifyAccountRequestProcessorExperian";
-import { VerifyAccountRequestProcessorHmrc } from "./services/VerifyAccountRequestProcessorHmrc";
+import { VerifyAccountRequestProcessor } from "./services/VerifyAccountRequestProcessor";
 import { VerifyAccountPayload } from "./type/VerifyAccountPayload";
 import { AppError } from "./utils/AppError";
 import { getParameter } from "./utils/Config";
@@ -24,8 +23,7 @@ export const logger = new Logger({
 
 const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE, serviceName: POWERTOOLS_SERVICE_NAME });
 
-let EXPERIAN_TOKEN: string;
-let HMRC_TOKEN: string;
+let VENDOR_TOKEN: string;
 let CREDENTIAL_VENDOR: string;
 export class VerifyAccountHandler implements LambdaInterface {
 
@@ -43,21 +41,18 @@ export class VerifyAccountHandler implements LambdaInterface {
 
 			if (CREDENTIAL_VENDOR === "HMRC") {
 				const hmrcTokenSsmPath = checkEnvironmentVariable(EnvironmentVariables.HMRC_TOKEN_SSM_PATH, logger);
-    		HMRC_TOKEN = await getParameter(hmrcTokenSsmPath);
+    			VENDOR_TOKEN = await getParameter(hmrcTokenSsmPath);
 
 				logger.appendKeys({ sessionId });
 				logger.info("Starting VerifyAccountRequestProcessorHmrc");
-				return await VerifyAccountRequestProcessorHmrc.getInstance(logger, metrics, HMRC_TOKEN).processRequest(sessionId, body, clientIpAddress, encodedHeader);
 			} else {
 				const experianTokenSsmPath = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_TOKEN_SSM_PATH, logger);
-				EXPERIAN_TOKEN = await getParameter(experianTokenSsmPath);
-	
+				VENDOR_TOKEN = await getParameter(experianTokenSsmPath);
 				logger.appendKeys({ sessionId });
 				logger.info("Starting VerifyAccountRequestProcessorExperian");
-				return await VerifyAccountRequestProcessorExperian.getInstance(logger, metrics, EXPERIAN_TOKEN).processRequest(sessionId, body, clientIpAddress, encodedHeader);
 			}
-			
-			
+			return await VerifyAccountRequestProcessor.getInstance(logger, metrics, VENDOR_TOKEN).processRequest(sessionId, body, clientIpAddress, encodedHeader, CREDENTIAL_VENDOR);
+
 		} catch (error: any) {
 			logger.error({ message: "An error has occurred.", error, messageCode: MessageCodes.SERVER_ERROR });
 			if (error instanceof AppError) {
