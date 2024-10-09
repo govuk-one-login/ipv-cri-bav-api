@@ -26,7 +26,7 @@ describe("VerifyAccountHandler", () => {
 
 		await lambdaHandler(VALID_VERIFY_ACCOUNT, CONTEXT);
 
-		expect(mockedVerifyAccountRequestProcessor.processRequest).toHaveBeenCalledTimes(1);
+		expect(mockedVerifyAccountRequestProcessor.processExperianRequest).toHaveBeenCalledTimes(1);
 	});
 
 	it("calls VerifyAccountRequestProcessor with clientIpAddress from X_FORWARDED_FOR header if present", async () => {
@@ -34,12 +34,11 @@ describe("VerifyAccountHandler", () => {
 
 		await lambdaHandler({ ...VALID_VERIFY_ACCOUNT, headers: { ...VALID_VERIFY_ACCOUNT.headers, [Constants.X_FORWARDED_FOR]: "x-forwarded-for" } }, CONTEXT);
 
-		expect(mockedVerifyAccountRequestProcessor.processRequest).toHaveBeenCalledWith(
+		expect(mockedVerifyAccountRequestProcessor.processExperianRequest).toHaveBeenCalledWith(
 			"732075c8-08e6-4b25-ad5b-d6cb865a18e5",
 			JSON.parse(VALID_VERIFY_ACCOUNT.body),
 			"x-forwarded-for",
 			"encoded header",
-			"/dev/bav/vendor",
 		);
 	});
 
@@ -48,12 +47,11 @@ describe("VerifyAccountHandler", () => {
 
 		await lambdaHandler(VALID_VERIFY_ACCOUNT, CONTEXT);
 
-		expect(mockedVerifyAccountRequestProcessor.processRequest).toHaveBeenCalledWith(
+		expect(mockedVerifyAccountRequestProcessor.processExperianRequest).toHaveBeenCalledWith(
 			"732075c8-08e6-4b25-ad5b-d6cb865a18e5",
 			JSON.parse(VALID_VERIFY_ACCOUNT.body),
 			"1.1.1",
 			"encoded header",
-			"/dev/bav/vendor",
 		);
 	});
 
@@ -145,11 +143,11 @@ describe("VerifyAccountHandler", () => {
 
 	it("returns error when VerifyAccountRequestProcessor throws an error", async () => {
 		VerifyAccountRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedVerifyAccountRequestProcessor);
-		mockedVerifyAccountRequestProcessor.processRequest.mockRejectedValueOnce("Error");
+		mockedVerifyAccountRequestProcessor.processExperianRequest.mockRejectedValueOnce("Error");
 
 		const response = await lambdaHandler(VALID_VERIFY_ACCOUNT, CONTEXT);
 		
-		expect(mockedVerifyAccountRequestProcessor.processRequest).toHaveBeenCalledTimes(1);
+		expect(mockedVerifyAccountRequestProcessor.processExperianRequest).toHaveBeenCalledTimes(1);
 		expect(response.statusCode).toEqual(HttpCodesEnum.SERVER_ERROR);
 		expect(response.body).toBe("Server Error");
 	});

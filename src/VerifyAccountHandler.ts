@@ -44,13 +44,14 @@ export class VerifyAccountHandler implements LambdaInterface {
 
 				logger.appendKeys({ sessionId });
 				logger.info("Starting VerifyAccountRequestProcessorHmrc");
+				return await VerifyAccountRequestProcessor.getInstance(logger, metrics, VENDOR_TOKEN).processHmrcRequest(sessionId, body, clientIpAddress, encodedHeader);
 			} else {
 				const experianTokenSsmPath = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_TOKEN_SSM_PATH, logger);
 				VENDOR_TOKEN = await getParameter(experianTokenSsmPath);
 				logger.appendKeys({ sessionId });
 				logger.info("Starting VerifyAccountRequestProcessorExperian");
+				return await VerifyAccountRequestProcessor.getInstance(logger, metrics, VENDOR_TOKEN).processExperianRequest(sessionId, body, clientIpAddress, encodedHeader);
 			}
-			return await VerifyAccountRequestProcessor.getInstance(logger, metrics, VENDOR_TOKEN).processRequest(sessionId, body, clientIpAddress, encodedHeader, CREDENTIAL_VENDOR);
 
 		} catch (error: any) {
 			logger.error({ message: "An error has occurred.", error, messageCode: MessageCodes.SERVER_ERROR });
