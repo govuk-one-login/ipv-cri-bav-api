@@ -8,7 +8,6 @@ import { ExperianCheckResults } from "../models/enums/Experian";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { TxmaEventNames } from "../models/enums/TxmaEvents";
-import { ExperianVerifyResponse, ExperianHCResponse } from "../models/IExperianResponse";
 import { PersonIdentityItem } from "../models/PersonIdentityItem";
 import { ISessionItem, ExperianCheckResult } from "../models/ISessionItem";
 import { EnvironmentVariables, Constants } from "../utils/Constants";
@@ -18,7 +17,6 @@ import { getFullName } from "../utils/PersonIdentityUtils";
 import { Response } from "../utils/Response";
 import { buildCoreEventFields } from "../utils/TxmaEvent";
 import { VerifyAccountPayload } from "../type/VerifyAccountPayload";
-import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { APIGatewayProxyResult } from "aws-lambda";
 
 export class VerifyAccountRequestProcessorExperian {
@@ -92,7 +90,6 @@ export class VerifyAccountRequestProcessorExperian {
 
   	const name = getFullName(person.name);
   	this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
-		const timeOfRequest = absoluteTimeNow();
   	let { vendorUuid } = session;
 
   	if (!vendorUuid) {
@@ -120,7 +117,7 @@ export class VerifyAccountRequestProcessorExperian {
   						name,
   						sortCode,
   						accountNumber: paddedAccountNumber,
-  						attemptNum: session.attemptCount || 1,
+  						attemptNum: session.attemptCount ?? 1,
 					 },
   				],
 		 		},

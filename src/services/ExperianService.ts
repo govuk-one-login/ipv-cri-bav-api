@@ -4,7 +4,7 @@ import axios, { AxiosRequestConfig } from "axios";
 import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../models/enums/MessageCodes";
-import { ExperianVerifyResponse, ExperianTokenResponse } from "../models/IExperianResponse";
+import { ExperianTokenResponse } from "../models/IExperianResponse";
 import { sleep } from "../utils/Sleep";
 
 export class ExperianService {
@@ -71,7 +71,7 @@ export class ExperianService {
 
     			let personalDetailsScore;
 
-    			if (decisionElements[0] && decisionElements[0].warningsErrors && decisionElements[0].warningsErrors[0] && decisionElements[0].warningsErrors[0].responseCode) {
+    			if (decisionElements[0]?.warningsErrors[0]?.responseCode) {
     				switch (decisionElements[0].warningsErrors[0].responseCode) {
     					case 2:
 						  personalDetailsScore = 1;
@@ -104,7 +104,6 @@ export class ExperianService {
     			} else {
     				personalDetailsScore = decisionElements[2].scores[0].score;
     			}
-
     			return personalDetailsScore;
     		} catch (error: any) {
     			const message = "Error sending verify request to Experian";

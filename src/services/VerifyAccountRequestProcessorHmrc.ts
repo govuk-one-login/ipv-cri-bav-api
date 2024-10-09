@@ -120,7 +120,7 @@ export class VerifyAccountRequestProcessorHmrc {
   						name,
   						sortCode,
   						accountNumber: paddedAccountNumber,
-  						attemptNum: session.attemptCount || 1,
+  						attemptNum: session.attemptCount ?? 1,
 					 },
   				],
 		 		},
