@@ -149,7 +149,7 @@ describe("Experian Service", () => {
 		it("returns error if Experian verify call fails with non 500", async () => {
 			const error = {
 				response: {
-					status: 400, message: "Bad request",
+					status: 400, message: "Bad requesr",
 				},
 			};
 			jest.spyOn(axios, "post").mockRejectedValueOnce(error);

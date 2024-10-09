@@ -3,8 +3,6 @@ import { PersonIdentityName, PersonIdentityBirthDate } from "../models/PersonIde
 
 export type TxmaEventName =
 	"BAV_CRI_START" | 
-	"BAV_COP_REQUEST_SENT" | 
-	"BAV_COP_RESPONSE_RECEIVED" | 
 	"BAV_EXPERIAN_REQUEST_SENT" |
 	"BAV_EXPERIAN_RESPONSE_RECEIVED" |
 	"BAV_CRI_VC_ISSUED" |
@@ -37,19 +35,11 @@ export interface ExperianRequestDetails {
 	attemptNum: number;
 }
 
-export interface CopRequestDetails {
-	name: string;
-	sortCode: string;
-	accountNumber: string;
-	attemptNum: number;
-}
-
 export interface RestrictedObject {
 	name?: PersonIdentityName[];
 	birthDate?: PersonIdentityBirthDate[];
 	bankAccount?: BankAccountDetails[];
 	Experian_request_details?: ExperianRequestDetails[];
-	CoP_request_details?: CopRequestDetails[];
 	device_information?: {
 		encoded: string;
 	};

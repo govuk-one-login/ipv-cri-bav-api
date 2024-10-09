@@ -4,8 +4,6 @@ import { HARNESS_API_INSTANCE } from "./ApiTestSteps";
 import { TxmaEvent, TxmaEventName } from "../../utils/TxmaEvent";
 import { CloudWatchClient, DescribeAlarmsCommand, DescribeAlarmsCommandInput } from "@aws-sdk/client-cloudwatch";
 const client = new CloudWatchClient({ region: "eu-west-2" });
-import * as BAV_COP_REQUEST_SENT_SCHEMA from "../data/BAV_COP_REQUEST_SENT_SCHEMA.json";
-import * as BAV_COP_RESPONSE_RECEIVED_SCHEMA from "../data/BAV_COP_RESPONSE_RECEIVED_SCHEMA.json";
 import * as BAV_EXPERIAN_REQUEST_SENT_SCHEMA from "../data/BAV_EXPERIAN_REQUEST_SENT_SCHEMA.json";
 import * as BAV_EXPERIAN_RESPONSE_RECEIVED_SCHEMA from "../data/BAV_EXPERIAN_RESPONSE_RECEIVED_SCHEMA.json";
 import * as BAV_CRI_END_SCHEMA from "../data/BAV_CRI_END_SCHEMA.json";
@@ -14,9 +12,8 @@ import * as BAV_CRI_START_SCHEMA from "../data/BAV_CRI_START_SCHEMA.json";
 import * as BAV_CRI_VC_ISSUED_SCHEMA from "../data/BAV_CRI_VC_ISSUED_SCHEMA.json";
 
 const ajv = new Ajv({ strictTuples: false });
-ajv.addSchema(BAV_COP_REQUEST_SENT_SCHEMA, "BAV_COP_REQUEST_SENT_SCHEMA");
-ajv.addSchema(BAV_COP_RESPONSE_RECEIVED_SCHEMA, "BAV_COP_RESPONSE_RECEIVED_SCHEMA");
 ajv.addSchema(BAV_EXPERIAN_REQUEST_SENT_SCHEMA, "BAV_EXPERIAN_REQUEST_SENT_SCHEMA");
+ajv.addSchema(BAV_EXPERIAN_RESPONSE_RECEIVED_SCHEMA, "BAV_EXPERIAN_RESPONSE_RECEIVED_SCHEMA");
 ajv.addSchema(BAV_EXPERIAN_RESPONSE_RECEIVED_SCHEMA, "BAV_EXPERIAN_RESPONSE_RECEIVED_SCHEMA");
 ajv.addSchema(BAV_CRI_END_SCHEMA, "BAV_CRI_END_SCHEMA");
 ajv.addSchema(BAV_CRI_START_SCHEMA, "BAV_CRI_START_SCHEMA");
@@ -31,8 +28,6 @@ interface TestHarnessReponse {
 
 interface AllTxmaEvents {
 	"BAV_CRI_START"?: TxmaEvent;
-	"BAV_COP_REQUEST_SENT"?: TxmaEvent;
-	"BAV_COP_RESPONSE_RECEIVED"?: TxmaEvent;
 	"BAV_EXPERIAN_REQUEST_SENT"?: TxmaEvent;
 	"BAV_EXPERIAN_RESPONSE_RECEIVED"?: TxmaEvent;
 	"BAV_CRI_VC_ISSUED"?: TxmaEvent;
