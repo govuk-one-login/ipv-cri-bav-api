@@ -233,7 +233,6 @@ describe("VerifyAccountRequestProcessor", () => {
 
 			const response = await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress, encodedTxmaHeader);
 
-			expect(mockBavService.saveExperianCheckResult);
 			expect(mockBavService.saveExperianCheckResult).toHaveBeenCalledWith(sessionId, "NO_MATCH", 1);
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
 			expect(response.body).toBe(JSON.stringify({ message:"Success", attemptCount: 1 }));
