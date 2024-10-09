@@ -4,7 +4,7 @@ import { DynamoDBDocument, GetCommand, PutCommand, QueryCommandInput, UpdateComm
 import { randomUUID } from "crypto";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../models/enums/MessageCodes";
-import { ISessionItem, ExperianCheckResult } from "../models/ISessionItem";
+import { ISessionItem, ExperianCheckResult, CopCheckResult } from "../models/ISessionItem";
 import { SharedClaimsPersonIdentity, PersonIdentityItem, PersonIdentityName } from "../models/PersonIdentityItem";
 import { AppError } from "../utils/AppError";
 import { absoluteTimeNow, getAuthorizationCodeExpirationEpoch } from "../utils/DateTimeUtils";
@@ -274,6 +274,29 @@ export class BavService {
 		}
 	}
 
+	async saveCopCheckResult(sessionId: string, copCheckResult: CopCheckResult, attemptCount?: number): Promise<void> {
+		this.logger.info({ message: `Updating ${this.tableName} table with copCheckResult`, copCheckResult });
+
+		const updateStateCommand = new UpdateCommand({
+			TableName: this.tableName,
+			Key: { sessionId },
+			UpdateExpression: `SET copCheckResult = :copCheckResult, authSessionState = :authSessionState${attemptCount ? ", attemptCount = :attemptCount" : ""}`,
+			ExpressionAttributeValues: {
+				":copCheckResult": copCheckResult,
+				...(attemptCount && { ":attemptCount": attemptCount }),
+				":authSessionState": AuthSessionState.BAV_DATA_RECEIVED,
+			},
+		});
+
+		try {
+			await this.dynamo.send(updateStateCommand);
+			this.logger.info({ message: "Saved copCheckResult in dynamodb" });
+		} catch (error) {
+			this.logger.error({ message: "Got error saving copCheckResult", messageCode: MessageCodes.FAILED_UPDATING_SESSION, error });
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "saveCopCheckResult failed: got error saving copCheckResult");
+		}
+	}
+
 	async saveExperianCheckResult(sessionId: string, experianCheckResult?: ExperianCheckResult, attemptCount?: number): Promise<void> {
 		this.logger.info({ message: `Updating ${this.tableName} table with experianCheckResult`, experianCheckResult });
 		
@@ -287,7 +310,7 @@ export class BavService {
 				":authSessionState": AuthSessionState.BAV_DATA_RECEIVED,
 			},
 		});
-
+		
 		try {
 			await this.dynamo.send(updateStateCommand);
 			this.logger.info({ message: "Saved experianCheckResult in dynamodb" });
@@ -297,24 +320,24 @@ export class BavService {
 		}
 	}
 
-	async saveExperianUuid(sessionId: string, experianUuid: string): Promise<void> {
-		this.logger.info({ message: `Updating ${this.tableName} table with experianUuid`, experianUuid });
+	async saveVendorUuid(sessionId: string, vendorUuid: string): Promise<void> {
+		this.logger.info({ message: `Updating ${this.tableName} table with vendorUuid`, vendorUuid });
 
 		const updateStateCommand = new UpdateCommand({
 			TableName: this.tableName,
 			Key: { sessionId },
-			UpdateExpression: "SET experianUuid = :experianUuid",
+			UpdateExpression: "SET vendorUuid = :vendorUuid",
 			ExpressionAttributeValues: {
-				":experianUuid": experianUuid,
+				":vendorUuid": vendorUuid,
 			},
 		});
 
 		try {
 			await this.dynamo.send(updateStateCommand);
-			this.logger.info({ message: "Saved experianUuid in dynamodb" });
+			this.logger.info({ message: "Saved vendorUuid in dynamodb" });
 		} catch (error) {
-			this.logger.error({ message: "Got error saving experianUuid", messageCode: MessageCodes.FAILED_UPDATING_SESSION, error });
-			throw new AppError(HttpCodesEnum.SERVER_ERROR, "saveExperianUuid failed: got error saving experianUuid");
+			this.logger.error({ message: "Got error saving vendorUuid", messageCode: MessageCodes.FAILED_UPDATING_SESSION, error });
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "saveVendorUuid failed: got error saving vendorUuid");
 		}
 	}
 

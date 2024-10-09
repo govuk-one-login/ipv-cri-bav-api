@@ -35,7 +35,7 @@ export class ExperianService {
     // eslint-disable-next-line max-lines-per-function
     async verify(
     	{ accountNumber, sortCode, name, uuid }: { accountNumber: string; sortCode: string; name: string; uuid: string }, token: string,
-    ) {
+    ): Promise<any> {
     	const params = {
     		header: {
 			  tenantId: uuid,
@@ -69,9 +69,43 @@ export class ExperianService {
     				eventOutcome: decisionElements[1].auditLogs[0].eventOutcome,
     			});
 
-    			const personalDetailsScore = decisionElements[2].scores[0].score;
+    			let personalDetailsScore;
+
+    			if (decisionElements[0] && decisionElements[0].warningsErrors && decisionElements[0].warningsErrors[0] && decisionElements[0].warningsErrors[0].responseCode) {
+    				switch (decisionElements[0].warningsErrors[0].responseCode) {
+    					case 2:
+						  personalDetailsScore = 1;
+						  this.logger.debug("Modulus check algorithm is unavailable for these account details and therefore Bank Wizard cannot confirm the details are valid");
+						  break;
+    					case 3:
+						  personalDetailsScore = 1;
+						  this.logger.debug("Account number does not use a modulus check algorithm and therefore Bank Wizard cannot confirm the details are valid");
+						  break;
+    					case 6:
+						  personalDetailsScore = 1;
+						  this.logger.debug("Bank or branch code is not in use");
+						  break;
+    					case 7:
+						  personalDetailsScore = 1;
+						  this.logger.debug("Modulus check has failed. Although the formats of the supplied fields are correct, one or more of them are incorrect");
+						  break;
+    					case 11:
+						  personalDetailsScore = 1;
+						  this.logger.debug("Sort Code has been closed");
+						  break;
+    					case 12:
+						  personalDetailsScore = 1;
+						  this.logger.debug("Branch has been transferred and the accounts have been redirected to another branch");
+						  break;
+    					default:
+						  this.logger.debug("No error");
+						  break;
+					  }
+    			} else {
+    				personalDetailsScore = decisionElements[2].scores[0].score;
+    			}
+
     			return personalDetailsScore;
-					
     		} catch (error: any) {
     			const message = "Error sending verify request to Experian";
     			this.logger.error({ message, messageCode: MessageCodes.FAILED_VERIFYING_ACCOUNT, statusCode: error?.response?.status });
