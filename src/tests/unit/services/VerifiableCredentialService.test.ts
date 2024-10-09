@@ -45,15 +45,15 @@ function getMockSessionItem(): ISessionItem {
 		clientIpAddress: "127.0.0.1",
 		authSessionState: "BAV_ACCESS_TOKEN_ISSUED",
 		copCheckResult: "FULL_MATCH",
-		experianUuid: "testId",
+		vendorUuid: "testId",
 	};
 	return sess;
 }
 
-const experianUuid = "testId";
+const vendorUuid = "testId";
 const successBlock = {
 	type: Constants.IDENTITY_CHECK,
-	txn: experianUuid,
+	txn: vendorUuid,
 	strengthScore: 3,
 	validityScore: 2,
 	checkDetails: [
@@ -65,7 +65,7 @@ const successBlock = {
 };
 const failureBlock = {
 	type: Constants.IDENTITY_CHECK,
-	txn: experianUuid,
+	txn: vendorUuid,
 	strengthScore: 3,
 	validityScore: 0,
 	failedCheckDetails: [
@@ -103,18 +103,18 @@ describe("VerifiableCredentialService", () => {
 
 	describe("evidence block generation", () => {
 		it("should return a success evidence block correctly", () => {
-			const evidenceBlock = service.getSuccessEvidenceBlock(experianUuid);
+			const evidenceBlock = service.getSuccessEvidenceBlock(vendorUuid);
 			expect(evidenceBlock).toEqual(expect.objectContaining({
-				txn: experianUuid,
+				txn: vendorUuid,
 				strengthScore: 3,
 				validityScore: 2,
 			}));
 		});
 
 		it("should return a failure evidence block correctly", () => {
-			const evidenceBlock = service.getFailureEvidenceBlock(experianUuid);
+			const evidenceBlock = service.getFailureEvidenceBlock(vendorUuid);
 			expect(evidenceBlock).toEqual(expect.objectContaining({
-				txn: experianUuid,
+				txn: vendorUuid,
 				strengthScore: 3,
 				validityScore: 0,
 				ci: expect.arrayContaining(["D15"]),

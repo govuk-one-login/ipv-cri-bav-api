@@ -172,7 +172,7 @@ export class UserInfoRequestProcessor {
 					extensions: {
 						evidence: [
 							{
-								txn: session.experianUuid!,
+								txn: session.vendorUuid!,
 								strengthScore: evidenceInfo.strengthScore,
 								validityScore: evidenceInfo.validityScore,
 								attemptNum: session.attemptCount || 1,

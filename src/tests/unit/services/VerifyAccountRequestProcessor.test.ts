@@ -14,10 +14,10 @@ import { VerifyAccountRequestProcessor } from "../../../services/VerifyAccountRe
 import { ExperianService } from "../../../services/ExperianService";
 import { Constants } from "../../../utils/Constants";
 
-const experianUuid = "new experianUuid";
+const vendorUuid = "new vendorUuid";
 jest.mock("crypto", () => ({
 	...jest.requireActual("crypto"),
-	randomUUID: () => experianUuid,
+	randomUUID: () => vendorUuid,
 }));
 const mockBavService = mock<BavService>();
 const mockExperianService = mock<ExperianService>();
@@ -101,14 +101,14 @@ describe("VerifyAccountRequestProcessor", () => {
 			});
 		});
 
-		it("generates and saves experianUuid if one doesn't exist", async () => {
+		it("generates and saves vendorUuid if one doesn't exist", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
-			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, experianUuid: undefined });
+			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, vendorUuid: undefined });
 			mockExperianService.verify.mockResolvedValueOnce(9);
 
 			await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress, encodedTxmaHeader);
 
-			expect(mockBavService.saveExperianUuid).toHaveBeenCalledWith(sessionId, experianUuid);
+			expect(mockBavService.saveVendorUuid).toHaveBeenCalledWith(sessionId, vendorUuid);
 	  });
       
 		it("returns error response if session has exceeded attemptCount", async () => {
@@ -126,13 +126,13 @@ describe("VerifyAccountRequestProcessor", () => {
 
 		it("saves account details to person identity table", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
-			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, experianUuid: "EXPERIAN_UUID" });
+			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, vendorUuid: "EXPERIAN_UUID" });
 			mockExperianService.verify.mockResolvedValueOnce(9);
 
 			await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress, encodedTxmaHeader);
 
 			expect(logger.appendKeys).toHaveBeenCalledWith({ govuk_signin_journey_id: session.clientSessionId });
-			expect(mockBavService.saveExperianUuid).not.toHaveBeenCalled();
+			expect(mockBavService.saveVendorUuid).not.toHaveBeenCalled();
 			expect(mockBavService.updateAccountDetails).toHaveBeenCalledWith(
 				{	sessionId, accountNumber: body.account_number, sortCode: body.sort_code },
 				process.env.PERSON_IDENTITY_TABLE_NAME,
@@ -146,14 +146,14 @@ describe("VerifyAccountRequestProcessor", () => {
 
 			await verifyAccountRequestProcessorTest.processRequest(sessionId, body, clientIpAddress, encodedTxmaHeader);
 
-			expect(mockExperianService.verify).toHaveBeenCalledWith({ accountNumber: body.account_number, sortCode: body.sort_code, name: "Frederick Joseph Flintstone", uuid: experianUuid }, TOKEN_SSM_PARAM );
+			expect(mockExperianService.verify).toHaveBeenCalledWith({ accountNumber: body.account_number, sortCode: body.sort_code, name: "Frederick Joseph Flintstone", uuid: vendorUuid }, TOKEN_SSM_PARAM );
 			expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "MYQUEUE", {
 				event_name: "BAV_EXPERIAN_REQUEST_SENT",
 				component_id: "https://XXX-c.env.account.gov.uk",
 				extensions: {
 					evidence: [
 				 		{
-					 		txn: "new experianUuid",
+					 		txn: "new vendorUuid",
 						},
 					],
 				},
@@ -184,7 +184,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				extensions: {
 					evidence: [
 				 		{
-					 		txn: "new experianUuid",
+					 		txn: "new vendorUuid",
 						},
 					],
 				},
@@ -211,7 +211,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				{ sessionId, accountNumber: "00123456", sortCode: body.sort_code },
 				process.env.PERSON_IDENTITY_TABLE_NAME,
 			);
-			expect(mockExperianService.verify).toHaveBeenCalledWith({ accountNumber: "00123456", sortCode: body.sort_code, name: "Frederick Joseph Flintstone", uuid: experianUuid }, TOKEN_SSM_PARAM );
+			expect(mockExperianService.verify).toHaveBeenCalledWith({ accountNumber: "00123456", sortCode: body.sort_code, name: "Frederick Joseph Flintstone", uuid: vendorUuid }, TOKEN_SSM_PARAM );
 		});
 
 		it("saves saveExperianCheckResult and returns success where there has been a match", async () => {

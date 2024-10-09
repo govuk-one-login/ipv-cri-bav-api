@@ -39,10 +39,10 @@ export class VerifiableCredentialService {
 		return VerifiableCredentialService.instance;
 	}
 
-	getSuccessEvidenceBlock(experianUuid: string): VerifiedCredentialEvidence {
+	getSuccessEvidenceBlock(vendorUuid: string): VerifiedCredentialEvidence {
 		return {
 			type: Constants.IDENTITY_CHECK,
-			txn: experianUuid,
+			txn: vendorUuid,
 			strengthScore: 3,
 			validityScore: 2,
 			checkDetails: [
@@ -54,10 +54,10 @@ export class VerifiableCredentialService {
 		};
 	}
 
-	getFailureEvidenceBlock(experianUuid: string): VerifiedCredentialEvidence {
+	getFailureEvidenceBlock(vendorUuid: string): VerifiedCredentialEvidence {
 		return {
 			type: Constants.IDENTITY_CHECK,
-			txn: experianUuid,
+			txn: vendorUuid,
 			strengthScore: 3,
 			validityScore: 0,
 			failedCheckDetails: [
@@ -78,7 +78,7 @@ export class VerifiableCredentialService {
 		const now = getNow();
 		const subject = sessionItem.subject;
 		const evidenceInfo = sessionItem.copCheckResult === CopCheckResult.FULL_MATCH ?
-			this.getSuccessEvidenceBlock(sessionItem.experianUuid!) : this.getFailureEvidenceBlock(sessionItem.experianUuid!);
+			this.getSuccessEvidenceBlock(sessionItem.vendorUuid!) : this.getFailureEvidenceBlock(sessionItem.vendorUuid!);
 		const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, birthDate, bankAccountInfo, evidenceInfo, this.credentialVendor)
 			.build();
 		let result;

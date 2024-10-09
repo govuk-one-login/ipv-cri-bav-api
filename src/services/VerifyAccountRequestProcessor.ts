@@ -93,11 +93,11 @@ export class VerifyAccountRequestProcessor {
   	const name = getFullName(person.name);
   	this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
 		const timeOfRequest = absoluteTimeNow();
-  	let { experianUuid } = session;
+  	let { vendorUuid } = session;
 
-  	if (!experianUuid) {
-  		experianUuid = randomUUID();
-  		await this.BavService.saveExperianUuid(sessionId, experianUuid);
+  	if (!vendorUuid) {
+  		vendorUuid = randomUUID();
+  		await this.BavService.saveVendorUuid(sessionId, vendorUuid);
   	}
 
   	const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
@@ -110,7 +110,7 @@ export class VerifyAccountRequestProcessor {
   			extensions:{
   				evidence:[
 						 {
-  						txn: experianUuid,
+  						txn: vendorUuid,
   					},
   				],
 			 },
@@ -129,7 +129,7 @@ export class VerifyAccountRequestProcessor {
   	);
 
   	const verifyResponse = await this.ExperianService.verify(
-  		{ accountNumber: paddedAccountNumber, sortCode, name, uuid: experianUuid },
+  		{ accountNumber: paddedAccountNumber, sortCode, name, uuid: vendorUuid },
   		this.experianToken,
   	);
 
@@ -146,7 +146,7 @@ export class VerifyAccountRequestProcessor {
   			extensions:{
   				evidence:[
 						 {
-  						txn: experianUuid,
+  						txn: vendorUuid,
   					},
   				],
 			  },
