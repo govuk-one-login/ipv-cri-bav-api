@@ -232,7 +232,6 @@ export class VerifyAccountRequestProcessor {
   		return Response(HttpCodesEnum.SERVER_ERROR, "Error received in COP verify response");
   	}
 
-  	let attemptCount;
   	// If there is a full match attemptCount will be undefined because it doesn't matter
   	if (copCheckResult !== CopCheckResults.FULL_MATCH) {
   		attemptCount = session.attemptCount ? session.attemptCount + 1 : 1;
