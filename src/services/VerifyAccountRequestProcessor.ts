@@ -108,152 +108,153 @@ export class VerifyAccountRequestProcessor {
 
   	const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
 
-	let attemptCount
+  	let attemptCount;
   	if (credentialVendor === "EXPERIAN") {
-		await this.BavService.sendToTXMA(this.txmaQueueUrl, {
-			event_name: TxmaEventNames.BAV_EXPERIAN_REQUEST_SENT,
-			...coreEventFields,
-			extensions: {
-				evidence: [
-					{
-						txn: vendorUuid,
-					},
-				],
-			},
-			restricted: {
-				Experian_request_details: [
-					{
-						name,
-						sortCode,
-						accountNumber: paddedAccountNumber,
-						attemptNum: session.attemptCount ?? 1,
-					},
-				],
-			},
-		}, encodedHeader);
+  		await this.BavService.sendToTXMA(this.txmaQueueUrl, {
+  			event_name: TxmaEventNames.BAV_EXPERIAN_REQUEST_SENT,
+  			...coreEventFields,
+  			extensions: {
+  				evidence: [
+  					{
+  						txn: vendorUuid,
+  					},
+  				],
+  			},
+  			restricted: {
+  				Experian_request_details: [
+  					{
+  						name,
+  						sortCode,
+  						accountNumber: paddedAccountNumber,
+  						attemptNum: session.attemptCount ?? 1,
+  					},
+  				],
+  			},
+  		}, encodedHeader);
 	
-		const verifyResponse = await this.ExperianService.verify(
-			{ accountNumber: paddedAccountNumber, sortCode, name, uuid: vendorUuid },
-			this.vendorToken,
-		);
+  		const verifyResponse = await this.ExperianService.verify(
+  			{ accountNumber: paddedAccountNumber, sortCode, name, uuid: vendorUuid },
+  			this.vendorToken,
+  		);
 	
-		if (!verifyResponse) {
-			this.logger.error("No verify response received", { messageCode: MessageCodes.NO_VERIFY_RESPONSE });
-			return Response(HttpCodesEnum.SERVER_ERROR, "Could not verify account");
-		}
+  		if (!verifyResponse) {
+  			this.logger.error("No verify response received", { messageCode: MessageCodes.NO_VERIFY_RESPONSE });
+  			return Response(HttpCodesEnum.SERVER_ERROR, "Could not verify account");
+  		}
 	
-		await this.BavService.sendToTXMA(this.txmaQueueUrl, {
-			event_name: TxmaEventNames.BAV_EXPERIAN_RESPONSE_RECEIVED,
-			...coreEventFields,
-			extensions: {
-				evidence: [
-					{
-						txn: vendorUuid,
-					},
-				],
-			},
-		}, encodedHeader);
+  		await this.BavService.sendToTXMA(this.txmaQueueUrl, {
+  			event_name: TxmaEventNames.BAV_EXPERIAN_RESPONSE_RECEIVED,
+  			...coreEventFields,
+  			extensions: {
+  				evidence: [
+  					{
+  						txn: vendorUuid,
+  					},
+  				],
+  			},
+  		}, encodedHeader);
 	
-		await this.BavService.updateAccountDetails(
-			{ sessionId, accountNumber: paddedAccountNumber, sortCode },
-			this.personIdentityTableName,
-		);
+  		await this.BavService.updateAccountDetails(
+  			{ sessionId, accountNumber: paddedAccountNumber, sortCode },
+  			this.personIdentityTableName,
+  		);
 	
-		const experianCheckResult = this.calculateExperianCheckResult(verifyResponse, attemptCount);
-		this.logger.debug(`experianCheckResult is ${experianCheckResult}`);
+  		const experianCheckResult = this.calculateExperianCheckResult(verifyResponse, attemptCount);
+  		this.logger.debug(`experianCheckResult is ${experianCheckResult}`);
 	
-		if (experianCheckResult !== ExperianCheckResults.FULL_MATCH) {
-			attemptCount = session.attemptCount ? session.attemptCount + 1 : 1;
-		}
-		await this.BavService.saveExperianCheckResult(sessionId, experianCheckResult, attemptCount);
+  		if (experianCheckResult !== ExperianCheckResults.FULL_MATCH) {
+  			attemptCount = session.attemptCount ? session.attemptCount + 1 : 1;
+  		}
+  		await this.BavService.saveExperianCheckResult(sessionId, experianCheckResult, attemptCount);
 	
-		return Response(HttpCodesEnum.OK, JSON.stringify({
-			message: "Success",
-			attemptCount,
-		}));
+  		return Response(HttpCodesEnum.OK, JSON.stringify({
+  			message: "Success",
+  			attemptCount,
+  		}));
 	
-	} else {
-		await this.BavService.sendToTXMA(this.txmaQueueUrl, {
-			event_name: TxmaEventNames.BAV_COP_REQUEST_SENT,
-			...coreEventFields,
-			extensions: {
-				evidence: [
-					{
-						txn: vendorUuid,
-					},
-				],
-			},
-			restricted: {
-				CoP_request_details: [
-					{
-						name,
-						sortCode,
-						accountNumber: paddedAccountNumber,
-						attemptNum: session.attemptCount ?? 1,
-					},
-				],
-			},
-		}, encodedHeader);
+  	} else {
+  		await this.BavService.sendToTXMA(this.txmaQueueUrl, {
+  			event_name: TxmaEventNames.BAV_COP_REQUEST_SENT,
+  			...coreEventFields,
+  			extensions: {
+  				evidence: [
+  					{
+  						txn: vendorUuid,
+  					},
+  				],
+  			},
+  			restricted: {
+  				CoP_request_details: [
+  					{
+  						name,
+  						sortCode,
+  						accountNumber: paddedAccountNumber,
+  						attemptNum: session.attemptCount ?? 1,
+  					},
+  				],
+  			},
+  		}, encodedHeader);
 	
-		const verifyResponse = await this.HmrcService.verify(
-			{ accountNumber: paddedAccountNumber, sortCode, name, uuid: vendorUuid },
-			this.vendorToken,
-		);
+  		const verifyResponse = await this.HmrcService.verify(
+  			{ accountNumber: paddedAccountNumber, sortCode, name, uuid: vendorUuid },
+  			this.vendorToken,
+  		);
 	
-		if (!verifyResponse) {
-			this.logger.error("No verify response received", { messageCode: MessageCodes.NO_VERIFY_RESPONSE });
-			return Response(HttpCodesEnum.SERVER_ERROR, "Could not verify account");
-		}
+  		if (!verifyResponse) {
+  			this.logger.error("No verify response received", { messageCode: MessageCodes.NO_VERIFY_RESPONSE });
+  			return Response(HttpCodesEnum.SERVER_ERROR, "Could not verify account");
+  		}
 	
-		await this.BavService.sendToTXMA(this.txmaQueueUrl, {
-			event_name: TxmaEventNames.BAV_COP_RESPONSE_RECEIVED,
-			...coreEventFields,
-			extensions: {
-				evidence: [
-					{
-						txn: vendorUuid,
-					},
-				],
-			},
-		}, encodedHeader);
+  		await this.BavService.sendToTXMA(this.txmaQueueUrl, {
+  			event_name: TxmaEventNames.BAV_COP_RESPONSE_RECEIVED,
+  			...coreEventFields,
+  			extensions: {
+  				evidence: [
+  					{
+  						txn: vendorUuid,
+  					},
+  				],
+  			},
+  		}, encodedHeader);
 
-		await this.BavService.updateAccountDetails(
-			{ sessionId, accountNumber: paddedAccountNumber, sortCode },
-			this.personIdentityTableName,
-		);
+  		await this.BavService.updateAccountDetails(
+  			{ sessionId, accountNumber: paddedAccountNumber, sortCode },
+  			this.personIdentityTableName,
+  		);
 	
-		const copCheckResult = this.calculateCopCheckResult(verifyResponse);
-		this.logger.debug(`copCheckResult is ${copCheckResult}`);
+  		const copCheckResult = this.calculateCopCheckResult(verifyResponse);
+  		this.logger.debug(`copCheckResult is ${copCheckResult}`);
 	
-		if (copCheckResult === CopCheckResults.MATCH_ERROR) {
-			this.logger.warn("Error received in COP verify response");
-			return Response(HttpCodesEnum.SERVER_ERROR, "Error received in COP verify response");
-		}
+  		if (copCheckResult === CopCheckResults.MATCH_ERROR) {
+  			this.logger.warn("Error received in COP verify response");
+  			return Response(HttpCodesEnum.SERVER_ERROR, "Error received in COP verify response");
+  		}
 	
-		if (copCheckResult !== CopCheckResults.FULL_MATCH) {
-			attemptCount = session.attemptCount ? session.attemptCount + 1 : 1;
-		}
-		await this.BavService.saveCopCheckResult(sessionId, copCheckResult, attemptCount);
+  		if (copCheckResult !== CopCheckResults.FULL_MATCH) {
+  			attemptCount = session.attemptCount ? session.attemptCount + 1 : 1;
+  		}
+  		await this.BavService.saveCopCheckResult(sessionId, copCheckResult, attemptCount);
 	
-		if (copCheckResult === CopCheckResults.PARTIAL_MATCH) {
-			const partialNameRecord: PartialNameSQSRecord = {
-				itemNumber: vendorUuid,
-				timeStamp: timeOfRequest,
-				cicName: name,
-				accountName: verifyResponse.accountName,
-				accountExists: verifyResponse.accountExists,
-				nameMatches: verifyResponse.nameMatches,
-				sortCodeBankName: verifyResponse.sortCodeBankName,
-			};
+  		if (copCheckResult === CopCheckResults.PARTIAL_MATCH) {
+  			const partialNameRecord: PartialNameSQSRecord = {
+  				itemNumber: vendorUuid,
+  				timeStamp: timeOfRequest,
+  				cicName: name,
+  				accountName: verifyResponse.accountName,
+  				accountExists: verifyResponse.accountExists,
+  				nameMatches: verifyResponse.nameMatches,
+  				sortCodeBankName: verifyResponse.sortCodeBankName,
+  			};
 	
-			await this.BavService.savePartialNameInfo(this.partialNameQueueUrl, partialNameRecord);
-		}
+  			await this.BavService.savePartialNameInfo(this.partialNameQueueUrl, partialNameRecord);
+  		}
 	
-		return Response(HttpCodesEnum.OK, JSON.stringify({
-			message: "Success",
-			attemptCount,
-		}));
-	}}
+  		return Response(HttpCodesEnum.OK, JSON.stringify({
+  			message: "Success",
+  			attemptCount,
+  		}));
+  	}
+  }
 		  
 
   calculateExperianCheckResult(verifyResponse: number, attemptCount?: number): ExperianCheckResult {
