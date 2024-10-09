@@ -280,9 +280,9 @@ export class BavService {
 		const updateStateCommand = new UpdateCommand({
 			TableName: this.tableName,
 			Key: { sessionId },
-			UpdateExpression: `SET copCheckResult = :copCheckResult, authSessionState = :authSessionState${attemptCount ? ", attemptCount = :attemptCount" : ""}`,
+			UpdateExpression: `SET ${copCheckResult ? "copCheckResult = :copCheckResult," : ""} authSessionState = :authSessionState${attemptCount ? ", attemptCount = :attemptCount" : ""}`,
 			ExpressionAttributeValues: {
-				":copCheckResult": copCheckResult,
+				...(copCheckResult && { ":copCheckResult": copCheckResult }),
 				...(attemptCount && { ":attemptCount": attemptCount }),
 				":authSessionState": AuthSessionState.BAV_DATA_RECEIVED,
 			},

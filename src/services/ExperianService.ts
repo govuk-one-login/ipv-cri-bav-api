@@ -55,7 +55,6 @@ export class ExperianService {
     	let retryCount = 0;
     	let exponentialBackOffPeriod = this.backoffPeriodMs;
     	while (retryCount <= this.maxRetries) {
-			
     		try {
 
     			const endpoint = `${this.experianBaseUrl}/${Constants.EXPERIAN_VERIFY_ENDPOINT_PATH}`;
