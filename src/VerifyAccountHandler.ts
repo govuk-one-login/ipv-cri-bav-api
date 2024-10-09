@@ -52,10 +52,10 @@ export class VerifyAccountHandler implements LambdaInterface {
 				const experianTokenSsmPath = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_TOKEN_SSM_PATH, logger);
 				EXPERIAN_TOKEN = await getParameter(experianTokenSsmPath);
 	
-					logger.appendKeys({ sessionId });
-					logger.info("Starting VerifyAccountRequestProcessorExperian");
-					return await VerifyAccountRequestProcessorExperian.getInstance(logger, metrics, EXPERIAN_TOKEN).processRequest(sessionId, body, clientIpAddress, encodedHeader);
-				}
+				logger.appendKeys({ sessionId });
+				logger.info("Starting VerifyAccountRequestProcessorExperian");
+				return await VerifyAccountRequestProcessorExperian.getInstance(logger, metrics, EXPERIAN_TOKEN).processRequest(sessionId, body, clientIpAddress, encodedHeader);
+			}
 			
 			
 		} catch (error: any) {

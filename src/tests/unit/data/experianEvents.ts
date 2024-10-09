@@ -258,7 +258,7 @@ export const experianVerifyResponse = {
 };
 
 export const experianVerifyResponseErrorFail = {
-		"responseHeader": {
+	"responseHeader": {
 		  "requestType": "BAVConsumer-Standard",
 		  "clientReferenceId": "${context.request.body:$.header.clientReferenceId}",
 		  "expRequestId": "RB0000${random.numeric(length=8)}",
@@ -269,96 +269,96 @@ export const experianVerifyResponseErrorFail = {
 			"decisionReasons": [
 			  "Bank Account Verification – Consumer check resulted in a Stop decision",
 			  "Bank account details may be valid",
-			  "Processing completed successfully"
+			  "Processing completed successfully",
 			],
 			"recommendedNextActions": [],
-			"spareObjects": []
+			"spareObjects": [],
 		  },
 		  "responseCode": "${stores.responseDetail.responseCode}",
 		  "responseType": "${stores.responseDetail.responseType}",
 		  "responseMessage": "${stores.responseDetail.responseMessage}",
-		  "tenantID": "${context.request.body:$.header.tenantId}"
-		},
-		"clientResponsePayload": {
+		  "tenantID": "${context.request.body:$.header.tenantId}",
+	},
+	"clientResponsePayload": {
 		  "orchestrationDecisions": [
 			{
 			  "sequenceId": "1",
 			  "decisionSource": "BWValidation",
 			  "decision": "CONTINUE",
 			  "decisionReasons": [
-				"Valid bank account details"
+					"Valid bank account details",
 			  ],
 			  "score": 0,
 			  "decisionText": "CONTINUE",
 			  "nextAction": "Continue",
-			  "decisionTime": "2023-09-06T14:43:09Z"
+			  "decisionTime": "2023-09-06T14:43:09Z",
 			},
 			{
 			  "sequenceId": "2",
 			  "decisionSource": "uk-crp",
 			  "decision": "CONTINUE",
 			  "decisionReasons": [
-				"Processing completed successfully"
+					"Processing completed successfully",
 			  ],
 			  "score": 0,
 			  "decisionText": "Continue",
 			  "nextAction": "Continue",
-			  "decisionTime": "2023-09-06T14:43:09Z"
+			  "decisionTime": "2023-09-06T14:43:09Z",
 			},
 			{
 			  "sequenceId": "3",
 			  "decisionSource": "Bank Account Verification",
 			  "decision": "STOP",
 			  "decisionReasons": [
-				"Bank Account Verification – Consumer check resulted in a Stop decision"
+					"Bank Account Verification – Consumer check resulted in a Stop decision",
 			  ],
 			  "score": 0,
 			  "decisionText": "STOP",
 			  "nextAction": "Continue",
-			  "decisionTime": "2023-09-06T14:43:10Z"
-			}
+			  "decisionTime": "2023-09-06T14:43:10Z",
+			},
 		  ],
 		  "decisionElements": [
 			{
 			  "serviceName": "Bankaccountvalidation",
 			  "applicantId": "APPLICANT_1",
 			  "warningsErrors": [
-				{
+					{
 				  "responseType": "warning",
 				  "responseCode": "2",
-				  "responseMessage": "Modulus check algorithm is unavailable for these account details"
+				  "responseMessage": "Modulus check algorithm is unavailable for these account details",
 	  
-				}
+					},
 			  ],
 			  "otherData": {
-				"branchData": [
+					"branchData": [
 				  {
-					"institutionName": "020202 Short Name",
-					"branchName": "020202 BWA DATA INGESTION TEST 020202",
-					"address": [
+							"institutionName": "020202 Short Name",
+							"branchName": "020202 BWA DATA INGESTION TEST 020202",
+							"address": [
 					  {
-						"1": "020202 Address 1",
-						"2": "020202 Address 2",
-						"3": "020202 Address 3",
-						"4": "020202 Town",
-						"5": "020202 County"
-					  }
+									"1": "020202 Address 1",
+									"2": "020202 Address 2",
+									"3": "020202 Address 3",
+									"4": "020202 Town",
+									"5": "020202 County",
+					  },
+							],
+							"telephoneNumber": "67 020202 020202",
+							"subBranchNumber": 0,
+				  },
 					],
-					"telephoneNumber": "67 020202 020202",
-					"subBranchNumber": 0
-				  }
-				]
 			  },
 			  "decisions": [
-				{
+					{
 				  "element": "BBAN1",
-				  "value": "020202"
-				},
-				{
+				  "value": "020202",
+					},
+					{
 				  "element": "BBAN2",
-				  "value": "11111116"
-				}
-			  ]
+				  "value": "11111116",
+					},
+			  ],
 			},
 			{
 			  "serviceName": "uk-crpverify",
@@ -366,19 +366,19 @@ export const experianVerifyResponseErrorFail = {
 			  "appReference": "7FMQQD8CYT",
 			  "warningsErrors": [],
 			  "otherData": {
-				"response": {
+					"response": {
 				  "contactId": "MainContact_1",
 				  "nameId": "MAINPERSONNAME_1",
-				  "uuid": "42be5933-ab4f-4d31-b056-2109ef9bb547"
-				}
+				  "uuid": "42be5933-ab4f-4d31-b056-2109ef9bb547",
+					},
 			  },
 			  "auditLogs": [
-				{
+					{
 				  "eventType": "CONSUMER BANK ACCOUNT",
 				  "eventDate": "2023-06-15T13:40:44Z",
-				  "eventOutcome": "Match Found"
-				}
-			  ]
+				  "eventOutcome": "Match Found",
+					},
+			  ],
 			},
 			{
 			  "serviceName": "uk-bavconsumer",
@@ -386,149 +386,149 @@ export const experianVerifyResponseErrorFail = {
 			  "score": 0,
 			  "appReference": "7FMQQD8CYT",
 			  "rules": [
-				{
+					{
 				  "ruleId": "CNS1004",
 				  "ruleName": "BAV_Acc_Age_0_30_Days",
 				  "ruleScore": 0,
-				  "ruleText": "Data has been found to indicate that the account was opened in the last 30 days"
-				},
-				{
+				  "ruleText": "Data has been found to indicate that the account was opened in the last 30 days",
+					},
+					{
 				  "ruleId": "CNS1005",
 				  "ruleName": "BAV_Acc_Age_30_60_Days",
 				  "ruleScore": 0,
-				  "ruleText": "Data has been found to indicate that the account was opened in the past 30-60 days"
-				},
-				{
+				  "ruleText": "Data has been found to indicate that the account was opened in the past 30-60 days",
+					},
+					{
 				  "ruleId": "CNS1001",
 				  "ruleName": "BAV_Acc_Holder_Deceased",
 				  "ruleScore": 1,
-				  "ruleText": "Data has been found to indicate that the account hol der is deceased"
-				},
-				{
+				  "ruleText": "Data has been found to indicate that the account hol der is deceased",
+					},
+					{
 				  "ruleId": "CNS1002",
 				  "ruleName": "BAV_Account_Closed",
 				  "ruleScore": 0,
-				  "ruleText": "Data has been found to indicate that the account is closed"
-				},
-				{
+				  "ruleText": "Data has been found to indicate that the account is closed",
+					},
+					{
 				  "ruleId": "CNS1018",
 				  "ruleName": "BAV_OA_GE90D_PDSGE7_ASGE6",
 				  "ruleScore": 0,
-				  "ruleText": "Match to an open account, aged >=90 days, Personal D etails Score >=7 and Address Score >=6"
-				},
-				{
+				  "ruleText": "Match to an open account, aged >=90 days, Personal D etails Score >=7 and Address Score >=6",
+					},
+					{
 				  "ruleId": "CNS1019",
 				  "ruleName": "BAV_OA_GE90D_PDSGE5_ASGE4",
 				  "ruleScore": 0,
-				  "ruleText": "Match found to an open account which was opened 90 o r more days ago with Personal Details Score >= 5 and Address Score >= 4"
-				},
-				{
+				  "ruleText": "Match found to an open account which was opened 90 o r more days ago with Personal Details Score >= 5 and Address Score >= 4",
+					},
+					{
 				  "ruleId": "CNS1020",
 				  "ruleName": "BAV_OA_PDSGE5_ASGE4",
 				  "ruleScore": 0,
-				  "ruleText": "Match to an open account, aged >=90 days, Personal Details Score >=5 and Address Score >=4"
-				},
-				{
+				  "ruleText": "Match to an open account, aged >=90 days, Personal Details Score >=5 and Address Score >=4",
+					},
+					{
 				  "ruleId": "CNS1021",
 				  "ruleName": "BAV_OA_GE90D_PDSGE7",
 				  "ruleScore": 0,
-				  "ruleText": "Match to an open account, aged >=90 days, Personal Details Score >=7"
-				},
-				{
+				  "ruleText": "Match to an open account, aged >=90 days, Personal Details Score >=7",
+					},
+					{
 				  "ruleId": "CNS1022",
 				  "ruleName": "BAV_OA_GE90D_PDSGE5",
 				  "ruleScore": 0,
-				  "ruleText": "Match to an open account, aged >=90 days, Personal Details Score >=5"
-				},
-				{
+				  "ruleText": "Match to an open account, aged >=90 days, Personal Details Score >=5",
+					},
+					{
 				  "ruleId": "CNS1016",
 				  "ruleName": "BAV_Unable_to_Check_Not_Consented_Provider",
 				  "ruleScore": 0,
-				  "ruleText": "The supplied sort code belongs to a provider that has not consented for their data to be used by this service"
-				},
-				{
+				  "ruleText": "The supplied sort code belongs to a provider that has not consented for their data to be used by this service",
+					},
+					{
 				  "ruleId": "9990",
 				  "ruleName": "NRF9990",
 				  "ruleScore": 0,
-				  "ruleText": "No other rule has fired"
-				}
+				  "ruleText": "No other rule has fired",
+					},
 			  ],
 			  "matches": [
-				{
+					{
 				  "name": "Joint Account",
-				  "value": "No Match"
-				},
-				{
+				  "value": "No Match",
+					},
+					{
 				  "name": "Sole Account",
-				  "value": "Match"
-				}
+				  "value": "Match",
+					},
 			  ],
 			  "dataCounts": [
-				{
+					{
 				  "name": "BAV_AccHolderDeceased",
-				  "value": 1
-				},
-				{
+				  "value": 1,
+					},
+					{
 				  "name": "AccountAgeThirtySixMonthsPlus",
-				  "value": 1
-				},
-				{
+				  "value": 1,
+					},
+					{
 				  "name": "BAV_ConsentedDataFound",
-				  "value": 1
-				},
-				{
+				  "value": 1,
+					},
+					{
 				  "name": "AccountAgeNinetyOrMoreDays",
-				  "value": 1
-				}
+				  "value": 1,
+					},
 			  ],
 			  "scores": [
-				{
+					{
 				  "name": "Personal details",
-				  "score": 1
-				},
-				{
+				  "score": 1,
+					},
+					{
 	  
 				  "name": "Address",
-				  "score": 1
+				  "score": 1,
 	  
-				}
-			  ]
-			}
-		  ]
-		},
-		"originalRequestData": {
+					},
+			  ],
+			},
+		  ],
+	},
+	"originalRequestData": {
 		  "application": {
 			"applicants": [
 			  {
-				"id": "APPLICANT_1",
-				"contactId": "MainContact_1"
-			  }
-			]
+					"id": "APPLICANT_1",
+					"contactId": "MainContact_1",
+			  },
+			],
 		  },
 		  "source": "WEB",
 		  "contacts": [
 		  {
-			"id": "MainContact_1",
-			"person": {
+				"id": "MainContact_1",
+				"person": {
 			  "typeOfPerson": "APPLICANT",
 			  "personDetails": {
-				"dateOfBirth": "${context.request.body:$.payload.contacts[0].person.personDetails.dateOfBirth}"
+						"dateOfBirth": "${context.request.body:$.payload.contacts[0].person.personDetails.dateOfBirth}",
 			  },
 			  "names": [
-				{
+						{
 				  "id": "MAINPERSONNAME_1",
 				  "type": "CURRENT",
 				  "firstName": "${context.request.body:$.payload.contacts[0].person.names[0].firstName}",
 				  "middleNames": "",
-				  "surName": "${context.request.body:$.payload.contacts[0].person.names[0].surName}"
-				}
-			  ]
-			},
-			"bankAccount": {
+				  "surName": "${context.request.body:$.payload.contacts[0].person.names[0].surName}",
+						},
+			  ],
+				},
+				"bankAccount": {
 			  "sortCode": "${context.request.body:$.account.sortCode}",
-			  "accountNumber": "${context.request.body:$.account.accountNumber}"
-			}
-		  }
-		]
-	   }
-}
+			  "accountNumber": "${context.request.body:$.account.accountNumber}",
+				},
+		  },
+		],
+	   },
+};
