@@ -157,7 +157,7 @@ export class VerifyAccountRequestProcessor {
   	);
   	const experianCheckResult = this.calculateExperianCheckResult(verifyResponse, session.attemptCount);
   	this.logger.debug(`experianCheckResult is ${experianCheckResult}`);
-	
+
   	let attemptCount;
   	if (experianCheckResult !== ExperianCheckResults.FULL_MATCH || !experianCheckResult) {
   		attemptCount = session.attemptCount ? session.attemptCount + 1 : 1;
@@ -288,7 +288,6 @@ export class VerifyAccountRequestProcessor {
   }	  
 
   calculateExperianCheckResult(verifyResponse: number, attemptCount?: number): ExperianCheckResult {
-  	console.log("calculateExperianCheckResult ATTEMPT COUNT", attemptCount);
   	if (verifyResponse === 9) {
   		return ExperianCheckResults.FULL_MATCH;
   	} else if (verifyResponse !== 9 && attemptCount === undefined) {
