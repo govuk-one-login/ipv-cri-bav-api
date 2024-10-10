@@ -6,6 +6,7 @@ import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { ExperianTokenResponse } from "../models/IExperianResponse";
 import { sleep } from "../utils/Sleep";
+import { logResponseCode } from "../utils/LogResponseCode";
 
 export class ExperianService {
 	readonly logger: Logger;
@@ -56,7 +57,6 @@ export class ExperianService {
     	let exponentialBackOffPeriod = this.backoffPeriodMs;
     	while (retryCount <= this.maxRetries) {
     		try {
-
     			const endpoint = `${this.experianBaseUrl}/${Constants.EXPERIAN_VERIFY_ENDPOINT_PATH}`;
     			this.logger.info("Sending verify request to Experian", { uuid, endpoint, retryCount });
     			const { data } = await axios.post(endpoint, params, { headers });
@@ -71,40 +71,11 @@ export class ExperianService {
     			let personalDetailsScore;
     			const responseCode = decisionElements[0]?.warningsErrors[0]?.responseCode ?? undefined;
     			if (responseCode) {
-    				switch (responseCode) {
-    					case "2":
-						  personalDetailsScore = decisionElements[2].scores[0].score;
-						  this.logger.warn({ message: `Response code ${responseCode}: Modulus check algorithm is unavailable for these account details and therefore Bank Wizard cannot confirm the details are valid` });
-						  break;
-    					case "3":
-						  personalDetailsScore = decisionElements[2].scores[0].score;
-						  this.logger.warn({ message: `Response code ${responseCode}: Account number does not use a modulus check algorithm and therefore Bank Wizard cannot confirm the details are valid` });
-						  break;
-    					case "6":
-						  personalDetailsScore = decisionElements[2].scores[0].score;
-						  this.logger.error({ message: `Response code ${responseCode}: Bank or branch code is not in use` });
-						  break;
-    					case "7":
-						  personalDetailsScore = decisionElements[2].scores[0].score;
-						  this.logger.error({ message: `Response code ${responseCode}: Modulus check has failed. Although the formats of the supplied fields are correct, one or more of them are incorrect` });
-						  break;
-    					case "11":
-						  personalDetailsScore = decisionElements[2].scores[0].score;
-						  this.logger.error({ message: `Response code ${responseCode}: Sort Code has been closed` });
-						  break;
-    					case "12":
-						  personalDetailsScore = decisionElements[2].scores[0].score;
-						  this.logger.error({ message: `Response code ${responseCode}: Branch has been transferred and the accounts have been redirected to another branch` });
-						  break;
-    					default:
-						  personalDetailsScore = decisionElements[2].scores[0].score;
-						  this.logger.debug({ message: "No error" });
-						  break;
-					  }
+    				return logResponseCode(responseCode, personalDetailsScore, decisionElements, this.logger);
     			} else {
     				personalDetailsScore = decisionElements[2].scores[0].score;
+    				return personalDetailsScore;
     			}
-    			return personalDetailsScore;
     		} catch (error: any) {
     			const message = "Error sending verify request to Experian";
     			this.logger.error({ message, messageCode: MessageCodes.FAILED_VERIFYING_ACCOUNT, statusCode: error?.response?.status });
@@ -120,6 +91,7 @@ export class ExperianService {
     		}
     	}
     }
+	
 
     // eslint-disable-next-line max-lines-per-function
     async generateToken(clientSecret: string, clientId: string): Promise<ExperianTokenResponse | undefined> {
@@ -165,5 +137,7 @@ export class ExperianService {
     	this.logger.error(`generateToken - cannot generate experianToken even after ${this.maxRetries} retries.`);
     	throw new AppError(HttpCodesEnum.SERVER_ERROR, `Cannot generate experianToken even after ${this.maxRetries} retries.`);
     }
+
+	
 }
 
