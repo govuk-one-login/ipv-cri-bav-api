@@ -97,6 +97,7 @@ export class ExperianService {
 						  this.logger.debug("Branch has been transferred and the accounts have been redirected to another branch");
 						  break;
     					default:
+						  personalDetailsScore = decisionElements[2].scores[0].score;
 						  this.logger.debug("No error");
 						  break;
 					  }

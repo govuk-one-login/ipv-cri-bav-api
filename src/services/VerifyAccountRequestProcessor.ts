@@ -156,7 +156,6 @@ export class VerifyAccountRequestProcessor {
   		{ sessionId, accountNumber: paddedAccountNumber, sortCode },
   		this.personIdentityTableName,
   	);
-	
   	const experianCheckResult = this.calculateExperianCheckResult(verifyResponse, attemptCount);
   	this.logger.debug(`experianCheckResult is ${experianCheckResult}`);
 	
@@ -291,7 +290,7 @@ export class VerifyAccountRequestProcessor {
   calculateExperianCheckResult(verifyResponse: number, attemptCount?: number): ExperianCheckResult {
   	if (verifyResponse === 9) {
   		return ExperianCheckResults.FULL_MATCH;
-  	} else if (verifyResponse !== 9 && attemptCount && attemptCount < 1) {
+  	} else if (verifyResponse !== 9 && attemptCount === undefined) {
   		return undefined;
   	} else {
   		return ExperianCheckResults.NO_MATCH;
