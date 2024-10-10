@@ -226,7 +226,7 @@ describe("VerifyAccountRequestProcessor", () => {
 			expect(response.body).toBe(JSON.stringify({ message:"Success" }));
 		});
 
-		it("saves saveExperianCheckResult with increased attemptCount if there was no match and returns success", async () => {
+		it("saves saveExperianCheckResult with increased attemptCount and empty experianCheckResult if there was no match on the first attempt and returns success", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
 			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, attemptCount: undefined });
 			mockExperianService.verify.mockResolvedValueOnce(1);
@@ -236,6 +236,19 @@ describe("VerifyAccountRequestProcessor", () => {
 			expect(mockBavService.saveExperianCheckResult).toHaveBeenCalledWith(sessionId, undefined, 1);
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
 			expect(response.body).toBe(JSON.stringify({ message:"Success", attemptCount: 1 }));
+		});
+
+		it("saves saveExperianCheckResult with increased attemptCount and experianCheckResult set to NO_MATCH on the second attempt and returns success", async () => {
+			mockBavService.getPersonIdentityById.mockResolvedValue(person);
+			mockBavService.getSessionById.mockResolvedValue({ ...session, attemptCount: 1 });
+			mockExperianService.verify.mockResolvedValue(1);
+
+			await verifyAccountRequestProcessorTest.processExperianRequest(sessionId, body, clientIpAddress, encodedTxmaHeader);
+			const response = await verifyAccountRequestProcessorTest.processExperianRequest(sessionId, body, clientIpAddress, encodedTxmaHeader);
+
+			expect(mockBavService.saveExperianCheckResult).toHaveBeenNthCalledWith(2, sessionId, "NO_MATCH", 2);
+			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
+			expect(response.body).toBe(JSON.stringify({ message:"Success", attemptCount: 2 }));
 		});
 
 		it("returns success without attemptCount when there has been a FULL_MATCH", async () => {

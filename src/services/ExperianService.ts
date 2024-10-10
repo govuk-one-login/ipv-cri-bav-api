@@ -60,7 +60,9 @@ export class ExperianService {
     			const endpoint = `${this.experianBaseUrl}/${Constants.EXPERIAN_VERIFY_ENDPOINT_PATH}`;
     			this.logger.info("Sending verify request to Experian", { uuid, endpoint, retryCount });
     			const { data } = await axios.post(endpoint, params, { headers });
+    			console.log("DATA!", data);
     			const decisionElements = data?.clientResponsePayload?.decisionElements;
+    			console.log("DEC ELEMENTS!", decisionElements);
 
     			this.logger.debug({
     				message: "Recieved response from Experian verify request",
@@ -68,8 +70,11 @@ export class ExperianService {
     				eventOutcome: decisionElements[1].auditLogs[0].eventOutcome,
     			});
 
+    			console.log("PRE SCORE");
     			let personalDetailsScore;
-    			const responseCode = decisionElements[0]?.warningsErrors[0]?.responseCode;
+    			console.log("POST SCORE");
+    			const responseCode = decisionElements[0]?.warningsErrors[0]?.responseCode ?? undefined;
+    			console.log("RES CODE", responseCode);
     			if (responseCode) {
     				switch (responseCode) {
     					case "2":
@@ -104,6 +109,7 @@ export class ExperianService {
     			} else {
     				personalDetailsScore = decisionElements[2].scores[0].score;
     			}
+    			console.log("PDSCORE", personalDetailsScore);
     			return personalDetailsScore;
     		} catch (error: any) {
     			const message = "Error sending verify request to Experian";

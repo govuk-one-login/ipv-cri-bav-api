@@ -107,7 +107,6 @@ export class VerifyAccountRequestProcessor {
 
   	const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
 
-  	let attemptCount;
   	await this.BavService.sendToTXMA(this.txmaQueueUrl, {
   		event_name: TxmaEventNames.BAV_EXPERIAN_REQUEST_SENT,
   		...coreEventFields,
@@ -156,10 +155,11 @@ export class VerifyAccountRequestProcessor {
   		{ sessionId, accountNumber: paddedAccountNumber, sortCode },
   		this.personIdentityTableName,
   	);
-  	const experianCheckResult = this.calculateExperianCheckResult(verifyResponse, attemptCount);
+  	const experianCheckResult = this.calculateExperianCheckResult(verifyResponse, session.attemptCount);
   	this.logger.debug(`experianCheckResult is ${experianCheckResult}`);
 	
-  	if (experianCheckResult !== ExperianCheckResults.FULL_MATCH) {
+  	let attemptCount;
+  	if (experianCheckResult !== ExperianCheckResults.FULL_MATCH || !experianCheckResult) {
   		attemptCount = session.attemptCount ? session.attemptCount + 1 : 1;
   	}
   	await this.BavService.saveExperianCheckResult(sessionId, experianCheckResult, attemptCount);
@@ -288,6 +288,7 @@ export class VerifyAccountRequestProcessor {
   }	  
 
   calculateExperianCheckResult(verifyResponse: number, attemptCount?: number): ExperianCheckResult {
+  	console.log("calculateExperianCheckResult ATTEMPT COUNT", attemptCount);
   	if (verifyResponse === 9) {
   		return ExperianCheckResults.FULL_MATCH;
   	} else if (verifyResponse !== 9 && attemptCount === undefined) {
