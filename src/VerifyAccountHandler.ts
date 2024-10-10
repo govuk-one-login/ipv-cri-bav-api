@@ -23,7 +23,8 @@ export const logger = new Logger({
 
 const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE, serviceName: POWERTOOLS_SERVICE_NAME });
 
-let HMRC_TOKEN: string;
+let VENDOR_TOKEN: string;
+let CREDENTIAL_VENDOR: string;
 export class VerifyAccountHandler implements LambdaInterface {
 
 	@metrics.logMetrics({ throwOnEmptyMetrics: false, captureColdStartMetric: true })
@@ -35,14 +36,23 @@ export class VerifyAccountHandler implements LambdaInterface {
 		try {
 			const { sessionId, body, encodedHeader } = this.validateEvent(event);
 			const clientIpAddress = event.headers[Constants.X_FORWARDED_FOR] ?? event.requestContext.identity?.sourceIp;
+			const credentialVendorSsmPath = checkEnvironmentVariable(EnvironmentVariables.CREDENTIAL_VENDOR_SSM_PATH, logger);
+			CREDENTIAL_VENDOR = await getParameter(credentialVendorSsmPath);
+			if (CREDENTIAL_VENDOR === "HMRC") {
+				const hmrcTokenSsmPath = checkEnvironmentVariable(EnvironmentVariables.HMRC_TOKEN_SSM_PATH, logger);
+    			VENDOR_TOKEN = await getParameter(hmrcTokenSsmPath);
 
-			const hmrcTokenSsmPath = checkEnvironmentVariable(EnvironmentVariables.HMRC_TOKEN_SSM_PATH, logger);
-    	HMRC_TOKEN = await getParameter(hmrcTokenSsmPath);
+				logger.appendKeys({ sessionId });
+				logger.info("Starting VerifyAccountRequestProcessorHmrc");
+				return await VerifyAccountRequestProcessor.getInstance(logger, metrics, VENDOR_TOKEN).processHmrcRequest(sessionId, body, clientIpAddress, encodedHeader);
+			} else {
+				const experianTokenSsmPath = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_TOKEN_SSM_PATH, logger);
+				VENDOR_TOKEN = await getParameter(experianTokenSsmPath);
+				logger.appendKeys({ sessionId });
+				logger.info("Starting VerifyAccountRequestProcessorExperian");
+				return await VerifyAccountRequestProcessor.getInstance(logger, metrics, VENDOR_TOKEN).processExperianRequest(sessionId, body, clientIpAddress, encodedHeader);
+			}
 
-			logger.appendKeys({ sessionId });
-			logger.info("Starting VerifyAccountRequestProcessor");
-
-			return await VerifyAccountRequestProcessor.getInstance(logger, metrics, HMRC_TOKEN).processRequest(sessionId, body, clientIpAddress, encodedHeader);
 		} catch (error: any) {
 			logger.error({ message: "An error has occurred.", error, messageCode: MessageCodes.SERVER_ERROR });
 			if (error instanceof AppError) {

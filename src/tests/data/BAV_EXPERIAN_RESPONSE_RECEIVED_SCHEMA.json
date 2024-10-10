@@ -63,34 +63,6 @@
     "restricted": {
       "type": "object",
       "properties": {
-        "Cop_request_details": {
-          "type": "array",
-          "items": [
-            {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "type": "string"
-                },
-                "sortCode": {
-                  "type": "string"
-                },
-                "accountNumber": {
-                  "type": "string"
-                },
-                "attemptNum": {
-                  "type": "integer"
-                }
-              },
-              "required": [
-                "name",
-                "sortCode",
-                "accountNumber",
-                "attemptNum"
-              ]
-            }
-          ]
-        },
         "device_information": {
           "type": "object",
           "properties": {
@@ -104,7 +76,6 @@
         }
       },
       "required": [
-        "Cop_request_details",
         "device_information"
       ]
     }

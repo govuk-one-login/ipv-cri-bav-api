@@ -5,6 +5,8 @@ export type TxmaEventName =
 	"BAV_CRI_START" | 
 	"BAV_COP_REQUEST_SENT" | 
 	"BAV_COP_RESPONSE_RECEIVED" | 
+	"BAV_EXPERIAN_REQUEST_SENT" |
+	"BAV_EXPERIAN_RESPONSE_RECEIVED" |
 	"BAV_CRI_VC_ISSUED" |
 	"BAV_CRI_END" | 
 	"BAV_CRI_SESSION_ABORTED";
@@ -28,6 +30,13 @@ export interface BankAccountDetails {
 	accountNumber: string;
 }
 
+export interface ExperianRequestDetails {
+	name: string;
+	sortCode: string;
+	accountNumber: string;
+	attemptNum: number;
+}
+
 export interface CopRequestDetails {
 	name: string;
 	sortCode: string;
@@ -39,6 +48,7 @@ export interface RestrictedObject {
 	name?: PersonIdentityName[];
 	birthDate?: PersonIdentityBirthDate[];
 	bankAccount?: BankAccountDetails[];
+	Experian_request_details?: ExperianRequestDetails[];
 	CoP_request_details?: CopRequestDetails[];
 	device_information?: {
 		encoded: string;

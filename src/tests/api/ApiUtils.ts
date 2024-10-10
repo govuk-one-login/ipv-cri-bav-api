@@ -6,6 +6,8 @@ import { CloudWatchClient, DescribeAlarmsCommand, DescribeAlarmsCommandInput } f
 const client = new CloudWatchClient({ region: "eu-west-2" });
 import * as BAV_COP_REQUEST_SENT_SCHEMA from "../data/BAV_COP_REQUEST_SENT_SCHEMA.json";
 import * as BAV_COP_RESPONSE_RECEIVED_SCHEMA from "../data/BAV_COP_RESPONSE_RECEIVED_SCHEMA.json";
+import * as BAV_EXPERIAN_REQUEST_SENT_SCHEMA from "../data/BAV_EXPERIAN_REQUEST_SENT_SCHEMA.json";
+import * as BAV_EXPERIAN_RESPONSE_RECEIVED_SCHEMA from "../data/BAV_EXPERIAN_RESPONSE_RECEIVED_SCHEMA.json";
 import * as BAV_CRI_END_SCHEMA from "../data/BAV_CRI_END_SCHEMA.json";
 import * as BAV_CRI_SESSION_ABORTED_SCHEMA from "../data/BAV_CRI_SESSION_ABORTED_SCHEMA.json";
 import * as BAV_CRI_START_SCHEMA from "../data/BAV_CRI_START_SCHEMA.json";
@@ -14,6 +16,8 @@ import * as BAV_CRI_VC_ISSUED_SCHEMA from "../data/BAV_CRI_VC_ISSUED_SCHEMA.json
 const ajv = new Ajv({ strictTuples: false });
 ajv.addSchema(BAV_COP_REQUEST_SENT_SCHEMA, "BAV_COP_REQUEST_SENT_SCHEMA");
 ajv.addSchema(BAV_COP_RESPONSE_RECEIVED_SCHEMA, "BAV_COP_RESPONSE_RECEIVED_SCHEMA");
+ajv.addSchema(BAV_EXPERIAN_REQUEST_SENT_SCHEMA, "BAV_EXPERIAN_REQUEST_SENT_SCHEMA");
+ajv.addSchema(BAV_EXPERIAN_RESPONSE_RECEIVED_SCHEMA, "BAV_EXPERIAN_RESPONSE_RECEIVED_SCHEMA");
 ajv.addSchema(BAV_CRI_END_SCHEMA, "BAV_CRI_END_SCHEMA");
 ajv.addSchema(BAV_CRI_START_SCHEMA, "BAV_CRI_START_SCHEMA");
 ajv.addSchema(BAV_CRI_SESSION_ABORTED_SCHEMA, "BAV_CRI_SESSION_ABORTED_SCHEMA");
@@ -29,6 +33,8 @@ interface AllTxmaEvents {
 	"BAV_CRI_START"?: TxmaEvent;
 	"BAV_COP_REQUEST_SENT"?: TxmaEvent;
 	"BAV_COP_RESPONSE_RECEIVED"?: TxmaEvent;
+	"BAV_EXPERIAN_REQUEST_SENT"?: TxmaEvent;
+	"BAV_EXPERIAN_RESPONSE_RECEIVED"?: TxmaEvent;
 	"BAV_CRI_VC_ISSUED"?: TxmaEvent;
 	"BAV_CRI_END"?: TxmaEvent;
 	"BAV_CRI_SESSION_ABORTED"?: TxmaEvent;

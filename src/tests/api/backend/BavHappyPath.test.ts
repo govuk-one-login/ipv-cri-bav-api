@@ -85,8 +85,8 @@ describe("BAV CRI happy path tests", () => {
 			const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 3);
 
 			validateTxMAEventData({ eventName: "BAV_CRI_START", schemaName: "BAV_CRI_START_SCHEMA" }, allTxmaEventBodies);
-			validateTxMAEventData({ eventName: "BAV_COP_REQUEST_SENT", schemaName: "BAV_COP_REQUEST_SENT_SCHEMA" }, allTxmaEventBodies);
-			validateTxMAEventData({ eventName: "BAV_COP_RESPONSE_RECEIVED", schemaName: "BAV_COP_RESPONSE_RECEIVED_SCHEMA" }, allTxmaEventBodies);
+			validateTxMAEventData({ eventName: "BAV_EXPERIAN_REQUEST_SENT", schemaName: "BAV_EXPERIAN_REQUEST_SENT_SCHEMA" }, allTxmaEventBodies);
+			validateTxMAEventData({ eventName: "BAV_EXPERIAN_RESPONSE_RECEIVED", schemaName: "BAV_EXPERIAN_RESPONSE_RECEIVED_SCHEMA" }, allTxmaEventBodies);
 		});
 		it.each([
 			["00111112"],
@@ -111,8 +111,8 @@ describe("BAV CRI happy path tests", () => {
 			const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 3);
 
 			validateTxMAEventData({ eventName: "BAV_CRI_START", schemaName: "BAV_CRI_START_SCHEMA" }, allTxmaEventBodies);
-			validateTxMAEventData({ eventName: "BAV_COP_REQUEST_SENT", schemaName: "BAV_COP_REQUEST_SENT_SCHEMA" }, allTxmaEventBodies);
-			validateTxMAEventData({ eventName: "BAV_COP_RESPONSE_RECEIVED", schemaName: "BAV_COP_RESPONSE_RECEIVED_SCHEMA" }, allTxmaEventBodies);
+			validateTxMAEventData({ eventName: "BAV_EXPERIAN_REQUEST_SENT", schemaName: "BAV_EXPERIAN_REQUEST_SENT_SCHEMA" }, allTxmaEventBodies);
+			validateTxMAEventData({ eventName: "BAV_EXPERIAN_RESPONSE_RECEIVED", schemaName: "BAV_EXPERIAN_RESPONSE_RECEIVED_SCHEMA" }, allTxmaEventBodies);
 		});
 
 		it.each([
@@ -138,8 +138,8 @@ describe("BAV CRI happy path tests", () => {
 			const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 3);
 
 			validateTxMAEventData({ eventName: "BAV_CRI_START", schemaName: "BAV_CRI_START_SCHEMA" }, allTxmaEventBodies);
-			validateTxMAEventData({ eventName: "BAV_COP_REQUEST_SENT", schemaName: "BAV_COP_REQUEST_SENT_SCHEMA" }, allTxmaEventBodies);
-			validateTxMAEventData({ eventName: "BAV_COP_RESPONSE_RECEIVED", schemaName: "BAV_COP_RESPONSE_RECEIVED_SCHEMA" }, allTxmaEventBodies);
+			validateTxMAEventData({ eventName: "BAV_EXPERIAN_REQUEST_SENT", schemaName: "BAV_EXPERIAN_REQUEST_SENT_SCHEMA" }, allTxmaEventBodies);
+			validateTxMAEventData({ eventName: "BAV_EXPERIAN_RESPONSE_RECEIVED", schemaName: "BAV_EXPERIAN_RESPONSE_RECEIVED_SCHEMA" }, allTxmaEventBodies);
 		});
 	});
 
@@ -217,8 +217,8 @@ describe("BAV CRI happy path tests", () => {
 			const rawBody = userInfoResponse.data["https://vocab.account.gov.uk/v1/credentialJWT"][0].split(".")[1];
 			const decodedBody = decodeRawBody(rawBody);
 
-			const hmrcUuid = await getKeyFromSession(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "hmrcUuid");
-			expect(decodedBody.vc.evidence[0].txn).toBe(hmrcUuid);
+			const vendorUuid = await getKeyFromSession(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "vendorUuid");
+			expect(decodedBody.vc.evidence[0].txn).toBe(vendorUuid);
 
 			expect(decodedBody.vc.credentialSubject.bankAccount[0].sortCode).toBe(bankDetails.sort_code);
 			expect(decodedBody.vc.credentialSubject.bankAccount[0].accountNumber).toBe(bankDetails.account_number.padStart(8, "0"));
@@ -277,8 +277,8 @@ describe("BAV CRI happy path tests", () => {
 			const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 4);
 
 			validateTxMAEventData({ eventName: "BAV_CRI_START", schemaName: "BAV_CRI_START_SCHEMA" }, allTxmaEventBodies);
-			validateTxMAEventData({ eventName: "BAV_COP_REQUEST_SENT", schemaName: "BAV_COP_REQUEST_SENT_SCHEMA" }, allTxmaEventBodies);
-			validateTxMAEventData({ eventName: "BAV_COP_RESPONSE_RECEIVED", schemaName: "BAV_COP_RESPONSE_RECEIVED_SCHEMA" }, allTxmaEventBodies);
+			validateTxMAEventData({ eventName: "BAV_EXPERIAN_REQUEST_SENT", schemaName: "BAV_EXPERIAN_REQUEST_SENT_SCHEMA" }, allTxmaEventBodies);
+			validateTxMAEventData({ eventName: "BAV_EXPERIAN_RESPONSE_RECEIVED", schemaName: "BAV_EXPERIAN_RESPONSE_RECEIVED_SCHEMA" }, allTxmaEventBodies);
 			validateTxMAEventData({ eventName: "BAV_CRI_SESSION_ABORTED", schemaName: "BAV_CRI_SESSION_ABORTED_SCHEMA" }, allTxmaEventBodies);
 
 			expect(response.headers).toBeTruthy();

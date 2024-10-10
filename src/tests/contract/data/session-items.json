@@ -36,7 +36,7 @@
                   "expiryDate": {
                     "N": "4865226539"
                   },
-                  "hmrcUuid": {
+                  "vendorUuid": {
                     "S": "a4c91d5c-b125-4475-8c34-ed07ee1622be"
                   },
                   "redirectUri": {
