@@ -257,7 +257,7 @@ export const experianVerifyResponse = {
 	},
 };
 
-export const experianVerifyResponseErrorFail = {
+export const experianVerifyResponseError2 = {
 	"responseHeader": {
 		  "requestType": "BAVConsumer-Standard",
 		  "clientReferenceId": "${context.request.body:$.header.clientReferenceId}",
@@ -532,3 +532,99 @@ export const experianVerifyResponseErrorFail = {
 		],
 	   },
 };
+
+export const experianVerifyResponseError3 = {
+	...experianVerifyResponseError2,
+	"clientResponsePayload": {
+	  ...experianVerifyResponseError2.clientResponsePayload,
+	  "decisionElements": experianVerifyResponseError2.clientResponsePayload.decisionElements.map((element, index) =>
+			index === 0
+		  ? {
+			  ...element,
+			  "warningsErrors": element?.warningsErrors?.map((warning, warningIndex) =>
+						warningIndex === 0
+				  ? { ...warning, "responseCode": "3" }
+				  : warning,
+			  ),
+				}
+		  : element,
+	  ),
+	},
+};
+
+export const experianVerifyResponseError6 = {
+	...experianVerifyResponseError2,
+	"clientResponsePayload": {
+	  ...experianVerifyResponseError2.clientResponsePayload,
+	  "decisionElements": experianVerifyResponseError2.clientResponsePayload.decisionElements.map((element, index) =>
+			index === 0
+		  ? {
+			  ...element,
+			  "warningsErrors": element?.warningsErrors?.map((warning, warningIndex) =>
+						warningIndex === 0
+				  ? { ...warning, "responseCode": "6" }
+				  : warning,
+			  ),
+				}
+		  : element,
+	  ),
+	},
+};
+
+export const experianVerifyResponseError7 = {
+	...experianVerifyResponseError2,
+	"clientResponsePayload": {
+	  ...experianVerifyResponseError2.clientResponsePayload,
+	  "decisionElements": experianVerifyResponseError2.clientResponsePayload.decisionElements.map((element, index) =>
+			index === 0
+		  ? {
+			  ...element,
+			  "warningsErrors": element?.warningsErrors?.map((warning, warningIndex) =>
+						warningIndex === 0
+				  ? { ...warning, "responseCode": "7" }
+				  : warning,
+			  ),
+				}
+		  : element,
+	  ),
+	},
+};
+
+export const experianVerifyResponseError11 = {
+	...experianVerifyResponseError2,
+	"clientResponsePayload": {
+	  ...experianVerifyResponseError2.clientResponsePayload,
+	  "decisionElements": experianVerifyResponseError2.clientResponsePayload.decisionElements.map((element, index) =>
+			index === 0
+		  ? {
+			  ...element,
+			  "warningsErrors": element?.warningsErrors?.map((warning, warningIndex) =>
+						warningIndex === 0
+				  ? { ...warning, "responseCode": "11" }
+				  : warning,
+			  ),
+				}
+		  : element,
+	  ),
+	},
+};
+
+export const experianVerifyResponseError12 = {
+	...experianVerifyResponseError2,
+	"clientResponsePayload": {
+	  ...experianVerifyResponseError2.clientResponsePayload,
+	  "decisionElements": experianVerifyResponseError2.clientResponsePayload.decisionElements.map((element, index) =>
+			index === 0
+		  ? {
+			  ...element,
+			  "warningsErrors": element?.warningsErrors?.map((warning, warningIndex) =>
+						warningIndex === 0
+				  ? { ...warning, "responseCode": "12" }
+				  : warning,
+			  ),
+				}
+		  : element,
+	  ),
+	},
+};
+  

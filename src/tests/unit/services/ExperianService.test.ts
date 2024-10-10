@@ -3,7 +3,13 @@
 import { Logger } from "@aws-lambda-powertools/logger";
 import axios, { AxiosRequestConfig } from "axios";
 import { mock } from "jest-mock-extended";
-import { experianVerifyResponse } from "../data/experianEvents";
+import { experianVerifyResponse, 
+	experianVerifyResponseError2, 
+	experianVerifyResponseError3, 
+	experianVerifyResponseError6, 
+	experianVerifyResponseError7,
+	experianVerifyResponseError11,
+	experianVerifyResponseError12 } from "../data/experianEvents";
 import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../../../models/enums/MessageCodes";
 import { ExperianService } from "../../../services/ExperianService";
@@ -163,6 +169,32 @@ describe("Experian Service", () => {
 			expect(logger.error).toHaveBeenCalledWith({ message: "Error sending verify request to Experian", messageCode: MessageCodes.FAILED_VERIFYING_ACCOUNT, statusCode: 400 });
 			expect(axios.post).toHaveBeenCalledTimes(1);
 		});
+
+		it.each([
+			{ errorResponse: experianVerifyResponseError2, expectedMessage: "Response code 2: Modulus check algorithm is unavailable for these account details and therefore Bank Wizard cannot confirm the details are valid" },
+			{ errorResponse: experianVerifyResponseError3, expectedMessage: "Response code 3: Account number does not use a modulus check algorithm and therefore Bank Wizard cannot confirm the details are valid" },
+		  ])("returns correct logger response in case of Experian response", async ({ errorResponse, expectedMessage }) => {
+			jest.spyOn(axios, "post").mockResolvedValueOnce({ data: errorResponse });
+		  
+			await experianServiceTest.verify({ accountNumber, sortCode, name, uuid }, experianTokenSsmPath);
+		  
+			expect(logger.warn).toHaveBeenCalledWith({ message: expectedMessage });
+		  });
+
+		it.each([
+			{ errorResponse: experianVerifyResponseError6, expectedMessage: "Response code 6: Bank or branch code is not in use" },
+			{ errorResponse: experianVerifyResponseError7, expectedMessage: "Response code 7: Modulus check has failed. Although the formats of the supplied fields are correct, one or more of them are incorrect" },
+			{ errorResponse: experianVerifyResponseError11, expectedMessage: "Response code 11: Sort Code has been closed" },
+			{ errorResponse: experianVerifyResponseError12, expectedMessage: "Response code 12: Branch has been transferred and the accounts have been redirected to another branch" },
+		  ])("returns correct logger response in case of Experian response", async ({ errorResponse, expectedMessage }) => {
+			jest.spyOn(axios, "post").mockResolvedValueOnce({ data: errorResponse });
+		  
+			await experianServiceTest.verify({ accountNumber, sortCode, name, uuid }, experianTokenSsmPath);
+		  
+			expect(logger.error).toHaveBeenCalledWith({ message: expectedMessage });
+		  });
+
+
 	});
 
 	describe("#generateToken", () => {

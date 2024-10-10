@@ -69,36 +69,36 @@ export class ExperianService {
     			});
 
     			let personalDetailsScore;
-
-    			if (decisionElements[0]?.warningsErrors[0]?.responseCode) {
-    				switch (decisionElements[0].warningsErrors[0].responseCode) {
-    					case 2:
-						  personalDetailsScore = 1;
-						  this.logger.debug("Modulus check algorithm is unavailable for these account details and therefore Bank Wizard cannot confirm the details are valid");
+    			const responseCode = decisionElements[0]?.warningsErrors[0]?.responseCode;
+    			if (responseCode) {
+    				switch (responseCode) {
+    					case "2":
+						  personalDetailsScore = decisionElements[2].scores[0].score;
+						  this.logger.warn({ message: `Response code ${responseCode}: Modulus check algorithm is unavailable for these account details and therefore Bank Wizard cannot confirm the details are valid` });
 						  break;
-    					case 3:
-						  personalDetailsScore = 1;
-						  this.logger.debug("Account number does not use a modulus check algorithm and therefore Bank Wizard cannot confirm the details are valid");
+    					case "3":
+						  personalDetailsScore = decisionElements[2].scores[0].score;
+						  this.logger.warn({ message: `Response code ${responseCode}: Account number does not use a modulus check algorithm and therefore Bank Wizard cannot confirm the details are valid` });
 						  break;
-    					case 6:
-						  personalDetailsScore = 1;
-						  this.logger.debug("Bank or branch code is not in use");
+    					case "6":
+						  personalDetailsScore = decisionElements[2].scores[0].score;
+						  this.logger.error({ message: `Response code ${responseCode}: Bank or branch code is not in use` });
 						  break;
-    					case 7:
-						  personalDetailsScore = 1;
-						  this.logger.debug("Modulus check has failed. Although the formats of the supplied fields are correct, one or more of them are incorrect");
+    					case "7":
+						  personalDetailsScore = decisionElements[2].scores[0].score;
+						  this.logger.error({ message: `Response code ${responseCode}: Modulus check has failed. Although the formats of the supplied fields are correct, one or more of them are incorrect` });
 						  break;
-    					case 11:
-						  personalDetailsScore = 1;
-						  this.logger.debug("Sort Code has been closed");
+    					case "11":
+						  personalDetailsScore = decisionElements[2].scores[0].score;
+						  this.logger.error({ message: `Response code ${responseCode}: Sort Code has been closed` });
 						  break;
-    					case 12:
-						  personalDetailsScore = 1;
-						  this.logger.debug("Branch has been transferred and the accounts have been redirected to another branch");
+    					case "12":
+						  personalDetailsScore = decisionElements[2].scores[0].score;
+						  this.logger.error({ message: `Response code ${responseCode}: Branch has been transferred and the accounts have been redirected to another branch` });
 						  break;
     					default:
 						  personalDetailsScore = decisionElements[2].scores[0].score;
-						  this.logger.debug("No error");
+						  this.logger.debug({ message: "No error" });
 						  break;
 					  }
     			} else {
