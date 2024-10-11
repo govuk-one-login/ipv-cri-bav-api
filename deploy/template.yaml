@@ -111,6 +111,7 @@ Mappings:
       TESTHARNESSURL: "https://bav-test-harness-testharness.review-bav.dev.account.gov.uk"
       HMRCBASEURL: "https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev"
       HMRCVERIFYBASEURL: "https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev/misc/bank-account"
+      EXPERIANBASEURL: "https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev/"
     build:
       ISSUER: 'https://review-bav.build.account.gov.uk'
       DNSSUFFIX: review-bav.build.account.gov.uk
@@ -123,6 +124,7 @@ Mappings:
       HMRCBASEURL: "https://c99d36403h.execute-api.eu-west-2.amazonaws.com/build"
       HMRCVERIFYBASEURL: "https://c99d36403h.execute-api.eu-west-2.amazonaws.com/build/misc/bank-account"
       TESTHARNESSURL: "https://testharness.review-bav.build.account.gov.uk"
+      EXPERIANBASEURL: "https://c99d36403h.execute-api.eu-west-2.amazonaws.com/build/"
     staging:
       ISSUER: 'https://review-bav.staging.account.gov.uk'
       DNSSUFFIX: review-bav.staging.account.gov.uk
@@ -134,6 +136,7 @@ Mappings:
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
       HMRCBASEURL: "https://x0ch9rvyhe.execute-api.eu-west-2.amazonaws.com/staging"
       HMRCVERIFYBASEURL: "https://x0ch9rvyhe.execute-api.eu-west-2.amazonaws.com/staging/misc/bank-account"
+      EXPERIANBASEURL: "https://proxy.review-bav.integration.account.gov.uk/experian"
     integration:
       ISSUER: 'https://review-bav.integration.account.gov.uk'
       DNSSUFFIX: review-bav.integration.account.gov.uk
@@ -145,6 +148,7 @@ Mappings:
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
       HMRCBASEURL: "https://proxy.review-bav.integration.account.gov.uk/hmrc"
       HMRCVERIFYBASEURL: "https://proxy.review-bav.integration.account.gov.uk/hmrc/misc/bank-account"
+      EXPERIANBASEURL: "https://proxy.review-bav.integration.account.gov.uk/experian"
     production:
       ISSUER: 'https://review-bav.account.gov.uk'
       DNSSUFFIX: review-bav.account.gov.uk
@@ -156,6 +160,7 @@ Mappings:
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
       HMRCBASEURL: "https://proxy.review-bav.account.gov.uk/hmrc"
       HMRCVERIFYBASEURL: "https://proxy.review-bav.account.gov.uk/misc/bank-account/hmrc"
+      EXPERIANBASEURL: "https://proxy.review-bav.integration.account.gov.uk/experian"
   TxMAAccounts:
     # EVENTS is used to egress to TxMA.
     dev:
@@ -283,6 +288,8 @@ Globals:
           Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-name"
         SESSION_TABLE:
           Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
+        EXPERIAN_TOKEN_TABLE:
+          Fn::ImportValue: !Sub "${L2DynamoStackName}-experian-token-table-name"
         ISSUER: !FindInMap [EnvironmentVariables, !Ref Environment, ISSUER]
         SECRET_PREFIX: !If [
           UseSecretPrefix,
@@ -4743,6 +4750,24 @@ Outputs:
       Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-arn"
     Export:
       Name: !Sub ${AWS::StackName}-PersonIdentityTable-arn
+  ExperianTokenTableName:
+    Description: "Name of the Experian Token DynamoDB table"
+    Value:
+      Fn::ImportValue: !Sub "${L2DynamoStackName}-experian-token-table-name"
+    Export:
+      Name: !Sub ${AWS::StackName}-ExperianTokenTable-name
+  ExperianTokenTableARN:
+    Description: "Arn of the Experian Token DynamoDB table"
+    Value:
+      Fn::ImportValue: !Sub "${L2DynamoStackName}-experian-token-table-arn"
+    Export:
+      Name: !Sub ${AWS::StackName}-ExperianToken-arn
+  ExperianTokenTableEcryptionARN:
+    Description: "Arn of the ExperianTokenTableEncryptionKey"
+    Value:
+      Fn::ImportValue: !Sub "${L2DynamoStackName}-experian-token-table-key-arn"
+    Export:
+      Name: !Sub ${AWS::StackName}-ExperianTokenTableEncryptionKey-arn
   BAVIPVStubExecuteURL:
     Condition: IsNotProdLikeEnvironment
     Description: "BAV IPV Stub"
