@@ -89,7 +89,7 @@ describe("Experian service", () => {
 
 		it("Should generate a new access token if a valid access token does not exist", async () => {
 			experianServiceTest.checkExperianToken = jest.fn().mockResolvedValue(undefined);
-			jest.spyOn(axios, "post").mockResolvedValue({ token: mockToken });
+			jest.spyOn(axios, "post").mockResolvedValue({ data: mockToken });
 			const data = await experianServiceTest.generateExperianToken(clientPassword, clientUsername, clientSecret, clientId);
 			expect(data).toBe(mockToken);
 		});

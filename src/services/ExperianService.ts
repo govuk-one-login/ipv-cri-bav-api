@@ -47,13 +47,13 @@ export class ExperianService {
 					client_id : clientId,
 				};
 				
-				const { token }: { token: ExperianTokenResponse } = await axios.post(
+				const { data }: { data: ExperianTokenResponse } = await axios.post(
 					`${this.experianBaseUrl}${Constants.EXPERIAN_TOKEN_ENDPOINT_PATH}`,
 					params,
 				);
 				this.logger.info("Received response from experian token endpoint");
-				await this.saveExperianToken(token);
-				return token;
+				await this.saveExperianToken(data);
+				return data;
 			} catch (error: any) {
 				this.logger.error({ message: "Error generating experian token", statusCode: error?.response?.status, messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN });
 				throw new AppError(HttpCodesEnum.SERVER_ERROR, "Error generating experian token");
@@ -105,10 +105,8 @@ export class ExperianService {
 		}
 
 		const twentyFiveMinutesInMillis = 25 * 60 * 1000; 
-		if (token.Item 
-			&& Date.now() < parseInt(token.Item.issued_at) + twentyFiveMinutesInMillis) {
+		if (token.Item && Date.now() < Number(token.Item.issued_at) + twentyFiveMinutesInMillis) {
 			return token.Item as ExperianTokenResponse;
-			
 		} 
     	return undefined; 
 	}
