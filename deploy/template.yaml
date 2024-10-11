@@ -905,10 +905,8 @@ Resources:
       Dimensions:
         - Name: Resource
           Value: !Sub "${AWS::StackName}-SessionFunction:live"
-        - Name: FunctionName
-          Value: !Ref SessionFunction
         - Name: ExecutedVersion
-          Value: !GetAtt SessionFunction.Version.Version
+          Value: !Sub SessionFunction.Version.Version
       Period: 60
       EvaluationPeriods: 1
       Threshold: 1
@@ -1408,10 +1406,8 @@ Resources:
       Dimensions:
         - Name: Resource
           Value: !Sub "${AWS::StackName}-AbortFunction:live"
-        - Name: FunctionName
-          Value: !Ref AbortFunction
         - Name: ExecutedVersion
-          Value: !GetAtt AbortFunction.Version.Version
+          Value: !Sub AbortFunction.Version.Version
       Period: 60
       EvaluationPeriods: 1
       Threshold: 1
@@ -1825,10 +1821,8 @@ Resources:
       Dimensions:
         - Name: Resource
           Value: !Sub "${AWS::StackName}-PersonInfoFunction:live"
-        - Name: FunctionName
-          Value: !Ref PersonInfoFunction
         - Name: ExecutedVersion
-          Value: !GetAtt PersonInfoFunction.Version.Version
+          Value: !Sub PersonInfoFunction.Version.Version
       Period: 60
       EvaluationPeriods: 1
       Threshold: 1
@@ -2225,10 +2219,8 @@ Resources:
       Dimensions:
         - Name: Resource
           Value: !Sub "${AWS::StackName}-PersonInfoKeyFunction:live"
-        - Name: FunctionName
-          Value: !Ref PersonInfoKeyFunction
         - Name: ExecutedVersion
-          Value: !GetAtt PersonInfoKeyFunction.Version.Version
+          Value: !Sub PersonInfoKeyFunction.Version.Version
       Period: 60
       EvaluationPeriods: 1
       Threshold: 1
@@ -2660,10 +2652,8 @@ Resources:
       Dimensions:
         - Name: Resource
           Value: !Sub "${AWS::StackName}-UserInfoFunction:live"
-        - Name: FunctionName
-          Value: !Ref UserInfoFunction
         - Name: ExecutedVersion
-          Value: !GetAtt UserInfoFunction.Version.Version
+          Value: !Sub UserInfoFunction.Version.Version
       Period: 60
       EvaluationPeriods: 1
       Threshold: 1
@@ -3073,10 +3063,8 @@ Resources:
       Dimensions:
         - Name: Resource
           Value: !Sub "${AWS::StackName}-TokenFunction:live"
-        - Name: FunctionName
-          Value: !Ref TokenFunction
         - Name: ExecutedVersion
-          Value: !GetAtt TokenFunction.Version.Version
+          Value: !Sub TokenFunction.Version.Version
       Period: 60
       EvaluationPeriods: 1
       Threshold: 1
@@ -3489,10 +3477,8 @@ Resources:
       Dimensions:
         - Name: Resource
           Value: !Sub "${AWS::StackName}-AuthorizationFunction:live"
-        - Name: FunctionName
-          Value: !Ref AuthorizationFunction
         - Name: ExecutedVersion
-          Value: !GetAtt AuthorizationFunction.Version.Version
+          Value: !Sub AuthorizationFunction.Version.Version
       Period: 60
       EvaluationPeriods: 1
       Threshold: 1
@@ -3933,10 +3919,8 @@ Resources:
       Dimensions:
         - Name: Resource
           Value: !Sub "${AWS::StackName}-VerifyAccountFunction:live"
-        - Name: FunctionName
-          Value: !Ref VerifyAccountFunction
         - Name: ExecutedVersion
-          Value: !GetAtt VerifyAccountFunction.Version.Version
+          Value: !Sub VerifyAccountFunction.Version.Version
       Period: 60
       EvaluationPeriods: 1
       Threshold: 1
@@ -5025,10 +5009,8 @@ Resources:
       Dimensions:
         - Name: Resource
           Value: !Sub "${AWS::StackName}-HmrcTokenFunction:live"
-        - Name: FunctionName
-          Value: !Ref HmrcTokenFunction
         - Name: ExecutedVersion
-          Value: !GetAtt HmrcTokenFunction.Version.Version
+          Value: !Sub HmrcTokenFunction.Version.Version
       Period: 60
       EvaluationPeriods: 1
       Threshold: 1
@@ -5231,10 +5213,8 @@ Resources:
       Dimensions:
         - Name: Resource
           Value: !Sub "${AWS::StackName}-PartialNameMatchFunction:live"
-        - Name: FunctionName
-          Value: !Ref PartialNameMatchFunction
         - Name: ExecutedVersion
-          Value: !GetAtt PartialNameMatchFunction.Version.Version
+          Value: !Sub PartialNameMatchFunction.Version.Version
       Period: 60
       EvaluationPeriods: 1
       Threshold: 1
