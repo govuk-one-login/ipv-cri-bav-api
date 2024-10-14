@@ -5,20 +5,27 @@ import { ExperianService } from "../../../services/ExperianService";
 import { mock } from "jest-mock-extended";
 import { createDynamoDbClient } from "../../../utils/DynamoDBFactory";
 import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
-import axios from "axios";
+import axios, { AxiosRequestConfig } from "axios";
+import { Constants } from "../../../utils/Constants";
 
 let experianServiceTest: ExperianService;
 const experianBaseUrl = process.env.EXPERIAN_BASE_URL!;
 const mockDynamoDbClient = jest.mocked(createDynamoDbClient());
 const experianTokenTableName = "EXPERIANSTOKENTABLE";
 const logger = mock<Logger>();
+
 jest.spyOn(Date, "now").mockReturnValue(1728637200000); // 11/10/2024 09:00:00.000
+jest.mock("crypto", () => ({
+	...jest.requireActual("crypto"),
+	randomUUID: () => "randomId",
+}));
+
 const mockToken = {
 	"issued_at" : "1728637200000",
 	"expires_in" : "1800",
 	"token_type" : "Bearer",
 	"access_token" : "TOKEN",
-	"refresh_token" : "${random.alphanumeric(length=32)}",
+	"refresh_token" : "123456789123456789",
 };
 
 describe("Experian service", () => {
@@ -76,21 +83,40 @@ describe("Experian service", () => {
 	});
 
 	describe("#generateExperianToken", () => {
-		const clientPassword = "12345678";
 		const clientUsername = "123456";
+		const clientPassword = "12345678";
 		const clientSecret = "Test";
-		const clientId = "uuid";
+		const clientId = "clientId";
+
+		const expectedParams = {
+			username: clientUsername,
+			password: clientPassword,
+			client_id: clientId,
+			client_secret: clientSecret,
+		};
+
+		const config: AxiosRequestConfig<any> = {
+			headers: {
+				"Content-Type": "application/json",
+				"X-Correlation-Id": "randomId",
+				"X-User-Domain": "cabinetofficegds.com",
+			},
+		};
 
 		it("Should return a valid access token response if a valid access token already exists", async () => {
 			experianServiceTest.checkExperianToken = jest.fn().mockResolvedValue(mockToken);
-			const data = await experianServiceTest.generateExperianToken(clientPassword, clientUsername, clientSecret, clientId);
+			const data = await experianServiceTest.generateExperianToken(clientUsername, clientPassword, clientId, clientSecret);
 			expect(data).toBe(mockToken);
 		});
 
 		it("Should generate a new access token if a valid access token does not exist", async () => {
 			experianServiceTest.checkExperianToken = jest.fn().mockResolvedValue(undefined);
 			jest.spyOn(axios, "post").mockResolvedValue({ data: mockToken });
-			const data = await experianServiceTest.generateExperianToken(clientPassword, clientUsername, clientSecret, clientId);
+			const data = await experianServiceTest.generateExperianToken(clientUsername, clientPassword, clientId, clientSecret);
+			expect(axios.post).toHaveBeenCalledWith(`${experianBaseUrl}${Constants.EXPERIAN_TOKEN_ENDPOINT_PATH}`,
+				expectedParams,
+				config,
+			);
 			expect(data).toBe(mockToken);
 		});
 

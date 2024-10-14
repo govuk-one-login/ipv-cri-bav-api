@@ -1,11 +1,12 @@
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Constants } from "../utils/Constants";
-import axios from "axios";
+import axios, { AxiosRequestConfig } from "axios";
 import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { ExperianTokenResponse } from "../models/IExperianResponse";
 import { DynamoDBDocument, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { randomUUID } from "crypto";
 
 export class ExperianService {
 	readonly logger: Logger;
@@ -32,7 +33,7 @@ export class ExperianService {
     	return ExperianService.instance;
 	}
 
-	async generateExperianToken(clientPassword: string, clientUsername: string, clientSecret: string, clientId: string): Promise<ExperianTokenResponse> {
+	async generateExperianToken(clientUsername: string, clientPassword: string, clientId: string, clientSecret: string): Promise<ExperianTokenResponse> {
     	this.logger.info({ message: `Checking ${this.experianTokenTableName} for valid token` });
 		const token = await this.checkExperianToken();
 		if (token) {
@@ -41,15 +42,24 @@ export class ExperianService {
 			this.logger.info("requestExperianToken - no valid token - trying to generate new Experian token");
 			try {
 				const params = {
-					clientPassword,
-					clientUsername,
-					client_secret : clientSecret,
-					client_id : clientId,
+					username: clientUsername,
+					password: clientPassword,
+					client_id: clientId,
+					client_secret: clientSecret,
 				};
-				
+
+				const config: AxiosRequestConfig<any> = {
+    				headers: {
+    					"Content-Type": "application/json",
+						"X-Correlation-Id": randomUUID(),
+						"X-User-Domain": "cabinetofficegds.com",
+    				},
+				};
+
 				const { data }: { data: ExperianTokenResponse } = await axios.post(
 					`${this.experianBaseUrl}${Constants.EXPERIAN_TOKEN_ENDPOINT_PATH}`,
 					params,
+					config,
 				);
 				this.logger.info("Received response from experian token endpoint");
 				await this.saveExperianToken(data);
