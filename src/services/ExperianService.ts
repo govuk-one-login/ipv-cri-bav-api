@@ -66,7 +66,7 @@ export class ExperianService {
 				return data;
 			} catch (error: any) {
 				this.logger.error({ message: "Error generating experian token", statusCode: error?.response?.status, messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN });
-				throw new AppError(HttpCodesEnum.SERVER_ERROR, "Error generating experian token");
+				throw new AppError(HttpCodesEnum.BAD_REQUEST, "Error generating experian token");
 			}
 		}
 	}
@@ -82,7 +82,6 @@ export class ExperianService {
 				expires_in: token.expires_in,
 				token_type: token.token_type,
 				access_token: token.access_token,
-				refresh_token: token.refresh_token,
 			},
 		});
 
