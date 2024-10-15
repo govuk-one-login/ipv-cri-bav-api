@@ -77,7 +77,7 @@ export class ExperianService {
 		const putExperianTokenCommand = new PutCommand({
 			TableName: this.experianTokenTableName,
 			Item: { 
-				id: "1",
+				id: "1", //Static primary key - table will only store 1 token, old token will always be overwritten
 				issued_at: token.issued_at,
 				expires_in: token.expires_in,
 				token_type: token.token_type,
@@ -96,11 +96,11 @@ export class ExperianService {
 	}
 
 	async checkExperianToken(): Promise<ExperianTokenResponse | undefined> {
-		this.logger.debug("Fetching Experian token from table " + this.experianTokenTableName);
+		this.logger.info("Fetching Experian token from table " + this.experianTokenTableName);
 		const getExperianTokenCommand = new GetCommand({
 			TableName: this.experianTokenTableName,
 			Key: {
-				id: "1",
+				id: "1", //Static primary key - table will only store 1 token, old token will always be overwritten
 			},
 		});
 
