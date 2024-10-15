@@ -4,7 +4,7 @@ import axios, { AxiosRequestConfig } from "axios";
 import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../models/enums/MessageCodes";
-import { ExperianTokenResponse } from "../models/IExperianResponse";
+import { ExperianTokenResponse, StoredExperianToken } from "../models/IExperianResponse";
 import { DynamoDBDocument, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
 
@@ -33,11 +33,14 @@ export class ExperianService {
     	return ExperianService.instance;
 	}
 
-	async generateExperianToken(clientUsername: string, clientPassword: string, clientId: string, clientSecret: string): Promise<ExperianTokenResponse> {
+	async generateExperianToken(clientUsername: string, clientPassword: string, clientId: string, clientSecret: string): Promise<StoredExperianToken | ExperianTokenResponse> {
     	this.logger.info({ message: `Checking ${this.experianTokenTableName} for valid token` });
-		const token = await this.checkExperianToken();
-		if (token) {
-			return token;
+
+		const storedToken = await this.getExperianToken();
+		const isValidToken = this.checkExperianToken(storedToken);
+
+		if (isValidToken) {
+			return storedToken;
 		} else {		
 			this.logger.info("requestExperianToken - no valid token - trying to generate new Experian token");
 			try {
@@ -66,7 +69,8 @@ export class ExperianService {
 				return data;
 			} catch (error: any) {
 				this.logger.error({ message: "Error generating experian token", statusCode: error?.response?.status, messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN });
-				throw new AppError(HttpCodesEnum.BAD_REQUEST, "Error generating experian token");
+				this.logger.info("Returning previous Experian token due to error generating a new one.");
+				return storedToken;
 			}
 		}
 	}
@@ -94,7 +98,7 @@ export class ExperianService {
 		}
 	}
 
-	async checkExperianToken(): Promise<ExperianTokenResponse | undefined> {
+	async getExperianToken(): Promise<StoredExperianToken> {
 		this.logger.info("Fetching Experian token from table " + this.experianTokenTableName);
 		const getExperianTokenCommand = new GetCommand({
 			TableName: this.experianTokenTableName,
@@ -112,12 +116,16 @@ export class ExperianService {
 			});
 			throw new AppError(HttpCodesEnum.SERVER_ERROR, "Error retrieving Experian token");
 		}
+		return token.Item as StoredExperianToken;
+	}
 
+	checkExperianToken(token: StoredExperianToken): boolean {
 		const twentyFiveMinutesInMillis = 25 * 60 * 1000; 
-		if (token.Item && Date.now() < Number(token.Item.issued_at) + twentyFiveMinutesInMillis) {
-			return token.Item as ExperianTokenResponse;
+		const tokenValidityWindow = Number(token.issued_at) + twentyFiveMinutesInMillis;
+		if (Date.now() < tokenValidityWindow) {
+			return true;
 		} 
-    	return undefined; 
+    	return false; 
 	}
 }
 
