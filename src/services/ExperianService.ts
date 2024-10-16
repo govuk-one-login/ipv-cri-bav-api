@@ -40,7 +40,7 @@ export class ExperianService {
     	const params = {
     		header: {
 			  tenantId: uuid,
-			  requestType: "BAVConsumer-Standard",
+			  requestType: Constants.EXPERIAN_PRODUCT_NAME,
     		},
     		account: { accountNumber, sortCode },
     		subject: { name },
@@ -62,20 +62,27 @@ export class ExperianService {
     			const { data } = await axios.post(endpoint, params, { headers });
     			const decisionElements = data?.clientResponsePayload?.decisionElements;
 
+				const logObject = decisionElements.find((object: { auditLogs: Array<object> }) => object.auditLogs)
     			this.logger.debug({
     				message: "Recieved response from Experian verify request",
-    				eventType: decisionElements[1].auditLogs[0].eventType,
-    				eventOutcome: decisionElements[1].auditLogs[0].eventOutcome,
+    				eventType: logObject.auditLogs[0].eventType,
+    				eventOutcome: logObject.auditLogs[0].eventOutcome,
     			});
 
-    			let personalDetailsScore;
-    			const responseCode = decisionElements[0]?.warningsErrors[0]?.responseCode ?? undefined;
-    			if (responseCode) {
-    				return logResponseCode(responseCode, personalDetailsScore, decisionElements, this.logger);
-    			} else {
-    				personalDetailsScore = decisionElements[2].scores[0].score;
-    				return personalDetailsScore;
-    			}
+				
+    			const errorObject = decisionElements.find((object: { warningsErrors: Array<{ responseType: string; responseCode: string; responseMessage: string }> }) => object.warningsErrors)
+				const responseCodeObject = errorObject?.warningsErrors.find((object: { responseType: string; responseCode: string; responseMessage: string }) => object.responseType === "warning")
+
+				    			
+				if (responseCodeObject && responseCodeObject.responseCode) {
+					logResponseCode(responseCodeObject.responseCode, this.logger);
+    			} 
+				
+				const bavCheckResults = decisionElements.find((object: { scores: Array<{ name: string; score: number }> }) => object.scores)
+				const personalDetailsScore = bavCheckResults?.scores.find((object: { name: string; score: number; }) => object.name === "Personal details")?.score
+
+				return personalDetailsScore;
+    			
     		} catch (error: any) {
     			const message = "Error sending verify request to Experian";
     			this.logger.error({ message, messageCode: MessageCodes.FAILED_VERIFYING_ACCOUNT, statusCode: error?.response?.status });

@@ -156,7 +156,7 @@ export class VerifyAccountRequestProcessor {
   		this.personIdentityTableName,
   	);
   	const experianCheckResult = this.calculateExperianCheckResult(verifyResponse, session.attemptCount);
-  	this.logger.debug(`experianCheckResult is ${experianCheckResult}`);
+  	this.logger.info(`experianCheckResult is ${experianCheckResult}`);
 
   	let attemptCount;
   	if (experianCheckResult !== ExperianCheckResults.FULL_MATCH || !experianCheckResult) {

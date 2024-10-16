@@ -87,6 +87,8 @@ export class Constants {
   static readonly MAX_VERIFY_ATTEMPTS = 2;
 
   static readonly TXMA_FIELDS_TO_SHOW = ["event_name", "session_id", "govuk_signin_journey_id", "attemptNum"];
+
+  static readonly EXPERIAN_PRODUCT_NAME = "BAVConsumer-Standard"
 }
 
 export const EnvironmentVariables = {
