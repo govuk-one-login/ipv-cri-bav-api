@@ -326,7 +326,7 @@ export const experianVerifyResponseError2 = {
 					{
 				  "responseType": "warning",
 				  "responseCode": "2",
-				  "responseMessage": "Modulus check algorithm is unavailable for these account details",
+				  "responseMessage": "Modulus check algorithm is unavailable for these account details and therefore Bank Wizard cannot confirm the details are valid",
 	  
 					},
 			  ],
@@ -543,7 +543,7 @@ export const experianVerifyResponseError3 = {
 			  ...element,
 			  "warningsErrors": element?.warningsErrors?.map((warning, warningIndex) =>
 						warningIndex === 0
-				  ? { ...warning, "responseCode": "3" }
+				  ? { ...warning, "responseCode": "3", "responseMessage": "Account number does not use a modulus check algorithm and therefore Bank Wizard cannot confirm the details are valid" }
 				  : warning,
 			  ),
 				}
@@ -562,7 +562,7 @@ export const experianVerifyResponseError6 = {
 			  ...element,
 			  "warningsErrors": element?.warningsErrors?.map((warning, warningIndex) =>
 						warningIndex === 0
-				  ? { ...warning, "responseCode": "6" }
+				  ? { ...warning, "responseType": "error", "responseCode": "6", "responseMessage": "Bank or branch code is not in use" }
 				  : warning,
 			  ),
 				}
@@ -581,7 +581,7 @@ export const experianVerifyResponseError7 = {
 			  ...element,
 			  "warningsErrors": element?.warningsErrors?.map((warning, warningIndex) =>
 						warningIndex === 0
-				  ? { ...warning, "responseCode": "7" }
+				  ? { ...warning, "responseType": "error", "responseCode": "7", "responseMessage": "Modulus check has failed. Although the formats of the supplied fields are correct, one or more of them are incorrect" }
 				  : warning,
 			  ),
 				}
@@ -600,7 +600,7 @@ export const experianVerifyResponseError11 = {
 			  ...element,
 			  "warningsErrors": element?.warningsErrors?.map((warning, warningIndex) =>
 						warningIndex === 0
-				  ? { ...warning, "responseCode": "11" }
+				  ? { ...warning, "responseType": "error", "responseCode": "11", "responseMessage": "Sort Code has been closed" }
 				  : warning,
 			  ),
 				}
@@ -619,7 +619,7 @@ export const experianVerifyResponseError12 = {
 			  ...element,
 			  "warningsErrors": element?.warningsErrors?.map((warning, warningIndex) =>
 						warningIndex === 0
-				  ? { ...warning, "responseCode": "12" }
+				  ? { ...warning, "responseType": "error", "responseCode": "12", "responseMessage": "Branch has been transferred and the accounts have been redirected to another branch" }
 				  : warning,
 			  ),
 				}

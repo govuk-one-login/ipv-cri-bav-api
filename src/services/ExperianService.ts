@@ -75,7 +75,7 @@ export class ExperianService {
 
 				    			
 				if (responseCodeObject && responseCodeObject.responseCode) {
-					logResponseCode(responseCodeObject.responseCode, this.logger);
+					logResponseCode(responseCodeObject, this.logger);
     			} 
 				
 				const bavCheckResults = decisionElements.find((object: { scores: Array<{ name: string; score: number }> }) => object.scores)
