@@ -12,8 +12,8 @@ beforeAll(() => {
   template = Template.fromJSON(yamlTemplate)
 })
 
-it("should define 2 DynamoDB tables", async () => {
-  template.resourceCountIs('AWS::DynamoDB::Table', 2)
+it("should define 3 DynamoDB tables", async () => {
+  template.resourceCountIs('AWS::DynamoDB::Table', 3)
 })
 
 it("each table should have an explicit DeletionPolicy", async () => {

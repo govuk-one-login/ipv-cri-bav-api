@@ -122,7 +122,7 @@ Resources:
         - Key: Product
           Value: Gov.UK Sign On
         - Key: System
-          Value: Claimed Identity Collector
+          Value: Bank Account Verification
         - Key: Environment
           Value: !Ref Environment
 
@@ -180,7 +180,7 @@ Resources:
         - Key: Product
           Value: Gov.UK Sign On
         - Key: System
-          Value: Claimed Identity Collector
+          Value: Bank Account Verification
         - Key: Environment
           Value: !Ref Environment
 
@@ -189,6 +189,64 @@ Resources:
     Properties:
       AliasName: !Sub "alias/${AWS::StackName}-person-identity-table-key"
       TargetKeyId: !Ref PersonIdentityTableKey
+  
+  ExperianTokenTable:
+    Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub "experian-token-${AWS::StackName}"
+      BillingMode: "PAY_PER_REQUEST"
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      AttributeDefinitions:
+        - AttributeName: "id"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "id"
+          KeyType: "HASH"
+      TimeToLiveSpecification:
+        AttributeName: expiryDate
+        Enabled: true
+      SSESpecification:
+        KMSMasterKeyId: !Ref ExperianTokenTableKey
+        SSEEnabled: true
+        SSEType: KMS
+
+  ExperianTokenTableKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: !Sub "${AWS::StackName} experian token table key"
+      Enabled: true
+      KeySpec: SYMMETRIC_DEFAULT
+      KeyUsage: ENCRYPT_DECRYPT
+      MultiRegion: false
+      PendingWindowInDays: !Ref KmsPendingWindowInDays
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "Allow the account to manage the key"
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action: "kms:*"
+            Resource: "*"
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName} experian token table key"
+        - Key: Product
+          Value: Gov.UK Sign On
+        - Key: System
+          Value: Bank Account Verification
+        - Key: Environment
+          Value: !Ref Environment
+
+  ExperianTokenTableKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub "alias/${AWS::StackName}-experian-token-table-key"
+      TargetKeyId: !Ref ExperianTokenTableKey
 
 Outputs:
   SessionTableName:
@@ -237,3 +295,26 @@ Outputs:
   PersonIdentityTableKeyAlias:
     Description: "The Alias of the person identity table encryption key"
     Value: !Ref PersonIdentityTableKeyAlias
+  ExperianTokenTableName:
+    Description: "The name of the DynamoDB Experian Token table"
+    Value: !Ref ExperianTokenTable
+    Export:
+      Name: !Sub "${AWS::StackName}-experian-token-table-name"
+  ExperianTokenTableArn:
+    Description: "The Arn of the DynamoDB Experian Token table"
+    Value: !GetAtt ExperianTokenTable.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-experian-token-table-arn"
+  ExperianTokenTableKeyArn:
+    Description: "The Arn of the experian token table encryption key"
+    Value: !GetAtt ExperianTokenTableKey.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-experian-token-table-key-arn"
+  ExperianTokenTableKeyId:
+    Description: "The Id of the experian token table encryption key"
+    Value: !Ref ExperianTokenTableKey
+    Export:
+      Name: !Sub "${AWS::StackName}-experian-token-table-key-id"
+  ExperianTokenTableKeyAlias:
+    Description: "The Alias of the experian token table encryption key"
+    Value: !Ref ExperianTokenTableKeyAlias
