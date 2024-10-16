@@ -112,7 +112,6 @@ Mappings:
       HMRCBASEURL: "https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev"
       HMRCVERIFYBASEURL: "https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev/misc/bank-account"
       EXPERIANBASEURL: "https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev"
-      EXPERIANVERIFYBASEURL: "https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev"
     build:
       ISSUER: 'https://review-bav.build.account.gov.uk'
       DNSSUFFIX: review-bav.build.account.gov.uk
@@ -125,7 +124,6 @@ Mappings:
       HMRCBASEURL: "https://c99d36403h.execute-api.eu-west-2.amazonaws.com/build"
       HMRCVERIFYBASEURL: "https://c99d36403h.execute-api.eu-west-2.amazonaws.com/build/misc/bank-account"
       EXPERIANBASEURL: "https://c99d36403h.execute-api.eu-west-2.amazonaws.com/build"
-      EXPERIANVERIFYBASEURL: "https://c99d36403h.execute-api.eu-west-2.amazonaws.com/build"
       TESTHARNESSURL: "https://testharness.review-bav.build.account.gov.uk"
     staging:
       ISSUER: 'https://review-bav.staging.account.gov.uk'
@@ -139,7 +137,6 @@ Mappings:
       HMRCBASEURL: "https://x0ch9rvyhe.execute-api.eu-west-2.amazonaws.com/staging"
       HMRCVERIFYBASEURL: "https://x0ch9rvyhe.execute-api.eu-west-2.amazonaws.com/staging/misc/bank-account"
       EXPERIANBASEURL: "https://x0ch9rvyhe.execute-api.eu-west-2.amazonaws.com/staging"
-      EXPERIANVERIFYBASEURL: "https://x0ch9rvyhe.execute-api.eu-west-2.amazonaws.com/staging"
     integration:
       ISSUER: 'https://review-bav.integration.account.gov.uk'
       DNSSUFFIX: review-bav.integration.account.gov.uk
@@ -152,7 +149,6 @@ Mappings:
       HMRCBASEURL: "https://proxy.review-bav.integration.account.gov.uk/hmrc"
       HMRCVERIFYBASEURL: "https://proxy.review-bav.integration.account.gov.uk/hmrc/misc/bank-account"
       EXPERIANBASEURL: "https://proxy.review-bav.integration.account.gov.uk/experian"
-      EXPERIANVERIFYBASEURL: "https://proxy.review-bav.integration.account.gov.uk/experian"
     production:
       ISSUER: 'https://review-bav.account.gov.uk'
       DNSSUFFIX: review-bav.account.gov.uk
@@ -165,7 +161,6 @@ Mappings:
       HMRCBASEURL: "https://proxy.review-bav.account.gov.uk/hmrc"
       HMRCVERIFYBASEURL: "https://proxy.review-bav.account.gov.uk/misc/bank-account/hmrc"
       EXPERIANBASEURL: "https://proxy.review-bav.account.gov.uk/experian"
-      EXPERIANVERIFYBASEURL: "https://proxy.review-bav.account.gov.uk/experian"
   TxMAAccounts:
     # EVENTS is used to egress to TxMA.
     dev:
@@ -3308,7 +3303,7 @@ Resources:
           HMRC_MAX_RETRIES: 2
           HMRC_TOKEN_BACKOFF_PERIOD_MS: 5000 # 5 seconds
           EXPERIAN_TOKEN_SSM_PATH: !Sub "/${Environment}/EXPERIAN/TOKEN"
-          EXPERIAN_BASE_URL: !FindInMap [ EnvironmentVariables, !Ref Environment, EXPERIANVERIFYBASEURL ]
+          EXPERIAN_BASE_URL: !FindInMap [ EnvironmentVariables, !Ref Environment, EXPERIANBASEURL ]
           EXPERIAN_MAX_RETRIES: 2
           EXPERIAN_TOKEN_BACKOFF_PERIOD_MS: 5000 # 5 seconds
           PARTIAL_MATCHES_QEUEUE_URL: !Ref PartialMatchesQueue
