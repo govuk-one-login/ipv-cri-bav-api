@@ -67,9 +67,11 @@ export class VerifyAccountRequestProcessor {
   }
 
   static getInstance(logger: Logger, metrics: Metrics, VENDOR_TOKEN: string): VerifyAccountRequestProcessor {
-  	if (!VerifyAccountRequestProcessor.instance) {
-  		VerifyAccountRequestProcessor.instance = new VerifyAccountRequestProcessor(logger, metrics, VENDOR_TOKEN);
-  	}
+	if (!VerifyAccountRequestProcessor.instance) {
+		VerifyAccountRequestProcessor.instance = new VerifyAccountRequestProcessor(logger, metrics, VENDOR_TOKEN);
+	} else if (VerifyAccountRequestProcessor.instance && VerifyAccountRequestProcessor.instance.vendorToken !== VENDOR_TOKEN) {
+		VerifyAccountRequestProcessor.instance = new VerifyAccountRequestProcessor(logger, metrics, VENDOR_TOKEN);
+	}
   	return VerifyAccountRequestProcessor.instance;
   }
 
