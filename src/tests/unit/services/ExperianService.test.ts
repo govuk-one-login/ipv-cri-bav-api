@@ -24,16 +24,13 @@ const experianBaseUrl = process.env.EXPERIAN_BASE_URL!;
 const mockDynamoDbClient = jest.mocked(createDynamoDbClient());
 const experianTokenTableName = "EXPERIANSTOKENTABLE";
 const logger = mock<Logger>();
-
-const experianBaseUrl = process.env.EXPERIAN_BASE_URL!;
-let experianServiceTest: ExperianService;
 const tokenResponse = {
 	"access_token": "token",
 	"scope": "default",
 	"expires_in": 14400,
 	"token_type": "bearer",
 };
-const logger = mock<Logger>();
+
 jest.mock(("../../../utils/Sleep"), () => ({
 	sleep: jest.fn(),
 }));
@@ -400,5 +397,6 @@ const expiredToken = {
 				{ message: "Error generating experian token", statusCode: 400, messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN },
 			);
 		});
+	});
 	});
 });

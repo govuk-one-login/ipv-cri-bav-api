@@ -42,41 +42,55 @@ export class VerifyAccountRequestProcessor {
   
   private readonly HmrcService: HmrcService;
 
-  private readonly vendorToken: string;
+  private readonly credentialVendor: string;
 
   private readonly partialNameQueueUrl: string;
 
-  constructor(logger: Logger, metrics: Metrics, VENDOR_TOKEN: string) {
+  constructor(logger: Logger, metrics: Metrics, CREDENTIAL_VENDOR: string) {
   	this.logger = logger;
   	this.metrics = metrics;
+	this.credentialVendor = CREDENTIAL_VENDOR
   	logger.debug("metrics is  " + JSON.stringify(this.metrics));
   	this.metrics.addMetric("Called", MetricUnits.Count, 1);
-	  this.txmaQueueUrl = checkEnvironmentVariable(EnvironmentVariables.TXMA_QUEUE_URL, this.logger);
-	  this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, this.logger);
+
+	this.txmaQueueUrl = checkEnvironmentVariable(EnvironmentVariables.TXMA_QUEUE_URL, this.logger);
+	this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, this.logger);
   	this.personIdentityTableName = checkEnvironmentVariable(EnvironmentVariables.PERSON_IDENTITY_TABLE_NAME, this.logger);
   	this.partialNameQueueUrl = checkEnvironmentVariable(EnvironmentVariables.PARTIAL_MATCHES_QEUEUE_URL, logger);
-  	this.vendorToken = VENDOR_TOKEN;
+	
   	const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, this.logger);
+  	const experianTokenTableName: string = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_TOKEN_TABLE, this.logger);
   	const experianBaseUrl = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_BASE_URL, this.logger);
-  	const maxRetries = +checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_MAX_RETRIES, logger);
-  	const experianBackoffPeriodMs = +checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_TOKEN_BACKOFF_PERIOD_MS, logger);
+  	const hmrcBaseUrl = checkEnvironmentVariable(EnvironmentVariables.HMRC_BASE_URL, this.logger);
+  	const hmrcMaxRetries = +checkEnvironmentVariable(EnvironmentVariables.HMRC_MAX_RETRIES, logger);
+  	const experianMaxRetries = +checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_MAX_RETRIES, logger);
+  	const hmrcBackoffPeriodMs = +checkEnvironmentVariable(EnvironmentVariables.HMRC_TOKEN_BACKOFF_PERIOD_MS, logger);
 
   	this.BavService = BavService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
-  	this.ExperianService = ExperianService.getInstance(this.logger, experianBaseUrl, experianBackoffPeriodMs, maxRetries);
-  	this.HmrcService = HmrcService.getInstance(this.logger, experianBaseUrl, experianBackoffPeriodMs, maxRetries);
+  	this.ExperianService = ExperianService.getInstance(this.logger, experianBaseUrl, experianMaxRetries, createDynamoDbClient(), experianTokenTableName);
+  	this.HmrcService = HmrcService.getInstance(this.logger, hmrcBaseUrl, hmrcBackoffPeriodMs, hmrcMaxRetries);
   }
 
-  static getInstance(logger: Logger, metrics: Metrics, VENDOR_TOKEN: string): VerifyAccountRequestProcessor {
+  static getInstance(logger: Logger, metrics: Metrics, CREDENTIAL_VENDOR: string): VerifyAccountRequestProcessor {
   	if (!VerifyAccountRequestProcessor.instance) {
-  		VerifyAccountRequestProcessor.instance = new VerifyAccountRequestProcessor(logger, metrics, VENDOR_TOKEN);
-  	} else if (VerifyAccountRequestProcessor.instance && VerifyAccountRequestProcessor.instance.vendorToken !== VENDOR_TOKEN) {
-  		VerifyAccountRequestProcessor.instance = new VerifyAccountRequestProcessor(logger, metrics, VENDOR_TOKEN);
+  		VerifyAccountRequestProcessor.instance = new VerifyAccountRequestProcessor(logger, metrics, CREDENTIAL_VENDOR);
+  	} else if (VerifyAccountRequestProcessor.instance && VerifyAccountRequestProcessor.instance.credentialVendor !== CREDENTIAL_VENDOR) {
+  		VerifyAccountRequestProcessor.instance = new VerifyAccountRequestProcessor(logger, metrics, CREDENTIAL_VENDOR);
   	}
   	return VerifyAccountRequestProcessor.instance;
   }
 
   // eslint-disable-next-line max-lines-per-function, complexity
-  async processExperianRequest(sessionId: string, body: VerifyAccountPayload, clientIpAddress: string, encodedHeader: string): Promise<APIGatewayProxyResult> {
+  async processExperianRequest(
+	sessionId: string, 
+	body: VerifyAccountPayload, 
+	clientIpAddress: string, 
+	encodedHeader: string,
+	experianUsername: string,
+	experianPassword: string,
+	experianClientId: string,
+	experianClientSecret: string
+	): Promise<APIGatewayProxyResult> {
   	const { account_number: accountNumber, sort_code: sortCode } = body;
   	const paddedAccountNumber = accountNumber.padStart(8, "0");
   	const person: PersonIdentityItem | undefined = await this.BavService.getPersonIdentityById(sessionId, this.personIdentityTableName);
@@ -132,8 +146,11 @@ export class VerifyAccountRequestProcessor {
   	}, encodedHeader);
 	
   	const verifyResponse = await this.ExperianService.verify(
-  		{ accountNumber: paddedAccountNumber, sortCode, name, uuid: vendorUuid },
-  		this.vendorToken,
+  		{ accountNumber: paddedAccountNumber, sortCode, name, uuid: vendorUuid }, // VENDOR UUID WILL BE REPLACED BY VALUE PROVIDED BY EXPERIAN
+		  experianUsername,
+		  experianPassword,
+		  experianClientId,
+		  experianClientSecret
   	);
 	
   	if (!verifyResponse) {
@@ -172,7 +189,7 @@ export class VerifyAccountRequestProcessor {
   	}));
   }
 
-  async processHmrcRequest(sessionId: string, body: VerifyAccountPayload, clientIpAddress: string, encodedHeader: string): Promise<APIGatewayProxyResult> {
+  async processHmrcRequest(sessionId: string, body: VerifyAccountPayload, clientIpAddress: string, encodedHeader: string, hmrcToken: string): Promise<APIGatewayProxyResult> {
   	const { account_number: accountNumber, sort_code: sortCode } = body;
   	const paddedAccountNumber = accountNumber.padStart(8, "0");
   	const person: PersonIdentityItem | undefined = await this.BavService.getPersonIdentityById(sessionId, this.personIdentityTableName);
@@ -231,7 +248,7 @@ export class VerifyAccountRequestProcessor {
 	
   	const verifyResponse = await this.HmrcService.verify(
   		{ accountNumber: paddedAccountNumber, sortCode, name, uuid: vendorUuid },
-  		this.vendorToken,
+  		hmrcToken,
   	);
 	
   	if (!verifyResponse) {

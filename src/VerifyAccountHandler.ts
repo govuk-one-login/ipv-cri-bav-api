@@ -36,18 +36,36 @@ export class VerifyAccountHandler implements LambdaInterface {
 			const clientIpAddress = event.headers[Constants.X_FORWARDED_FOR] ?? event.requestContext.identity?.sourceIp;
 			const credentialVendorSsmPath = checkEnvironmentVariable(EnvironmentVariables.CREDENTIAL_VENDOR_SSM_PATH, logger);
 			const CREDENTIAL_VENDOR = await getParameter(credentialVendorSsmPath);
+
 			if (CREDENTIAL_VENDOR === "HMRC") {
 				const hmrcTokenSsmPath = checkEnvironmentVariable(EnvironmentVariables.HMRC_TOKEN_SSM_PATH, logger);
-    			const VENDOR_TOKEN = await getParameter(hmrcTokenSsmPath);
+    			const HMRC_TOKEN = await getParameter(hmrcTokenSsmPath);
+
 				logger.appendKeys({ sessionId });
 				logger.info("Starting VerifyAccountRequestProcessorHmrc");
-				return await VerifyAccountRequestProcessor.getInstance(logger, metrics, VENDOR_TOKEN).processHmrcRequest(sessionId, body, clientIpAddress, encodedHeader);
+				return await VerifyAccountRequestProcessor.getInstance(logger, metrics, CREDENTIAL_VENDOR).processHmrcRequest(sessionId, body, clientIpAddress, encodedHeader, HMRC_TOKEN);
 			} else {
-				const experianTokenSsmPath = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_TOKEN_SSM_PATH, logger);
-				const VENDOR_TOKEN = await getParameter(experianTokenSsmPath);
+				const experianUsernameSsmPath = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_USERNAME_SSM_PATH, logger);
+				const EXPERIAN_USERNAME= await getParameter(experianUsernameSsmPath);
+				const experianPasswordSsmPath = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_PASSWORD_SSM_PATH, logger);
+				const EXPERIAN_PASSWORD = await getParameter(experianPasswordSsmPath);
+				const experianClientIdSsmPath = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_CLIENT_ID_SSM_PATH, logger);
+				const EXPERIAN_CLIENT_ID = await getParameter(experianClientIdSsmPath);
+				const experianClientSecretSsmPath = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_CLIENT_SECRET_SSM_PATH, logger);
+				const EXPERIAN_CLIENT_SECRET = await getParameter(experianClientSecretSsmPath);
+				
 				logger.appendKeys({ sessionId });
 				logger.info("Starting VerifyAccountRequestProcessorExperian");
-				return await VerifyAccountRequestProcessor.getInstance(logger, metrics, VENDOR_TOKEN).processExperianRequest(sessionId, body, clientIpAddress, encodedHeader);
+				return await VerifyAccountRequestProcessor.getInstance(logger, metrics, CREDENTIAL_VENDOR).processExperianRequest(
+					sessionId, 
+					body, 
+					clientIpAddress, 
+					encodedHeader,
+					EXPERIAN_USERNAME,
+					EXPERIAN_PASSWORD,
+					EXPERIAN_CLIENT_ID,
+					EXPERIAN_CLIENT_SECRET
+				);
 			}
 
 		} catch (error: any) {
