@@ -23,7 +23,7 @@ const mockBavService = mock<BavService>();
 const mockExperianService = mock<ExperianService>();
 const logger = mock<Logger>();
 const metrics = new Metrics({ namespace: "BAV" });
-const TOKEN_SSM_PARAM = "dfsgadfgadg";
+const CREDENTIAL_VENDOR = "EXPERIAN";
 const sessionId = "sessionId";
 const encodedTxmaHeader = "ABCDEFG";
 const body = {
@@ -53,12 +53,18 @@ const person: PersonIdentityItem = {
 	expiryDate: 123456789,
 	createdDate: 123456789,
 };
+
+const clientUsername = "123456";
+const clientPassword = "12345678";
+const clientId = "clientId";
+const clientSecret = "Test";
+
 const session = require("../data/db_record.json") as ISessionItem;
 let verifyAccountRequestProcessorTest: VerifyAccountRequestProcessor;
 
 describe("VerifyAccountRequestProcessor", () => {
 	beforeAll(() => {
-		verifyAccountRequestProcessorTest = new VerifyAccountRequestProcessor(logger, metrics, TOKEN_SSM_PARAM);
+		verifyAccountRequestProcessorTest = new VerifyAccountRequestProcessor(logger, metrics, CREDENTIAL_VENDOR);
 		// @ts-ignore
 		verifyAccountRequestProcessorTest.BavService = mockBavService;
 		// @ts-ignore
@@ -79,7 +85,16 @@ describe("VerifyAccountRequestProcessor", () => {
 		it("returns error response if person identity cannot be found", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(undefined);
 
-			const response = await verifyAccountRequestProcessorTest.processExperianRequest(sessionId, body, clientIpAddress, encodedTxmaHeader);
+			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
+				sessionId, 
+				body, 
+				clientIpAddress, 
+				encodedTxmaHeader,
+				clientUsername,
+				clientPassword,
+				clientId,
+				clientSecret
+			);
 
 			expect(response.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 			expect(response.body).toBe(`No person found with the session id: ${sessionId}`);
@@ -92,7 +107,16 @@ describe("VerifyAccountRequestProcessor", () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
 			mockBavService.getSessionById.mockResolvedValueOnce(undefined);
 
-			const response = await verifyAccountRequestProcessorTest.processExperianRequest(sessionId, body, clientIpAddress, encodedTxmaHeader);
+			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
+				sessionId, 
+				body, 
+				clientIpAddress, 
+				encodedTxmaHeader,
+				clientUsername,
+				clientPassword,
+				clientId,
+				clientSecret
+			);
 
 			expect(response.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 			expect(response.body).toBe(`No session found with the session id: ${sessionId}`);
@@ -106,7 +130,16 @@ describe("VerifyAccountRequestProcessor", () => {
 			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, vendorUuid: undefined });
 			mockExperianService.verify.mockResolvedValueOnce(9);
 
-			await verifyAccountRequestProcessorTest.processExperianRequest(sessionId, body, clientIpAddress, encodedTxmaHeader);
+			await verifyAccountRequestProcessorTest.processExperianRequest(
+				sessionId, 
+				body, 
+				clientIpAddress, 
+				encodedTxmaHeader,
+				clientUsername,
+				clientPassword,
+				clientId,
+				clientSecret
+			);
 
 			expect(mockBavService.saveVendorUuid).toHaveBeenCalledWith(sessionId, vendorUuid);
 	  });
@@ -115,7 +148,16 @@ describe("VerifyAccountRequestProcessor", () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
 			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, attemptCount: Constants.MAX_VERIFY_ATTEMPTS });
 
-			const response = await verifyAccountRequestProcessorTest.processExperianRequest(sessionId, body, clientIpAddress, encodedTxmaHeader);
+			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
+				sessionId, 
+				body, 
+				clientIpAddress, 
+				encodedTxmaHeader,
+				clientUsername,
+				clientPassword,
+				clientId,
+				clientSecret
+			);
 
 			expect(response.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 			expect(response.body).toBe("Too many attempts");
@@ -129,7 +171,16 @@ describe("VerifyAccountRequestProcessor", () => {
 			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, vendorUuid: "EXPERIAN_UUID" });
 			mockExperianService.verify.mockResolvedValueOnce(9);
 
-			await verifyAccountRequestProcessorTest.processExperianRequest(sessionId, body, clientIpAddress, encodedTxmaHeader);
+			await verifyAccountRequestProcessorTest.processExperianRequest(
+				sessionId, 
+				body, 
+				clientIpAddress, 
+				encodedTxmaHeader,
+				clientUsername,
+				clientPassword,
+				clientId,
+				clientSecret
+			);
 
 			expect(logger.appendKeys).toHaveBeenCalledWith({ govuk_signin_journey_id: session.clientSessionId });
 			expect(mockBavService.saveVendorUuid).not.toHaveBeenCalled();
@@ -144,9 +195,23 @@ describe("VerifyAccountRequestProcessor", () => {
 			mockBavService.getSessionById.mockResolvedValueOnce(session);
 			mockExperianService.verify.mockResolvedValueOnce(9);
 
-			await verifyAccountRequestProcessorTest.processExperianRequest(sessionId, body, clientIpAddress, encodedTxmaHeader);
+			await verifyAccountRequestProcessorTest.processExperianRequest(
+				sessionId, 
+				body, 
+				clientIpAddress, 
+				encodedTxmaHeader,
+				clientUsername,
+				clientPassword,
+				clientId,
+				clientSecret
+			);
 
-			expect(mockExperianService.verify).toHaveBeenCalledWith({ accountNumber: body.account_number, sortCode: body.sort_code, name: "Frederick Joseph Flintstone", uuid: vendorUuid }, TOKEN_SSM_PARAM );
+			expect(mockExperianService.verify).toHaveBeenCalledWith({ accountNumber: body.account_number, sortCode: body.sort_code, name: "Frederick Joseph Flintstone", uuid: vendorUuid },
+				clientUsername,
+				clientPassword,
+				clientId,
+				clientSecret
+			 );
 			expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "MYQUEUE", {
 				event_name: "BAV_EXPERIAN_REQUEST_SENT",
 				component_id: "https://XXX-c.env.account.gov.uk",
@@ -206,12 +271,25 @@ describe("VerifyAccountRequestProcessor", () => {
 			mockBavService.getSessionById.mockResolvedValueOnce(session);
 			mockExperianService.verify.mockResolvedValueOnce(9);
 
-			await verifyAccountRequestProcessorTest.processExperianRequest(sessionId, { ...body, account_number: "123456" }, clientIpAddress, encodedTxmaHeader);
+			await verifyAccountRequestProcessorTest.processExperianRequest(
+				sessionId, 
+				{ ...body, account_number: "123456" }, 
+				clientIpAddress, 
+				encodedTxmaHeader,
+				clientUsername,
+				clientPassword,
+				clientId,
+				clientSecret);
 			expect(mockBavService.updateAccountDetails).toHaveBeenCalledWith(
 				{ sessionId, accountNumber: "00123456", sortCode: body.sort_code },
 				process.env.PERSON_IDENTITY_TABLE_NAME,
 			);
-			expect(mockExperianService.verify).toHaveBeenCalledWith({ accountNumber: "00123456", sortCode: body.sort_code, name: "Frederick Joseph Flintstone", uuid: vendorUuid }, TOKEN_SSM_PARAM );
+			expect(mockExperianService.verify).toHaveBeenCalledWith({ accountNumber: "00123456", sortCode: body.sort_code, name: "Frederick Joseph Flintstone", uuid: vendorUuid },
+				clientUsername,
+				clientPassword,
+				clientId,
+				clientSecret
+			 );
 		});
 
 		it("saves saveExperianCheckResult and returns success where there has been a match", async () => {
@@ -219,7 +297,16 @@ describe("VerifyAccountRequestProcessor", () => {
 			mockBavService.getSessionById.mockResolvedValueOnce(session);
 			mockExperianService.verify.mockResolvedValueOnce(9);
 
-			const response = await verifyAccountRequestProcessorTest.processExperianRequest(sessionId, body, clientIpAddress, encodedTxmaHeader);
+			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
+				sessionId, 
+				body, 
+				clientIpAddress, 
+				encodedTxmaHeader,
+				clientUsername,
+				clientPassword,
+				clientId,
+				clientSecret
+			);
 
 			expect(mockBavService.saveExperianCheckResult).toHaveBeenCalledWith(sessionId, CopCheckResults.FULL_MATCH, undefined);
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
@@ -231,7 +318,16 @@ describe("VerifyAccountRequestProcessor", () => {
 			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, attemptCount: undefined });
 			mockExperianService.verify.mockResolvedValueOnce(1);
 
-			const response = await verifyAccountRequestProcessorTest.processExperianRequest(sessionId, body, clientIpAddress, encodedTxmaHeader);
+			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
+				sessionId, 
+				body, 
+				clientIpAddress, 
+				encodedTxmaHeader,
+				clientUsername,
+				clientPassword,
+				clientId,
+				clientSecret
+			);
 
 			expect(mockBavService.saveExperianCheckResult).toHaveBeenCalledWith(sessionId, undefined, 1);
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
@@ -243,8 +339,26 @@ describe("VerifyAccountRequestProcessor", () => {
 			mockBavService.getSessionById.mockResolvedValue({ ...session, attemptCount: 1 });
 			mockExperianService.verify.mockResolvedValue(1);
 
-			await verifyAccountRequestProcessorTest.processExperianRequest(sessionId, body, clientIpAddress, encodedTxmaHeader);
-			const response = await verifyAccountRequestProcessorTest.processExperianRequest(sessionId, body, clientIpAddress, encodedTxmaHeader);
+			await verifyAccountRequestProcessorTest.processExperianRequest(
+				sessionId, 
+				body, 
+				clientIpAddress, 
+				encodedTxmaHeader,
+				clientUsername,
+				clientPassword,
+				clientId,
+				clientSecret
+			);
+			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
+				sessionId, 
+				body, 
+				clientIpAddress, 
+				encodedTxmaHeader,
+				clientUsername,
+				clientPassword,
+				clientId,
+				clientSecret
+			);
 
 			expect(mockBavService.saveExperianCheckResult).toHaveBeenNthCalledWith(2, sessionId, "NO_MATCH", 2);
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
@@ -256,7 +370,16 @@ describe("VerifyAccountRequestProcessor", () => {
 			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, attemptCount: undefined });
 			mockExperianService.verify.mockResolvedValueOnce(9);
 
-			const response = await verifyAccountRequestProcessorTest.processExperianRequest(sessionId, body, clientIpAddress, encodedTxmaHeader);
+			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
+				sessionId, 
+				body, 
+				clientIpAddress, 
+				encodedTxmaHeader,
+				clientUsername,
+				clientPassword,
+				clientId,
+				clientSecret
+			);
 
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
 			expect(response.body).toBe(JSON.stringify({ message:"Success" }));

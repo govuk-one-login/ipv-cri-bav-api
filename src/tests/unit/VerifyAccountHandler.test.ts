@@ -39,6 +39,10 @@ describe("VerifyAccountHandler", () => {
 			JSON.parse(VALID_VERIFY_ACCOUNT.body),
 			"x-forwarded-for",
 			"encoded header",
+			"username",
+			"password",
+			"id",
+			"secret",
 		);
 	});
 
@@ -52,6 +56,10 @@ describe("VerifyAccountHandler", () => {
 			JSON.parse(VALID_VERIFY_ACCOUNT.body),
 			"1.1.1",
 			"encoded header",
+			"username",
+			"password",
+			"id",
+			"secret",
 		);
 	});
 
