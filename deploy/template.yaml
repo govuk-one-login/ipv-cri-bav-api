@@ -3306,10 +3306,10 @@ Resources:
           HMRC_TOKEN_BACKOFF_PERIOD_MS: 5000 # 5 seconds
           EXPERIAN_BASE_URL: !FindInMap [ EnvironmentVariables, !Ref Environment, EXPERIANBASEURL ]
           EXPERIAN_MAX_RETRIES: 2
-          EXPERIAN_USERNAME: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/Password"
-          EXPERIAN_PASSWORD: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/Username"
-          EXPERIAN_CLIENT_ID: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/clientId"
-          EXPERIAN_CLIENT_SECRET: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/clientSecret"
+          EXPERIAN_USERNAME_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/Password"
+          EXPERIAN_PASSWORD_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/Username"
+          EXPERIAN_CLIENT_ID_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/clientId"
+          EXPERIAN_CLIENT_SECRET_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/clientSecret"
           PARTIAL_MATCHES_QEUEUE_URL: !Ref PartialMatchesQueue
           CREDENTIAL_VENDOR_SSM_PATH: !Sub "/${Environment}/bav/vendor"
       Policies:
