@@ -3,7 +3,7 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   infra-l2-outbound-proxy
 
-  An HTTP API as a proxy for the BAV outbound integrations to HMRC
+  An HTTP API as a proxy for the BAV outbound integrations to HMRC and Experian
 
 Conditions:
   IsNotDevelopment: !Or
@@ -17,18 +17,23 @@ Mappings:
     dev:
       HMRCURL: "https://api.isc.externaltest.tax.service.gov.uk"
       PRETTYPROXYURL: "proxy.review-bav.dev.account.gov.uk"
+      EXPERIANURL: "https://uk-api.experian.com"
     build:
       HMRCURL: "https://api.isc.externaltest.tax.service.gov.uk"
       PRETTYPROXYURL: "proxy.review-bav.build.account.gov.uk"
+      EXPERIANURL: "https://uk-api.experian.com"
     staging:
       HMRCURL: "https://api.isc.externaltest.tax.service.gov.uk"
       PRETTYPROXYURL: "proxy.review-bav.staging.account.gov.uk"
+      EXPERIANURL: "https://uk-api.experian.com"
     integration:
       HMRCURL: "https://api.isc.externaltest.tax.service.gov.uk"
       PRETTYPROXYURL: "proxy.review-bav.integration.account.gov.uk"
+      EXPERIANURL: "https://uk-api.experian.com"
     production:
       HMRCURL: "https://api.isc.production.tax.service.gov.uk"
       PRETTYPROXYURL: "proxy.review-bav.account.gov.uk"
+      EXPERIANURL: "https://uk-api.experian.com"
 
 Parameters:
   Environment:
@@ -74,6 +79,29 @@ Resources:
         - /
         - - integrations
           - !Ref HMRCProxyApiGatewayIntegration
+  
+  ExperianProxyApiGatewayIntegration:
+    Type: 'AWS::ApiGatewayV2::Integration'
+    Properties:
+      ApiId: !Ref OutboundProxyApiGatewayAPI
+      Description: HTTP proxy integration with Experian endpoints
+      IntegrationType: HTTP_PROXY
+      IntegrationMethod: ANY
+      IntegrationUri: !Sub
+        - "${URL}/{proxy}"
+        - URL:
+            !FindInMap [ EnvironmentVariables, !Ref Environment, EXPERIANURL ]
+      PayloadFormatVersion: '1.0'
+
+  ExperianProxyApiGatewayRoute:
+    Type: 'AWS::ApiGatewayV2::Route'
+    Properties:
+      ApiId: !Ref OutboundProxyApiGatewayAPI
+      RouteKey: 'ANY /experian/{proxy+}'
+      Target: !Join
+        - /
+        - - integrations
+          - !Ref ExperianProxyApiGatewayIntegration
 
   OutboundProxyApiGatewayStageDefault:
     Type: 'AWS::ApiGatewayV2::Stage'
