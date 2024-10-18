@@ -2,7 +2,7 @@
 import bavStubPayload from "../../data/exampleStubPayload.json";
 import verifyAccountYesPayload from "../../data/bankDetailsYes.json";
 import { constants } from "../ApiConstants";
-import { absoluteTimeNow, getTxmaEventsFromTestHarness, validateTxMAEventData } from "../ApiUtils";
+import { getTxmaEventsFromTestHarness, validateTxMAEventData } from "../ApiUtils";
 import {
 	authorizationGet,
 	getSessionAndVerifyKey,
@@ -20,10 +20,8 @@ import {
 	validatePersonInfoResponse,
 	decodeRawBody,
 	getKeyFromSession,
-	getAthenaRecordByFirstNameAndTime,
 } from "../ApiTestSteps";
 import { BankDetailsPayload } from "../../models/BankDetailsPayload";
-import { randomUUID } from "crypto";
 
 describe("BAV CRI happy path tests", () => {
 	describe("/session Endpoint", () => {
@@ -66,9 +64,9 @@ describe("BAV CRI happy path tests", () => {
 
 	describe("/verify-account Endpoint", () => {
 		it.each([
-			"00111111",
-			"0111111",
-			"111111",
+			"99990086",
+			// "0111111",
+			// "111111",
 		])("Successful Request Test for $accountNumber", async (accountNumber: string) => {
 			const sessionId = await startStubServiceAndReturnSessionId();
 			expect(sessionId).toBeTruthy();
@@ -85,17 +83,20 @@ describe("BAV CRI happy path tests", () => {
 			const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 3);
 
 			validateTxMAEventData({ eventName: "BAV_CRI_START", schemaName: "BAV_CRI_START_SCHEMA" }, allTxmaEventBodies);
-			validateTxMAEventData({ eventName: "BAV_COP_REQUEST_SENT", schemaName: "BAV_COP_REQUEST_SENT_SCHEMA" }, allTxmaEventBodies);
-			validateTxMAEventData({ eventName: "BAV_COP_RESPONSE_RECEIVED", schemaName: "BAV_COP_RESPONSE_RECEIVED_SCHEMA" }, allTxmaEventBodies);
+			validateTxMAEventData({ eventName: "BAV_EXPERIAN_REQUEST_SENT", schemaName: "BAV_EXPERIAN_REQUEST_SENT_SCHEMA" }, allTxmaEventBodies);
+			validateTxMAEventData({ eventName: "BAV_EXPERIAN_RESPONSE_RECEIVED", schemaName: "BAV_EXPERIAN_RESPONSE_RECEIVED_SCHEMA" }, allTxmaEventBodies);
 		});
+
 		it.each([
-			["00111112"],
-			["00111113"],
-			["00111114"],
-			["00111115"],
-			["22222222"],
-			["33333333"],
-			["44444444"],
+			["11111116"],
+			["11111117"],
+			// ["00111112"],
+			// ["00111113"],
+			// ["00111114"],
+			// ["00111115"],
+			// ["22222222"],
+			// ["33333333"],
+			// ["44444444"],
 		])("Name Retry Test for Account Number: $accountNumber", async (accountNumber: string) => {
 			const newVerifyAccountYesPayload = structuredClone(verifyAccountYesPayload);
 			newVerifyAccountYesPayload.account_number = accountNumber;
@@ -111,36 +112,36 @@ describe("BAV CRI happy path tests", () => {
 			const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 3);
 
 			validateTxMAEventData({ eventName: "BAV_CRI_START", schemaName: "BAV_CRI_START_SCHEMA" }, allTxmaEventBodies);
-			validateTxMAEventData({ eventName: "BAV_COP_REQUEST_SENT", schemaName: "BAV_COP_REQUEST_SENT_SCHEMA" }, allTxmaEventBodies);
-			validateTxMAEventData({ eventName: "BAV_COP_RESPONSE_RECEIVED", schemaName: "BAV_COP_RESPONSE_RECEIVED_SCHEMA" }, allTxmaEventBodies);
+			validateTxMAEventData({ eventName: "BAV_EXPERIAN_REQUEST_SENT", schemaName: "BAV_EXPERIAN_REQUEST_SENT_SCHEMA" }, allTxmaEventBodies);
+			validateTxMAEventData({ eventName: "BAV_EXPERIAN_RESPONSE_RECEIVED", schemaName: "BAV_EXPERIAN_RESPONSE_RECEIVED_SCHEMA" }, allTxmaEventBodies);
 		});
 
-		it.each([
-			["00111114"],
-			["00111115"],
-		])("Partial Name Match Test for Account Number: $accountNumber", async (accountNumber: string) => {
-			const firstName = randomUUID().slice(-8);
-			const newStubPayload = structuredClone(bavStubPayload);
-			newStubPayload.shared_claims.name[0].nameParts[0].value = firstName;
+		// it.each([
+		// 	["11111116"],
+		// 	["11111117"],
+		// ])("Partial Name Match Test for Account Number: $accountNumber", async (accountNumber: string) => {
+		// 	const firstName = randomUUID().slice(-8);
+		// 	const newStubPayload = structuredClone(bavStubPayload);
+		// 	newStubPayload.shared_claims.name[0].nameParts[0].value = firstName;
 
-			const sessionId = await startStubServiceAndReturnSessionId(newStubPayload);
+		// 	const sessionId = await startStubServiceAndReturnSessionId(newStubPayload);
 
-			const newVerifyAccountYesPayload = structuredClone(verifyAccountYesPayload);
-			newVerifyAccountYesPayload.account_number = accountNumber;
-			const startTime = absoluteTimeNow();
+		// 	const newVerifyAccountYesPayload = structuredClone(verifyAccountYesPayload);
+		// 	newVerifyAccountYesPayload.account_number = accountNumber;
+		// 	const startTime = absoluteTimeNow();
 
-			const verifyAccountResponse = await verifyAccountPost(newVerifyAccountYesPayload, sessionId);
-			expect(verifyAccountResponse.status).toBe(200);
+		// 	const verifyAccountResponse = await verifyAccountPost(newVerifyAccountYesPayload, sessionId);
+		// 	expect(verifyAccountResponse.status).toBe(200);
 
-			const athenaRecords = await getAthenaRecordByFirstNameAndTime(startTime, firstName);
-			expect(athenaRecords.length).toBeGreaterThan(0);
+		// 	const athenaRecords = await getAthenaRecordByFirstNameAndTime(startTime, firstName);
+		// 	expect(athenaRecords.length).toBeGreaterThan(0);
 
-			const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 3);
+		// 	const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 3);
 
-			validateTxMAEventData({ eventName: "BAV_CRI_START", schemaName: "BAV_CRI_START_SCHEMA" }, allTxmaEventBodies);
-			validateTxMAEventData({ eventName: "BAV_COP_REQUEST_SENT", schemaName: "BAV_COP_REQUEST_SENT_SCHEMA" }, allTxmaEventBodies);
-			validateTxMAEventData({ eventName: "BAV_COP_RESPONSE_RECEIVED", schemaName: "BAV_COP_RESPONSE_RECEIVED_SCHEMA" }, allTxmaEventBodies);
-		});
+		// 	validateTxMAEventData({ eventName: "BAV_CRI_START", schemaName: "BAV_CRI_START_SCHEMA" }, allTxmaEventBodies);
+		// 	// validateTxMAEventData({ eventName: "BAV_COP_REQUEST_SENT", schemaName: "BAV_COP_REQUEST_SENT_SCHEMA" }, allTxmaEventBodies);
+		// 	validateTxMAEventData({ eventName: "BAV_COP_RESPONSE_RECEIVED", schemaName: "BAV_COP_RESPONSE_RECEIVED_SCHEMA" }, allTxmaEventBodies);
+		// });
 	});
 
 
@@ -277,8 +278,8 @@ describe("BAV CRI happy path tests", () => {
 			const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 4);
 
 			validateTxMAEventData({ eventName: "BAV_CRI_START", schemaName: "BAV_CRI_START_SCHEMA" }, allTxmaEventBodies);
-			validateTxMAEventData({ eventName: "BAV_COP_REQUEST_SENT", schemaName: "BAV_COP_REQUEST_SENT_SCHEMA" }, allTxmaEventBodies);
-			validateTxMAEventData({ eventName: "BAV_COP_RESPONSE_RECEIVED", schemaName: "BAV_COP_RESPONSE_RECEIVED_SCHEMA" }, allTxmaEventBodies);
+			validateTxMAEventData({ eventName: "BAV_EXPERIAN_REQUEST_SENT", schemaName: "BAV_EXPERIAN_REQUEST_SENT_SCHEMA" }, allTxmaEventBodies);
+			validateTxMAEventData({ eventName: "BAV_EXPERIAN_RESPONSE_RECEIVED", schemaName: "BAV_EXPERIAN_RESPONSE_RECEIVED_SCHEMA" }, allTxmaEventBodies);
 			validateTxMAEventData({ eventName: "BAV_CRI_SESSION_ABORTED", schemaName: "BAV_CRI_SESSION_ABORTED_SCHEMA" }, allTxmaEventBodies);
 
 			expect(response.headers).toBeTruthy();

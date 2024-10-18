@@ -4,6 +4,7 @@ import { PersonIdentityName, PersonIdentityBirthDate } from "../models/PersonIde
 export type TxmaEventName =
 	"BAV_CRI_START" | 
 	"BAV_COP_REQUEST_SENT" | 
+	"BAV_EXPERIAN_REQUEST_SENT" | 
 	"BAV_COP_RESPONSE_RECEIVED" | 
 	"BAV_EXPERIAN_REQUEST_SENT" |
 	"BAV_EXPERIAN_RESPONSE_RECEIVED" |
