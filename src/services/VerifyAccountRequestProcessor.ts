@@ -82,10 +82,12 @@ export class VerifyAccountRequestProcessor {
   	body: VerifyAccountPayload, 
   	clientIpAddress: string, 
   	encodedHeader: string,
-  	experianUsername: string,
-  	experianPassword: string,
-  	experianClientId: string,
-  	experianClientSecret: string,
+  	ssmParams: {
+  	experianUsername: string;
+  	experianPassword: string;
+  	experianClientId: string;
+  	experianClientSecret: string;
+  	},
   ): Promise<APIGatewayProxyResult> {
 		  const { account_number: accountNumber, sort_code: sortCode } = body;
 		  const paddedAccountNumber = accountNumber.padStart(8, "0");
@@ -138,10 +140,10 @@ export class VerifyAccountRequestProcessor {
 		
 		  const verifyResponse = await this.ExperianService.verify(
 			  { accountNumber: paddedAccountNumber, sortCode, name, uuid: expRequestId }, // VENDOR UUID WILL BE REPLACED BY VALUE PROVIDED BY EXPERIAN
-			  experianUsername,
-			  experianPassword,
-			  experianClientId,
-			  experianClientSecret,
+			  ssmParams.experianUsername,
+			  ssmParams.experianPassword,
+			  ssmParams.experianClientId,
+			  ssmParams.experianClientSecret,
 		  );
 		
 		  if (!verifyResponse) {

@@ -13,11 +13,8 @@ import { VerifyAccountRequestProcessor } from "../../../services/VerifyAccountRe
 import { ExperianService } from "../../../services/ExperianService";
 import { Constants } from "../../../utils/Constants";
 
-const vendorUuid = "new vendorUuid";
-jest.mock("crypto", () => ({
-	...jest.requireActual("crypto"),
-	randomUUID: () => vendorUuid,
-}));
+const expRequestId = "PLACEHOLDER";
+
 const mockBavService = mock<BavService>();
 const mockExperianService = mock<ExperianService>();
 const logger = mock<Logger>();
@@ -53,10 +50,12 @@ const person: PersonIdentityItem = {
 	createdDate: 123456789,
 };
 
-const clientUsername = "123456";
-const clientPassword = "12345678";
-const clientId = "clientId";
-const clientSecret = "Test";
+const ssmParams = {
+	experianUsername:"123456",
+	experianPassword: "12345678",
+	experianClientId:"clientId",
+	experianClientSecret:"Test",
+};
 
 const session = require("../data/db_record.json") as ISessionItem;
 let verifyAccountRequestProcessorTest: VerifyAccountRequestProcessor;
@@ -89,10 +88,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				body, 
 				clientIpAddress, 
 				encodedTxmaHeader,
-				clientUsername,
-				clientPassword,
-				clientId,
-				clientSecret
+				ssmParams,
 			);
 
 			expect(response.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
@@ -111,10 +107,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				body, 
 				clientIpAddress, 
 				encodedTxmaHeader,
-				clientUsername,
-				clientPassword,
-				clientId,
-				clientSecret
+				ssmParams,
 			);
 
 			expect(response.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
@@ -124,24 +117,24 @@ describe("VerifyAccountRequestProcessor", () => {
 			});
 		});
 
-	// 	it("generates and saves vendorUuid if one doesn't exist", async () => {
-	// 		mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
-	// 		mockBavService.getSessionById.mockResolvedValueOnce({ ...session, expRequestId: undefined });
-	// 		mockExperianService.verify.mockResolvedValueOnce(9);
+		// 	it("generates and saves vendorUuid if one doesn't exist", async () => {
+		// 		mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
+		// 		mockBavService.getSessionById.mockResolvedValueOnce({ ...session, expRequestId: undefined });
+		// 		mockExperianService.verify.mockResolvedValueOnce(9);
 
-	// 		await verifyAccountRequestProcessorTest.processExperianRequest(
-	// 			sessionId, 
-	// 			body, 
-	// 			clientIpAddress, 
-	// 			encodedTxmaHeader,
-	// 			clientUsername,
-	// 			clientPassword,
-	// 			clientId,
-	// 			clientSecret
-	// 		);
+		// 		await verifyAccountRequestProcessorTest.processExperianRequest(
+		// 			sessionId, 
+		// 			body, 
+		// 			clientIpAddress, 
+		// 			encodedTxmaHeader,
+		// 			clientUsername,
+		// 			clientPassword,
+		// 			clientId,
+		// 			clientSecret
+		// 		);
 
-	// 		expect(mockBavService.saveVendorUuid).toHaveBeenCalledWith(sessionId, vendorUuid);
-	//   });
+		// 		expect(mockBavService.saveVendorUuid).toHaveBeenCalledWith(sessionId, vendorUuid);
+		//   });
       
 		it("returns error response if session has exceeded attemptCount", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
@@ -152,10 +145,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				body, 
 				clientIpAddress, 
 				encodedTxmaHeader,
-				clientUsername,
-				clientPassword,
-				clientId,
-				clientSecret
+				ssmParams,
 			);
 
 			expect(response.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
@@ -175,10 +165,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				body, 
 				clientIpAddress, 
 				encodedTxmaHeader,
-				clientUsername,
-				clientPassword,
-				clientId,
-				clientSecret
+				ssmParams,
 			);
 
 			expect(logger.appendKeys).toHaveBeenCalledWith({ govuk_signin_journey_id: session.clientSessionId });
@@ -198,17 +185,14 @@ describe("VerifyAccountRequestProcessor", () => {
 				body, 
 				clientIpAddress, 
 				encodedTxmaHeader,
-				clientUsername,
-				clientPassword,
-				clientId,
-				clientSecret
+				ssmParams,
 			);
 
-			expect(mockExperianService.verify).toHaveBeenCalledWith({ accountNumber: body.account_number, sortCode: body.sort_code, name: "Frederick Joseph Flintstone", uuid: vendorUuid },
-				clientUsername,
-				clientPassword,
-				clientId,
-				clientSecret
+			expect(mockExperianService.verify).toHaveBeenCalledWith({ accountNumber: body.account_number, sortCode: body.sort_code, name: "Frederick Joseph Flintstone", uuid: expRequestId },
+				"123456",
+    			"12345678",
+    			"clientId",
+    			"Test",
 			 );
 			expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "MYQUEUE", {
 				event_name: "BAV_EXPERIAN_REQUEST_SENT",
@@ -216,7 +200,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				extensions: {
 					evidence: [
 				 		{
-					 		txn: "new vendorUuid",
+					 		txn: expRequestId,
 						},
 					],
 				},
@@ -247,7 +231,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				extensions: {
 					evidence: [
 				 		{
-					 		txn: "new vendorUuid",
+					 		txn: expRequestId,
 						},
 					],
 				},
@@ -274,19 +258,16 @@ describe("VerifyAccountRequestProcessor", () => {
 				{ ...body, account_number: "123456" }, 
 				clientIpAddress, 
 				encodedTxmaHeader,
-				clientUsername,
-				clientPassword,
-				clientId,
-				clientSecret);
+				ssmParams);
 			expect(mockBavService.updateAccountDetails).toHaveBeenCalledWith(
 				{ sessionId, accountNumber: "00123456", sortCode: body.sort_code },
 				process.env.PERSON_IDENTITY_TABLE_NAME,
 			);
-			expect(mockExperianService.verify).toHaveBeenCalledWith({ accountNumber: "00123456", sortCode: body.sort_code, name: "Frederick Joseph Flintstone", uuid: vendorUuid },
-				clientUsername,
-				clientPassword,
-				clientId,
-				clientSecret
+			expect(mockExperianService.verify).toHaveBeenCalledWith({ accountNumber: "00123456", sortCode: body.sort_code, name: "Frederick Joseph Flintstone", uuid: expRequestId },
+				"123456",
+    			"12345678",
+    			"clientId",
+    			"Test",
 			 );
 		});
 
@@ -300,10 +281,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				body, 
 				clientIpAddress, 
 				encodedTxmaHeader,
-				clientUsername,
-				clientPassword,
-				clientId,
-				clientSecret
+				ssmParams,
 			);
 
 			expect(mockBavService.saveExperianCheckResult).toHaveBeenCalledWith(sessionId, CopCheckResults.FULL_MATCH, undefined);
@@ -321,10 +299,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				body, 
 				clientIpAddress, 
 				encodedTxmaHeader,
-				clientUsername,
-				clientPassword,
-				clientId,
-				clientSecret
+				ssmParams,
 			);
 
 			expect(mockBavService.saveExperianCheckResult).toHaveBeenCalledWith(sessionId, undefined, 1);
@@ -342,20 +317,14 @@ describe("VerifyAccountRequestProcessor", () => {
 				body, 
 				clientIpAddress, 
 				encodedTxmaHeader,
-				clientUsername,
-				clientPassword,
-				clientId,
-				clientSecret
+				ssmParams,
 			);
 			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
 				sessionId, 
 				body, 
 				clientIpAddress, 
 				encodedTxmaHeader,
-				clientUsername,
-				clientPassword,
-				clientId,
-				clientSecret
+				ssmParams,
 			);
 
 			expect(mockBavService.saveExperianCheckResult).toHaveBeenNthCalledWith(2, sessionId, "NO_MATCH", 2);
@@ -373,10 +342,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				body, 
 				clientIpAddress, 
 				encodedTxmaHeader,
-				clientUsername,
-				clientPassword,
-				clientId,
-				clientSecret
+				ssmParams,
 			);
 
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);

@@ -60,6 +60,8 @@ export class VerifyAccountHandler implements LambdaInterface {
 				const experianClientSecretSsmPath = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_CLIENT_SECRET_SSM_PATH, logger);
 				const EXPERIAN_CLIENT_SECRET = await getParameter(experianClientSecretSsmPath);
 
+				const ssmParams = { experianUsername: EXPERIAN_USERNAME, experianPassword: EXPERIAN_PASSWORD, experianClientId: EXPERIAN_CLIENT_ID, experianClientSecret: EXPERIAN_CLIENT_SECRET };
+
 				logger.appendKeys({ sessionId });
 				logger.info("Starting VerifyAccountRequestProcessorExperian");
 
@@ -68,10 +70,7 @@ export class VerifyAccountHandler implements LambdaInterface {
 					body, 
 					clientIpAddress, 
 					encodedHeader,
-					EXPERIAN_USERNAME,
-					EXPERIAN_PASSWORD,
-					EXPERIAN_CLIENT_ID,
-					EXPERIAN_CLIENT_SECRET,
+					ssmParams,
 				);
 			}
 		} catch (error: any) {
