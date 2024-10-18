@@ -32,9 +32,7 @@ interface TestHarnessReponse {
 interface AllTxmaEvents {
 	"BAV_CRI_START"?: TxmaEvent;
 	"BAV_COP_REQUEST_SENT"?: TxmaEvent;
-	"BAV_EXPERIAN_REQUEST_SENT"?: TxmaEvent;
 	"BAV_COP_RESPONSE_RECEIVED"?: TxmaEvent;
-	"BAV_EXPERIAN_RESPONSE_RECEIVED"?: TxmaEvent;
 	"BAV_CRI_VC_ISSUED"?: TxmaEvent;
 	"BAV_CRI_END"?: TxmaEvent;
 	"BAV_CRI_SESSION_ABORTED"?: TxmaEvent;
