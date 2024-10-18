@@ -71,9 +71,7 @@ export class VerifyAccountRequestProcessor {
   }
 
   static getInstance(logger: Logger, metrics: Metrics, CREDENTIAL_VENDOR: string): VerifyAccountRequestProcessor {
-  	if (!VerifyAccountRequestProcessor.instance) {
-  		VerifyAccountRequestProcessor.instance = new VerifyAccountRequestProcessor(logger, metrics, CREDENTIAL_VENDOR);
-  	} else if (VerifyAccountRequestProcessor.instance && VerifyAccountRequestProcessor.instance.credentialVendor !== CREDENTIAL_VENDOR) {
+  	if (!VerifyAccountRequestProcessor.instance || (VerifyAccountRequestProcessor.instance && VerifyAccountRequestProcessor.instance.credentialVendor !== CREDENTIAL_VENDOR)) {
   		VerifyAccountRequestProcessor.instance = new VerifyAccountRequestProcessor(logger, metrics, CREDENTIAL_VENDOR);
   	}
   	return VerifyAccountRequestProcessor.instance;

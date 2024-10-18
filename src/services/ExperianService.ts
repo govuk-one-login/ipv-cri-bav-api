@@ -79,7 +79,7 @@ export class ExperianService {
     			const errorObject = decisionElements.find((object: { warningsErrors: Array<{ responseType: string; responseCode: string; responseMessage: string }> }) => object.warningsErrors);
     			const responseCodeObject = errorObject?.warningsErrors.find((object: { responseType: string; responseCode: string; responseMessage: string }) => object.responseType !== undefined);
 				    			
-    			if (responseCodeObject && responseCodeObject.responseCode) {
+    			if (responseCodeObject) {
     				logResponseCode(responseCodeObject, this.logger);
     			} 
 				
