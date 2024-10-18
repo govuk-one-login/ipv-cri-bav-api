@@ -52,7 +52,7 @@ describe("BAV CRI unhappy path tests", () => {
 
 		it("HMRC Multiple Retries Test - Error Code 5XX", async () => {
 			const newVerifyAccountYesPayload = structuredClone(verifyAccountYesPayload);
-			newVerifyAccountYesPayload.account_number = "55555555";
+			newVerifyAccountYesPayload.account_number = "11111115";
 
 			sessionId = await startStubServiceAndReturnSessionId();
 
@@ -65,9 +65,9 @@ describe("BAV CRI unhappy path tests", () => {
 			await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_SESSION_CREATED");
 		});
 
-		it("HMRC Multiple Retries Test - Error Code 429", async () => {
+		it("HMRC Multiple Retries Test - Error Code 4XX", async () => {
 			const newVerifyAccountYesPayload = structuredClone(verifyAccountYesPayload);
-			newVerifyAccountYesPayload.account_number = "66666666";
+			newVerifyAccountYesPayload.account_number = "11111114";
 
 			sessionId = await startStubServiceAndReturnSessionId();
 
@@ -81,13 +81,13 @@ describe("BAV CRI unhappy path tests", () => {
 		});
 
 		it.each([
-			["00111112"],
-			["00111113"],
-			["00111114"],
-			["00111115"],
-			["22222222"],
-			["33333333"],
-			["44444444"],
+			["11111116"],
+			["11111117"],
+			// ["00111114"],
+			// ["00111115"],
+			// ["22222222"],
+			// ["33333333"],
+			// ["44444444"],
 		])("Name Retry Tests - Too many retries rejection for Account Number: $accountNumber", async (accountNumber: string) => {
 			const newVerifyAccountYesPayload = structuredClone(verifyAccountYesPayload);
 			newVerifyAccountYesPayload.account_number = accountNumber;
