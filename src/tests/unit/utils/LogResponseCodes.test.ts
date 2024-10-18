@@ -1,5 +1,3 @@
-import axios, { AxiosRequestConfig } from "axios";
-import { mock } from "jest-mock-extended";
 import { logResponseCode } from "../../../utils/LogResponseCode";
 
 describe("logResponseCode", () => {
