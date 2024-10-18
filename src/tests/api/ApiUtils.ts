@@ -32,6 +32,8 @@ interface AllTxmaEvents {
 	"BAV_CRI_VC_ISSUED"?: TxmaEvent;
 	"BAV_CRI_END"?: TxmaEvent;
 	"BAV_CRI_SESSION_ABORTED"?: TxmaEvent;
+	"BAV_EXPERIAN_REQUEST_SENT"?: TxmaEvent;
+	"BAV_EXPERIAN_RESPONSE_RECEIVED"?: TxmaEvent;
 }
 
 const getTxMAS3FileNames = async (prefix: string): Promise<any> => {

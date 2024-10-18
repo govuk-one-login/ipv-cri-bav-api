@@ -46,7 +46,7 @@ const expiredToken = {
 describe("Experian service", () => {
 	
 	beforeAll(() => {
-		experianServiceTest = new ExperianService(logger, experianBaseUrl, mockDynamoDbClient, experianTokenTableName);
+		experianServiceTest = new ExperianService(logger, experianBaseUrl, 2, mockDynamoDbClient, experianTokenTableName);
 	});
 
 	describe("#checkExperianToken", () => {

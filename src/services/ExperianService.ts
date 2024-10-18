@@ -7,6 +7,7 @@ import { MessageCodes } from "../models/enums/MessageCodes";
 import { ExperianTokenResponse, StoredExperianToken } from "../models/IExperianResponse";
 import { DynamoDBDocument, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
+import { logResponseCode } from "../utils/LogResponseCode";
 
 export class ExperianService {
 	readonly logger: Logger;
@@ -19,19 +20,80 @@ export class ExperianService {
 
 	readonly experianBaseUrl: string;
 
-	constructor(logger: Logger, experianBaseUrl: string, dynamoDbClient: DynamoDBDocument, experianTokenTableName: string) {
+    readonly maxRetries: number;
+
+	constructor(logger: Logger, experianBaseUrl: string, maxRetries: number, dynamoDbClient: DynamoDBDocument, experianTokenTableName: string) {
     	this.logger = logger;
-		this.dynamo = dynamoDbClient;
 		this.experianBaseUrl = experianBaseUrl;
+		this.maxRetries = maxRetries;
+		this.dynamo = dynamoDbClient;
 		this.experianTokenTableName = experianTokenTableName;
 	}
 
-	static getInstance(logger: Logger, experianBaseUrl: string, dynamoDbClient: DynamoDBDocument, experianTokenTableName: string): ExperianService {
+	static getInstance(logger: Logger, experianBaseUrl: string, maxRetries: number, dynamoDbClient: DynamoDBDocument, experianTokenTableName: string): ExperianService {
     	if (!ExperianService.instance) {
-    		ExperianService.instance = new ExperianService(logger, experianBaseUrl, dynamoDbClient, experianTokenTableName);
+    		ExperianService.instance = new ExperianService(logger, experianBaseUrl, maxRetries, dynamoDbClient, experianTokenTableName);
     	}
     	return ExperianService.instance;
 	}
+
+	 // eslint-disable-next-line max-lines-per-function
+	 async verify(
+    	{ accountNumber, sortCode, name, uuid }: { accountNumber: string; sortCode: string; name: string; uuid: string }, 
+		experianUsername: string,
+		experianPassword: string,
+		experianClientId: string,
+		experianClientSecret: string
+    ): Promise<any> {
+    		try {
+				const params = {
+					header: {
+					  tenantId: uuid,
+					  requestType: Constants.EXPERIAN_PRODUCT_NAME,
+					},
+					account: { accountNumber, sortCode },
+					subject: { name },
+				  };
+				
+				const token = this.generateExperianToken(experianUsername, experianPassword, experianClientId, experianClientSecret)
+				const headers = {
+					"User-Agent": Constants.EXPERIAN_USER_AGENT,
+					"Authorization": `Bearer ${token}`,
+					"Content-Type":"application/json",
+					"Accept":"application/json",
+				};
+				
+    			const endpoint = `${this.experianBaseUrl}/${Constants.EXPERIAN_VERIFY_ENDPOINT_PATH}`;
+    			this.logger.info("Sending verify request to Experian", { uuid, endpoint });
+    			const { data } = await axios.post(endpoint, params, { headers });
+    			const decisionElements = data?.clientResponsePayload?.decisionElements;
+
+    			const logObject = decisionElements.find((object: { auditLogs: object[] }) => object.auditLogs);
+    			this.logger.debug({
+    				message: "Received response from Experian verify request",
+    				eventType: logObject.auditLogs[0].eventType,
+    				eventOutcome: logObject.auditLogs[0].eventOutcome,
+    			});
+
+				
+    			const errorObject = decisionElements.find((object: { warningsErrors: Array<{ responseType: string; responseCode: string; responseMessage: string }> }) => object.warningsErrors);
+    			const responseCodeObject = errorObject?.warningsErrors.find((object: { responseType: string; responseCode: string; responseMessage: string }) => object.responseType !== undefined);
+				    			
+    			if (responseCodeObject && responseCodeObject.responseCode) {
+    				logResponseCode(responseCodeObject, this.logger);
+    			} 
+				
+    			const bavCheckResults = decisionElements.find((object: { scores: Array<{ name: string; score: number }> }) => object.scores);
+    			const personalDetailsScore = bavCheckResults?.scores.find((object: { name: string; score: number }) => object.name === "Personal details")?.score;
+
+    			return personalDetailsScore;
+    			
+    		} catch (error: any) {
+    			const message = "Error sending verify request to Experian";
+    			this.logger.error({ message, messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT, statusCode: error?.response?.status });
+				throw new AppError(HttpCodesEnum.SERVER_ERROR, message);		
+    	}
+    }
 
 	async generateExperianToken(clientUsername: string, clientPassword: string, clientId: string, clientSecret: string): Promise<StoredExperianToken | ExperianTokenResponse> {
     	this.logger.info({ message: `Checking ${this.experianTokenTableName} for valid token` });

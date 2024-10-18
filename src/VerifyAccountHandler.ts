@@ -22,8 +22,6 @@ export const logger = new Logger({
 });
 
 const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE, serviceName: POWERTOOLS_SERVICE_NAME });
-
-let HMRC_TOKEN: string;
 export class VerifyAccountHandler implements LambdaInterface {
 
 	@metrics.logMetrics({ throwOnEmptyMetrics: false, captureColdStartMetric: true })
@@ -35,14 +33,47 @@ export class VerifyAccountHandler implements LambdaInterface {
 		try {
 			const { sessionId, body, encodedHeader } = this.validateEvent(event);
 			const clientIpAddress = event.headers[Constants.X_FORWARDED_FOR] ?? event.requestContext.identity?.sourceIp;
+			const credentialVendorSsmPath = checkEnvironmentVariable(EnvironmentVariables.CREDENTIAL_VENDOR_SSM_PATH, logger);
+			const CREDENTIAL_VENDOR = await getParameter(credentialVendorSsmPath);
 
-			const hmrcTokenSsmPath = checkEnvironmentVariable(EnvironmentVariables.HMRC_TOKEN_SSM_PATH, logger);
-    	HMRC_TOKEN = await getParameter(hmrcTokenSsmPath);
+			if (CREDENTIAL_VENDOR === "HMRC") {
+				const hmrcTokenSsmPath = checkEnvironmentVariable(EnvironmentVariables.HMRC_TOKEN_SSM_PATH, logger);
+    			const HMRC_TOKEN = await getParameter(hmrcTokenSsmPath);
 
-			logger.appendKeys({ sessionId });
-			logger.info("Starting VerifyAccountRequestProcessor");
+				logger.appendKeys({ sessionId });
+				logger.info("Starting VerifyAccountRequestProcessorHmrc");
 
-			return await VerifyAccountRequestProcessor.getInstance(logger, metrics, HMRC_TOKEN).processRequest(sessionId, body, clientIpAddress, encodedHeader);
+				return await VerifyAccountRequestProcessor.getInstance(logger, metrics, CREDENTIAL_VENDOR).processHmrcRequest(
+					sessionId, 
+					body, 
+					clientIpAddress, 
+					encodedHeader, 
+					HMRC_TOKEN
+				);
+			} else {
+				const experianUsernameSsmPath = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_USERNAME_SSM_PATH, logger);
+				const EXPERIAN_USERNAME= await getParameter(experianUsernameSsmPath);
+				const experianPasswordSsmPath = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_PASSWORD_SSM_PATH, logger);
+				const EXPERIAN_PASSWORD = await getParameter(experianPasswordSsmPath);
+				const experianClientIdSsmPath = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_CLIENT_ID_SSM_PATH, logger);
+				const EXPERIAN_CLIENT_ID = await getParameter(experianClientIdSsmPath);
+				const experianClientSecretSsmPath = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_CLIENT_SECRET_SSM_PATH, logger);
+				const EXPERIAN_CLIENT_SECRET = await getParameter(experianClientSecretSsmPath);
+
+				logger.appendKeys({ sessionId });
+				logger.info("Starting VerifyAccountRequestProcessorExperian");
+
+				return await VerifyAccountRequestProcessor.getInstance(logger, metrics, CREDENTIAL_VENDOR).processExperianRequest(
+					sessionId, 
+					body, 
+					clientIpAddress, 
+					encodedHeader,
+					EXPERIAN_USERNAME,
+					EXPERIAN_PASSWORD,
+					EXPERIAN_CLIENT_ID,
+					EXPERIAN_CLIENT_SECRET
+				);
+			}
 		} catch (error: any) {
 			logger.error({ message: "An error has occurred.", error, messageCode: MessageCodes.SERVER_ERROR });
 			if (error instanceof AppError) {
