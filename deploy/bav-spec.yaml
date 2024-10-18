@@ -1037,12 +1037,15 @@ components:
       properties:
         sort_code:
           type: string
-          pattern: ^[0-9]{6}$
+          pattern: ^\d{6}$|^\d{2}-\d{2}-\d{2}$|^\d{2} \d{2} \d{2}$
+          maxLength: 6
           example: "000000"
           description: 6 digit sort code
         account_number:
           type: string
-          pattern: ^[0-9]{6,8}$
+          pattern: ^\d+$
+          minLength: 6
+          maxLength: 8
           example: "12345678"
           description: bank account number
     OAuthErrorResponse:
