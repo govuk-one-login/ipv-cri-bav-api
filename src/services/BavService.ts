@@ -4,7 +4,7 @@ import { DynamoDBDocument, GetCommand, PutCommand, QueryCommandInput, UpdateComm
 import { randomUUID } from "crypto";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../models/enums/MessageCodes";
-import { ISessionItem, CopCheckResult } from "../models/ISessionItem";
+import { ISessionItem, CopCheckResult, ExperianCheckResult } from "../models/ISessionItem";
 import { SharedClaimsPersonIdentity, PersonIdentityItem, PersonIdentityName } from "../models/PersonIdentityItem";
 import { AppError } from "../utils/AppError";
 import { absoluteTimeNow, getAuthorizationCodeExpirationEpoch } from "../utils/DateTimeUtils";
@@ -315,6 +315,28 @@ export class BavService {
 		} catch (error) {
 			this.logger.error({ message: "Got error saving hmrcUuid", messageCode: MessageCodes.FAILED_UPDATING_SESSION, error });
 			throw new AppError(HttpCodesEnum.SERVER_ERROR, "saveHmrcUuid failed: got error saving hmrcUuid");
+		}
+	}
+
+	async saveExperianCheckResult(sessionId: string, experianCheckResult?: ExperianCheckResult, attemptCount?: number): Promise<void> {
+		this.logger.info({ message: `Updating ${this.tableName} table with experianCheckResult`, experianCheckResult });
+		const updateStateCommand = new UpdateCommand({
+			TableName: this.tableName,
+			Key: { sessionId },
+			UpdateExpression: `SET ${experianCheckResult ? "experianCheckResult = :experianCheckResult," : ""} authSessionState = :authSessionState${attemptCount ? ", attemptCount = :attemptCount" : ""}`,
+			ExpressionAttributeValues: {
+				...(experianCheckResult && { ":experianCheckResult": experianCheckResult }),
+				...(attemptCount && { ":attemptCount": attemptCount }),
+				":authSessionState": AuthSessionState.BAV_DATA_RECEIVED,
+			},
+		});
+		
+		try {
+			await this.dynamo.send(updateStateCommand);
+			this.logger.info({ message: "Saved experianCheckResult in dynamodb" });
+		} catch (error) {
+			this.logger.error({ message: "Got error saving experianCheckResult", messageCode: MessageCodes.FAILED_UPDATING_SESSION, error });
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "saveExperianCheckResult failed: got error saving experianCheckResult");
 		}
 	}
 

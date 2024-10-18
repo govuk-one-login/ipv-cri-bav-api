@@ -12,6 +12,11 @@ export interface IBAVSession {
 	date_of_birth?: string;
 }
 
+export type ExperianCheckResult =
+	"FULL_MATCH" |
+	"NO_MATCH" |
+	undefined;
+
 export interface ISessionItem extends IBAVSession {
 	sessionId: string;
 	clientId: string;
@@ -30,6 +35,7 @@ export interface ISessionItem extends IBAVSession {
 	authSessionState: string;
 	evidence_requested?: EvidenceRequested;
 	copCheckResult?: CopCheckResult;
+	experianCheckResult?: ExperianCheckResult;
 	hmrcUuid?: string;
 	attemptCount?: number;
 }
