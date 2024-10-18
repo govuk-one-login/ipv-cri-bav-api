@@ -46,49 +46,49 @@ export class VerifyAccountRequestProcessor {
 
   private readonly ExperianService: ExperianService;	
 
-	constructor(logger: Logger, metrics: Metrics, CREDENTIAL_VENDOR: string) {
+  constructor(logger: Logger, metrics: Metrics, CREDENTIAL_VENDOR: string) {
   	this.logger = logger;
   	this.metrics = metrics;
-	this.credentialVendor = CREDENTIAL_VENDOR;
+  	this.credentialVendor = CREDENTIAL_VENDOR;
   	logger.debug("metrics is  " + JSON.stringify(this.metrics));
   	this.metrics.addMetric("Called", MetricUnits.Count, 1);
 
-	this.txmaQueueUrl = checkEnvironmentVariable(EnvironmentVariables.TXMA_QUEUE_URL, this.logger);
-	this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, this.logger);
+  	this.txmaQueueUrl = checkEnvironmentVariable(EnvironmentVariables.TXMA_QUEUE_URL, this.logger);
+  	this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, this.logger);
   	this.personIdentityTableName = checkEnvironmentVariable(EnvironmentVariables.PERSON_IDENTITY_TABLE_NAME, this.logger);
-	this.partialNameQueueUrl = checkEnvironmentVariable(EnvironmentVariables.PARTIAL_MATCHES_QEUEUE_URL, logger);
+  	this.partialNameQueueUrl = checkEnvironmentVariable(EnvironmentVariables.PARTIAL_MATCHES_QEUEUE_URL, logger);
   	const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, this.logger);
   	const hmrcBaseUrl = checkEnvironmentVariable(EnvironmentVariables.HMRC_BASE_URL, this.logger);
   	const maxRetries = +checkEnvironmentVariable(EnvironmentVariables.HMRC_MAX_RETRIES, logger);
   	const hmrcBackoffPeriodMs = +checkEnvironmentVariable(EnvironmentVariables.HMRC_TOKEN_BACKOFF_PERIOD_MS, logger);
-	const experianTokenTableName: string = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_TOKEN_TABLE, this.logger);
+  	const experianTokenTableName: string = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_TOKEN_TABLE, this.logger);
   	const experianBaseUrl = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_BASE_URL, this.logger);
-	const experianMaxRetries = +checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_MAX_RETRIES, logger);
+  	const experianMaxRetries = +checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_MAX_RETRIES, logger);
 
   	this.BavService = BavService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
   	this.HmrcService = HmrcService.getInstance(this.logger, hmrcBaseUrl, hmrcBackoffPeriodMs, maxRetries);
-	this.ExperianService = ExperianService.getInstance(this.logger, experianBaseUrl, experianMaxRetries, createDynamoDbClient(), experianTokenTableName);
-	}
+  	this.ExperianService = ExperianService.getInstance(this.logger, experianBaseUrl, experianMaxRetries, createDynamoDbClient(), experianTokenTableName);
+  }
 
-	static getInstance(logger: Logger, metrics: Metrics, CREDENTIAL_VENDOR: string): VerifyAccountRequestProcessor {
+  static getInstance(logger: Logger, metrics: Metrics, CREDENTIAL_VENDOR: string): VerifyAccountRequestProcessor {
   	if (!VerifyAccountRequestProcessor.instance) {
   		VerifyAccountRequestProcessor.instance = new VerifyAccountRequestProcessor(logger, metrics, CREDENTIAL_VENDOR);
-	} else if (VerifyAccountRequestProcessor.instance && VerifyAccountRequestProcessor.instance.credentialVendor !== CREDENTIAL_VENDOR) {
-		VerifyAccountRequestProcessor.instance = new VerifyAccountRequestProcessor(logger, metrics, CREDENTIAL_VENDOR);
+  	} else if (VerifyAccountRequestProcessor.instance && VerifyAccountRequestProcessor.instance.credentialVendor !== CREDENTIAL_VENDOR) {
+  		VerifyAccountRequestProcessor.instance = new VerifyAccountRequestProcessor(logger, metrics, CREDENTIAL_VENDOR);
   	}
   	return VerifyAccountRequestProcessor.instance;
-	}
+  }
 
-	async processExperianRequest(
-		sessionId: string, 
-		body: VerifyAccountPayload, 
-		clientIpAddress: string, 
-		encodedHeader: string,
-		experianUsername: string,
-		experianPassword: string,
-		experianClientId: string,
-		experianClientSecret: string
-		): Promise<APIGatewayProxyResult> {
+  async processExperianRequest(
+  	sessionId: string, 
+  	body: VerifyAccountPayload, 
+  	clientIpAddress: string, 
+  	encodedHeader: string,
+  	experianUsername: string,
+  	experianPassword: string,
+  	experianClientId: string,
+  	experianClientSecret: string,
+  ): Promise<APIGatewayProxyResult> {
 		  const { account_number: accountNumber, sort_code: sortCode } = body;
 		  const paddedAccountNumber = accountNumber.padStart(8, "0");
 		  const person: PersonIdentityItem | undefined = await this.BavService.getPersonIdentityById(sessionId, this.personIdentityTableName);
@@ -112,7 +112,7 @@ export class VerifyAccountRequestProcessor {
 		  const name = getFullName(person.name);
 		  this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
 	
-		  let expRequestId = "PLACEHOLDER"; //EXPERIAN have not provided this value yet
+		  const expRequestId = "PLACEHOLDER"; //EXPERIAN have not provided this value yet
 	
 		  const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
 	
@@ -143,7 +143,7 @@ export class VerifyAccountRequestProcessor {
 			  experianUsername,
 			  experianPassword,
 			  experianClientId,
-			  experianClientSecret
+			  experianClientSecret,
 		  );
 		
 		  if (!verifyResponse) {
@@ -182,8 +182,8 @@ export class VerifyAccountRequestProcessor {
 		  }));
 	  }
 
-	// eslint-disable-next-line max-lines-per-function, complexity
-	async processHmrcRequest(sessionId: string, body: VerifyAccountPayload, clientIpAddress: string, encodedHeader: string, HMRC_TOKEN: string): Promise<APIGatewayProxyResult> {
+  // eslint-disable-next-line max-lines-per-function, complexity
+  async processHmrcRequest(sessionId: string, body: VerifyAccountPayload, clientIpAddress: string, encodedHeader: string, HMRC_TOKEN: string): Promise<APIGatewayProxyResult> {
   	const { account_number: accountNumber, sort_code: sortCode } = body;
   	const paddedAccountNumber = accountNumber.padStart(8, "0");
   	const person: PersonIdentityItem | undefined = await this.BavService.getPersonIdentityById(sessionId, this.personIdentityTableName);
@@ -206,7 +206,7 @@ export class VerifyAccountRequestProcessor {
 
   	const name = getFullName(person.name);
   	this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
-		const timeOfRequest = absoluteTimeNow();
+  	const timeOfRequest = absoluteTimeNow();
 
   	let { hmrcUuid } = session;
   	if (!hmrcUuid) {
@@ -238,7 +238,7 @@ export class VerifyAccountRequestProcessor {
   				],
 		 		},
   		},
-			encodedHeader,
+  		encodedHeader,
   	);
 
   	const verifyResponse = await this.HmrcService.verify(
@@ -264,7 +264,7 @@ export class VerifyAccountRequestProcessor {
   				],
 			  },
   		},
-			encodedHeader,
+  		encodedHeader,
   	);
 
   	await this.BavService.updateAccountDetails(
@@ -287,27 +287,27 @@ export class VerifyAccountRequestProcessor {
   	}
   	await this.BavService.saveCopCheckResult(sessionId, copCheckResult, attemptCount);
 
-		if (copCheckResult === CopCheckResults.PARTIAL_MATCH) {
-			const partialNameRecord: PartialNameSQSRecord = {
-				itemNumber: hmrcUuid,
-				timeStamp: timeOfRequest,
-				cicName: name,
-				accountName: verifyResponse.accountName,
-				accountExists: verifyResponse.accountExists,
-				nameMatches: verifyResponse.nameMatches,
-				sortCodeBankName: verifyResponse.sortCodeBankName,
-			};
+  	if (copCheckResult === CopCheckResults.PARTIAL_MATCH) {
+  		const partialNameRecord: PartialNameSQSRecord = {
+  			itemNumber: hmrcUuid,
+  			timeStamp: timeOfRequest,
+  			cicName: name,
+  			accountName: verifyResponse.accountName,
+  			accountExists: verifyResponse.accountExists,
+  			nameMatches: verifyResponse.nameMatches,
+  			sortCodeBankName: verifyResponse.sortCodeBankName,
+  		};
 			
-			await this.BavService.savePartialNameInfo(this.partialNameQueueUrl, partialNameRecord);
-		}
+  		await this.BavService.savePartialNameInfo(this.partialNameQueueUrl, partialNameRecord);
+  	}
 
   	return Response(HttpCodesEnum.OK, JSON.stringify({
   		message: "Success",
   		attemptCount,
   	}));
-	}
+  }
 
-	calculateCopCheckResult(verifyResponse: HmrcVerifyResponse): CopCheckResult {
+  calculateCopCheckResult(verifyResponse: HmrcVerifyResponse): CopCheckResult {
   	if (verifyResponse.nameMatches ===  "yes" && verifyResponse.accountExists === "yes") {
   		return CopCheckResults.FULL_MATCH;
   	} else if (verifyResponse.nameMatches ===  "partial" && verifyResponse.accountExists === "yes") {
@@ -317,15 +317,15 @@ export class VerifyAccountRequestProcessor {
   	} else {
   		return CopCheckResults.NO_MATCH;
   	}
-	}
+  }
 
-	calculateExperianCheckResult(verifyResponse: number, attemptCount?: number): ExperianCheckResult {
-		if (verifyResponse === 9) {
-			return ExperianCheckResults.FULL_MATCH;
-		} else if (verifyResponse !== 9 && attemptCount === undefined) {
-			return undefined;
-		} else {
-			return ExperianCheckResults.NO_MATCH;
-		}
-	}
+  calculateExperianCheckResult(verifyResponse: number, attemptCount?: number): ExperianCheckResult {
+  	if (verifyResponse === 9) {
+  		return ExperianCheckResults.FULL_MATCH;
+  	} else if (verifyResponse !== 9 && attemptCount === undefined) {
+  		return undefined;
+  	} else {
+  		return ExperianCheckResults.NO_MATCH;
+  	}
+  }
 }

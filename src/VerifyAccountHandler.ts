@@ -48,11 +48,11 @@ export class VerifyAccountHandler implements LambdaInterface {
 					body, 
 					clientIpAddress, 
 					encodedHeader, 
-					HMRC_TOKEN
+					HMRC_TOKEN,
 				);
 			} else {
 				const experianUsernameSsmPath = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_USERNAME_SSM_PATH, logger);
-				const EXPERIAN_USERNAME= await getParameter(experianUsernameSsmPath);
+				const EXPERIAN_USERNAME = await getParameter(experianUsernameSsmPath);
 				const experianPasswordSsmPath = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_PASSWORD_SSM_PATH, logger);
 				const EXPERIAN_PASSWORD = await getParameter(experianPasswordSsmPath);
 				const experianClientIdSsmPath = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_CLIENT_ID_SSM_PATH, logger);
@@ -71,7 +71,7 @@ export class VerifyAccountHandler implements LambdaInterface {
 					EXPERIAN_USERNAME,
 					EXPERIAN_PASSWORD,
 					EXPERIAN_CLIENT_ID,
-					EXPERIAN_CLIENT_SECRET
+					EXPERIAN_CLIENT_SECRET,
 				);
 			}
 		} catch (error: any) {
