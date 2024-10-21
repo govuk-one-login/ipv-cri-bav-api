@@ -3302,8 +3302,11 @@ Resources:
             Fn::ImportValue: !Sub "${L2KMSStackName}-encryption-key"
           HMRC_TOKEN_SSM_PATH: !Sub "/${Environment}/HMRC/TOKEN"
           HMRC_BASE_URL: !FindInMap [ EnvironmentVariables, !Ref Environment, HMRCVERIFYBASEURL ]
+          EXPERIAN_BASE_URL: !FindInMap [ EnvironmentVariables, !Ref Environment, EXPERIANBASEURL ]
           HMRC_MAX_RETRIES: 2
+          EXPERIAN_MAX_RETRIES: 2
           HMRC_TOKEN_BACKOFF_PERIOD_MS: 5000 # 5 seconds
+          CREDENTIAL_VENDOR_SSM_PATH: !Sub "/${Environment}/bav/vendor"
           PARTIAL_MATCHES_QEUEUE_URL: !Ref PartialMatchesQueue
           EXPERIAN_PASSWORD_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/Username"
           EXPERIAN_USERNAME_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/Password"
@@ -3312,6 +3315,8 @@ Resources:
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub "${Environment}/bav/vendor"
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${Environment}/HMRC/TOKEN"
         - SSMParameterReadPolicy:
