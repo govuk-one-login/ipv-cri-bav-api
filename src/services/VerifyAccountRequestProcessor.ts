@@ -111,6 +111,12 @@ export class VerifyAccountRequestProcessor {
 	
 		  const name = getFullName(person.name);
 		  this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
+
+		  let { hmrcUuid } = session;
+		  if (!hmrcUuid) {
+			  hmrcUuid = randomUUID();
+			  await this.BavService.saveHmrcUuid(sessionId, hmrcUuid);
+		  }
 	
 		  const expRequestId = "PLACEHOLDER"; //EXPERIAN have not provided this value yet
 	
