@@ -151,14 +151,14 @@ describe("Experian service", () => {
 	describe("#experianToken", () => {
 
 		describe("#checkExperianToken", () => {
-				it("should return true if token is valid", () => {
-			const result = experianServiceTest.checkExperianToken(storedExperianToken);
-			expect(result).toBe(true);
-				});
+			it("should return true if token is valid", () => {
+				const result = experianServiceTest.checkExperianToken(storedExperianToken);
+				expect(result).toBe(true);
+			});
 
-				it("should return false if token is invalid", () => {
-					const result = experianServiceTest.checkExperianToken(expiredToken);
-					expect(result).toBe(false);
+			it("should return false if token is invalid", () => {
+				const result = experianServiceTest.checkExperianToken(expiredToken);
+				expect(result).toBe(false);
 			});
 		});
 

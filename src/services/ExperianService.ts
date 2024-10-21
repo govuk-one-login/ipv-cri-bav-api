@@ -58,7 +58,7 @@ export class ExperianService {
     		// const token = this.generateExperianToken(experianUsername, experianPassword, experianClientId, experianClientSecret);
     		const headers = {
     			"User-Agent": Constants.EXPERIAN_USER_AGENT,
-    			"Authorization": `Bearer TOKEN`,
+    			"Authorization": "Bearer TOKEN",
     			"Content-Type":"application/json",
     			"Accept":"application/json",
     		};
