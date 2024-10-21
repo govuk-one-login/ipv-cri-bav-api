@@ -3302,14 +3302,31 @@ Resources:
             Fn::ImportValue: !Sub "${L2KMSStackName}-encryption-key"
           HMRC_TOKEN_SSM_PATH: !Sub "/${Environment}/HMRC/TOKEN"
           HMRC_BASE_URL: !FindInMap [ EnvironmentVariables, !Ref Environment, HMRCVERIFYBASEURL ]
+          EXPERIAN_BASE_URL: !FindInMap [ EnvironmentVariables, !Ref Environment, EXPERIANBASEURL ]
           HMRC_MAX_RETRIES: 2
+          EXPERIAN_MAX_RETRIES: 2
           HMRC_TOKEN_BACKOFF_PERIOD_MS: 5000 # 5 seconds
+          CREDENTIAL_VENDOR_SSM_PATH: !Sub "/${Environment}/bav/vendor"
           PARTIAL_MATCHES_QEUEUE_URL: !Ref PartialMatchesQueue
+          EXPERIAN_PASSWORD_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/Username"
+          EXPERIAN_USERNAME_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/Password"
+          EXPERIAN_CLIENT_ID_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/clientId"
+          EXPERIAN_CLIENT_SECRET_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/clientSecret"
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
         - SSMParameterReadPolicy:
+            ParameterName: !Sub "${Environment}/bav/vendor"
+        - SSMParameterReadPolicy:
             ParameterName: !Sub "${Environment}/HMRC/TOKEN"
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub "${Environment}/bav-cri-api/CrosscoreV2/Username"
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub "${Environment}/bav-cri-api/CrosscoreV2/Password"
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub "${Environment}/bav-cri-api/CrosscoreV2/clientId"
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub "${Environment}/bav-cri-api/CrosscoreV2/clientSecret"
         - DynamoDBWritePolicy:
             TableName:
               Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"

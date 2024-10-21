@@ -21,3 +21,10 @@ process.env.CREDENTIAL_VENDOR_SSM_PATH = "/dev/bav/vendor"
 // pragma: allowlist secret
 process.env.PRIVATE_KEY_SSM_PATH = "person-info/PRIVATE_KEY"
 process.env.PARTIAL_MATCHES_QEUEUE_URL = "PARTIALMATCH_QUEUE"
+process.env.EXPERIAN_TOKEN_TABLE = "experianTokenTable"
+process.env.EXPERIAN_BASE_URL = "https://experian"
+process.env.EXPERIAN_MAX_RETRIES = "2"
+process.env.EXPERIAN_USERNAME_SSM_PATH = "username",
+process.env.EXPERIAN_PASSWORD_SSM_PATH = "password",
+process.env.EXPERIAN_CLIENT_ID_SSM_PATH = "id",
+process.env.EXPERIAN_CLIENT_SECRET_SSM_PATH = "secret"
