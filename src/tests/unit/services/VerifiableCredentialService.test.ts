@@ -5,7 +5,6 @@ import { Logger } from "@aws-lambda-powertools/logger";
 import { ISessionItem } from "../../../models/ISessionItem";
 import { VerifiableCredentialService, VerifiableCredentialBuilder } from "../../../services/VerifiableCredentialService";
 import { KmsJwtAdapter } from "../../../utils/KmsJwtAdapter";
-import { CopCheckResult } from "../../../models/enums/checkResult";
 import { MessageCodes } from "../../../models/enums/MessageCodes";
 import { AppError } from "../../../utils/AppError";
 import { Constants } from "../../../utils/Constants";

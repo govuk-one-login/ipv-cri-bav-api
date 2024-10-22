@@ -7,7 +7,7 @@ import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { Constants } from "../utils/Constants";
 import { randomUUID } from "crypto";
-import { CopCheckResult, ExperianCheckResult } from "../models/enums/checkResult";
+import { ExperianCheckResult } from "../models/enums/checkResult";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { mockCI, mockVcClaims } from "../tests/contract/mocks/VerifiableCredential";
 
