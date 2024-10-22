@@ -257,7 +257,7 @@ function validateRawBody(rawBody: any): void {
 	const decodedBody = decodeRawBody(rawBody);
 	expect(decodedBody.jti).toBeTruthy();
 	expect(decodedBody.vc.evidence[0].strengthScore).toBe(3);
-	expect(decodedBody.vc.evidence[0].validityScore).toBe(0);
+	expect(decodedBody.vc.evidence[0].validityScore).toBe(2);
 }
 
 export function decodeRawBody(rawBody: any): any {
