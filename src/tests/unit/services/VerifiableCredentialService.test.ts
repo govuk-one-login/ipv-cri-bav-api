@@ -5,10 +5,10 @@ import { Logger } from "@aws-lambda-powertools/logger";
 import { ISessionItem } from "../../../models/ISessionItem";
 import { VerifiableCredentialService, VerifiableCredentialBuilder } from "../../../services/VerifiableCredentialService";
 import { KmsJwtAdapter } from "../../../utils/KmsJwtAdapter";
-import { CopCheckResult } from "../../../models/enums/CopCheckResult";
 import { MessageCodes } from "../../../models/enums/MessageCodes";
 import { AppError } from "../../../utils/AppError";
 import { Constants } from "../../../utils/Constants";
+import { ExperianCheckResult } from "../../../models/enums/checkResult";
 
 const mockKmsJwtAdapter = mock<KmsJwtAdapter>();
 const mockLogger = mock<Logger>();
@@ -45,6 +45,7 @@ function getMockSessionItem(): ISessionItem {
 		clientIpAddress: "127.0.0.1",
 		authSessionState: "BAV_ACCESS_TOKEN_ISSUED",
 		copCheckResult: "FULL_MATCH",
+		experianCheckResult: ExperianCheckResult.FULL_MATCH,
 		hmrcUuid: "testId",
 	};
 	return sess;
@@ -139,9 +140,9 @@ describe("VerifiableCredentialService", () => {
 			expect(mockLogger.info).toHaveBeenCalledWith("Generated VerifiableCredential jwt", { jti: expect.any(String) });
 		});
 
-		it("should generate a signed JWT for a non-full match result", async () => {
-			mockSessionItem.copCheckResult = CopCheckResult.PARTIAL_MATCH;
-			const signedJWT = "mockSignedJwtPartial";
+		it("should generate a signed JWT with failure evidence for a failed match result", async () => {
+			mockSessionItem.experianCheckResult = ExperianCheckResult.NO_MATCH;
+			const signedJWT = "mockSignedJwt";
 			mockKmsJwtAdapter.sign.mockResolvedValue(signedJWT);
 
 			const result = await service.generateSignedVerifiableCredentialJwt(

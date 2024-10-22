@@ -7,7 +7,7 @@ import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { Constants } from "../utils/Constants";
 import { randomUUID } from "crypto";
-import { CopCheckResult } from "../models/enums/CopCheckResult";
+import { ExperianCheckResult } from "../models/enums/checkResult";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { mockCI, mockVcClaims } from "../tests/contract/mocks/VerifiableCredential";
 
@@ -77,7 +77,7 @@ export class VerifiableCredentialService {
 		sessionItem: ISessionItem, nameParts: PersonIdentityNamePart[], birthDate: PersonIdentityBirthDate[], bankAccountInfo: BankAccountInfo, getNow: () => number): Promise<{ signedJWT: string; evidenceInfo: VerifiedCredentialEvidence }> {
 		const now = getNow();
 		const subject = sessionItem.subject;
-		const evidenceInfo = sessionItem.copCheckResult === CopCheckResult.FULL_MATCH ?
+		const evidenceInfo = sessionItem.experianCheckResult === ExperianCheckResult.FULL_MATCH ?
 			this.getSuccessEvidenceBlock(sessionItem.hmrcUuid!) : this.getFailureEvidenceBlock(sessionItem.hmrcUuid!);
 		const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, birthDate, bankAccountInfo, evidenceInfo, this.credentialVendor)
 			.build();

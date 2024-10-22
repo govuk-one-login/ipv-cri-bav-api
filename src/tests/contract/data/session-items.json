@@ -30,6 +30,9 @@
                   "copCheckResult": {
                     "S": "FULL_MATCH"
                   },
+                  "experianCheckResult": {
+                  "S": "FULL_MATCH"
+                },
                   "createdDate": {
                     "N": "1708351711"
                   },
@@ -76,6 +79,9 @@
                   "S": "e597d53bf06d94df4a7b316b9a04a05c"
                 },
                 "copCheckResult": {
+                  "S": "FULL_MATCH"
+                },
+                "experianCheckResult": {
                   "S": "FULL_MATCH"
                 },
                 "createdDate": {
