@@ -8,6 +8,7 @@ import { KmsJwtAdapter } from "../../../utils/KmsJwtAdapter";
 import { MessageCodes } from "../../../models/enums/MessageCodes";
 import { AppError } from "../../../utils/AppError";
 import { Constants } from "../../../utils/Constants";
+import { ExperianCheckResult } from "../../../models/enums/checkResult";
 
 const mockKmsJwtAdapter = mock<KmsJwtAdapter>();
 const mockLogger = mock<Logger>();
@@ -44,7 +45,7 @@ function getMockSessionItem(): ISessionItem {
 		clientIpAddress: "127.0.0.1",
 		authSessionState: "BAV_ACCESS_TOKEN_ISSUED",
 		copCheckResult: "FULL_MATCH",
-		experianCheckResult: "FULL_MATCH",
+		experianCheckResult: ExperianCheckResult.FULL_MATCH,
 		hmrcUuid: "testId",
 	};
 	return sess;
