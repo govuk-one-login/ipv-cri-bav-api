@@ -151,27 +151,11 @@
                                 "attemptNum": {
                                     "type": "integer"
                                 },
-                                "ci": {
-                                    "type": "array",
-                                    "items": [
-                                        {
-                                            "type": "string"
-                                        }
-                                    ]
-                                },
                                 "ciReasons": {
                                     "type": "array",
                                     "items": [
                                         {
-                                            "type": "object",
-                                            "properties": {
-                                                "ci": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "ci"
-                                            ]
+                                            "type": "object"
                                         }
                                     ]
                                 }
@@ -181,7 +165,6 @@
                                 "strengthScore",
                                 "validityScore",
                                 "attemptNum",
-                                "ci",
                                 "ciReasons"
                             ]
                         }
