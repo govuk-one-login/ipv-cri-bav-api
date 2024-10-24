@@ -70,7 +70,7 @@ export class Constants {
 
   static readonly HMRC_TOKEN_ENDPOINT_PATH = "/oauth/token";
 
-  static readonly EXPERIAN_VERIFY_ENDPOINT_PATH = "services/v0/applications/3";
+  static readonly EXPERIAN_VERIFY_ENDPOINT_PATH = "/services/v0/applications/3";
 
   static readonly EXPERIAN_TOKEN_ENDPOINT_PATH = "/oauth2/experianone/v1/token";
 

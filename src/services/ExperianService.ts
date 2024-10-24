@@ -55,7 +55,7 @@ export class ExperianService {
     			subject: { name },
 				  };
 				
-    		// const token = this.generateExperianToken(experianUsername, experianPassword, experianClientId, experianClientSecret);
+    		const token = await this.generateExperianToken(experianUsername, experianPassword, experianClientId, experianClientSecret);
     		const headers = {
     			"User-Agent": Constants.EXPERIAN_USER_AGENT,
     			"Authorization": "Bearer TOKEN",
@@ -63,7 +63,7 @@ export class ExperianService {
     			"Accept":"application/json",
     		};
 				
-    			const endpoint = `${this.experianBaseUrl}/${Constants.EXPERIAN_VERIFY_ENDPOINT_PATH}`;
+    			const endpoint = `${this.experianBaseUrl}${Constants.EXPERIAN_VERIFY_ENDPOINT_PATH}`;
     			this.logger.info("Sending verify request to Experian", { uuid, endpoint });
     			const { data } = await axios.post(endpoint, params, { headers });
     			const decisionElements = data?.clientResponsePayload?.decisionElements;
@@ -102,10 +102,13 @@ export class ExperianService {
     	const isValidToken = this.checkExperianToken(storedToken);
 
     	if (isValidToken) {
+			this.logger.info("Valid token found");
     		return storedToken;
     	} else {		
-    		this.logger.info("requestExperianToken - no valid token - trying to generate new Experian token");
+    		
     		try {
+				const endpoint = `${this.experianBaseUrl}${Constants.EXPERIAN_TOKEN_ENDPOINT_PATH}`
+				this.logger.info("No valid token - trying to generate new Experian token", { endpoint });
     			const params = {
     				username: clientUsername,
     				password: clientPassword,
@@ -122,15 +125,15 @@ export class ExperianService {
     			};
 
     			const { data }: { data: ExperianTokenResponse } = await axios.post(
-    				`${this.experianBaseUrl}${Constants.EXPERIAN_TOKEN_ENDPOINT_PATH}`,
+					endpoint,
     				params,
     				config,
     			);
-    			this.logger.info("Received response from experian token endpoint");
+    			this.logger.info("Received response from Experian token endpoint");
     			await this.saveExperianToken(data);
     			return data;
     		} catch (error: any) {
-    			this.logger.error({ message: "Error generating experian token", statusCode: error?.response?.status, messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN });
+    			this.logger.error({ message: "Error generating Experian token", statusCode: error?.response?.status, messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN });
     			this.logger.info("Returning previous Experian token due to error generating a new one.");
     			return storedToken;
     		}
