@@ -54,22 +54,37 @@ export class VerifiableCredentialService {
 		};
 	}
 
-	getFailureEvidenceBlock(vendorUuid: string): VerifiedCredentialEvidence {
-		return {
-			type: Constants.IDENTITY_CHECK,
-			txn: vendorUuid,
-			strengthScore: 3,
-			validityScore: 0,
-			failedCheckDetails: [
-				{
-					checkMethod: "data",
-					identityCheckPolicy: "none",
-				},
-			],
-			ci: process.env.USE_MOCKED ? mockCI : [
-				"D15",
-			],
-		};
+	getFailureEvidenceBlock(hmrcUuid: string, responseCode?: string): VerifiedCredentialEvidence {
+		if (responseCode === "2" || responseCode === "3") {
+			return {
+				type: Constants.IDENTITY_CHECK,
+				txn: hmrcUuid,
+				strengthScore: 3,
+				validityScore: 0,
+				failedCheckDetails: [
+					{
+						checkMethod: "data",
+						identityCheckPolicy: "none",
+					},
+				],
+			};
+		} else {
+			return {
+				type: Constants.IDENTITY_CHECK,
+				txn: hmrcUuid,
+				strengthScore: 3,
+				validityScore: 0,
+				failedCheckDetails: [
+					{
+						checkMethod: "data",
+						identityCheckPolicy: "none",
+					},
+				],
+				ci: process.env.USE_MOCKED ? mockCI : [
+					"D15",
+				],
+			};
+		}
 	}
 	
 
@@ -77,8 +92,9 @@ export class VerifiableCredentialService {
 		sessionItem: ISessionItem, nameParts: PersonIdentityNamePart[], birthDate: PersonIdentityBirthDate[], bankAccountInfo: BankAccountInfo, getNow: () => number): Promise<{ signedJWT: string; evidenceInfo: VerifiedCredentialEvidence }> {
 		const now = getNow();
 		const subject = sessionItem.subject;
+		const responseCode = sessionItem.responseCode;
 		const evidenceInfo = sessionItem.experianCheckResult === ExperianCheckResult.FULL_MATCH ?
-			this.getSuccessEvidenceBlock(sessionItem.vendorUuid!) : this.getFailureEvidenceBlock(sessionItem.vendorUuid!);
+			this.getSuccessEvidenceBlock(sessionItem.hmrcUuid!) : this.getFailureEvidenceBlock(sessionItem.hmrcUuid!, responseCode);
 		const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, birthDate, bankAccountInfo, evidenceInfo, this.credentialVendor)
 			.build();
 		let result;

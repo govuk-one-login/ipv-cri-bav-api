@@ -22,6 +22,7 @@ import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { APIGatewayProxyResult } from "aws-lambda";
 import { ExperianService } from "./ExperianService";
 import { ExperianCheckResults } from "../models/enums/Experian";
+import { ExperianVerifyResponse } from "../models/IVeriCredential";
 
 export class VerifyAccountRequestProcessor {
   private static instance: VerifyAccountRequestProcessor;
@@ -180,8 +181,8 @@ export class VerifyAccountRequestProcessor {
 		  if (experianCheckResult !== ExperianCheckResults.FULL_MATCH || !experianCheckResult) {
 			  attemptCount = session.attemptCount ? session.attemptCount + 1 : 1;
 		  }
-		  await this.BavService.saveExperianCheckResult(sessionId, experianCheckResult, attemptCount);
-		
+		  await this.BavService.saveExperianCheckResult(sessionId, experianCheckResult, verifyResponse.responseCode, attemptCount);
+		  /// TALK TO STELIOS ABOUT BEST IMPLEMENTATION OF THIS - COULD RETURN AN OBJECT FROM CALCEXPRES WITH SCORE AND RESPONSE CODE INSIDE AND ACCESS UP HERE?
 		  return Response(HttpCodesEnum.OK, JSON.stringify({
 			  message: "Success",
 			  attemptCount,
@@ -321,10 +322,12 @@ export class VerifyAccountRequestProcessor {
   	}
   }
 
-  calculateExperianCheckResult(verifyResponse: number, attemptCount?: number): ExperianCheckResult {
-  	if (verifyResponse === 9) {
+  calculateExperianCheckResult(verifyResponse: ExperianVerifyResponse, attemptCount?: number): ExperianCheckResult {
+  	const personalDetailsScore = verifyResponse.personalDetailsScore;
+  	const responseCode = verifyResponse.responseCode;
+  	if (personalDetailsScore === 9 && !responseCode) {
   		return ExperianCheckResults.FULL_MATCH;
-  	} else if (verifyResponse !== 9 && attemptCount === undefined) {
+  	} else if (personalDetailsScore !== 9 && attemptCount === undefined) {
   		return undefined;
   	} else {
   		return ExperianCheckResults.NO_MATCH;
