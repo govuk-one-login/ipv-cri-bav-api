@@ -108,7 +108,7 @@ export type VerifiedCredentialEvidence = {
 
 export type ExperianVerifyResponse = {
 	personalDetailsScore: number;
-	responseCode?: number;
+	responseCode?: string;
 };
 
 export type BankAccountInfo = {
