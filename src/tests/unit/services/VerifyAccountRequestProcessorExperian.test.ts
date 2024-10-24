@@ -375,5 +375,5 @@ describe("VerifyAccountRequestProcessor", () => {
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
 			expect(response.body).toBe(JSON.stringify({ message:"Success" }));
 		});
-	});
+	 });
 });
