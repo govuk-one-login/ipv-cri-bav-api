@@ -83,7 +83,7 @@ describe("HMRC Service", () => {
 				new AppError(HttpCodesEnum.SERVER_ERROR, "Error sending COP verify request to HMRC"),
 			);
 			expect(logger.error).toHaveBeenCalledWith(
-				{ message: "Error sending COP verify request to HMRC", messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT, statusCode: 500 },
+				{ message: "Error sending COP verify request to HMRC", messageCode: MessageCodes.FAILED_VERIFYING_ACCOUNT, statusCode: 500 },
 			);
 			expect(axios.post).toHaveBeenCalledTimes(4);
 			expect(axios.post).toHaveBeenCalledWith(
@@ -118,7 +118,7 @@ describe("HMRC Service", () => {
 				new AppError(HttpCodesEnum.SERVER_ERROR, "Error sending COP verify request to HMRC"),
 			);
 			expect(logger.error).toHaveBeenCalledWith(
-				{ message: "Error sending COP verify request to HMRC", messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT, statusCode: 429 },
+				{ message: "Error sending COP verify request to HMRC", messageCode: MessageCodes.FAILED_VERIFYING_ACCOUNT, statusCode: 429 },
 			);
 			expect(axios.post).toHaveBeenCalledTimes(4);
 			expect(axios.post).toHaveBeenCalledWith(
@@ -154,7 +154,7 @@ describe("HMRC Service", () => {
 					statusCode: HttpCodesEnum.SERVER_ERROR,
 					message: "Error sending COP verify request to HMRC",
 				}));
-			expect(logger.error).toHaveBeenCalledWith({ message: "Error sending COP verify request to HMRC", messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT, statusCode: 400 });
+			expect(logger.error).toHaveBeenCalledWith({ message: "Error sending COP verify request to HMRC", messageCode: MessageCodes.FAILED_VERIFYING_ACCOUNT, statusCode: 400 });
 			expect(axios.post).toHaveBeenCalledTimes(1);
 		});
 	});

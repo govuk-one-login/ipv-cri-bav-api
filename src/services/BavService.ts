@@ -318,14 +318,15 @@ export class BavService {
 		}
 	}
 
-	async saveExperianCheckResult(sessionId: string, experianCheckResult?: ExperianCheckResult, attemptCount?: number): Promise<void> {
+	async saveExperianCheckResult(sessionId: string, experianCheckResult?: ExperianCheckResult, responseCode?: number, attemptCount?: number): Promise<void> {
 		this.logger.info({ message: `Updating ${this.tableName} table with experianCheckResult`, experianCheckResult });
 		const updateStateCommand = new UpdateCommand({
 			TableName: this.tableName,
 			Key: { sessionId },
-			UpdateExpression: `SET ${experianCheckResult ? "experianCheckResult = :experianCheckResult," : ""} authSessionState = :authSessionState${attemptCount ? ", attemptCount = :attemptCount" : ""}`,
+			UpdateExpression: `SET ${experianCheckResult ? "experianCheckResult = :experianCheckResult," : ""}${responseCode ? "responseCode = :responseCode," : ""} authSessionState = :authSessionState${attemptCount ? ", attemptCount = :attemptCount" : ""}`,
 			ExpressionAttributeValues: {
 				...(experianCheckResult && { ":experianCheckResult": experianCheckResult }),
+				...(responseCode && { ":responseCode": responseCode }),
 				...(attemptCount && { ":attemptCount": attemptCount }),
 				":authSessionState": AuthSessionState.BAV_DATA_RECEIVED,
 			},

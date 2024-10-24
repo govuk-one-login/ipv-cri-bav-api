@@ -106,6 +106,11 @@ export type VerifiedCredentialEvidence = {
 	ci?: string[];
 };
 
+export type ExperianVerifyResponse = {
+	personalDetailsScore: number;
+	responseCode?: string;
+};
+
 export type BankAccountInfo = {
 	sortCode: string;
 	accountNumber: string;
