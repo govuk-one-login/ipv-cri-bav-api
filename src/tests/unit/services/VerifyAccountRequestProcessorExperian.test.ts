@@ -332,18 +332,18 @@ describe("VerifyAccountRequestProcessor", () => {
 		// 	expect(response.body).toBe(JSON.stringify({ message:"Success", attemptCount: 2 }));
 		// });
 
-	// 	it("returns success without attemptCount when there has been a FULL_MATCH", async () => {
-	// 		mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
-	// 		mockBavService.getSessionById.mockResolvedValueOnce({ ...session, attemptCount: undefined });
-	// 		mockExperianService.verify.mockResolvedValueOnce(9);
+		// 	it("returns success without attemptCount when there has been a FULL_MATCH", async () => {
+		// 		mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
+		// 		mockBavService.getSessionById.mockResolvedValueOnce({ ...session, attemptCount: undefined });
+		// 		mockExperianService.verify.mockResolvedValueOnce(9);
 
-	// 		const response = await verifyAccountRequestProcessorTest.processExperianRequest(
-	// 			sessionId, 
-	// 			body, 
-	// 			clientIpAddress, 
-	// 			encodedTxmaHeader,
-	// 			ssmParams,
-	// 		);
+		// 		const response = await verifyAccountRequestProcessorTest.processExperianRequest(
+		// 			sessionId, 
+		// 			body, 
+		// 			clientIpAddress, 
+		// 			encodedTxmaHeader,
+		// 			ssmParams,
+		// 		);
 
 	// 		expect(response.statusCode).toEqual(HttpCodesEnum.OK);
 	// 		expect(response.body).toBe(JSON.stringify({ message:"Success" }));
