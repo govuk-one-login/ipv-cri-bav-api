@@ -36,7 +36,7 @@ export interface ISessionItem extends IBAVSession {
 	evidence_requested?: EvidenceRequested;
 	copCheckResult?: CopCheckResult;
 	experianCheckResult?: ExperianCheckResult;
-	responseCode?: number;
+	responseCode?: string;
 	hmrcUuid?: string;
 	attemptCount?: number;
 }
