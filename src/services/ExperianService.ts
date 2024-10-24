@@ -67,7 +67,6 @@ export class ExperianService {
     			this.logger.info("Sending verify request to Experian", { uuid, endpoint });
     			const { data } = await axios.post(endpoint, params, { headers });
     			const decisionElements = data?.clientResponsePayload?.decisionElements;
-
     			const logObject = decisionElements.find((object: { auditLogs: object[] }) => object.auditLogs);
     			this.logger.debug({
     				message: "Received response from Experian verify request",
@@ -86,11 +85,16 @@ export class ExperianService {
     			const bavCheckResults = decisionElements.find((object: { scores: Array<{ name: string; score: number }> }) => object.scores);
     			const personalDetailsScore = bavCheckResults?.scores.find((object: { name: string; score: number }) => object.name === "Personal details")?.score;
 
-    			return personalDetailsScore;
+    		const verifyObject = {
+    			personalDetailsScore,
+    			responseCode: responseCodeObject?.responseCode ?? undefined,
+    		};
+				
+    			return verifyObject;
     			
     		} catch (error: any) {
     			const message = "Error sending verify request to Experian";
-    			this.logger.error({ message, messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT, statusCode: error?.response?.status });
+    			this.logger.error({ message, messageCode: MessageCodes.FAILED_VERIFYING_ACCOUNT, statusCode: error?.response?.status });
     		throw new AppError(HttpCodesEnum.SERVER_ERROR, message);		
     	}
     }
