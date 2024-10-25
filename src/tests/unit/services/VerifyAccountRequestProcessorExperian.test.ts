@@ -271,82 +271,82 @@ describe("VerifyAccountRequestProcessor", () => {
 			 );
 		});
 
-		// it("saves saveExperianCheckResult and returns success where there has been a match", async () => {
-		// 	mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
-		// 	mockBavService.getSessionById.mockResolvedValueOnce(session);
-		// 	mockExperianService.verify.mockResolvedValueOnce(9);
+		it("saves saveExperianCheckResult and returns success where there has been a match", async () => {
+			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
+			mockBavService.getSessionById.mockResolvedValueOnce(session);
+			mockExperianService.verify.mockResolvedValueOnce( {"personalDetailsScore": 9, "responseCode": undefined} );
 
-		// 	const response = await verifyAccountRequestProcessorTest.processExperianRequest(
-		// 		sessionId, 
-		// 		body, 
-		// 		clientIpAddress, 
-		// 		encodedTxmaHeader,
-		// 		ssmParams,
-		// 	);
+			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
+				sessionId, 
+				body, 
+				clientIpAddress, 
+				encodedTxmaHeader,
+				ssmParams,
+			);
 
-		// 	expect(mockBavService.saveExperianCheckResult).toHaveBeenCalledWith(sessionId, CopCheckResults.FULL_MATCH, undefined);
-		// 	expect(response.statusCode).toEqual(HttpCodesEnum.OK);
-		// 	expect(response.body).toBe(JSON.stringify({ message:"Success" }));
-		// });
+			expect(mockBavService.saveExperianCheckResult).toHaveBeenCalledWith(sessionId, CopCheckResults.FULL_MATCH, undefined, undefined);
+			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
+			expect(response.body).toBe(JSON.stringify({ message:"Success" }));
+		});
 
-		// it("saves saveExperianCheckResult with increased attemptCount and empty experianCheckResult if there was no match on the first attempt and returns success", async () => {
-		// 	mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
-		// 	mockBavService.getSessionById.mockResolvedValueOnce({ ...session, attemptCount: undefined });
-		// 	mockExperianService.verify.mockResolvedValueOnce(1);
+		it("saves saveExperianCheckResult with increased attemptCount and empty experianCheckResult if there was no match on the first attempt and returns success", async () => {
+			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
+			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, attemptCount: undefined });
+			mockExperianService.verify.mockResolvedValueOnce(1);
 
-		// 	const response = await verifyAccountRequestProcessorTest.processExperianRequest(
-		// 		sessionId, 
-		// 		body, 
-		// 		clientIpAddress, 
-		// 		encodedTxmaHeader,
-		// 		ssmParams,
-		// 	);
+			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
+				sessionId, 
+				body, 
+				clientIpAddress, 
+				encodedTxmaHeader,
+				ssmParams,
+			);
 
-		// 	expect(mockBavService.saveExperianCheckResult).toHaveBeenCalledWith(sessionId, undefined, 1);
-		// 	expect(response.statusCode).toEqual(HttpCodesEnum.OK);
-		// 	expect(response.body).toBe(JSON.stringify({ message:"Success", attemptCount: 1 }));
-		// });
+			expect(mockBavService.saveExperianCheckResult).toHaveBeenCalledWith(sessionId, undefined, undefined, 1);
+			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
+			expect(response.body).toBe(JSON.stringify({ message:"Success", attemptCount: 1 }));
+		});
 
-		// it("saves saveExperianCheckResult with increased attemptCount and experianCheckResult set to NO_MATCH on the second attempt and returns success", async () => {
-		// 	mockBavService.getPersonIdentityById.mockResolvedValue(person);
-		// 	mockBavService.getSessionById.mockResolvedValue({ ...session, attemptCount: 1 });
-		// 	mockExperianService.verify.mockResolvedValue(1);
+		it("saves saveExperianCheckResult with increased attemptCount and experianCheckResult set to NO_MATCH on the second attempt and returns success", async () => {
+			mockBavService.getPersonIdentityById.mockResolvedValue(person);
+			mockBavService.getSessionById.mockResolvedValue({ ...session, attemptCount: 1 });
+			mockExperianService.verify.mockResolvedValue(1);
 
-		// 	await verifyAccountRequestProcessorTest.processExperianRequest(
-		// 		sessionId, 
-		// 		body, 
-		// 		clientIpAddress, 
-		// 		encodedTxmaHeader,
-		// 		ssmParams,
-		// 	);
-		// 	const response = await verifyAccountRequestProcessorTest.processExperianRequest(
-		// 		sessionId, 
-		// 		body, 
-		// 		clientIpAddress, 
-		// 		encodedTxmaHeader,
-		// 		ssmParams,
-		// 	);
+			await verifyAccountRequestProcessorTest.processExperianRequest(
+				sessionId, 
+				body, 
+				clientIpAddress, 
+				encodedTxmaHeader,
+				ssmParams,
+			);
+			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
+				sessionId, 
+				body, 
+				clientIpAddress, 
+				encodedTxmaHeader,
+				ssmParams,
+			);
 
-		// 	expect(mockBavService.saveExperianCheckResult).toHaveBeenNthCalledWith(2, sessionId, "NO_MATCH", 2);
-		// 	expect(response.statusCode).toEqual(HttpCodesEnum.OK);
-		// 	expect(response.body).toBe(JSON.stringify({ message:"Success", attemptCount: 2 }));
-		// });
+			expect(mockBavService.saveExperianCheckResult).toHaveBeenNthCalledWith(2, sessionId, "NO_MATCH", undefined, 2);
+			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
+			expect(response.body).toBe(JSON.stringify({ message:"Success", attemptCount: 2 }));
+		});
 
-		// 	it("returns success without attemptCount when there has been a FULL_MATCH", async () => {
-		// 		mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
-		// 		mockBavService.getSessionById.mockResolvedValueOnce({ ...session, attemptCount: undefined });
-		// 		mockExperianService.verify.mockResolvedValueOnce(9);
+		it("returns success without attemptCount when there has been a FULL_MATCH", async () => {
+			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
+			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, attemptCount: undefined });
+			mockExperianService.verify.mockResolvedValueOnce( {"personalDetailsScore": 9, "responseCode": undefined} );
 
-		// 		const response = await verifyAccountRequestProcessorTest.processExperianRequest(
-		// 			sessionId, 
-		// 			body, 
-		// 			clientIpAddress, 
-		// 			encodedTxmaHeader,
-		// 			ssmParams,
-		// 		);
+			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
+				sessionId, 
+				body, 
+				clientIpAddress, 
+				encodedTxmaHeader,
+				ssmParams,
+			);
 
-	// 		expect(response.statusCode).toEqual(HttpCodesEnum.OK);
-	// 		expect(response.body).toBe(JSON.stringify({ message:"Success" }));
-	// 	});
-	 });
+			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
+			expect(response.body).toBe(JSON.stringify({ message:"Success" }));
+		});
+	});
 });
