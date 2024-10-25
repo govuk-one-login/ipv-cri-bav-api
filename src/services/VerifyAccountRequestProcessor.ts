@@ -182,7 +182,6 @@ export class VerifyAccountRequestProcessor {
 			  attemptCount = session.attemptCount ? session.attemptCount + 1 : 1;
 		  }
 		  await this.BavService.saveExperianCheckResult(sessionId, experianCheckResult, verifyResponse.responseCode, attemptCount);
-		  /// TALK TO STELIOS ABOUT BEST IMPLEMENTATION OF THIS - COULD RETURN AN OBJECT FROM CALCEXPRES WITH SCORE AND RESPONSE CODE INSIDE AND ACCESS UP HERE?
 		  return Response(HttpCodesEnum.OK, JSON.stringify({
 			  message: "Success",
 			  attemptCount,
