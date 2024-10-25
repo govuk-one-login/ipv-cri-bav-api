@@ -112,40 +112,16 @@ export class VerifyAccountRequestProcessor {
 		  const name = getFullName(person.name);
 		  this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
 
-		  let { hmrcUuid } = session;
-		  if (!hmrcUuid) {
-			  hmrcUuid = randomUUID();
-			  await this.BavService.saveHmrcUuid(sessionId, hmrcUuid);
+		  let { vendorUuid } = session;
+		  if (!vendorUuid) {
+			vendorUuid = randomUUID();
+			  await this.BavService.saveVendorUuid(sessionId, vendorUuid);
 		  }
 	
-		  const expRequestId = "PLACEHOLDER"; //EXPERIAN have not provided this value yet
-	
 		  const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
-	
-		  await this.BavService.sendToTXMA(this.txmaQueueUrl, {
-			  event_name: TxmaEventNames.BAV_EXPERIAN_REQUEST_SENT,
-			  ...coreEventFields,
-			  extensions: {
-				  evidence: [
-					  {
-						  txn: expRequestId,
-					  },
-				  ],
-			  },
-			  restricted: {
-				  Experian_request_details: [
-					  {
-						  name,
-						  sortCode,
-						  accountNumber: paddedAccountNumber,
-						  attemptNum: session.attemptCount ?? 1,
-					  },
-				  ],
-			  },
-		  }, encodedHeader);
 		
 		  const verifyResponse = await this.ExperianService.verify(
-			  { accountNumber: paddedAccountNumber, sortCode, name, uuid: expRequestId }, // VENDOR UUID WILL BE REPLACED BY VALUE PROVIDED BY EXPERIAN
+			  { accountNumber: paddedAccountNumber, sortCode, name, uuid: vendorUuid },
 			  ssmParams.experianUsername,
 			  ssmParams.experianPassword,
 			  ssmParams.experianClientId,
@@ -156,6 +132,28 @@ export class VerifyAccountRequestProcessor {
 			  this.logger.error("No verify response received", { messageCode: MessageCodes.NO_VERIFY_RESPONSE });
 			  return Response(HttpCodesEnum.SERVER_ERROR, "Could not verify account");
 		  }
+
+		  await this.BavService.sendToTXMA(this.txmaQueueUrl, {
+			event_name: TxmaEventNames.BAV_EXPERIAN_REQUEST_SENT,
+			...coreEventFields,
+			extensions: {
+				evidence: [
+					{
+						txn: verifyResponse.responseHeader.expRequestId,
+					},
+				],
+			},
+			restricted: {
+				Experian_request_details: [
+					{
+						name,
+						sortCode,
+						accountNumber: paddedAccountNumber,
+						attemptNum: session.attemptCount ?? 1,
+					},
+				],
+			},
+		}, encodedHeader);
 		
 		  await this.BavService.sendToTXMA(this.txmaQueueUrl, {
 			  event_name: TxmaEventNames.BAV_EXPERIAN_RESPONSE_RECEIVED,
@@ -163,7 +161,7 @@ export class VerifyAccountRequestProcessor {
 			  extensions: {
 				  evidence: [
 					  {
-						  txn: expRequestId,
+						  txn: verifyResponse.responseHeader.expRequestId,
 					  },
 				  ],
 			  },
@@ -214,10 +212,10 @@ export class VerifyAccountRequestProcessor {
   	this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
   	const timeOfRequest = absoluteTimeNow();
 
-  	let { hmrcUuid } = session;
-  	if (!hmrcUuid) {
-  		hmrcUuid = randomUUID();
-  		await this.BavService.saveHmrcUuid(sessionId, hmrcUuid);
+  	let { vendorUuid } = session;
+  	if (!vendorUuid) {
+		vendorUuid = randomUUID();
+  		await this.BavService.saveVendorUuid(sessionId, vendorUuid);
   	}
 
   	const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
@@ -229,7 +227,7 @@ export class VerifyAccountRequestProcessor {
   			extensions:{
   				evidence:[
 						 {
-  						txn: hmrcUuid,
+  						txn: vendorUuid,
   					},
   				],
 			 },
@@ -248,7 +246,7 @@ export class VerifyAccountRequestProcessor {
   	);
 
   	const verifyResponse = await this.HmrcService.verify(
-  		{ accountNumber: paddedAccountNumber, sortCode, name, uuid: hmrcUuid },
+  		{ accountNumber: paddedAccountNumber, sortCode, name, uuid: vendorUuid },
   		HMRC_TOKEN,
   	);
 
@@ -265,7 +263,7 @@ export class VerifyAccountRequestProcessor {
   			extensions:{
   				evidence:[
 						 {
-  						txn: hmrcUuid,
+  						txn: vendorUuid,
   					},
   				],
 			  },
@@ -295,7 +293,7 @@ export class VerifyAccountRequestProcessor {
 
   	if (copCheckResult === CopCheckResults.PARTIAL_MATCH) {
   		const partialNameRecord: PartialNameSQSRecord = {
-  			itemNumber: hmrcUuid,
+  			itemNumber: vendorUuid,
   			timeStamp: timeOfRequest,
   			cicName: name,
   			accountName: verifyResponse.accountName,
