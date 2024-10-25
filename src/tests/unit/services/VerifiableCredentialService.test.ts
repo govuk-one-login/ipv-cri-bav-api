@@ -46,6 +46,7 @@ function getMockSessionItem(): ISessionItem {
 		authSessionState: "BAV_ACCESS_TOKEN_ISSUED",
 		copCheckResult: "FULL_MATCH",
 		experianCheckResult: ExperianCheckResult.FULL_MATCH,
+		responseCode: undefined,
 		hmrcUuid: "testId",
 	};
 	return sess;
@@ -77,6 +78,19 @@ const failureBlock = {
 	],
 	ci: [
 		"D15",
+	],
+};
+
+const failureBlockNoCI = {
+	type: Constants.IDENTITY_CHECK,
+	txn: hmrcUuid,
+	strengthScore: 3,
+	validityScore: 0,
+	failedCheckDetails: [
+		{
+			checkMethod: "data",
+			identityCheckPolicy: "none",
+		},
 	],
 };
 
@@ -140,7 +154,7 @@ describe("VerifiableCredentialService", () => {
 			expect(mockLogger.info).toHaveBeenCalledWith("Generated VerifiableCredential jwt", { jti: expect.any(String) });
 		});
 
-		it("should generate a signed JWT with failure evidence for a failed match result", async () => {
+		it("should generate a signed JWT with failure evidence including a CI for a failed match result", async () => {
 			mockSessionItem.experianCheckResult = ExperianCheckResult.NO_MATCH;
 			const signedJWT = "mockSignedJwt";
 			mockKmsJwtAdapter.sign.mockResolvedValue(signedJWT);
@@ -150,6 +164,21 @@ describe("VerifiableCredentialService", () => {
 			);
 
 			expect(result).toEqual({ signedJWT, evidenceInfo: failureBlock });
+			expect(mockKmsJwtAdapter.sign).toHaveBeenCalled();
+			expect(mockLogger.info).toHaveBeenCalledWith("Generated VerifiableCredential jwt", { jti: expect.any(String) });
+		});
+
+		it("should generate a signed JWT with failure evidence without a CI for a failed match result with response code 2 or 3", async () => {
+			mockSessionItem.experianCheckResult = ExperianCheckResult.NO_MATCH;
+			mockSessionItem.responseCode = "2";
+			const signedJWT = "mockSignedJwt";
+			mockKmsJwtAdapter.sign.mockResolvedValue(signedJWT);
+
+			const result = await service.generateSignedVerifiableCredentialJwt(
+				mockSessionItem, mockNameParts, mockBirthDate, mockBankAccountInfo, mockNow,
+			);
+
+			expect(result).toEqual({ signedJWT, evidenceInfo: failureBlockNoCI });
 			expect(mockKmsJwtAdapter.sign).toHaveBeenCalled();
 			expect(mockLogger.info).toHaveBeenCalledWith("Generated VerifiableCredential jwt", { jti: expect.any(String) });
 		});

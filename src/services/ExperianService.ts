@@ -85,10 +85,10 @@ export class ExperianService {
     			const bavCheckResults = decisionElements.find((object: { scores: Array<{ name: string; score: number }> }) => object.scores);
     			const personalDetailsScore = bavCheckResults?.scores.find((object: { name: string; score: number }) => object.name === "Personal details")?.score;
 
-				const verifyObject = {
-					personalDetailsScore,
-					responseCode: responseCodeObject?.responseCode ?? undefined,
-				};
+    		const verifyObject = {
+    			personalDetailsScore,
+    			responseCode: responseCodeObject?.responseCode ?? undefined,
+    		};
 				
     			return verifyObject;
     			

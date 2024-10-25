@@ -113,7 +113,7 @@ describe("Experian service", () => {
 				eventType: experianVerifyResponse.clientResponsePayload.decisionElements[1].auditLogs![0].eventType,
 				eventOutcome: experianVerifyResponse.clientResponsePayload.decisionElements[1].auditLogs![0].eventOutcome,
 			});
-			expect(response).toStrictEqual( {"personalDetailsScore": 9, "responseCode": undefined} );
+			expect(response).toStrictEqual( { "personalDetailsScore": 9, "responseCode": undefined } );
 		});
 
 		it.each([

@@ -274,7 +274,7 @@ describe("VerifyAccountRequestProcessor", () => {
 		it("saves saveExperianCheckResult and returns success where there has been a match", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
 			mockBavService.getSessionById.mockResolvedValueOnce(session);
-			mockExperianService.verify.mockResolvedValueOnce( {"personalDetailsScore": 9, "responseCode": undefined} );
+			mockExperianService.verify.mockResolvedValueOnce( { "personalDetailsScore": 9, "responseCode": undefined } );
 
 			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
 				sessionId, 
@@ -335,7 +335,7 @@ describe("VerifyAccountRequestProcessor", () => {
 		it("returns success without attemptCount when there has been a FULL_MATCH", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
 			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, attemptCount: undefined });
-			mockExperianService.verify.mockResolvedValueOnce( {"personalDetailsScore": 9, "responseCode": undefined} );
+			mockExperianService.verify.mockResolvedValueOnce( { "personalDetailsScore": 9, "responseCode": undefined } );
 
 			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
 				sessionId, 
