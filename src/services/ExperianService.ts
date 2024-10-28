@@ -177,7 +177,7 @@ export class ExperianService {
     				throw new AppError(HttpCodesEnum.SERVER_ERROR, message);
     			}
     		}
-    	}	
+    	}
     }
 
     async saveExperianToken(token : ExperianTokenResponse): Promise<void> {
