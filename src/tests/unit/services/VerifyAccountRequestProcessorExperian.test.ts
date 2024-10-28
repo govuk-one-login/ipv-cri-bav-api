@@ -3,7 +3,7 @@
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { mock } from "jest-mock-extended";
-import { CopCheckResults } from "../../../models/enums/Hmrc";
+import { ExperianCheckResults } from "../../../models/enums/Experian";
 import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../../../models/enums/MessageCodes";
 import { ISessionItem } from "../../../models/ISessionItem";
@@ -13,8 +13,12 @@ import { VerifyAccountRequestProcessor } from "../../../services/VerifyAccountRe
 import { ExperianService } from "../../../services/ExperianService";
 import { Constants } from "../../../utils/Constants";
 
-const expRequestId = "PLACEHOLDER";
 
+const vendorUuid = "new hmrcUuid";
+jest.mock("crypto", () => ({
+	...jest.requireActual("crypto"),
+	randomUUID: () => vendorUuid,
+}));
 const mockBavService = mock<BavService>();
 const mockExperianService = mock<ExperianService>();
 const logger = mock<Logger>();
@@ -26,6 +30,8 @@ const body = {
 	sort_code: "123456",
 	account_number: "12345678",
 };
+const experianServiceVerifyResponseSuccess = { personalDetailsScore: 9, expRequestId: "1234568" };
+const experianServiceVerifyResponseFail = { personalDetailsScore: 1, expRequestId: "1234568" };
 const clientIpAddress = "127.0.0.1";
 const person: PersonIdentityItem = {
 	sessionId,
@@ -79,6 +85,27 @@ describe("VerifyAccountRequestProcessor", () => {
 		jest.useRealTimers();
 	});
 
+	describe("getInstance", () => {
+		it("should create a new instance if not already created", () => {
+			const newInstance = VerifyAccountRequestProcessor.getInstance( logger, metrics, CREDENTIAL_VENDOR);
+			expect(newInstance).toBeDefined();
+		});
+
+		it("should return the same instance of VerifiableCredentialService when called multiple times", () => {
+			const firstInstance = VerifyAccountRequestProcessor.getInstance( logger, metrics, CREDENTIAL_VENDOR);
+			const secondInstance = VerifyAccountRequestProcessor.getInstance( logger, metrics, CREDENTIAL_VENDOR);
+			expect(firstInstance).toBe(secondInstance);
+		});
+
+		it("should return a new instance of VerifiableCredentialService when called with a new CREDENTIAL_VENDOR", () => {
+			const firstInstance = VerifyAccountRequestProcessor.getInstance( logger, metrics, CREDENTIAL_VENDOR);
+			const secondInstance = VerifyAccountRequestProcessor.getInstance( logger, metrics, "HMRC");
+			expect(firstInstance).not.toBe(secondInstance);
+			expect(firstInstance.credentialVendor).toBe(CREDENTIAL_VENDOR); // Assuming a property exists
+   			expect(secondInstance.credentialVendor).toBe("HMRC");
+		});
+	});
+
 	describe("#processExperianRequest", () => {
 		it("returns error response if person identity cannot be found", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(undefined);
@@ -117,24 +144,21 @@ describe("VerifyAccountRequestProcessor", () => {
 			});
 		});
 
-		// 	it("generates and saves vendorUuid if one doesn't exist", async () => {
-		// 		mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
-		// 		mockBavService.getSessionById.mockResolvedValueOnce({ ...session, expRequestId: undefined });
-		// 		mockExperianService.verify.mockResolvedValueOnce(9);
+		it("generates and saves vendorUuid if one doesn't exist", async () => {
+			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
+			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, vendorUuid: undefined });
+			mockExperianService.verify.mockResolvedValueOnce(experianServiceVerifyResponseSuccess);
 
-		// 		await verifyAccountRequestProcessorTest.processExperianRequest(
-		// 			sessionId, 
-		// 			body, 
-		// 			clientIpAddress, 
-		// 			encodedTxmaHeader,
-		// 			clientUsername,
-		// 			clientPassword,
-		// 			clientId,
-		// 			clientSecret
-		// 		);
+			await verifyAccountRequestProcessorTest.processExperianRequest(
+				sessionId, 
+				body, 
+				clientIpAddress, 
+				encodedTxmaHeader,
+				ssmParams,
+			);
 
-		// 		expect(mockBavService.saveVendorUuid).toHaveBeenCalledWith(sessionId, vendorUuid);
-		//   });
+			expect(mockBavService.saveVendorUuid).toHaveBeenCalledWith(sessionId, vendorUuid);
+		  });
       
 		it("returns error response if session has exceeded attemptCount", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
@@ -158,7 +182,7 @@ describe("VerifyAccountRequestProcessor", () => {
 		it("saves account details to person identity table", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
 			mockBavService.getSessionById.mockResolvedValueOnce(session);
-			mockExperianService.verify.mockResolvedValueOnce(9);
+			mockExperianService.verify.mockResolvedValueOnce(experianServiceVerifyResponseSuccess);
 
 			await verifyAccountRequestProcessorTest.processExperianRequest(
 				sessionId, 
@@ -178,7 +202,7 @@ describe("VerifyAccountRequestProcessor", () => {
 		it("verifies the account details given", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
 			mockBavService.getSessionById.mockResolvedValueOnce(session);
-			mockExperianService.verify.mockResolvedValueOnce(9);
+			mockExperianService.verify.mockResolvedValueOnce(experianServiceVerifyResponseSuccess);
 
 			await verifyAccountRequestProcessorTest.processExperianRequest(
 				sessionId, 
@@ -188,7 +212,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				ssmParams,
 			);
 
-			expect(mockExperianService.verify).toHaveBeenCalledWith({ accountNumber: body.account_number, sortCode: body.sort_code, name: "Frederick Joseph Flintstone", uuid: expRequestId },
+			expect(mockExperianService.verify).toHaveBeenCalledWith({ accountNumber: body.account_number, sortCode: body.sort_code, birthDate: "12-01-1986", givenName: "Frederick Joseph", surname: "Flintstone", uuid: vendorUuid },
 				"123456",
     			"12345678",
     			"clientId",
@@ -200,7 +224,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				extensions: {
 					evidence: [
 				 		{
-					 		txn: expRequestId,
+					 		txn: "1234568",
 						},
 					],
 				},
@@ -231,7 +255,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				extensions: {
 					evidence: [
 				 		{
-					 		txn: expRequestId,
+					 		txn: "1234568",
 						},
 					],
 				},
@@ -251,7 +275,7 @@ describe("VerifyAccountRequestProcessor", () => {
 		it("pads account number if it's too short", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
 			mockBavService.getSessionById.mockResolvedValueOnce(session);
-			mockExperianService.verify.mockResolvedValueOnce(9);
+			mockExperianService.verify.mockResolvedValueOnce(experianServiceVerifyResponseSuccess);
 
 			await verifyAccountRequestProcessorTest.processExperianRequest(
 				sessionId, 
@@ -263,7 +287,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				{ sessionId, accountNumber: "00123456", sortCode: body.sort_code },
 				process.env.PERSON_IDENTITY_TABLE_NAME,
 			);
-			expect(mockExperianService.verify).toHaveBeenCalledWith({ accountNumber: "00123456", sortCode: body.sort_code, name: "Frederick Joseph Flintstone", uuid: expRequestId },
+			expect(mockExperianService.verify).toHaveBeenCalledWith({ accountNumber: "00123456", sortCode: body.sort_code, birthDate: "12-01-1986", givenName: "Frederick Joseph", surname: "Flintstone", uuid: vendorUuid },
 				"123456",
     			"12345678",
     			"clientId",
@@ -274,7 +298,7 @@ describe("VerifyAccountRequestProcessor", () => {
 		it("saves saveExperianCheckResult and returns success where there has been a match", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
 			mockBavService.getSessionById.mockResolvedValueOnce(session);
-			mockExperianService.verify.mockResolvedValueOnce(9);
+			mockExperianService.verify.mockResolvedValueOnce(experianServiceVerifyResponseSuccess);
 
 			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
 				sessionId, 
@@ -284,7 +308,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				ssmParams,
 			);
 
-			expect(mockBavService.saveExperianCheckResult).toHaveBeenCalledWith(sessionId, CopCheckResults.FULL_MATCH, undefined);
+			expect(mockBavService.saveExperianCheckResult).toHaveBeenCalledWith(sessionId, ExperianCheckResults.FULL_MATCH, undefined);
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
 			expect(response.body).toBe(JSON.stringify({ message:"Success" }));
 		});
@@ -292,7 +316,7 @@ describe("VerifyAccountRequestProcessor", () => {
 		it("saves saveExperianCheckResult with increased attemptCount and empty experianCheckResult if there was no match on the first attempt and returns success", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
 			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, attemptCount: undefined });
-			mockExperianService.verify.mockResolvedValueOnce(1);
+			mockExperianService.verify.mockResolvedValueOnce(experianServiceVerifyResponseFail);
 
 			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
 				sessionId, 
@@ -310,7 +334,7 @@ describe("VerifyAccountRequestProcessor", () => {
 		it("saves saveExperianCheckResult with increased attemptCount and experianCheckResult set to NO_MATCH on the second attempt and returns success", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValue(person);
 			mockBavService.getSessionById.mockResolvedValue({ ...session, attemptCount: 1 });
-			mockExperianService.verify.mockResolvedValue(1);
+			mockExperianService.verify.mockResolvedValue(experianServiceVerifyResponseFail);
 
 			await verifyAccountRequestProcessorTest.processExperianRequest(
 				sessionId, 
@@ -335,7 +359,7 @@ describe("VerifyAccountRequestProcessor", () => {
 		it("returns success without attemptCount when there has been a FULL_MATCH", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
 			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, attemptCount: undefined });
-			mockExperianService.verify.mockResolvedValueOnce(9);
+			mockExperianService.verify.mockResolvedValueOnce(experianServiceVerifyResponseSuccess);
 
 			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
 				sessionId, 

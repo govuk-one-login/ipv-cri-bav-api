@@ -40,7 +40,7 @@ export class VerifyAccountRequestProcessor {
 
   private readonly HmrcService: HmrcService;
 
-  private readonly credentialVendor: string;
+  readonly credentialVendor: string;
 
   private readonly partialNameQueueUrl: string;
 

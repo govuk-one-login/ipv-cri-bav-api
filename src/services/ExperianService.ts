@@ -48,9 +48,8 @@ export class ExperianService {
     		try {
     		const params = {
     			header: {
-				  requestType: "BAVConsumer-Standard",
+				  requestType: Constants.EXPERIAN_PRODUCT_NAME,
 				  clientReferenceId: uuid,
-				  expRequestId: "",
 				  messageTime: new Date().toISOString(),
 				  options: {},
     			},
@@ -74,7 +73,6 @@ export class ExperianService {
     							names: [
 						  {
     									firstName: givenName,
-    									middleNames: "",
     									surName: surname,
 						  },
     							],
@@ -103,7 +101,7 @@ export class ExperianService {
     		const expRequestId = data?.responseHeader?.expRequestId;
 
     			const logObject = decisionElements.find((object: { auditLogs: object[] }) => object.auditLogs);
-    			this.logger.debug({
+    			this.logger.info({
     				message: "Received response from Experian verify request",
     				eventType: logObject.auditLogs[0].eventType,
     				eventOutcome: logObject.auditLogs[0].eventOutcome,
@@ -150,10 +148,11 @@ export class ExperianService {
     				client_secret: clientSecret,
     			};
 
+    			const correlationId = randomUUID();
     			const config: AxiosRequestConfig<any> = {
     				headers: {
     					"Content-Type": "application/json",
-    					"X-Correlation-Id": randomUUID(),
+    					"X-Correlation-Id": correlationId,
     					"X-User-Domain": "cabinetofficegds.com",
     				},
     			};
@@ -163,7 +162,7 @@ export class ExperianService {
     				params,
     				config,
     			);
-    			this.logger.info("Received response from Experian token endpoint");
+    			this.logger.info(`Received response from Experian token endpoint - X-Correlation-Id: ${correlationId}`);
     			await this.saveExperianToken(data);
     			return data;
 

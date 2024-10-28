@@ -16,11 +16,15 @@ const mockDynamoDbClient = jest.mocked(createDynamoDbClient());
 const experianTokenTableName = "EXPERIANSTOKENTABLE";
 const logger = mock<Logger>();
 
-jest.spyOn(Date, "now").mockReturnValue(1728637200000); // 11/10/2024 09:00:00.000
+jest.useFakeTimers();
+jest.spyOn(Date, "now").mockReturnValue(1728637200000); // 11/10/2024 10:00:00.000
+jest.setSystemTime(new Date("2024-10-11T09:00:00.000Z"));
+
 jest.mock("crypto", () => ({
 	...jest.requireActual("crypto"),
 	randomUUID: () => "randomId",
 }));
+
 
 import { experianVerifyResponse, 
 	experianVerifyResponseError2, 
@@ -29,6 +33,46 @@ import { experianVerifyResponse,
 	experianVerifyResponseError7,
 	experianVerifyResponseError11,
 	experianVerifyResponseError12 } from "../data/experianEvents";
+
+const experianPayload = {
+	header: {
+		requestType: "BAVConsumer-Standard",
+		clientReferenceId: "uuid",
+		messageTime: "2024-10-11T09:00:00.000Z",
+		options: {},
+	},
+	payload: {
+		source: "WEB",
+		application: {
+			applicant: [
+	  {
+					id: "APPLICANT_1",
+					contactId: "MainContact_1",
+	  },
+			],
+		},
+		contacts: [
+			{
+	  id: "MainContact_1",
+	  person: {
+					personDetails: {
+		  dateOfBirth: "DATE",
+					},
+					names: [
+		  {
+							firstName: "First",
+							surName: "Last",
+		  },
+					],
+	  },
+	  bankAccount: {
+					sortCode: "123456",
+					clearAccountNumber: "12345678",
+	  },
+			},
+		],
+	},
+};
 
 const experianTokenResponse = {
 	"issued_at" : "1728637200000",
@@ -40,7 +84,7 @@ const experianTokenResponse = {
 
 // refresh_token field is not stored in DynamoDB
 const storedExperianToken = {
-	"issued_at" : "1728637200000",
+	"issued_at" : "1728637200000", // 11/10/2024 10:00:00.000
 	"expires_in" : "1800",
 	"token_type" : "Bearer",
 	"access_token" : "TOKEN",
@@ -55,7 +99,6 @@ const clientUsername = "123456";
 const clientPassword = "12345678";
 const clientId = "clientId";
 const clientSecret = "Test";
-const experianTokenSsmPath = "dev/Experian/TOKEN";
 
 describe("Experian service", () => {
 	
@@ -64,40 +107,37 @@ describe("Experian service", () => {
 	});
 
 	afterEach(() => {
-		jest.clearAllMocks();
+		jest.restoreAllMocks();
 	});
 
 	describe("#verify", () => {
 		const accountNumber = "12345678";
 		const sortCode = "123456";
-		const name = "Test Testing";
+		const givenName = "First";
+		const surname = "Last";
 		const uuid = "uuid";
+		const birthDate = "DATE";
 		
 
 		it("calls Experian verify endpoint with correct params and headers", async () => {
-			const endpoint = `${experianServiceTest.experianBaseUrl}/${Constants.EXPERIAN_VERIFY_ENDPOINT_PATH}`;
+			const endpoint = `${experianServiceTest.experianBaseUrl}${Constants.EXPERIAN_VERIFY_ENDPOINT_PATH}`;
 			jest.spyOn(axios, "post").mockResolvedValueOnce({ data: experianVerifyResponse });
-			// mockDynamoDbClient.send = jest.fn().mockResolvedValue({ Item: storedExperianToken });
+			mockDynamoDbClient.send = jest.fn().mockResolvedValue({ Item: storedExperianToken });
 
-			const response = await experianServiceTest.verify({ accountNumber, sortCode, name, uuid },
+			const response = await experianServiceTest.verify({ accountNumber, sortCode, givenName, surname, birthDate, uuid },
 				clientUsername,
 				clientPassword,
 				clientId,
 				clientSecret,
 			);
 
-			// expect(logger.info).toHaveBeenNthCalledWith(1, {message: "Checking EXPERIANSTOKENTABLE for valid token"});
-			// expect(logger.info).toHaveBeenNthCalledWith(2, "Fetching Experian token from table EXPERIANSTOKENTABLE");
-			expect(logger.info).toHaveBeenNthCalledWith(1, "Sending verify request to Experian", { uuid, endpoint });
+			expect(logger.info).toHaveBeenNthCalledWith(1, { message: "Checking EXPERIANSTOKENTABLE for valid token" });
+			expect(logger.info).toHaveBeenNthCalledWith(2, "Fetching Experian token from table EXPERIANSTOKENTABLE");
+			expect(logger.info).toHaveBeenNthCalledWith(3, "Valid token found");
+			expect(logger.info).toHaveBeenNthCalledWith(4, "Sending verify request to Experian", { uuid, endpoint });
 			expect(axios.post).toHaveBeenCalledWith(
 				endpoint,
-				{	header: {
-					tenantId: uuid,
-					requestType: "BAVConsumer-Standard",
-				  },
-				account: { accountNumber, sortCode },
-				subject: { name },
-				},
+				experianPayload,
 				{ 
 					headers: {
 						"User-Agent": Constants.EXPERIAN_USER_AGENT,
@@ -108,12 +148,12 @@ describe("Experian service", () => {
 				},
 			);
 			
-			expect(logger.debug).toHaveBeenCalledWith({
+			expect(logger.info).toHaveBeenNthCalledWith(5, {
 				message: "Received response from Experian verify request",
 				eventType: experianVerifyResponse.clientResponsePayload.decisionElements[1].auditLogs![0].eventType,
 				eventOutcome: experianVerifyResponse.clientResponsePayload.decisionElements[1].auditLogs![0].eventOutcome,
 			});
-			expect(response).toBe(9);
+			expect(response).toEqual({ "personalDetailsScore": 9, "expRequestId": "1234567890" });
 		});
 
 		it.each([
@@ -121,8 +161,9 @@ describe("Experian service", () => {
 			{ errorResponse: experianVerifyResponseError3, expectedMessage: "Response code 3: Account number does not use a modulus check algorithm and therefore Bank Wizard cannot confirm the details are valid" },
 		  ])("returns correct logger response in case of Experian response", async ({ errorResponse, expectedMessage }) => {
 			jest.spyOn(axios, "post").mockResolvedValueOnce({ data: errorResponse });
+			mockDynamoDbClient.send = jest.fn().mockResolvedValueOnce({ Item: storedExperianToken });
 		  
-			await experianServiceTest.verify({ accountNumber, sortCode, name, uuid }, clientUsername,
+			await experianServiceTest.verify({ accountNumber, sortCode, givenName, surname, birthDate, uuid }, clientUsername,
 				clientPassword,
 				clientId,
 				clientSecret);
@@ -137,8 +178,9 @@ describe("Experian service", () => {
 			{ errorResponse: experianVerifyResponseError12, expectedMessage: "Response code 12: Branch has been transferred and the accounts have been redirected to another branch" },
 		  ])("returns correct logger response in case of Experian response", async ({ errorResponse, expectedMessage }) => {
 			jest.spyOn(axios, "post").mockResolvedValueOnce({ data: errorResponse });
+			mockDynamoDbClient.send = jest.fn().mockResolvedValueOnce({ Item: storedExperianToken });
 		  
-			await experianServiceTest.verify({ accountNumber, sortCode, name, uuid }, clientUsername,
+			await experianServiceTest.verify({ accountNumber, sortCode, givenName, surname, birthDate, uuid }, clientUsername,
 				clientPassword,
 				clientId,
 				clientSecret);
@@ -249,8 +291,23 @@ describe("Experian service", () => {
 				expect(axios.post).toHaveBeenCalledWith(`${experianBaseUrl}${Constants.EXPERIAN_TOKEN_ENDPOINT_PATH}`, expectedParams, config);
 				expect(data).toBe(expiredToken);
 				expect(logger.error).toHaveBeenCalledWith(
-					{ message: "Error generating experian token", statusCode: 400, messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN },
+					{ message: "Error generating Experian token - returning previous Experian token", statusCode: 400, messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN },
 				);
+			});
+
+			it("Should throw app error if no access token present and call to Experian token endpoint fails", async () => {
+				const error = {
+					response: {
+						status: 400, message: "Bad request",
+					},
+				};
+
+				experianServiceTest.getExperianToken = jest.fn().mockResolvedValue(undefined);
+				jest.spyOn(axios, "post").mockRejectedValueOnce(error); 
+				await expect(experianServiceTest.generateExperianToken(clientUsername, clientPassword, clientId, clientSecret)).rejects.toThrow(expect.objectContaining({
+					message: "Error generating Experian token and no previous token found",
+					statusCode: HttpCodesEnum.SERVER_ERROR,
+				}));
 			});
 		});
 	});
