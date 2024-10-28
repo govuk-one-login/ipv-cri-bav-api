@@ -137,7 +137,7 @@ export class ExperianService {
     		this.logger.info("Valid token found");
     		return storedToken;
 
-    	} else {	
+    	} else {
     		try {
     			const endpoint = `${this.experianBaseUrl}${Constants.EXPERIAN_TOKEN_ENDPOINT_PATH}`;
     			this.logger.info("No valid token found - trying to generate new Experian token", { endpoint });
