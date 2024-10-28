@@ -115,11 +115,7 @@ export class VerifyAccountRequestProcessor {
 
 		  this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
 
-		  let { vendorUuid } = session;
-		  if (!vendorUuid) {
-  		vendorUuid = randomUUID();
-			  await this.BavService.saveVendorUuid(sessionId, vendorUuid);
-		  }
+		  const vendorUuid = await this.generateUuid(session);
 	
 		  const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
 		
@@ -216,11 +212,7 @@ export class VerifyAccountRequestProcessor {
   	this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
   	const timeOfRequest = absoluteTimeNow();
 
-  	let { vendorUuid } = session;
-  	if (!vendorUuid) {
-  		vendorUuid = randomUUID();
-  		await this.BavService.saveVendorUuid(sessionId, vendorUuid);
-  	}
+  	const vendorUuid = await this.generateUuid(session);
 
   	const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
   	await this.BavService.sendToTXMA(
@@ -336,4 +328,14 @@ export class VerifyAccountRequestProcessor {
   		return ExperianCheckResults.NO_MATCH;
   	}
   }
+
+  async generateUuid(session: ISessionItem): Promise<string> {
+  	let { vendorUuid } = session;
+		  if (!vendorUuid) {
+  		vendorUuid = randomUUID();
+			  await this.BavService.saveVendorUuid(session.sessionId, vendorUuid);
+		  }
+  	return vendorUuid;
+  }
 }
+

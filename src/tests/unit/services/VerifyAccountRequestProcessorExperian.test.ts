@@ -14,7 +14,7 @@ import { ExperianService } from "../../../services/ExperianService";
 import { Constants } from "../../../utils/Constants";
 
 
-const vendorUuid = "new hmrcUuid";
+const vendorUuid = "new vendorUuid";
 jest.mock("crypto", () => ({
 	...jest.requireActual("crypto"),
 	randomUUID: () => vendorUuid,
@@ -24,7 +24,7 @@ const mockExperianService = mock<ExperianService>();
 const logger = mock<Logger>();
 const metrics = new Metrics({ namespace: "BAV" });
 const CREDENTIAL_VENDOR = "EXPERIAN";
-const sessionId = "sessionId";
+const sessionId = "SESSIONID";
 const encodedTxmaHeader = "ABCDEFG";
 const body = {
 	sort_code: "123456",

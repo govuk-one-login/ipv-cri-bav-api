@@ -25,7 +25,7 @@ const logger = mock<Logger>();
 const metrics = new Metrics({ namespace: "BAV" });
 const HMRC_TOKEN = "dfsgadfgadg";
 const CREDENTIAL_VENDOR = "HMRC";
-const sessionId = "sessionId";
+const sessionId = "SESSIONID";
 const encodedTxmaHeader = "ABCDEFG";
 const body = {
 	sort_code: "123456",
@@ -102,7 +102,7 @@ describe("VerifyAccountRequestProcessor", () => {
 			});
 		});
 
-		it("generates and saves hmrcUuid if one doesn't exist", async () => {
+		it("generates and saves vendorUuid if one doesn't exist", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
 			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, vendorUuid: undefined });
 			mockHmrcService.verify.mockResolvedValueOnce(hmrcVerifyResponse);
