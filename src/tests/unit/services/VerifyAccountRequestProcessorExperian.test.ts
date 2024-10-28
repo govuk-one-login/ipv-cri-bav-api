@@ -61,6 +61,7 @@ const ssmParams = {
 	experianPassword: "12345678",
 	experianClientId:"clientId",
 	experianClientSecret:"Test",
+	experianTenantId:"TenantId",
 };
 
 const session = require("../data/db_record.json") as ISessionItem;
@@ -217,6 +218,7 @@ describe("VerifyAccountRequestProcessor", () => {
     			"12345678",
     			"clientId",
     			"Test",
+				"TenantId",
 			 );
 			expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "MYQUEUE", {
 				event_name: "BAV_EXPERIAN_REQUEST_SENT",
@@ -292,6 +294,7 @@ describe("VerifyAccountRequestProcessor", () => {
     			"12345678",
     			"clientId",
     			"Test",
+				"TenantId",
 			 );
 		});
 

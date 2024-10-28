@@ -28,3 +28,4 @@ process.env.EXPERIAN_USERNAME_SSM_PATH = "username",
 process.env.EXPERIAN_PASSWORD_SSM_PATH = "password",
 process.env.EXPERIAN_CLIENT_ID_SSM_PATH = "id",
 process.env.EXPERIAN_CLIENT_SECRET_SSM_PATH = "secret"
+process.env.EXPERIAN_TENANT_ID_SSM_PATH = "tenantId"

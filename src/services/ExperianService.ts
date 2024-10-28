@@ -44,6 +44,7 @@ export class ExperianService {
     	experianPassword: string,
     	experianClientId: string,
     	experianClientSecret: string,
+    	experianClientTenantId: string,
     ): Promise<any> {
     		try {
     		const params = {
@@ -94,7 +95,7 @@ export class ExperianService {
     			"Accept":"application/json",
     		};
 				
-    			const endpoint = `${this.experianBaseUrl}${Constants.EXPERIAN_VERIFY_ENDPOINT_PATH}`;
+    			const endpoint = `${this.experianBaseUrl}/decisionanalytics/crosscore/${experianClientTenantId}${Constants.EXPERIAN_VERIFY_ENDPOINT_PATH}`;
     			this.logger.info("Sending verify request to Experian", { uuid, endpoint });
     			const { data } = await axios.post(endpoint, params, { headers });
 	   			const decisionElements = data?.clientResponsePayload?.decisionElements;

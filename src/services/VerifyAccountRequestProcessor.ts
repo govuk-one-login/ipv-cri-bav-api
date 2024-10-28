@@ -87,6 +87,7 @@ export class VerifyAccountRequestProcessor {
   	experianPassword: string;
   	experianClientId: string;
   	experianClientSecret: string;
+  		experianTenantId: string;
   	},
   ): Promise<APIGatewayProxyResult> {
 		  const { account_number: accountNumber, sort_code: sortCode } = body;
@@ -125,6 +126,7 @@ export class VerifyAccountRequestProcessor {
 			  ssmParams.experianPassword,
 			  ssmParams.experianClientId,
 			  ssmParams.experianClientSecret,
+			  ssmParams.experianTenantId,
 		  );
 		
 		  if (!verifyResponse) {

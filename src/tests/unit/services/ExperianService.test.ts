@@ -99,6 +99,7 @@ const clientUsername = "123456";
 const clientPassword = "12345678";
 const clientId = "clientId";
 const clientSecret = "Test";
+const tenantId = "TenanttId";
 
 describe("Experian service", () => {
 	
@@ -120,7 +121,7 @@ describe("Experian service", () => {
 		
 
 		it("calls Experian verify endpoint with correct params and headers", async () => {
-			const endpoint = `${experianServiceTest.experianBaseUrl}${Constants.EXPERIAN_VERIFY_ENDPOINT_PATH}`;
+			const endpoint = `${experianServiceTest.experianBaseUrl}/decisionanalytics/crosscore/TenanttId${Constants.EXPERIAN_VERIFY_ENDPOINT_PATH}`;
 			jest.spyOn(axios, "post").mockResolvedValueOnce({ data: experianVerifyResponse });
 			mockDynamoDbClient.send = jest.fn().mockResolvedValue({ Item: storedExperianToken });
 
@@ -129,6 +130,7 @@ describe("Experian service", () => {
 				clientPassword,
 				clientId,
 				clientSecret,
+				tenantId,
 			);
 
 			expect(logger.info).toHaveBeenNthCalledWith(1, { message: "Checking EXPERIANSTOKENTABLE for valid token" });
@@ -166,7 +168,8 @@ describe("Experian service", () => {
 			await experianServiceTest.verify({ accountNumber, sortCode, givenName, surname, birthDate, uuid }, clientUsername,
 				clientPassword,
 				clientId,
-				clientSecret);
+				clientSecret,
+				tenantId);
 		  
 			expect(logger.warn).toHaveBeenCalledWith({ message: expectedMessage });
 		  });
@@ -183,7 +186,8 @@ describe("Experian service", () => {
 			await experianServiceTest.verify({ accountNumber, sortCode, givenName, surname, birthDate, uuid }, clientUsername,
 				clientPassword,
 				clientId,
-				clientSecret);
+				clientSecret,
+				tenantId);
 		  
 			expect(logger.error).toHaveBeenCalledWith({ message: expectedMessage });
 		  });
