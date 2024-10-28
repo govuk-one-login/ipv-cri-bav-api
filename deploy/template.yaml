@@ -124,7 +124,7 @@ Mappings:
       HMRCBASEURL: "https://c99d36403h.execute-api.eu-west-2.amazonaws.com/build"
       HMRCVERIFYBASEURL: "https://c99d36403h.execute-api.eu-west-2.amazonaws.com/build/misc/bank-account"
       TESTHARNESSURL: "https://testharness.review-bav.build.account.gov.uk"
-      EXPERIANBASEURL: "https://c99d36403h.execute-api.eu-west-2.amazonaws.com/build"
+      EXPERIANBASEURL: "https://proxy.review-bav.build.account.gov.uk/experian"
     staging:
       ISSUER: 'https://review-bav.staging.account.gov.uk'
       DNSSUFFIX: review-bav.staging.account.gov.uk
@@ -136,7 +136,7 @@ Mappings:
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
       HMRCBASEURL: "https://x0ch9rvyhe.execute-api.eu-west-2.amazonaws.com/staging"
       HMRCVERIFYBASEURL: "https://x0ch9rvyhe.execute-api.eu-west-2.amazonaws.com/staging/misc/bank-account"
-      EXPERIANBASEURL: "https://proxy.review-bav.build.account.gov.uk/experian"
+      EXPERIANBASEURL: "https://c99d36403h.execute-api.eu-west-2.amazonaws.com/build"
     integration:
       ISSUER: 'https://review-bav.integration.account.gov.uk'
       DNSSUFFIX: review-bav.integration.account.gov.uk
@@ -3312,6 +3312,7 @@ Resources:
           EXPERIAN_USERNAME_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/Password"
           EXPERIAN_CLIENT_ID_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/clientId"
           EXPERIAN_CLIENT_SECRET_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/clientSecret"
+          EXPERIAN_TENANT_ID_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/tenantId"
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
@@ -3327,6 +3328,8 @@ Resources:
             ParameterName: !Sub "${Environment}/bav-cri-api/CrosscoreV2/clientId"
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${Environment}/bav-cri-api/CrosscoreV2/clientSecret"
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub "${Environment}/bav-cri-api/CrosscoreV2/tenantId"
         - DynamoDBWritePolicy:
             TableName:
               Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
