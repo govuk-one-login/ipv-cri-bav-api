@@ -46,7 +46,7 @@ function getMockSessionItem(): ISessionItem {
 		authSessionState: "BAV_ACCESS_TOKEN_ISSUED",
 		copCheckResult: "FULL_MATCH",
 		experianCheckResult: ExperianCheckResult.FULL_MATCH,
-		hmrcUuid: "testId",
+		vendorUuid: "testId",
 	};
 	return sess;
 }

@@ -297,24 +297,24 @@ export class BavService {
 		}
 	}
 
-	async saveHmrcUuid(sessionId: string, hmrcUuid: string): Promise<void> {
-		this.logger.info({ message: `Updating ${this.tableName} table with hmrcUuid`, hmrcUuid });
+	async saveVendorUuid(sessionId: string, vendorUuid: string): Promise<void> {
+		this.logger.info({ message: `Updating ${this.tableName} table with vendorUuid`, vendorUuid });
 
 		const updateStateCommand = new UpdateCommand({
 			TableName: this.tableName,
 			Key: { sessionId },
-			UpdateExpression: "SET hmrcUuid = :hmrcUuid",
+			UpdateExpression: "SET vendorUuid = :vendorUuid",
 			ExpressionAttributeValues: {
-				":hmrcUuid": hmrcUuid,
+				":vendorUuid": vendorUuid,
 			},
 		});
 
 		try {
 			await this.dynamo.send(updateStateCommand);
-			this.logger.info({ message: "Saved hmrcUuid in dynamodb" });
+			this.logger.info({ message: "Saved vendorUuid in dynamodb" });
 		} catch (error) {
-			this.logger.error({ message: "Got error saving hmrcUuid", messageCode: MessageCodes.FAILED_UPDATING_SESSION, error });
-			throw new AppError(HttpCodesEnum.SERVER_ERROR, "saveHmrcUuid failed: got error saving hmrcUuid");
+			this.logger.error({ message: "Got error saving vendorUuid", messageCode: MessageCodes.FAILED_UPDATING_SESSION, error });
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "saveVendorUuid failed: got error saving vendorUuid");
 		}
 	}
 

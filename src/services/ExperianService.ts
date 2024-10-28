@@ -39,40 +39,73 @@ export class ExperianService {
 
 	 // eslint-disable-next-line max-lines-per-function
 	 async verify(
-    	{ accountNumber, sortCode, name, uuid }: { accountNumber: string; sortCode: string; name: string; uuid: string }, 
+    	{ accountNumber, sortCode, givenName, surname, birthDate, uuid }: { accountNumber: string; sortCode: string; givenName: string; surname: string; birthDate: string; uuid: string }, 
     	experianUsername: string,
     	experianPassword: string,
     	experianClientId: string,
     	experianClientSecret: string,
+    	experianClientTenantId: string,
     ): Promise<any> {
     		try {
     		const params = {
     			header: {
-					  tenantId: uuid,
-					  requestType: Constants.EXPERIAN_PRODUCT_NAME,
+				  requestType: Constants.EXPERIAN_PRODUCT_NAME,
+				  clientReferenceId: uuid,
+				  messageTime: new Date().toISOString(),
+				  options: {},
     			},
-    			account: { accountNumber, sortCode },
-    			subject: { name },
-				  };
+    			payload: {
+				  source: "WEB",
+				  application: {
+    					applicant: [
+					  {
+    							id: "APPLICANT_1",
+    							contactId: "MainContact_1",
+					  },
+    					],
+				  },
+				  contacts: [
+    					{
+					  id: "MainContact_1",
+					  person: {
+    							personDetails: {
+						  dateOfBirth: birthDate,
+    							},
+    							names: [
+						  {
+    									firstName: givenName,
+    									surName: surname,
+						  },
+    							],
+					  },
+					  bankAccount: {
+    							sortCode,
+    							clearAccountNumber: accountNumber,
+					  },
+    					},
+				  ],
+    			},
+			  };
 				
-    		// const token = this.generateExperianToken(experianUsername, experianPassword, experianClientId, experianClientSecret);
+    		const token = await this.generateExperianToken(experianUsername, experianPassword, experianClientId, experianClientSecret);
     		const headers = {
     			"User-Agent": Constants.EXPERIAN_USER_AGENT,
-    			"Authorization": "Bearer TOKEN",
+    			"Authorization": `Bearer ${token.access_token}`,
     			"Content-Type":"application/json",
     			"Accept":"application/json",
     		};
 				
-    			const endpoint = `${this.experianBaseUrl}/${Constants.EXPERIAN_VERIFY_ENDPOINT_PATH}`;
+    			const endpoint = `${this.experianBaseUrl}/decisionanalytics/crosscore/${experianClientTenantId}${Constants.EXPERIAN_VERIFY_ENDPOINT_PATH}`;
     			this.logger.info("Sending verify request to Experian", { uuid, endpoint });
     			const { data } = await axios.post(endpoint, params, { headers });
-    			const decisionElements = data?.clientResponsePayload?.decisionElements;
+	   			const decisionElements = data?.clientResponsePayload?.decisionElements;
+    		const expRequestId = data?.responseHeader?.expRequestId;
 
     			const logObject = decisionElements.find((object: { auditLogs: object[] }) => object.auditLogs);
-    			this.logger.debug({
+    			this.logger.info({
     				message: "Received response from Experian verify request",
-    				eventType: logObject.auditLogs[0].eventType,
-    				eventOutcome: logObject.auditLogs[0].eventOutcome,
+    				eventType: logObject.auditLogs[0]?.eventType,
+    				eventOutcome: logObject.auditLogs[0]?.eventOutcome,
     			});
 
 				
@@ -86,7 +119,7 @@ export class ExperianService {
     			const bavCheckResults = decisionElements.find((object: { scores: Array<{ name: string; score: number }> }) => object.scores);
     			const personalDetailsScore = bavCheckResults?.scores.find((object: { name: string; score: number }) => object.name === "Personal details")?.score;
 
-    			return personalDetailsScore;
+    			return { personalDetailsScore, expRequestId };
     			
     		} catch (error: any) {
     			const message = "Error sending verify request to Experian";
@@ -101,11 +134,14 @@ export class ExperianService {
     	const storedToken = await this.getExperianToken();
     	const isValidToken = this.checkExperianToken(storedToken);
 
-    	if (isValidToken) {
+    	if (storedToken && isValidToken) {
+    		this.logger.info("Valid token found");
     		return storedToken;
-    	} else {		
-    		this.logger.info("requestExperianToken - no valid token - trying to generate new Experian token");
+
+    	} else {
     		try {
+    			const endpoint = `${this.experianBaseUrl}${Constants.EXPERIAN_TOKEN_ENDPOINT_PATH}`;
+    			this.logger.info("No valid token found - trying to generate new Experian token", { endpoint });
     			const params = {
     				username: clientUsername,
     				password: clientPassword,
@@ -113,26 +149,34 @@ export class ExperianService {
     				client_secret: clientSecret,
     			};
 
+    			const correlationId = randomUUID();
     			const config: AxiosRequestConfig<any> = {
     				headers: {
     					"Content-Type": "application/json",
-    					"X-Correlation-Id": randomUUID(),
+    					"X-Correlation-Id": correlationId,
     					"X-User-Domain": "cabinetofficegds.com",
     				},
     			};
 
     			const { data }: { data: ExperianTokenResponse } = await axios.post(
-    				`${this.experianBaseUrl}${Constants.EXPERIAN_TOKEN_ENDPOINT_PATH}`,
+    				endpoint,
     				params,
     				config,
     			);
-    			this.logger.info("Received response from experian token endpoint");
+    			this.logger.info(`Received response from Experian token endpoint - X-Correlation-Id: ${correlationId}`);
     			await this.saveExperianToken(data);
     			return data;
+
     		} catch (error: any) {
-    			this.logger.error({ message: "Error generating experian token", statusCode: error?.response?.status, messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN });
-    			this.logger.info("Returning previous Experian token due to error generating a new one.");
-    			return storedToken;
+    			if (storedToken) {
+    				const message = "Error refreshing Experian token - returning previous Experian token";
+    				this.logger.error({ message, statusCode: error?.response?.status, messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN });
+    				return storedToken;
+    			} else {
+    				const message = "Error generating Experian token and no previous token found";
+    				this.logger.error({ message, messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN });
+    				throw new AppError(HttpCodesEnum.SERVER_ERROR, message);
+    			}
     		}
     	}
     }
@@ -160,7 +204,7 @@ export class ExperianService {
     	}
     }
 
-    async getExperianToken(): Promise<StoredExperianToken> {
+    async getExperianToken(): Promise<StoredExperianToken | undefined> {
     	this.logger.info("Fetching Experian token from table " + this.experianTokenTableName);
     	const getExperianTokenCommand = new GetCommand({
     		TableName: this.experianTokenTableName,
@@ -178,16 +222,28 @@ export class ExperianService {
     		});
     		throw new AppError(HttpCodesEnum.SERVER_ERROR, "Error retrieving Experian token");
     	}
-    	return token.Item as StoredExperianToken;
+		
+    	if (token.Item) {
+    		return token.Item as StoredExperianToken;
+    	} else { 
+    		return undefined;
+    	}
     }
 
-    checkExperianToken(token: StoredExperianToken): boolean {
+    checkExperianToken(token: StoredExperianToken | undefined): boolean {
+		
+    	if (token === undefined) {
+    		return false;
+    	}
+
     	const twentyFiveMinutesInMillis = 25 * 60 * 1000; 
     	const tokenValidityWindow = Number(token.issued_at) + twentyFiveMinutesInMillis;
+    	
     	if (Date.now() < tokenValidityWindow) {
     		return true;
+    	} else {
+    		return false;
     	} 
-    	return false; 
     }
 }
 

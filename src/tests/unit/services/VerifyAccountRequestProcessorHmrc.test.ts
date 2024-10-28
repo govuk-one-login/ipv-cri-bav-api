@@ -14,10 +14,10 @@ import { VerifyAccountRequestProcessor } from "../../../services/VerifyAccountRe
 import { HmrcService } from "../../../services/HmrcService";
 import { Constants } from "../../../utils/Constants";
 
-const hmrcUuid = "new hmrcUuid";
+const vendorUuid = "new hmrcUuid";
 jest.mock("crypto", () => ({
 	...jest.requireActual("crypto"),
-	randomUUID: () => hmrcUuid,
+	randomUUID: () => vendorUuid,
 }));
 const mockBavService = mock<BavService>();
 const mockHmrcService = mock<HmrcService>();
@@ -25,7 +25,7 @@ const logger = mock<Logger>();
 const metrics = new Metrics({ namespace: "BAV" });
 const HMRC_TOKEN = "dfsgadfgadg";
 const CREDENTIAL_VENDOR = "HMRC";
-const sessionId = "sessionId";
+const sessionId = "SESSIONID";
 const encodedTxmaHeader = "ABCDEFG";
 const body = {
 	sort_code: "123456",
@@ -102,14 +102,14 @@ describe("VerifyAccountRequestProcessor", () => {
 			});
 		});
 
-		it("generates and saves hmrcUuid if one doesn't exist", async () => {
+		it("generates and saves vendorUuid if one doesn't exist", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
-			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, hmrcUuid: undefined });
+			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, vendorUuid: undefined });
 			mockHmrcService.verify.mockResolvedValueOnce(hmrcVerifyResponse);
 
 			await verifyAccountRequestProcessorTest.processHmrcRequest(sessionId, body, clientIpAddress, encodedTxmaHeader, HMRC_TOKEN);
 
-			expect(mockBavService.saveHmrcUuid).toHaveBeenCalledWith(sessionId, hmrcUuid);
+			expect(mockBavService.saveVendorUuid).toHaveBeenCalledWith(sessionId, vendorUuid);
 	  });
       
 		it("returns error response if session has exceeded attemptCount", async () => {
@@ -127,13 +127,13 @@ describe("VerifyAccountRequestProcessor", () => {
 
 		it("saves account details to person identity table", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
-			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, hmrcUuid: "HMRC_UUID" });
+			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, vendorUuid: "HMRC_UUID" });
 			mockHmrcService.verify.mockResolvedValueOnce(hmrcVerifyResponse);
 
 			await verifyAccountRequestProcessorTest.processHmrcRequest(sessionId, body, clientIpAddress, encodedTxmaHeader, HMRC_TOKEN);
 
 			expect(logger.appendKeys).toHaveBeenCalledWith({ govuk_signin_journey_id: session.clientSessionId });
-			expect(mockBavService.saveHmrcUuid).not.toHaveBeenCalled();
+			expect(mockBavService.saveVendorUuid).not.toHaveBeenCalled();
 			expect(mockBavService.updateAccountDetails).toHaveBeenCalledWith(
 				{	sessionId, accountNumber: body.account_number, sortCode: body.sort_code },
 				process.env.PERSON_IDENTITY_TABLE_NAME,
@@ -147,7 +147,7 @@ describe("VerifyAccountRequestProcessor", () => {
 
 			await verifyAccountRequestProcessorTest.processHmrcRequest(sessionId, body, clientIpAddress, encodedTxmaHeader, HMRC_TOKEN);
 
-			expect(mockHmrcService.verify).toHaveBeenCalledWith({ accountNumber: body.account_number, sortCode: body.sort_code, name: "Frederick Joseph Flintstone", uuid: hmrcUuid }, HMRC_TOKEN);
+			expect(mockHmrcService.verify).toHaveBeenCalledWith({ accountNumber: body.account_number, sortCode: body.sort_code, name: "Frederick Joseph Flintstone", uuid: vendorUuid }, HMRC_TOKEN);
 			expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "MYQUEUE", {
 				event_name: "BAV_COP_REQUEST_SENT",
 				component_id: "https://XXX-c.env.account.gov.uk",
@@ -212,7 +212,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				{ sessionId, accountNumber: "00123456", sortCode: body.sort_code },
 				process.env.PERSON_IDENTITY_TABLE_NAME,
 			);
-			expect(mockHmrcService.verify).toHaveBeenCalledWith({ accountNumber: "00123456", sortCode: body.sort_code, name: "Frederick Joseph Flintstone", uuid: hmrcUuid }, HMRC_TOKEN);
+			expect(mockHmrcService.verify).toHaveBeenCalledWith({ accountNumber: "00123456", sortCode: body.sort_code, name: "Frederick Joseph Flintstone", uuid: vendorUuid }, HMRC_TOKEN);
 		});
 
 		it("saves saveCopCheckResult and returns success where there has been a match", async () => {

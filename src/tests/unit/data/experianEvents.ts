@@ -2,7 +2,7 @@ export const experianVerifyResponse = {
 	"responseHeader": {
 		"requestType": "BAVConsumer-Standard",
 		"clientReferenceId": "${context.request.body:$.header.clientReferenceId}",
-		"expRequestId": "RB0000${random.numeric(length=8)}",
+		"expRequestId": "1234567890",
 		"messageTime": "2022-05-19T16:01:53Z",
 		"overallResponse": {
 			"decision": "CONTINUE",
@@ -261,7 +261,7 @@ export const experianVerifyResponseError2 = {
 	"responseHeader": {
 		  "requestType": "BAVConsumer-Standard",
 		  "clientReferenceId": "${context.request.body:$.header.clientReferenceId}",
-		  "expRequestId": "RB0000${random.numeric(length=8)}",
+		  "expRequestId": "1234567890",
 		  "messageTime": "2022-05-19T16:01:53Z",
 		  "overallResponse": {
 			"decision": "STOP",

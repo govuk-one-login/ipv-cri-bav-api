@@ -48,7 +48,7 @@ function getMockSessionItem(): ISessionItem {
 		copCheckResult: "FULL_MATCH",
 		experianCheckResult: "FULL_MATCH",
 		attemptCount: 1,
-		hmrcUuid: "1c756b7e-b5b8-4f33-966d-4aeee9bb0000",
+		vendorUuid: "1c756b7e-b5b8-4f33-966d-4aeee9bb0000",
 	};
 	return sess;
 }

@@ -111,7 +111,7 @@ Mappings:
       TESTHARNESSURL: "https://bav-test-harness-testharness.review-bav.dev.account.gov.uk"
       HMRCBASEURL: "https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev"
       HMRCVERIFYBASEURL: "https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev/misc/bank-account"
-      EXPERIANBASEURL: "https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev/"
+      EXPERIANBASEURL: "https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev"
     build:
       ISSUER: 'https://review-bav.build.account.gov.uk'
       DNSSUFFIX: review-bav.build.account.gov.uk
@@ -124,7 +124,7 @@ Mappings:
       HMRCBASEURL: "https://c99d36403h.execute-api.eu-west-2.amazonaws.com/build"
       HMRCVERIFYBASEURL: "https://c99d36403h.execute-api.eu-west-2.amazonaws.com/build/misc/bank-account"
       TESTHARNESSURL: "https://testharness.review-bav.build.account.gov.uk"
-      EXPERIANBASEURL: "https://c99d36403h.execute-api.eu-west-2.amazonaws.com/build/"
+      EXPERIANBASEURL: "https://proxy.review-bav.build.account.gov.uk/experian"
     staging:
       ISSUER: 'https://review-bav.staging.account.gov.uk'
       DNSSUFFIX: review-bav.staging.account.gov.uk
@@ -3320,6 +3320,7 @@ Resources:
           EXPERIAN_USERNAME_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/Password"
           EXPERIAN_CLIENT_ID_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/clientId"
           EXPERIAN_CLIENT_SECRET_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/clientSecret"
+          EXPERIAN_TENANT_ID_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/tenantId"
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
@@ -3335,24 +3336,35 @@ Resources:
             ParameterName: !Sub "${Environment}/bav-cri-api/CrosscoreV2/clientId"
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${Environment}/bav-cri-api/CrosscoreV2/clientSecret"
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub "${Environment}/bav-cri-api/CrosscoreV2/tenantId"
         - DynamoDBWritePolicy:
             TableName:
               Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
         - DynamoDBWritePolicy:
             TableName:
               Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-name"
+        - DynamoDBWritePolicy:
+            TableName:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-experian-token-table-name"
         - DynamoDBReadPolicy:
             TableName:
               Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
         - DynamoDBReadPolicy:
             TableName:
               Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-name"
+        - DynamoDBReadPolicy:
+            TableName:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-experian-token-table-name"
         - KMSDecryptPolicy:
             KeyId:
               Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-key-id"
         - KMSDecryptPolicy:
             KeyId:
               Fn::ImportValue: !Sub "${L2DynamoStackName}-person-identity-table-key-id"
+        - KMSDecryptPolicy:
+            KeyId:
+              Fn::ImportValue: !Sub "${L2DynamoStackName}-experian-token-table-key-id"
         - Statement:
             - Effect: Allow
               Action:

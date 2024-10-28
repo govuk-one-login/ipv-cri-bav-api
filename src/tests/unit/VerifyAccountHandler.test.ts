@@ -39,7 +39,7 @@ describe("VerifyAccountHandler", () => {
 			JSON.parse(VALID_VERFIY_ACCOUNT.body),
 			"x-forwarded-for",
 			"encoded header",
-			{ "experianClientId": "id", "experianClientSecret": "secret", "experianPassword": "password", "experianUsername": "username" },
+			{ "experianClientId": "id", "experianClientSecret": "secret", "experianPassword": "password", "experianUsername": "username", "experianTenantId": "tenantId" },
 		);
 	});
 
@@ -53,7 +53,7 @@ describe("VerifyAccountHandler", () => {
 			JSON.parse(VALID_VERFIY_ACCOUNT.body),
 			"1.1.1",
 			"encoded header",
-			{ "experianClientId": "id", "experianClientSecret": "secret", "experianPassword": "password", "experianUsername": "username" },
+			{ "experianClientId": "id", "experianClientSecret": "secret", "experianPassword": "password", "experianUsername": "username", "experianTenantId": "tenantId" },
 		);
 	});
 

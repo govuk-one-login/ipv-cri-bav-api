@@ -14,7 +14,7 @@ import { CopCheckResult, ExperianCheckResult, ISessionItem } from "../models/ISe
 import { EnvironmentVariables, Constants } from "../utils/Constants";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
-import { getFullName } from "../utils/PersonIdentityUtils";
+import { getNameByType } from "../utils/PersonIdentityUtils";
 import { Response } from "../utils/Response";
 import { buildCoreEventFields } from "../utils/TxmaEvent";
 import { VerifyAccountPayload } from "../type/VerifyAccountPayload";
@@ -40,7 +40,7 @@ export class VerifyAccountRequestProcessor {
 
   private readonly HmrcService: HmrcService;
 
-  private readonly credentialVendor: string;
+  readonly credentialVendor: string;
 
   private readonly partialNameQueueUrl: string;
 
@@ -87,6 +87,7 @@ export class VerifyAccountRequestProcessor {
   	experianPassword: string;
   	experianClientId: string;
   	experianClientSecret: string;
+  		experianTenantId: string;
   	},
   ): Promise<APIGatewayProxyResult> {
 		  const { account_number: accountNumber, sort_code: sortCode } = body;
@@ -109,53 +110,51 @@ export class VerifyAccountRequestProcessor {
 			  return Response(HttpCodesEnum.UNAUTHORIZED, "Too many attempts");
 		  }
 	
-		  const name = getFullName(person.name);
+		  const givenName = getNameByType(person.name, "GivenName");
+		  const surname = getNameByType(person.name, "FamilyName");
+		  const birthDate = person.birthDate[0].value;
+
 		  this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
 
-		  let { hmrcUuid } = session;
-		  if (!hmrcUuid) {
-			  hmrcUuid = randomUUID();
-			  await this.BavService.saveHmrcUuid(sessionId, hmrcUuid);
-		  }
-	
-		  const expRequestId = "PLACEHOLDER"; //EXPERIAN have not provided this value yet
+		  const vendorUuid = await this.updateVendorUuid(session);
 	
 		  const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
-	
-		  await this.BavService.sendToTXMA(this.txmaQueueUrl, {
-			  event_name: TxmaEventNames.BAV_EXPERIAN_REQUEST_SENT,
-			  ...coreEventFields,
-			  extensions: {
-				  evidence: [
-					  {
-						  txn: expRequestId,
-					  },
-				  ],
-			  },
-			  restricted: {
-				  Experian_request_details: [
-					  {
-						  name,
-						  sortCode,
-						  accountNumber: paddedAccountNumber,
-						  attemptNum: session.attemptCount ?? 1,
-					  },
-				  ],
-			  },
-		  }, encodedHeader);
 		
 		  const verifyResponse = await this.ExperianService.verify(
-			  { accountNumber: paddedAccountNumber, sortCode, name, uuid: expRequestId }, // VENDOR UUID WILL BE REPLACED BY VALUE PROVIDED BY EXPERIAN
+			  { accountNumber: paddedAccountNumber, sortCode, givenName, surname, birthDate, uuid: vendorUuid },
 			  ssmParams.experianUsername,
 			  ssmParams.experianPassword,
 			  ssmParams.experianClientId,
 			  ssmParams.experianClientSecret,
+			  ssmParams.experianTenantId,
 		  );
 		
 		  if (!verifyResponse) {
 			  this.logger.error("No verify response received", { messageCode: MessageCodes.NO_VERIFY_RESPONSE });
 			  return Response(HttpCodesEnum.SERVER_ERROR, "Could not verify account");
 		  }
+
+		  await this.BavService.sendToTXMA(this.txmaQueueUrl, {
+  		event_name: TxmaEventNames.BAV_EXPERIAN_REQUEST_SENT,
+  		...coreEventFields,
+  		extensions: {
+  			evidence: [
+  				{
+  					txn: verifyResponse.expRequestId,
+  				},
+  			],
+  		},
+  		restricted: {
+  			Experian_request_details: [
+  				{
+  					name:`${givenName} ${surname}`,
+  					sortCode,
+  					accountNumber: paddedAccountNumber,
+  					attemptNum: session.attemptCount ?? 1,
+  				},
+  			],
+  		},
+  	}, encodedHeader);
 		
 		  await this.BavService.sendToTXMA(this.txmaQueueUrl, {
 			  event_name: TxmaEventNames.BAV_EXPERIAN_RESPONSE_RECEIVED,
@@ -163,7 +162,7 @@ export class VerifyAccountRequestProcessor {
 			  extensions: {
 				  evidence: [
 					  {
-						  txn: expRequestId,
+						  txn: verifyResponse.expRequestId,
 					  },
 				  ],
 			  },
@@ -173,7 +172,8 @@ export class VerifyAccountRequestProcessor {
 			  { sessionId, accountNumber: paddedAccountNumber, sortCode },
 			  this.personIdentityTableName,
 		  );
-		  const experianCheckResult = this.calculateExperianCheckResult(verifyResponse, session.attemptCount);
+		  
+		  const experianCheckResult = this.calculateExperianCheckResult(verifyResponse.personalDetailsScore, session.attemptCount);
 		  this.logger.info(`experianCheckResult is ${experianCheckResult}`);
 	
 		  let attemptCount;
@@ -210,15 +210,11 @@ export class VerifyAccountRequestProcessor {
   		return Response(HttpCodesEnum.UNAUTHORIZED, "Too many attempts");
   	}
 
-  	const name = getFullName(person.name);
+  	const name = getNameByType(person.name);
   	this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
   	const timeOfRequest = absoluteTimeNow();
 
-  	let { hmrcUuid } = session;
-  	if (!hmrcUuid) {
-  		hmrcUuid = randomUUID();
-  		await this.BavService.saveHmrcUuid(sessionId, hmrcUuid);
-  	}
+  	const vendorUuid = await this.updateVendorUuid(session);
 
   	const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
   	await this.BavService.sendToTXMA(
@@ -229,7 +225,7 @@ export class VerifyAccountRequestProcessor {
   			extensions:{
   				evidence:[
 						 {
-  						txn: hmrcUuid,
+  						txn: vendorUuid,
   					},
   				],
 			 },
@@ -248,7 +244,7 @@ export class VerifyAccountRequestProcessor {
   	);
 
   	const verifyResponse = await this.HmrcService.verify(
-  		{ accountNumber: paddedAccountNumber, sortCode, name, uuid: hmrcUuid },
+  		{ accountNumber: paddedAccountNumber, sortCode, name, uuid: vendorUuid },
   		HMRC_TOKEN,
   	);
 
@@ -265,7 +261,7 @@ export class VerifyAccountRequestProcessor {
   			extensions:{
   				evidence:[
 						 {
-  						txn: hmrcUuid,
+  						txn: vendorUuid,
   					},
   				],
 			  },
@@ -295,7 +291,7 @@ export class VerifyAccountRequestProcessor {
 
   	if (copCheckResult === CopCheckResults.PARTIAL_MATCH) {
   		const partialNameRecord: PartialNameSQSRecord = {
-  			itemNumber: hmrcUuid,
+  			itemNumber: vendorUuid,
   			timeStamp: timeOfRequest,
   			cicName: name,
   			accountName: verifyResponse.accountName,
@@ -334,4 +330,14 @@ export class VerifyAccountRequestProcessor {
   		return ExperianCheckResults.NO_MATCH;
   	}
   }
+
+  async updateVendorUuid(session: ISessionItem): Promise<string> {
+  	let { vendorUuid } = session;
+		  if (!vendorUuid) {
+  		vendorUuid = randomUUID();
+			  await this.BavService.saveVendorUuid(session.sessionId, vendorUuid);
+		  }
+  	return vendorUuid;
+  }
 }
+
