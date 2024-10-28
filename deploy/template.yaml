@@ -136,7 +136,7 @@ Mappings:
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
       HMRCBASEURL: "https://x0ch9rvyhe.execute-api.eu-west-2.amazonaws.com/staging"
       HMRCVERIFYBASEURL: "https://x0ch9rvyhe.execute-api.eu-west-2.amazonaws.com/staging/misc/bank-account"
-      EXPERIANBASEURL: "https://c99d36403h.execute-api.eu-west-2.amazonaws.com/build"
+      EXPERIANBASEURL: "https://x0ch9rvyhe.execute-api.eu-west-2.amazonaws.com/staging/"
     integration:
       ISSUER: 'https://review-bav.integration.account.gov.uk'
       DNSSUFFIX: review-bav.integration.account.gov.uk
