@@ -168,7 +168,7 @@ export class ExperianService {
 
     		} catch (error: any) {
     			if (storedToken) {
-    				const message = "Error generating Experian token - returning previous Experian token";
+    				const message = "Error refreshing Experian token - returning previous Experian token";
     				this.logger.error({ message, statusCode: error?.response?.status, messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN });
     				return storedToken;
     			} else {
