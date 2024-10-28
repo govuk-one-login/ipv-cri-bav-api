@@ -39,7 +39,7 @@ export class ExperianService {
 
 	 // eslint-disable-next-line max-lines-per-function
 	 async verify(
-    	{ accountNumber, sortCode, name, uuid }: { accountNumber: string; sortCode: string; name: string; uuid: string }, 
+    	{ accountNumber, sortCode, givenName, surname, birthDate, uuid }: { accountNumber: string; sortCode: string; givenName: string; surname: string; birthDate: string; uuid: string }, 
     	experianUsername: string,
     	experianPassword: string,
     	experianClientId: string,
@@ -48,12 +48,45 @@ export class ExperianService {
     		try {
     		const params = {
     			header: {
-					  tenantId: uuid,
-					  requestType: Constants.EXPERIAN_PRODUCT_NAME,
+				  requestType: "BAVConsumer-Standard",
+				  clientReferenceId: uuid,
+				  expRequestId: "",
+				  messageTime: new Date().toISOString(),
+				  options: {},
     			},
-    			account: { accountNumber, sortCode },
-    			subject: { name },
-				  };
+    			payload: {
+				  source: "WEB",
+				  application: {
+    					applicant: [
+					  {
+    							id: "APPLICANT_1",
+    							contactId: "MainContact_1",
+					  },
+    					],
+				  },
+				  contacts: [
+    					{
+					  id: "MainContact_1",
+					  person: {
+    							personDetails: {
+						  dateOfBirth: birthDate,
+    							},
+    							names: [
+						  {
+    									firstName: givenName,
+    									middleNames: "",
+    									surName: surname,
+						  },
+    							],
+					  },
+					  bankAccount: {
+    							sortCode,
+    							clearAccountNumber: accountNumber,
+					  },
+    					},
+				  ],
+    			},
+			  };
 				
     		const token = await this.generateExperianToken(experianUsername, experianPassword, experianClientId, experianClientSecret);
     		const headers = {
@@ -66,7 +99,8 @@ export class ExperianService {
     			const endpoint = `${this.experianBaseUrl}${Constants.EXPERIAN_VERIFY_ENDPOINT_PATH}`;
     			this.logger.info("Sending verify request to Experian", { uuid, endpoint });
     			const { data } = await axios.post(endpoint, params, { headers });
-    			const decisionElements = data?.clientResponsePayload?.decisionElements;
+	   			const decisionElements = data?.clientResponsePayload?.decisionElements;
+    		const expRequestId = data?.responseHeader?.expRequestId;
 
     			const logObject = decisionElements.find((object: { auditLogs: object[] }) => object.auditLogs);
     			this.logger.debug({
@@ -86,7 +120,7 @@ export class ExperianService {
     			const bavCheckResults = decisionElements.find((object: { scores: Array<{ name: string; score: number }> }) => object.scores);
     			const personalDetailsScore = bavCheckResults?.scores.find((object: { name: string; score: number }) => object.name === "Personal details")?.score;
 
-    			return personalDetailsScore;
+    			return { personalDetailsScore, expRequestId };
     			
     		} catch (error: any) {
     			const message = "Error sending verify request to Experian";

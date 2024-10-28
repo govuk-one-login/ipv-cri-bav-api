@@ -7,7 +7,7 @@ import { MessageCodes } from "../models/enums/MessageCodes";
 import { EnvironmentVariables } from "../utils/Constants";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
-import { getFullName } from "../utils/PersonIdentityUtils";
+import { getNameByType } from "../utils/PersonIdentityUtils";
 import { Response } from "../utils/Response";
 import { APIGatewayProxyResult } from "aws-lambda";
 
@@ -62,7 +62,7 @@ export class PersonInfoRequestProcessor {
   		return Response(HttpCodesEnum.UNAUTHORIZED, `No person found with the session id: ${sessionId}`);
   	}
 
-  	const name = getFullName(person.name);
+  	const name = getNameByType(person.name);
   	const encryptedResponseValue = this.encryptResponse({ name });
 
   	return Response(HttpCodesEnum.OK, encryptedResponseValue);

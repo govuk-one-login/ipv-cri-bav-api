@@ -14,7 +14,7 @@ import { CopCheckResult, ExperianCheckResult, ISessionItem } from "../models/ISe
 import { EnvironmentVariables, Constants } from "../utils/Constants";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
-import { getFullName } from "../utils/PersonIdentityUtils";
+import { getNameByType } from "../utils/PersonIdentityUtils";
 import { Response } from "../utils/Response";
 import { buildCoreEventFields } from "../utils/TxmaEvent";
 import { VerifyAccountPayload } from "../type/VerifyAccountPayload";
@@ -109,19 +109,22 @@ export class VerifyAccountRequestProcessor {
 			  return Response(HttpCodesEnum.UNAUTHORIZED, "Too many attempts");
 		  }
 	
-		  const name = getFullName(person.name);
+		  const givenName = getNameByType(person.name, "GivenName");
+		  const surname = getNameByType(person.name, "FamilyName");
+		  const birthDate = person.birthDate[0].value;
+
 		  this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
 
 		  let { vendorUuid } = session;
 		  if (!vendorUuid) {
-			vendorUuid = randomUUID();
+  		vendorUuid = randomUUID();
 			  await this.BavService.saveVendorUuid(sessionId, vendorUuid);
 		  }
 	
 		  const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
 		
 		  const verifyResponse = await this.ExperianService.verify(
-			  { accountNumber: paddedAccountNumber, sortCode, name, uuid: vendorUuid },
+			  { accountNumber: paddedAccountNumber, sortCode, givenName, surname, birthDate, uuid: vendorUuid },
 			  ssmParams.experianUsername,
 			  ssmParams.experianPassword,
 			  ssmParams.experianClientId,
@@ -134,26 +137,26 @@ export class VerifyAccountRequestProcessor {
 		  }
 
 		  await this.BavService.sendToTXMA(this.txmaQueueUrl, {
-			event_name: TxmaEventNames.BAV_EXPERIAN_REQUEST_SENT,
-			...coreEventFields,
-			extensions: {
-				evidence: [
-					{
-						txn: verifyResponse.responseHeader.expRequestId,
-					},
-				],
-			},
-			restricted: {
-				Experian_request_details: [
-					{
-						name,
-						sortCode,
-						accountNumber: paddedAccountNumber,
-						attemptNum: session.attemptCount ?? 1,
-					},
-				],
-			},
-		}, encodedHeader);
+  		event_name: TxmaEventNames.BAV_EXPERIAN_REQUEST_SENT,
+  		...coreEventFields,
+  		extensions: {
+  			evidence: [
+  				{
+  					txn: verifyResponse.expRequestId,
+  				},
+  			],
+  		},
+  		restricted: {
+  			Experian_request_details: [
+  				{
+  					name:`${givenName} ${surname}`,
+  					sortCode,
+  					accountNumber: paddedAccountNumber,
+  					attemptNum: session.attemptCount ?? 1,
+  				},
+  			],
+  		},
+  	}, encodedHeader);
 		
 		  await this.BavService.sendToTXMA(this.txmaQueueUrl, {
 			  event_name: TxmaEventNames.BAV_EXPERIAN_RESPONSE_RECEIVED,
@@ -161,7 +164,7 @@ export class VerifyAccountRequestProcessor {
 			  extensions: {
 				  evidence: [
 					  {
-						  txn: verifyResponse.responseHeader.expRequestId,
+						  txn: verifyResponse.expRequestId,
 					  },
 				  ],
 			  },
@@ -171,7 +174,8 @@ export class VerifyAccountRequestProcessor {
 			  { sessionId, accountNumber: paddedAccountNumber, sortCode },
 			  this.personIdentityTableName,
 		  );
-		  const experianCheckResult = this.calculateExperianCheckResult(verifyResponse, session.attemptCount);
+		  
+		  const experianCheckResult = this.calculateExperianCheckResult(verifyResponse.personalDetailsScore, session.attemptCount);
 		  this.logger.info(`experianCheckResult is ${experianCheckResult}`);
 	
 		  let attemptCount;
@@ -208,13 +212,13 @@ export class VerifyAccountRequestProcessor {
   		return Response(HttpCodesEnum.UNAUTHORIZED, "Too many attempts");
   	}
 
-  	const name = getFullName(person.name);
+  	const name = getNameByType(person.name);
   	this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
   	const timeOfRequest = absoluteTimeNow();
 
   	let { vendorUuid } = session;
   	if (!vendorUuid) {
-		vendorUuid = randomUUID();
+  		vendorUuid = randomUUID();
   		await this.BavService.saveVendorUuid(sessionId, vendorUuid);
   	}
 

@@ -51,6 +51,7 @@ export class VerifyAccountHandler implements LambdaInterface {
 					HMRC_TOKEN,
 				);
 			} else {
+				
 				const experianUsernameSsmPath = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_USERNAME_SSM_PATH, logger);
 				const EXPERIAN_USERNAME = await getParameter(experianUsernameSsmPath);
 				const experianPasswordSsmPath = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_PASSWORD_SSM_PATH, logger);
