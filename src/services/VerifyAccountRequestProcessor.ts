@@ -115,7 +115,7 @@ export class VerifyAccountRequestProcessor {
 
 		  this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
 
-		  const vendorUuid = await this.generateUuid(session);
+		  const vendorUuid = await this.updateVendorUuid(session);
 	
 		  const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
 		
@@ -212,7 +212,7 @@ export class VerifyAccountRequestProcessor {
   	this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
   	const timeOfRequest = absoluteTimeNow();
 
-  	const vendorUuid = await this.generateUuid(session);
+  	const vendorUuid = await this.updateVendorUuid(session);
 
   	const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
   	await this.BavService.sendToTXMA(
@@ -329,7 +329,7 @@ export class VerifyAccountRequestProcessor {
   	}
   }
 
-  async generateUuid(session: ISessionItem): Promise<string> {
+  async updateVendorUuid(session: ISessionItem): Promise<string> {
   	let { vendorUuid } = session;
 		  if (!vendorUuid) {
   		vendorUuid = randomUUID();
