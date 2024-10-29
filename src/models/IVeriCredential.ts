@@ -106,9 +106,15 @@ export type VerifiedCredentialEvidence = {
 	ci?: string[];
 };
 
+export type WarningsErrors = {
+	responseType: string;
+	responseCode: string;
+	responseMessage: string;
+}
+
 export type ExperianVerifyResponse = {
 	personalDetailsScore: number;
-	responseCode?: string;
+	warningsErrors?: WarningsErrors[];
 };
 
 export type BankAccountInfo = {

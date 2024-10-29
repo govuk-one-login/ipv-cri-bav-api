@@ -181,7 +181,7 @@ export class VerifyAccountRequestProcessor {
 		  if (experianCheckResult !== ExperianCheckResults.FULL_MATCH || !experianCheckResult) {
 			  attemptCount = session.attemptCount ? session.attemptCount + 1 : 1;
 		  }
-		  await this.BavService.saveExperianCheckResult(sessionId, experianCheckResult, verifyResponse.responseCode, attemptCount);
+		  await this.BavService.saveExperianCheckResult(sessionId, verifyResponse, experianCheckResult, attemptCount);
 		  return Response(HttpCodesEnum.OK, JSON.stringify({
 			  message: "Success",
 			  attemptCount,
@@ -323,7 +323,7 @@ export class VerifyAccountRequestProcessor {
 
   calculateExperianCheckResult(verifyResponse: ExperianVerifyResponse, attemptCount?: number): ExperianCheckResult {
   	const personalDetailsScore = verifyResponse.personalDetailsScore;
-  	const responseCode = verifyResponse.responseCode;
+  	const responseCode = verifyResponse.warningsErrors?.[0]?.responseCode;
   	if (personalDetailsScore === 9 && !responseCode) {
   		return ExperianCheckResults.FULL_MATCH;
   	} else if (personalDetailsScore !== 9 && attemptCount === undefined) {

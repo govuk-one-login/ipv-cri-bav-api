@@ -14,6 +14,7 @@ import { Constants } from "../utils/Constants";
 import { AuthSessionState } from "../models/enums/AuthSessionState";
 import { PartialNameSQSRecord } from "../models/IHmrcResponse";
 import { SendMessageCommand } from "@aws-sdk/client-sqs";
+import { ExperianVerifyResponse, WarningsErrors } from "../models/IVeriCredential";
 
 export class BavService {
 	readonly tableName: string;
@@ -318,15 +319,45 @@ export class BavService {
 		}
 	}
 
-	async saveExperianCheckResult(sessionId: string, experianCheckResult?: ExperianCheckResult, responseCode?: string, attemptCount?: number): Promise<void> {
-		this.logger.info({ message: `Updating ${this.tableName} table with experianCheckResult`, experianCheckResult });
+	async saveExpRequestId(sessionId: string, expRequestId: string): Promise<void> {
+		this.logger.info({ message: `Updating ${this.tableName} table with expRequestId`, expRequestId });
+
 		const updateStateCommand = new UpdateCommand({
 			TableName: this.tableName,
 			Key: { sessionId },
-			UpdateExpression: `SET ${experianCheckResult ? "experianCheckResult = :experianCheckResult," : ""}${responseCode ? "responseCode = :responseCode," : ""} authSessionState = :authSessionState${attemptCount ? ", attemptCount = :attemptCount" : ""}`,
+			UpdateExpression: "SET expRequestId = :expRequestId",
+			ExpressionAttributeValues: {
+				":expRequestId": expRequestId,
+			},
+		});
+
+		try {
+			await this.dynamo.send(updateStateCommand);
+			this.logger.info({ message: "Saved expRequestId in dynamodb" });
+		} catch (error) {
+			this.logger.error({ message: "Got error saving expRequestId", messageCode: MessageCodes.FAILED_UPDATING_SESSION, error });
+			throw new AppError(HttpCodesEnum.SERVER_ERROR, "saveExpRequestId failed: got error saving expRequestId");
+		}
+	}
+
+	async saveExperianCheckResult(sessionId: string, verifyResponse: ExperianVerifyResponse, experianCheckResult?: ExperianCheckResult, attemptCount?: number): Promise<void> {
+		this.logger.info({ message: `Updating ${this.tableName} table with experianCheckResult`, experianCheckResult });
+		const personalDetailsScore = verifyResponse.personalDetailsScore
+		const warningsErrors = verifyResponse.warningsErrors
+
+		const updateStateCommand = new UpdateCommand({
+			TableName: this.tableName,
+			Key: { sessionId },
+			UpdateExpression: `SET ${experianCheckResult ? "experianCheckResult = :experianCheckResult," : ""} 
+			personalDetailsScore = :personalDetailsScore,
+			${ warningsErrors ? "warningsErrors = :warningsErrors," : ""} 
+			authSessionState = :authSessionState
+			${attemptCount ? ", attemptCount = :attemptCount" : ""}`,
+			
 			ExpressionAttributeValues: {
 				...(experianCheckResult && { ":experianCheckResult": experianCheckResult }),
-				...(responseCode && { ":responseCode": responseCode }),
+				":personalDetailsScore": personalDetailsScore,
+				...(warningsErrors && { ":warningsErrors": warningsErrors }),
 				...(attemptCount && { ":attemptCount": attemptCount }),
 				":authSessionState": AuthSessionState.BAV_DATA_RECEIVED,
 			},
