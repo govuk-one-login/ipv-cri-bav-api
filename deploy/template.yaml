@@ -111,7 +111,7 @@ Mappings:
       TESTHARNESSURL: "https://bav-test-harness-testharness.review-bav.dev.account.gov.uk"
       HMRCBASEURL: "https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev"
       HMRCVERIFYBASEURL: "https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev/misc/bank-account"
-      EXPERIANBASEURL: "https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev"
+      EXPERIANBASEURL: "https://uk-api.experian.com"
     build:
       ISSUER: 'https://review-bav.build.account.gov.uk'
       DNSSUFFIX: review-bav.build.account.gov.uk
