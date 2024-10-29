@@ -124,7 +124,7 @@ Mappings:
       HMRCBASEURL: "https://c99d36403h.execute-api.eu-west-2.amazonaws.com/build"
       HMRCVERIFYBASEURL: "https://c99d36403h.execute-api.eu-west-2.amazonaws.com/build/misc/bank-account"
       TESTHARNESSURL: "https://testharness.review-bav.build.account.gov.uk"
-      EXPERIANBASEURL: "https://proxy.review-bav.build.account.gov.uk/experian"
+      EXPERIANBASEURL: "https://uk-api.experian.com"
     staging:
       ISSUER: 'https://review-bav.staging.account.gov.uk'
       DNSSUFFIX: review-bav.staging.account.gov.uk
