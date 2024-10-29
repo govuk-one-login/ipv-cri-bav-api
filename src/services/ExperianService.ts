@@ -47,7 +47,6 @@ export class ExperianService {
     	experianClientTenantId: string,
     ): Promise<any> {
     		try {
-				console.log("IN VERIFY!")
     		const params = {
     			header: {
 				  requestType: Constants.EXPERIAN_PRODUCT_NAME,
@@ -108,30 +107,32 @@ export class ExperianService {
     				eventType: logObject.auditLogs[0]?.eventType,
     				eventOutcome: logObject.auditLogs[0]?.eventOutcome,
     			});
-				console.log("DEC ELEMENTS", decisionElements)
+
 				
     			const errorObject = decisionElements.find((object: { warningsErrors: Array<{ responseType: string; responseCode: string; responseMessage: string }> }) => object.warningsErrors);
-				console.log("ERR OBJ", errorObject)
     			const warningsErrors = errorObject?.warningsErrors.find((object: { responseType: string; responseCode: string; responseMessage: string }) => object.responseType !== undefined);
-				console.log("WARNINGSERRORS", warningsErrors)
+
+    			if (warningsErrors) {
+    				logResponseCode(warningsErrors, this.logger);
+    			const warningsErrors = errorObject?.warningsErrors.find((object: { responseType: string; responseCode: string; responseMessage: string }) => object.responseType !== undefined);
 
     			if (warningsErrors) {
     				logResponseCode(warningsErrors, this.logger);
     			} 
 				
     			const bavCheckResults = decisionElements.find((object: { scores: Array<{ name: string; score: number }> }) => object.scores);
-				console.log("BAV CHECK RES", bavCheckResults)
-    			const personalDetailsScore = bavCheckResults?.scores.find((object: { name: string; score: number }) => object.name === "Personal details")?.score;
-				console.log("PD SCORE", personalDetailsScore)
+				const personalDetailsScore = bavCheckResults?.scores.find((object: { name: string; score: number }) => object.name === "Personal details")?.score;
 
     			return { personalDetailsScore, expRequestId };
     			
     		} catch (error: any) {
     			const message = "Error sending verify request to Experian";
     			this.logger.error({ message, messageCode: MessageCodes.FAILED_VERIFYING_ACCOUNT, statusCode: error?.response?.status });
+    			this.logger.error({ message, messageCode: MessageCodes.FAILED_VERIFYING_ACCOUNT, statusCode: error?.response?.status });
     		throw new AppError(HttpCodesEnum.SERVER_ERROR, message);		
     	}
-    }
+		}}
+
 
     async generateExperianToken(clientUsername: string, clientPassword: string, clientId: string, clientSecret: string): Promise<StoredExperianToken | ExperianTokenResponse> {
     	this.logger.info({ message: `Checking ${this.experianTokenTableName} for valid token` });

@@ -23,6 +23,7 @@ import { APIGatewayProxyResult } from "aws-lambda";
 import { ExperianService } from "./ExperianService";
 import { ExperianCheckResults } from "../models/enums/Experian";
 import { ExperianVerifyResponse } from "../models/IVeriCredential";
+import { ExperianVerifyResponse } from "../models/IVeriCredential";
 
 export class VerifyAccountRequestProcessor {
   private static instance: VerifyAccountRequestProcessor;
@@ -182,6 +183,7 @@ export class VerifyAccountRequestProcessor {
 			  attemptCount = session.attemptCount ? session.attemptCount + 1 : 1;
 		  }
 		  await this.BavService.saveExperianCheckResult(sessionId, verifyResponse, experianCheckResult, attemptCount);
+		  await this.BavService.saveExperianCheckResult(sessionId, verifyResponse, experianCheckResult, attemptCount);
 		  return Response(HttpCodesEnum.OK, JSON.stringify({
 			  message: "Success",
 			  attemptCount,
@@ -325,7 +327,12 @@ export class VerifyAccountRequestProcessor {
   	const personalDetailsScore = verifyResponse.personalDetailsScore;
   	const responseCode = verifyResponse.warningsErrors?.[0]?.responseCode;
   	if (personalDetailsScore === 9 && !responseCode) {
+  calculateExperianCheckResult(verifyResponse: ExperianVerifyResponse, attemptCount?: number): ExperianCheckResult {
+  	const personalDetailsScore = verifyResponse.personalDetailsScore;
+  	const responseCode = verifyResponse.warningsErrors?.[0]?.responseCode;
+  	if (personalDetailsScore === 9 && !responseCode) {
   		return ExperianCheckResults.FULL_MATCH;
+  	} else if (personalDetailsScore !== 9 && attemptCount === undefined) {
   	} else if (personalDetailsScore !== 9 && attemptCount === undefined) {
   		return undefined;
   	} else {

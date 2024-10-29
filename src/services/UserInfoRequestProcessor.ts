@@ -157,6 +157,7 @@ export class UserInfoRequestProcessor {
 
 			const txmaCoreFields = buildCoreEventFields(session, this.issuer, session.clientIpAddress);
 			const warningsErrors = session.warningsErrors?.[0]
+			const warningsErrors = session.warningsErrors?.[0]
 			await this.BavService.sendToTXMA(
 				this.txmaQueueUrl,
 				{
@@ -187,9 +188,20 @@ export class UserInfoRequestProcessor {
 										responseMessage: warningsErrors?.responseMessage
 									}
 								],
+								checkDetails: [{
+									personalDetailsMatchScore: session.personalDetailsScore
+								}],
+								responseMessages: [
+									{
+										responseType: warningsErrors?.responseType,
+										responseCode: warningsErrors?.responseCode,
+										responseMessage: warningsErrors?.responseMessage
+									}
+								],
 								ci: evidenceInfo.ci,
 								ciReasons: [{
 									ci: evidenceInfo.ci?.[0],
+									reason: session.experianCheckResult,
 									reason: session.experianCheckResult,
 								}],
 							},
