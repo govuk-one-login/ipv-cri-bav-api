@@ -126,7 +126,8 @@ export class BavService {
 			};
 
 			this.logger.info({ message: "Sending message to TxMA", eventName: event.event_name });
-
+			console.log("TXMA EVENT PRE OBFUSCATION: RESTRICTED", event.restricted)
+			console.log("TXMA EVENT PRE OBFUSCATION: EVIDENCE", event.extensions?.evidence?.[0])
 			const obfuscatedObject = await this.obfuscateJSONValues(event, Constants.TXMA_FIELDS_TO_SHOW);
 			this.logger.info({ message: "Obfuscated TxMA Event", txmaEvent: JSON.stringify(obfuscatedObject, null, 2) });
 
@@ -319,41 +320,16 @@ export class BavService {
 		}
 	}
 
-	async saveExpRequestId(sessionId: string, expRequestId: string): Promise<void> {
-		this.logger.info({ message: `Updating ${this.tableName} table with expRequestId`, expRequestId });
-
-		const updateStateCommand = new UpdateCommand({
-			TableName: this.tableName,
-			Key: { sessionId },
-			UpdateExpression: "SET expRequestId = :expRequestId",
-			ExpressionAttributeValues: {
-				":expRequestId": expRequestId,
-			},
-		});
-
-		try {
-			await this.dynamo.send(updateStateCommand);
-			this.logger.info({ message: "Saved expRequestId in dynamodb" });
-		} catch (error) {
-			this.logger.error({ message: "Got error saving expRequestId", messageCode: MessageCodes.FAILED_UPDATING_SESSION, error });
-			throw new AppError(HttpCodesEnum.SERVER_ERROR, "saveExpRequestId failed: got error saving expRequestId");
-		}
-	}
 
 	async saveExperianCheckResult(sessionId: string, verifyResponse: ExperianVerifyResponse, experianCheckResult?: ExperianCheckResult, attemptCount?: number): Promise<void> {
 		this.logger.info({ message: `Updating ${this.tableName} table with experianCheckResult`, experianCheckResult });
-		const personalDetailsScore = verifyResponse.personalDetailsScore
-		const warningsErrors = verifyResponse.warningsErrors
+		const personalDetailsScore = verifyResponse.personalDetailsScore;
+		const warningsErrors = verifyResponse.warningsErrors;
 
 		const updateStateCommand = new UpdateCommand({
 			TableName: this.tableName,
 			Key: { sessionId },
-			UpdateExpression: `SET ${experianCheckResult ? "experianCheckResult = :experianCheckResult," : ""} 
-			personalDetailsScore = :personalDetailsScore,
-			${ warningsErrors ? "warningsErrors = :warningsErrors," : ""} 
-			authSessionState = :authSessionState
-			${attemptCount ? ", attemptCount = :attemptCount" : ""}`,
-			
+			UpdateExpression: `SET ${experianCheckResult ? "experianCheckResult = :experianCheckResult," : ""} personalDetailsScore = :personalDetailsScore, ${ warningsErrors ? "warningsErrors = :warningsErrors," : ""} authSessionState = :authSessionState${attemptCount ? ", attemptCount = :attemptCount" : ""}`,
 			ExpressionAttributeValues: {
 				...(experianCheckResult && { ":experianCheckResult": experianCheckResult }),
 				":personalDetailsScore": personalDetailsScore,

@@ -41,11 +41,10 @@ export interface ISessionItem extends IBAVSession {
 	authSessionState: string;
 	evidence_requested?: EvidenceRequested;
 	copCheckResult?: CopCheckResult;
-	personalDetailsScore?: number,
+	personalDetailsScore?: number;
 	experianCheckResult?: ExperianCheckResult;
-	warningsErrors?: WarningsErrors[];
-	hmrcUuid?: string;
-	expRequestId?: string;
+	warningsErrors?: WarningsErrors;
+	vendorUuid?: string;
 	attemptCount?: number;
 }
 

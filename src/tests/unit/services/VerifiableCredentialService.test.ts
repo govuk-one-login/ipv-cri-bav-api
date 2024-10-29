@@ -44,6 +44,7 @@ function getMockSessionItem(): ISessionItem {
 		persistentSessionId: "sdgsdg",
 		clientIpAddress: "127.0.0.1",
 		authSessionState: "BAV_ACCESS_TOKEN_ISSUED",
+		personalDetailsScore: 9,
 		copCheckResult: "FULL_MATCH",
 		experianCheckResult: ExperianCheckResult.FULL_MATCH,
 		vendorUuid: "testId",
@@ -51,10 +52,10 @@ function getMockSessionItem(): ISessionItem {
 	return sess;
 }
 
-const hmrcUuid = "testId";
+const vendorUuid = "testId";
 const successBlock = {
 	type: Constants.IDENTITY_CHECK,
-	txn: hmrcUuid,
+	txn: vendorUuid,
 	strengthScore: 3,
 	validityScore: 2,
 	checkDetails: [
@@ -66,7 +67,7 @@ const successBlock = {
 };
 const failureBlock = {
 	type: Constants.IDENTITY_CHECK,
-	txn: hmrcUuid,
+	txn: vendorUuid,
 	strengthScore: 3,
 	validityScore: 0,
 	failedCheckDetails: [
@@ -82,20 +83,7 @@ const failureBlock = {
 
 const failureBlockNoCI = {
 	type: Constants.IDENTITY_CHECK,
-	txn: hmrcUuid,
-	strengthScore: 3,
-	validityScore: 0,
-	failedCheckDetails: [
-		{
-			checkMethod: "data",
-			identityCheckPolicy: "none",
-		},
-	],
-};
-
-const failureBlockNoCI = {
-	type: Constants.IDENTITY_CHECK,
-	txn: hmrcUuid,
+	txn: vendorUuid,
 	strengthScore: 3,
 	validityScore: 0,
 	failedCheckDetails: [
@@ -130,18 +118,18 @@ describe("VerifiableCredentialService", () => {
 
 	describe("evidence block generation", () => {
 		it("should return a success evidence block correctly", () => {
-			const evidenceBlock = service.getSuccessEvidenceBlock(hmrcUuid);
+			const evidenceBlock = service.getSuccessEvidenceBlock(vendorUuid);
 			expect(evidenceBlock).toEqual(expect.objectContaining({
-				txn: hmrcUuid,
+				txn: vendorUuid,
 				strengthScore: 3,
 				validityScore: 2,
 			}));
 		});
 
 		it("should return a failure evidence block correctly", () => {
-			const evidenceBlock = service.getFailureEvidenceBlock(hmrcUuid);
+			const evidenceBlock = service.getFailureEvidenceBlock(vendorUuid);
 			expect(evidenceBlock).toEqual(expect.objectContaining({
-				txn: hmrcUuid,
+				txn: vendorUuid,
 				strengthScore: 3,
 				validityScore: 0,
 				ci: expect.arrayContaining(["D15"]),
@@ -166,79 +154,68 @@ describe("VerifiableCredentialService", () => {
 			expect(mockLogger.info).toHaveBeenCalledWith("Generated VerifiableCredential jwt", { jti: expect.any(String) });
 		});
 
-		it("should generate a signed JWT with failure evidence including a CI for a failed match result", async () => {
-		it("should generate a signed JWT with failure evidence including a CI for a failed match result", async () => {
-			mockSessionItem.experianCheckResult = ExperianCheckResult.NO_MATCH;
-			const signedJWT = "mockSignedJwt";
-			mockKmsJwtAdapter.sign.mockResolvedValue(signedJWT);
+			it("should generate a signed JWT with failure evidence including a CI for a failed match result", async () => {
+				mockSessionItem.experianCheckResult = ExperianCheckResult.NO_MATCH;
+				const signedJWT = "mockSignedJwt";
+				mockKmsJwtAdapter.sign.mockResolvedValue(signedJWT);
 
-			const result = await service.generateSignedVerifiableCredentialJwt(
-				mockSessionItem, mockNameParts, mockBirthDate, mockBankAccountInfo, mockNow,
-			);
+				const result = await service.generateSignedVerifiableCredentialJwt(
+					mockSessionItem, mockNameParts, mockBirthDate, mockBankAccountInfo, mockNow,
+				);
 
-			expect(result).toEqual({ signedJWT, evidenceInfo: failureBlock });
-			expect(mockKmsJwtAdapter.sign).toHaveBeenCalled();
-			expect(mockLogger.info).toHaveBeenCalledWith("Generated VerifiableCredential jwt", { jti: expect.any(String) });
-		});
-
-		it("should generate a signed JWT with failure evidence without a CI for a failed match result with response code 2 or 3", async () => {
-			mockSessionItem.experianCheckResult = ExperianCheckResult.NO_MATCH;
-			mockSessionItem.responseCode = "2";
-			const signedJWT = "mockSignedJwt";
-			mockKmsJwtAdapter.sign.mockResolvedValue(signedJWT);
-
-			const result = await service.generateSignedVerifiableCredentialJwt(
-				mockSessionItem, mockNameParts, mockBirthDate, mockBankAccountInfo, mockNow,
-			);
-
-			expect(result).toEqual({ signedJWT, evidenceInfo: failureBlockNoCI });
-			expect(mockKmsJwtAdapter.sign).toHaveBeenCalled();
-			expect(mockLogger.info).toHaveBeenCalledWith("Generated VerifiableCredential jwt", { jti: expect.any(String) });
-		});
-
-		it("should generate a signed JWT with failure evidence without a CI for a failed match result with response code 2 or 3", async () => {
-			mockSessionItem.experianCheckResult = ExperianCheckResult.NO_MATCH;
-			mockSessionItem.responseCode = "2";
-			const signedJWT = "mockSignedJwt";
-			mockKmsJwtAdapter.sign.mockResolvedValue(signedJWT);
-
-			const result = await service.generateSignedVerifiableCredentialJwt(
-				mockSessionItem, mockNameParts, mockBirthDate, mockBankAccountInfo, mockNow,
-			);
-
-			expect(result).toEqual({ signedJWT, evidenceInfo: failureBlockNoCI });
-			expect(mockKmsJwtAdapter.sign).toHaveBeenCalled();
-			expect(mockLogger.info).toHaveBeenCalledWith("Generated VerifiableCredential jwt", { jti: expect.any(String) });
-		});
-
-		it("should throw an error when KMS signing fails", async () => {
-			const signError = new Error("KMS signing failed");
-			mockKmsJwtAdapter.sign.mockRejectedValue(signError);
-			await expect(
-				service.generateSignedVerifiableCredentialJwt(mockSessionItem, mockNameParts, mockBirthDate, mockBankAccountInfo, mockNow),
-			).rejects.toThrow(AppError);
-
-			expect(mockLogger.error).toHaveBeenCalledWith("Error generating signed verifiable credential jwt", {
-				error: signError,
-				messageCode: MessageCodes.ERROR_SIGNING_VC,
+				expect(result).toEqual({ signedJWT, evidenceInfo: failureBlock });
+				expect(mockKmsJwtAdapter.sign).toHaveBeenCalled();
+				expect(mockLogger.info).toHaveBeenCalledWith("Generated VerifiableCredential jwt", { jti: expect.any(String) });
 			});
-		});
+
+			it("should generate a signed JWT with failure evidence without a CI for a failed match result with response code 2 or 3", async () => {
+				mockSessionItem.experianCheckResult = ExperianCheckResult.NO_MATCH;
+				mockSessionItem.warningsErrors = 
+				{ 	
+					responseType: 'warning',
+					responseCode: '2',
+					responseMessage: 'Modulus check algorithm is unavailable for these account details'
+				}
+				const signedJWT = "mockSignedJwt";
+				mockKmsJwtAdapter.sign.mockResolvedValue(signedJWT);
+
+				const result = await service.generateSignedVerifiableCredentialJwt(
+					mockSessionItem, mockNameParts, mockBirthDate, mockBankAccountInfo, mockNow,
+				);
+
+				expect(result).toEqual({ signedJWT, evidenceInfo: failureBlockNoCI });
+				expect(mockKmsJwtAdapter.sign).toHaveBeenCalled();
+				expect(mockLogger.info).toHaveBeenCalledWith("Generated VerifiableCredential jwt", { jti: expect.any(String) });
+			});
+
+			it("should throw an error when KMS signing fails", async () => {
+				const signError = new Error("KMS signing failed");
+				mockKmsJwtAdapter.sign.mockRejectedValue(signError);
+				await expect(
+					service.generateSignedVerifiableCredentialJwt(mockSessionItem, mockNameParts, mockBirthDate, mockBankAccountInfo, mockNow),
+				).rejects.toThrow(AppError);
+
+				expect(mockLogger.error).toHaveBeenCalledWith("Error generating signed verifiable credential jwt", {
+					error: signError,
+					messageCode: MessageCodes.ERROR_SIGNING_VC,
+				});
+			});
 	});
-});
 
-describe("VerifiableCredentialBuilder", () => {
-	describe("build credential", () => {
-		it("should create a credential object with a date of birth if the credential vendor is set to EXPERIAN", () => {
-			const verifiableCredentialDOB = new VerifiableCredentialBuilder(mockNameParts, mockBirthDate, mockBankAccountInfo, successBlock, credentialVendorExperian).build();
-			expect(verifiableCredentialDOB.credentialSubject.birthDate).toEqual([{
-				value: "12-01-1986",
-			}]);
-		});
+	describe("VerifiableCredentialBuilder", () => {
+		describe("build credential", () => {
+			it("should create a credential object with a date of birth if the credential vendor is set to EXPERIAN", () => {
+				const verifiableCredentialDOB = new VerifiableCredentialBuilder(mockNameParts, mockBirthDate, mockBankAccountInfo, successBlock, credentialVendorExperian).build();
+				expect(verifiableCredentialDOB.credentialSubject.birthDate).toEqual([{
+					value: "12-01-1986",
+				}]);
+			});
 
-		it("should create a credential object with a date of birth if the credential vendor is set to another value", () => {
-			const credentialVendorOther = "OTHER";
-			const verifiableCredentialNoDOB = new VerifiableCredentialBuilder(mockNameParts, mockBirthDate, mockBankAccountInfo, successBlock, credentialVendorOther).build();
-			expect(verifiableCredentialNoDOB.credentialSubject.birthDate).toBeUndefined();
+			it("should create a credential object with a date of birth if the credential vendor is set to another value", () => {
+				const credentialVendorOther = "OTHER";
+				const verifiableCredentialNoDOB = new VerifiableCredentialBuilder(mockNameParts, mockBirthDate, mockBankAccountInfo, successBlock, credentialVendorOther).build();
+				expect(verifiableCredentialNoDOB.credentialSubject.birthDate).toBeUndefined();
+			});
 		});
 	});
 });

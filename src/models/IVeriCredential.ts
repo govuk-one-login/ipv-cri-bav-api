@@ -110,9 +110,10 @@ export type WarningsErrors = {
 	responseType: string;
 	responseCode: string;
 	responseMessage: string;
-}
+};
 
 export type ExperianVerifyResponse = {
+	expRequestId: string;
 	personalDetailsScore: number;
 	warningsErrors?: WarningsErrors[];
 };

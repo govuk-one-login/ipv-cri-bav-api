@@ -100,6 +100,7 @@ describe("UserInfoRequestProcessor", () => {
 
 	it("Return successful response with 200 OK when user data is found for an accessToken", async () => {
 		mockBavService.getSessionById.mockResolvedValue(mockSession);
+		mockSession.personalDetailsScore = 9
 		mockBavService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
 		// @ts-ignore
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
@@ -157,12 +158,10 @@ describe("UserInfoRequestProcessor", () => {
 						"strengthScore": 3,
 						"validityScore": 2,
 						"attemptNum": 1,
-						"ci": undefined,
-						"ciReasons": [
+						"checkDetails": [
 							{
-								"ci": undefined,
-								"reason": "FULL_MATCH",
-							},
+								"personalDetailsMatchScore": 9
+							}
 						],
 					 },
 				],

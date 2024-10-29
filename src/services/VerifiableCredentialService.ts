@@ -54,11 +54,11 @@ export class VerifiableCredentialService {
 		};
 	}
 
-	getFailureEvidenceBlock(hmrcUuid: string, responseCode?: string): VerifiedCredentialEvidence {
+	getFailureEvidenceBlock(vendorUuid: string, responseCode?: string): VerifiedCredentialEvidence {
 		if (responseCode === "2" || responseCode === "3") {
 			return {
 				type: Constants.IDENTITY_CHECK,
-				txn: hmrcUuid,
+				txn: vendorUuid,
 				strengthScore: 3,
 				validityScore: 0,
 				failedCheckDetails: [
@@ -71,7 +71,7 @@ export class VerifiableCredentialService {
 		} else {
 			return {
 				type: Constants.IDENTITY_CHECK,
-				txn: hmrcUuid,
+				txn: vendorUuid,
 				strengthScore: 3,
 				validityScore: 0,
 				failedCheckDetails: [
@@ -92,9 +92,9 @@ export class VerifiableCredentialService {
 		sessionItem: ISessionItem, nameParts: PersonIdentityNamePart[], birthDate: PersonIdentityBirthDate[], bankAccountInfo: BankAccountInfo, getNow: () => number): Promise<{ signedJWT: string; evidenceInfo: VerifiedCredentialEvidence }> {
 		const now = getNow();
 		const subject = sessionItem.subject;
-		const responseCode = sessionItem.responseCode;
+		const responseCode = sessionItem.warningsErrors?.responseCode;
 		const evidenceInfo = sessionItem.experianCheckResult === ExperianCheckResult.FULL_MATCH ?
-			this.getSuccessEvidenceBlock(sessionItem.hmrcUuid!) : this.getFailureEvidenceBlock(sessionItem.hmrcUuid!, responseCode);
+			this.getSuccessEvidenceBlock(sessionItem.vendorUuid!) : this.getFailureEvidenceBlock(sessionItem.vendorUuid!, responseCode);
 		const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, birthDate, bankAccountInfo, evidenceInfo, this.credentialVendor)
 			.build();
 		let result;

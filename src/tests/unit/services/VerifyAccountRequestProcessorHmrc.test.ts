@@ -14,7 +14,7 @@ import { VerifyAccountRequestProcessor } from "../../../services/VerifyAccountRe
 import { HmrcService } from "../../../services/HmrcService";
 import { Constants } from "../../../utils/Constants";
 
-const vendorUuid = "new hmrcUuid";
+const vendorUuid = "new vendorUuid";
 jest.mock("crypto", () => ({
 	...jest.requireActual("crypto"),
 	randomUUID: () => vendorUuid,
@@ -154,7 +154,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				extensions: {
 					evidence: [
 				 		{
-					 		txn: "new hmrcUuid",
+					 		txn: "new vendorUuid",
 						},
 					],
 				},
@@ -185,7 +185,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				extensions: {
 					evidence: [
 				 		{
-					 		txn: "new hmrcUuid",
+					 		txn: "new vendorUuid",
 						},
 					],
 				},
@@ -290,7 +290,7 @@ describe("VerifyAccountRequestProcessor", () => {
 
 			const response = await verifyAccountRequestProcessorTest.processHmrcRequest(sessionId, body, clientIpAddress, encodedTxmaHeader, HMRC_TOKEN);
 
-			expect(mockBavService.savePartialNameInfo).toHaveBeenCalledWith("PARTIALMATCH_QUEUE", { "accountExists": "yes", "accountName": "Mr Peter Smith", "cicName": "Frederick Joseph Flintstone", "itemNumber": "new hmrcUuid", "nameMatches": "partial", "sortCodeBankName": "THE ROYAL BANK OF SCOTLAND PLC", "timeStamp": 1585695600 });
+			expect(mockBavService.savePartialNameInfo).toHaveBeenCalledWith("PARTIALMATCH_QUEUE", { "accountExists": "yes", "accountName": "Mr Peter Smith", "cicName": "Frederick Joseph Flintstone", "itemNumber": "new vendorUuid", "nameMatches": "partial", "sortCodeBankName": "THE ROYAL BANK OF SCOTLAND PLC", "timeStamp": 1585695600 });
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
 			expect(response.body).toBe(JSON.stringify({ message:"Success", attemptCount: 1 }));
 			jest.useRealTimers();
@@ -305,7 +305,7 @@ describe("VerifyAccountRequestProcessor", () => {
 
 			const response = await verifyAccountRequestProcessorTest.processHmrcRequest(sessionId, body, clientIpAddress, encodedTxmaHeader, HMRC_TOKEN);
 
-			expect(mockBavService.savePartialNameInfo).toHaveBeenCalledWith("PARTIALMATCH_QUEUE", { "accountExists": "yes", "accountName": "Mr Peter Smith", "cicName": "Frederick Joseph Flintstone", "itemNumber": "new hmrcUuid", "nameMatches": "partial", "sortCodeBankName": undefined, "timeStamp": 1585695600 });
+			expect(mockBavService.savePartialNameInfo).toHaveBeenCalledWith("PARTIALMATCH_QUEUE", { "accountExists": "yes", "accountName": "Mr Peter Smith", "cicName": "Frederick Joseph Flintstone", "itemNumber": "new vendorUuid", "nameMatches": "partial", "sortCodeBankName": undefined, "timeStamp": 1585695600 });
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
 			expect(response.body).toBe(JSON.stringify({ message:"Success", attemptCount: 1 }));
 			jest.useRealTimers();

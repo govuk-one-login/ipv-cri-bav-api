@@ -156,8 +156,8 @@ export class UserInfoRequestProcessor {
 			await this.BavService.updateSessionAuthState(session.sessionId, AuthSessionState.BAV_CRI_VC_ISSUED);
 
 			const txmaCoreFields = buildCoreEventFields(session, this.issuer, session.clientIpAddress);
-			const warningsErrors = session.warningsErrors?.[0]
-			const warningsErrors = session.warningsErrors?.[0]
+			const warningsErrors = session.warningsErrors
+			console.log("WARNINGS ERRORS", warningsErrors)
 			await this.BavService.sendToTXMA(
 				this.txmaQueueUrl,
 				{
@@ -178,32 +178,25 @@ export class UserInfoRequestProcessor {
 								strengthScore: evidenceInfo.strengthScore,
 								validityScore: evidenceInfo.validityScore,
 								attemptNum: session.attemptCount || 1,
-								checkDetails: [{
-									personalDetailsMatchScore: session.personalDetailsScore
-								}],
-								responseMessages: [
+								checkDetails: [
 									{
-										responseType: warningsErrors?.responseType,
-										responseCode: warningsErrors?.responseCode,
-										responseMessage: warningsErrors?.responseMessage
+										personalDetailsMatchScore: session.personalDetailsScore,
 									}
 								],
-								checkDetails: [{
-									personalDetailsMatchScore: session.personalDetailsScore
-								}],
-								responseMessages: [
-									{
-										responseType: warningsErrors?.responseType,
-										responseCode: warningsErrors?.responseCode,
-										responseMessage: warningsErrors?.responseMessage
-									}
-								],
-								ci: evidenceInfo.ci,
-								ciReasons: [{
-									ci: evidenceInfo.ci?.[0],
-									reason: session.experianCheckResult,
-									reason: session.experianCheckResult,
-								}],
+								...(warningsErrors ? {
+									responseMessages: [{
+										responseType: warningsErrors.responseType,
+										responseCode: warningsErrors.responseCode,
+										responseMessage: warningsErrors.responseMessage,
+									}],
+								} : {}),
+								...(evidenceInfo.ci ? {
+									ci: evidenceInfo.ci,
+									ciReasons: [{
+										ci: evidenceInfo.ci[0],
+										reason: session.experianCheckResult,
+									}],
+								} : {}),
 							},
 						],
 				 },

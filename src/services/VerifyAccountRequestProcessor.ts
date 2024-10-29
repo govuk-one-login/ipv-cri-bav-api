@@ -23,7 +23,6 @@ import { APIGatewayProxyResult } from "aws-lambda";
 import { ExperianService } from "./ExperianService";
 import { ExperianCheckResults } from "../models/enums/Experian";
 import { ExperianVerifyResponse } from "../models/IVeriCredential";
-import { ExperianVerifyResponse } from "../models/IVeriCredential";
 
 export class VerifyAccountRequestProcessor {
   private static instance: VerifyAccountRequestProcessor;
@@ -175,14 +174,13 @@ export class VerifyAccountRequestProcessor {
 			  this.personIdentityTableName,
 		  );
 		  
-		  const experianCheckResult = this.calculateExperianCheckResult(verifyResponse.personalDetailsScore, session.attemptCount);
+		  const experianCheckResult = this.calculateExperianCheckResult(verifyResponse, session.attemptCount);
 		  this.logger.info(`experianCheckResult is ${experianCheckResult}`);
 	
 		  let attemptCount;
 		  if (experianCheckResult !== ExperianCheckResults.FULL_MATCH || !experianCheckResult) {
 			  attemptCount = session.attemptCount ? session.attemptCount + 1 : 1;
 		  }
-		  await this.BavService.saveExperianCheckResult(sessionId, verifyResponse, experianCheckResult, attemptCount);
 		  await this.BavService.saveExperianCheckResult(sessionId, verifyResponse, experianCheckResult, attemptCount);
 		  return Response(HttpCodesEnum.OK, JSON.stringify({
 			  message: "Success",
@@ -325,17 +323,17 @@ export class VerifyAccountRequestProcessor {
 
   calculateExperianCheckResult(verifyResponse: ExperianVerifyResponse, attemptCount?: number): ExperianCheckResult {
   	const personalDetailsScore = verifyResponse.personalDetailsScore;
-  	const responseCode = verifyResponse.warningsErrors?.[0]?.responseCode;
-  	if (personalDetailsScore === 9 && !responseCode) {
-  calculateExperianCheckResult(verifyResponse: ExperianVerifyResponse, attemptCount?: number): ExperianCheckResult {
-  	const personalDetailsScore = verifyResponse.personalDetailsScore;
-  	const responseCode = verifyResponse.warningsErrors?.[0]?.responseCode;
-  	if (personalDetailsScore === 9 && !responseCode) {
+	console.log("VERIFY RESPONSE", verifyResponse)
+	console.log("WARNINGS ERRORS", verifyResponse.warningsErrors)
+	console.log("ATTEMPT COUNT", attemptCount)
+  	if (personalDetailsScore === 9 && !verifyResponse.warningsErrors) {
+		console.log("CALC EXP IN IF")
   		return ExperianCheckResults.FULL_MATCH;
   	} else if (personalDetailsScore !== 9 && attemptCount === undefined) {
-  	} else if (personalDetailsScore !== 9 && attemptCount === undefined) {
+		console.log("CALC EXP IN ELSE IF")
   		return undefined;
   	} else {
+		console.log("CALC EXP IN ELSE")
   		return ExperianCheckResults.NO_MATCH;
   	}
   }
@@ -349,4 +347,3 @@ export class VerifyAccountRequestProcessor {
   	return vendorUuid;
   }
 }
-
