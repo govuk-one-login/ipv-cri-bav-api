@@ -215,12 +215,12 @@ export class UserInfoRequestProcessor {
 						},
 					],
 				},
-			}
+			},
 		);
 	
 		await this.BavService.sendToTXMA(
 			this.txmaQueueUrl,
-			{ event_name: TxmaEventNames.BAV_CRI_END, ...txmaCoreFields }
+			{ event_name: TxmaEventNames.BAV_CRI_END, ...txmaCoreFields },
 		);
 	}
 }
