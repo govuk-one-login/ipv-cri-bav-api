@@ -323,17 +323,11 @@ export class VerifyAccountRequestProcessor {
 
   calculateExperianCheckResult(verifyResponse: ExperianVerifyResponse, attemptCount?: number): ExperianCheckResult {
   	const personalDetailsScore = verifyResponse.personalDetailsScore;
-	console.log("VERIFY RESPONSE", verifyResponse)
-	console.log("WARNINGS ERRORS", verifyResponse.warningsErrors)
-	console.log("ATTEMPT COUNT", attemptCount)
   	if (personalDetailsScore === 9 && !verifyResponse.warningsErrors) {
-		console.log("CALC EXP IN IF")
   		return ExperianCheckResults.FULL_MATCH;
   	} else if (personalDetailsScore !== 9 && attemptCount === undefined) {
-		console.log("CALC EXP IN ELSE IF")
   		return undefined;
   	} else {
-		console.log("CALC EXP IN ELSE")
   		return ExperianCheckResults.NO_MATCH;
   	}
   }

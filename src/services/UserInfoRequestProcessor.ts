@@ -156,8 +156,7 @@ export class UserInfoRequestProcessor {
 			await this.BavService.updateSessionAuthState(session.sessionId, AuthSessionState.BAV_CRI_VC_ISSUED);
 
 			const txmaCoreFields = buildCoreEventFields(session, this.issuer, session.clientIpAddress);
-			const warningsErrors = session.warningsErrors
-			console.log("WARNINGS ERRORS", warningsErrors)
+			const warningsErrors = session.warningsErrors;
 			await this.BavService.sendToTXMA(
 				this.txmaQueueUrl,
 				{
@@ -181,7 +180,7 @@ export class UserInfoRequestProcessor {
 								checkDetails: [
 									{
 										personalDetailsMatchScore: session.personalDetailsScore,
-									}
+									},
 								],
 								...(warningsErrors ? {
 									responseMessages: [{

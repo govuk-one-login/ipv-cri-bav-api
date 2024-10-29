@@ -14,7 +14,7 @@ import { Constants } from "../utils/Constants";
 import { AuthSessionState } from "../models/enums/AuthSessionState";
 import { PartialNameSQSRecord } from "../models/IHmrcResponse";
 import { SendMessageCommand } from "@aws-sdk/client-sqs";
-import { ExperianVerifyResponse, WarningsErrors } from "../models/IVeriCredential";
+import { ExperianVerifyResponse } from "../models/IVeriCredential";
 
 export class BavService {
 	readonly tableName: string;
@@ -126,8 +126,6 @@ export class BavService {
 			};
 
 			this.logger.info({ message: "Sending message to TxMA", eventName: event.event_name });
-			console.log("TXMA EVENT PRE OBFUSCATION: RESTRICTED", event.restricted)
-			console.log("TXMA EVENT PRE OBFUSCATION: EVIDENCE", event.extensions?.evidence?.[0])
 			const obfuscatedObject = await this.obfuscateJSONValues(event, Constants.TXMA_FIELDS_TO_SHOW);
 			this.logger.info({ message: "Obfuscated TxMA Event", txmaEvent: JSON.stringify(obfuscatedObject, null, 2) });
 

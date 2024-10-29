@@ -154,52 +154,52 @@ describe("VerifiableCredentialService", () => {
 			expect(mockLogger.info).toHaveBeenCalledWith("Generated VerifiableCredential jwt", { jti: expect.any(String) });
 		});
 
-			it("should generate a signed JWT with failure evidence including a CI for a failed match result", async () => {
-				mockSessionItem.experianCheckResult = ExperianCheckResult.NO_MATCH;
-				const signedJWT = "mockSignedJwt";
-				mockKmsJwtAdapter.sign.mockResolvedValue(signedJWT);
+		it("should generate a signed JWT with failure evidence including a CI for a failed match result", async () => {
+			mockSessionItem.experianCheckResult = ExperianCheckResult.NO_MATCH;
+			const signedJWT = "mockSignedJwt";
+			mockKmsJwtAdapter.sign.mockResolvedValue(signedJWT);
 
-				const result = await service.generateSignedVerifiableCredentialJwt(
-					mockSessionItem, mockNameParts, mockBirthDate, mockBankAccountInfo, mockNow,
-				);
+			const result = await service.generateSignedVerifiableCredentialJwt(
+				mockSessionItem, mockNameParts, mockBirthDate, mockBankAccountInfo, mockNow,
+			);
 
-				expect(result).toEqual({ signedJWT, evidenceInfo: failureBlock });
-				expect(mockKmsJwtAdapter.sign).toHaveBeenCalled();
-				expect(mockLogger.info).toHaveBeenCalledWith("Generated VerifiableCredential jwt", { jti: expect.any(String) });
-			});
+			expect(result).toEqual({ signedJWT, evidenceInfo: failureBlock });
+			expect(mockKmsJwtAdapter.sign).toHaveBeenCalled();
+			expect(mockLogger.info).toHaveBeenCalledWith("Generated VerifiableCredential jwt", { jti: expect.any(String) });
+		});
 
-			it("should generate a signed JWT with failure evidence without a CI for a failed match result with response code 2 or 3", async () => {
-				mockSessionItem.experianCheckResult = ExperianCheckResult.NO_MATCH;
-				mockSessionItem.warningsErrors = 
+		it("should generate a signed JWT with failure evidence without a CI for a failed match result with response code 2 or 3", async () => {
+			mockSessionItem.experianCheckResult = ExperianCheckResult.NO_MATCH;
+			mockSessionItem.warningsErrors = 
 				{ 	
-					responseType: 'warning',
-					responseCode: '2',
-					responseMessage: 'Modulus check algorithm is unavailable for these account details'
-				}
-				const signedJWT = "mockSignedJwt";
-				mockKmsJwtAdapter.sign.mockResolvedValue(signedJWT);
+					responseType: "warning",
+					responseCode: "2",
+					responseMessage: "Modulus check algorithm is unavailable for these account details",
+				};
+			const signedJWT = "mockSignedJwt";
+			mockKmsJwtAdapter.sign.mockResolvedValue(signedJWT);
 
-				const result = await service.generateSignedVerifiableCredentialJwt(
-					mockSessionItem, mockNameParts, mockBirthDate, mockBankAccountInfo, mockNow,
-				);
+			const result = await service.generateSignedVerifiableCredentialJwt(
+				mockSessionItem, mockNameParts, mockBirthDate, mockBankAccountInfo, mockNow,
+			);
 
-				expect(result).toEqual({ signedJWT, evidenceInfo: failureBlockNoCI });
-				expect(mockKmsJwtAdapter.sign).toHaveBeenCalled();
-				expect(mockLogger.info).toHaveBeenCalledWith("Generated VerifiableCredential jwt", { jti: expect.any(String) });
+			expect(result).toEqual({ signedJWT, evidenceInfo: failureBlockNoCI });
+			expect(mockKmsJwtAdapter.sign).toHaveBeenCalled();
+			expect(mockLogger.info).toHaveBeenCalledWith("Generated VerifiableCredential jwt", { jti: expect.any(String) });
+		});
+
+		it("should throw an error when KMS signing fails", async () => {
+			const signError = new Error("KMS signing failed");
+			mockKmsJwtAdapter.sign.mockRejectedValue(signError);
+			await expect(
+				service.generateSignedVerifiableCredentialJwt(mockSessionItem, mockNameParts, mockBirthDate, mockBankAccountInfo, mockNow),
+			).rejects.toThrow(AppError);
+
+			expect(mockLogger.error).toHaveBeenCalledWith("Error generating signed verifiable credential jwt", {
+				error: signError,
+				messageCode: MessageCodes.ERROR_SIGNING_VC,
 			});
-
-			it("should throw an error when KMS signing fails", async () => {
-				const signError = new Error("KMS signing failed");
-				mockKmsJwtAdapter.sign.mockRejectedValue(signError);
-				await expect(
-					service.generateSignedVerifiableCredentialJwt(mockSessionItem, mockNameParts, mockBirthDate, mockBankAccountInfo, mockNow),
-				).rejects.toThrow(AppError);
-
-				expect(mockLogger.error).toHaveBeenCalledWith("Error generating signed verifiable credential jwt", {
-					error: signError,
-					messageCode: MessageCodes.ERROR_SIGNING_VC,
-				});
-			});
+		});
 	});
 
 	describe("VerifiableCredentialBuilder", () => {

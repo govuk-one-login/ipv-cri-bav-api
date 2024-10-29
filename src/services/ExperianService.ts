@@ -98,11 +98,8 @@ export class ExperianService {
     			const endpoint = `${this.experianBaseUrl}/decisionanalytics/crosscore/${experianClientTenantId}${Constants.EXPERIAN_VERIFY_ENDPOINT_PATH}`;
     			this.logger.info("Sending verify request to Experian", { uuid, endpoint });
     			const { data } = await axios.post(endpoint, params, { headers });
-				console.log("DATA", data)
 	   			const decisionElements = data?.clientResponsePayload?.decisionElements;
-				console.log("DEC ELEMS", decisionElements)
     		const expRequestId = data?.responseHeader?.expRequestId;
-			console.log("EXP REQ ID", expRequestId)
 
     			const logObject = decisionElements.find((object: { auditLogs: object[] }) => object.auditLogs);
     			this.logger.info({
@@ -114,7 +111,6 @@ export class ExperianService {
 				
     			const errorObject = decisionElements.find((object: { warningsErrors: Array<{ responseType: string; responseCode: string; responseMessage: string }> }) => object.warningsErrors);
     			const warningsErrors = errorObject?.warningsErrors.find((object: { responseType: string; responseCode: string; responseMessage: string }) => object.responseType !== undefined);
-				console.log("WARNING ERRS", warningsErrors)
     			if (warningsErrors) {
     				logResponseCode(warningsErrors, this.logger);
     			} 
@@ -122,13 +118,13 @@ export class ExperianService {
     			const bavCheckResults = decisionElements.find((object: { scores: Array<{ name: string; score: number }> }) => object.scores);
     		const personalDetailsScore = bavCheckResults?.scores.find((object: { name: string; score: number }) => object.name === "Personal details")?.score;
 
-			const verifyObject = {
-				expRequestId,
+    		const verifyObject = {
+    			expRequestId,
     			personalDetailsScore,
-				warningsErrors
+    			warningsErrors,
     		};
     		
-			return verifyObject
+    		return verifyObject;
     			
     		} catch (error: any) {
     			const message = "Error sending verify request to Experian";
