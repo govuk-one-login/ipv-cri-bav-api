@@ -123,7 +123,7 @@ export class ExperianService {
     			
     		} catch (error: any) {
     			const message = "Error sending verify request to Experian";
-    			this.logger.error({ message, messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT, statusCode: error?.response?.status });
+    			this.logger.error({ error, message, messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT, statusCode: error?.response?.status });
     		throw new AppError(HttpCodesEnum.SERVER_ERROR, message);		
     	}
     }
@@ -149,7 +149,7 @@ export class ExperianService {
     				client_secret: clientSecret,
     			};
     			this.logger.info("No valid token found - trying to generate new Experian token", { endpoint });
-    			this.logger.debug({ message: `Query params: ${params}` });
+    			this.logger.debug({ message: `Query params: ${params.username} ${params.password} ${params.client_id} ${params.client_secret}` });
 
     			const correlationId = randomUUID();
     			const config: AxiosRequestConfig<any> = {
