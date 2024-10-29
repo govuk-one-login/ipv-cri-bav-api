@@ -149,7 +149,7 @@ export class ExperianService {
     				client_secret: clientSecret,
     			};
     			this.logger.info("No valid token found - trying to generate new Experian token", { endpoint });
-				this. logger.debug({ message: `Query params: ${params}` });
+				this.logger.debug({ message: `Query params: ${params}` });
 
     			const correlationId = randomUUID();
     			const config: AxiosRequestConfig<any> = {
