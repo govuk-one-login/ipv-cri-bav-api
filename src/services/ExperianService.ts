@@ -141,13 +141,15 @@ export class ExperianService {
     	} else {
     		try {
     			const endpoint = `${this.experianBaseUrl}${Constants.EXPERIAN_TOKEN_ENDPOINT_PATH}`;
-    			this.logger.info("No valid token found - trying to generate new Experian token", { endpoint });
+    			
     			const params = {
     				username: clientUsername,
     				password: clientPassword,
     				client_id: clientId,
     				client_secret: clientSecret,
     			};
+    			this.logger.info("No valid token found - trying to generate new Experian token", { endpoint });
+    			this.logger.debug({ message: `Query params: ${params}` });
 
     			const correlationId = randomUUID();
     			const config: AxiosRequestConfig<any> = {
@@ -170,11 +172,11 @@ export class ExperianService {
     		} catch (error: any) {
     			if (storedToken) {
     				const message = "Error refreshing Experian token - returning previous Experian token";
-    				this.logger.error({ message, statusCode: error?.response?.status, messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN });
+    				this.logger.error({ error, message, statusCode: error?.response?.status, messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN });
     				return storedToken;
     			} else {
     				const message = "Error generating Experian token and no previous token found";
-    				this.logger.error({ message, messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN });
+    				this.logger.error({ error, message, messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN });
     				throw new AppError(HttpCodesEnum.SERVER_ERROR, message);
     			}
     		}
