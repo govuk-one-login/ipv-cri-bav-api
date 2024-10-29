@@ -295,7 +295,15 @@ describe("Experian service", () => {
 				expect(axios.post).toHaveBeenCalledWith(`${experianBaseUrl}${Constants.EXPERIAN_TOKEN_ENDPOINT_PATH}`, expectedParams, config);
 				expect(data).toBe(expiredToken);
 				expect(logger.error).toHaveBeenCalledWith(
-					{ message: "Error refreshing Experian token - returning previous Experian token", statusCode: 400, messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN },
+					{ error: {
+						response: {
+						  message: "Bad request",
+						  status: 400,
+						},
+					  },
+					message: "Error refreshing Experian token - returning previous Experian token",
+					statusCode: 400,
+					messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN },
 				);
 			});
 
