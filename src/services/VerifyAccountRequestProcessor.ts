@@ -112,14 +112,9 @@ export class VerifyAccountRequestProcessor {
 	
 		  const name = getFullName(person.name);
 		  this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
-
-		  let { hmrcUuid } = session;
-		  if (!hmrcUuid) {
-			  hmrcUuid = randomUUID();
-			  await this.BavService.saveHmrcUuid(sessionId, hmrcUuid);
-		  }
 	
 		  const expRequestId = "PLACEHOLDER"; //EXPERIAN have not provided this value yet
+		  await this.BavService.saveExpRequestId(sessionId, expRequestId);
 	
 		  const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
 	
@@ -181,7 +176,7 @@ export class VerifyAccountRequestProcessor {
 		  if (experianCheckResult !== ExperianCheckResults.FULL_MATCH || !experianCheckResult) {
 			  attemptCount = session.attemptCount ? session.attemptCount + 1 : 1;
 		  }
-		  await this.BavService.saveExperianCheckResult(sessionId, experianCheckResult, verifyResponse.responseCode, attemptCount);
+		  await this.BavService.saveExperianCheckResult(sessionId, verifyResponse, experianCheckResult, attemptCount);
 		  return Response(HttpCodesEnum.OK, JSON.stringify({
 			  message: "Success",
 			  attemptCount,
@@ -327,7 +322,7 @@ export class VerifyAccountRequestProcessor {
 
   calculateExperianCheckResult(verifyResponse: ExperianVerifyResponse, attemptCount?: number): ExperianCheckResult {
   	const personalDetailsScore = verifyResponse.personalDetailsScore;
-  	const responseCode = verifyResponse.responseCode;
+  	const responseCode = verifyResponse.warningsErrors?.[0]?.responseCode;
   	if (personalDetailsScore === 9 && !responseCode) {
   		return ExperianCheckResults.FULL_MATCH;
   	} else if (personalDetailsScore !== 9 && attemptCount === undefined) {

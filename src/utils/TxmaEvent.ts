@@ -55,6 +55,12 @@ export interface RestrictedObject {
 	};
 }
 
+export interface ResponseMessages {
+	responseType?: string;
+	responseCode?: string;
+	responseMessage?: string;
+}
+
 export interface CiReasons {
 	ci?: string;
 	reason?: string;
@@ -66,6 +72,8 @@ export type VerifiedCredentialEvidenceTxMA = Array<{
 	strengthScore?: number;
 	validityScore?: number;
 	verificationScore?: number;
+	checkDetails?: object[];
+	responseMessages?: ResponseMessages[];
 	ci?: string[];
 	ciReasons?: CiReasons[];
 }>;

@@ -46,6 +46,7 @@ export class ExperianService {
     	experianClientSecret: string,
     ): Promise<any> {
     		try {
+				console.log("IN VERIFY!")
     		const params = {
     			header: {
 					  tenantId: uuid,
@@ -54,7 +55,8 @@ export class ExperianService {
     			account: { accountNumber, sortCode },
     			subject: { name },
 				  };
-				
+				  console.log("58!")
+
     		// const token = this.generateExperianToken(experianUsername, experianPassword, experianClientId, experianClientSecret);
     		const headers = {
     			"User-Agent": Constants.EXPERIAN_USER_AGENT,
@@ -62,10 +64,11 @@ export class ExperianService {
     			"Content-Type":"application/json",
     			"Accept":"application/json",
     		};
-				
+			console.log("67!")
     			const endpoint = `${this.experianBaseUrl}/${Constants.EXPERIAN_VERIFY_ENDPOINT_PATH}`;
     			this.logger.info("Sending verify request to Experian", { uuid, endpoint });
     			const { data } = await axios.post(endpoint, params, { headers });
+				console.log("DATA!", data)
     			const decisionElements = data?.clientResponsePayload?.decisionElements;
     			const logObject = decisionElements.find((object: { auditLogs: object[] }) => object.auditLogs);
     			this.logger.debug({
@@ -73,24 +76,33 @@ export class ExperianService {
     				eventType: logObject.auditLogs[0].eventType,
     				eventOutcome: logObject.auditLogs[0].eventOutcome,
     			});
-
+				console.log("DEC ELEMENTS", decisionElements)
 				
     			const errorObject = decisionElements.find((object: { warningsErrors: Array<{ responseType: string; responseCode: string; responseMessage: string }> }) => object.warningsErrors);
-    			const responseCodeObject = errorObject?.warningsErrors.find((object: { responseType: string; responseCode: string; responseMessage: string }) => object.responseType !== undefined);
-				    			
-    			if (responseCodeObject) {
-    				logResponseCode(responseCodeObject, this.logger);
+				console.log("ERR OBJ", errorObject)
+    			const warningsErrors = errorObject?.warningsErrors.find((object: { responseType: string; responseCode: string; responseMessage: string }) => object.responseType !== undefined);
+				console.log("WARNINGSERRORS", warningsErrors)
+
+    			if (warningsErrors) {
+    				logResponseCode(warningsErrors, this.logger);
     			} 
 				
     			const bavCheckResults = decisionElements.find((object: { scores: Array<{ name: string; score: number }> }) => object.scores);
+				console.log("BAV CHECK RES", bavCheckResults)
     			const personalDetailsScore = bavCheckResults?.scores.find((object: { name: string; score: number }) => object.name === "Personal details")?.score;
+				console.log("PD SCORE", personalDetailsScore)
 
     		const verifyObject = {
     			personalDetailsScore,
-    			responseCode: responseCodeObject?.responseCode ?? undefined,
+				warningsErrors: [{
+					responseType: warningsErrors?.responseType ?? undefined,
+					responseCode: warningsErrors?.responseCode ?? undefined,
+					responseMessage: warningsErrors?.responseMessage ?? undefined,
+				}]
     		};
-				
-    			return verifyObject;
+			
+			console.log("VERIFY OBJ", verifyObject)
+    		return verifyObject;
     			
     		} catch (error: any) {
     			const message = "Error sending verify request to Experian";

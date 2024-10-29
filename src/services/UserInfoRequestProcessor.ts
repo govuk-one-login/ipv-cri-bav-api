@@ -156,6 +156,7 @@ export class UserInfoRequestProcessor {
 			await this.BavService.updateSessionAuthState(session.sessionId, AuthSessionState.BAV_CRI_VC_ISSUED);
 
 			const txmaCoreFields = buildCoreEventFields(session, this.issuer, session.clientIpAddress);
+			const warningsErrors = session.warningsErrors?.[0]
 			await this.BavService.sendToTXMA(
 				this.txmaQueueUrl,
 				{
@@ -172,14 +173,24 @@ export class UserInfoRequestProcessor {
 					extensions: {
 						evidence: [
 							{
-								txn: session.hmrcUuid!,
+								txn: session.expRequestId!,
 								strengthScore: evidenceInfo.strengthScore,
 								validityScore: evidenceInfo.validityScore,
 								attemptNum: session.attemptCount || 1,
+								checkDetails: [{
+									personalDetailsMatchScore: session.personalDetailsScore
+								}],
+								responseMessages: [
+									{
+										responseType: warningsErrors?.responseType,
+										responseCode: warningsErrors?.responseCode,
+										responseMessage: warningsErrors?.responseMessage
+									}
+								],
 								ci: evidenceInfo.ci,
 								ciReasons: [{
 									ci: evidenceInfo.ci?.[0],
-									reason: session.copCheckResult,
+									reason: session.experianCheckResult,
 								}],
 							},
 						],
