@@ -97,8 +97,8 @@ const clientUsername = "123456";
 const clientPassword = "12345678";
 const clientId = "clientId";
 const clientSecret = "Test";
-const experianVerifyUrl = "https://uk-api.experian.com/verify";
-const experianTokenUrl = "https://uk-api.experian.com/token";
+const experianVerifyUrl = "https://localhost/verify";
+const experianTokenUrl = "https://localhost/token";
 
 describe("Experian service", () => {
 	

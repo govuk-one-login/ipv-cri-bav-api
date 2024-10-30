@@ -27,5 +27,5 @@ process.env.EXPERIAN_USERNAME_SSM_PATH = "username",
 process.env.EXPERIAN_PASSWORD_SSM_PATH = "password",
 process.env.EXPERIAN_CLIENT_ID_SSM_PATH = "id",
 process.env.EXPERIAN_CLIENT_SECRET_SSM_PATH = "secret"
-process.env.EXPERIAN_VERIFY_URL_SSM_PATH = "https://uk-api.experian.com/verify"
-process.env.EXPERIAN_TOKEN_URL_SSM_PATH = "https://uk-api.experian.com/token"
+process.env.EXPERIAN_VERIFY_URL_SSM_PATH = "https://localhost/verify"
+process.env.EXPERIAN_TOKEN_URL_SSM_PATH = "https://localhost/token"
