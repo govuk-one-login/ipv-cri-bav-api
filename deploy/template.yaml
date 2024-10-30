@@ -111,7 +111,6 @@ Mappings:
       TESTHARNESSURL: "https://bav-test-harness-testharness.review-bav.dev.account.gov.uk"
       HMRCBASEURL: "https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev"
       HMRCVERIFYBASEURL: "https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev/misc/bank-account"
-      EXPERIANBASEURL: "https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev"
     build:
       ISSUER: 'https://review-bav.build.account.gov.uk'
       DNSSUFFIX: review-bav.build.account.gov.uk
@@ -124,7 +123,6 @@ Mappings:
       HMRCBASEURL: "https://c99d36403h.execute-api.eu-west-2.amazonaws.com/build"
       HMRCVERIFYBASEURL: "https://c99d36403h.execute-api.eu-west-2.amazonaws.com/build/misc/bank-account"
       TESTHARNESSURL: "https://testharness.review-bav.build.account.gov.uk"
-      EXPERIANBASEURL: "https://uk-api.experian.com"
     staging:
       ISSUER: 'https://review-bav.staging.account.gov.uk'
       DNSSUFFIX: review-bav.staging.account.gov.uk
@@ -136,7 +134,6 @@ Mappings:
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
       HMRCBASEURL: "https://x0ch9rvyhe.execute-api.eu-west-2.amazonaws.com/staging"
       HMRCVERIFYBASEURL: "https://x0ch9rvyhe.execute-api.eu-west-2.amazonaws.com/staging/misc/bank-account"
-      EXPERIANBASEURL: "https://x0ch9rvyhe.execute-api.eu-west-2.amazonaws.com/staging/"
     integration:
       ISSUER: 'https://review-bav.integration.account.gov.uk'
       DNSSUFFIX: review-bav.integration.account.gov.uk
@@ -148,7 +145,6 @@ Mappings:
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
       HMRCBASEURL: "https://proxy.review-bav.integration.account.gov.uk/hmrc"
       HMRCVERIFYBASEURL: "https://proxy.review-bav.integration.account.gov.uk/hmrc/misc/bank-account"
-      EXPERIANBASEURL: "https://proxy.review-bav.integration.account.gov.uk/experian"
     production:
       ISSUER: 'https://review-bav.account.gov.uk'
       DNSSUFFIX: review-bav.account.gov.uk
@@ -160,7 +156,6 @@ Mappings:
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
       HMRCBASEURL: "https://proxy.review-bav.account.gov.uk/hmrc"
       HMRCVERIFYBASEURL: "https://proxy.review-bav.account.gov.uk/misc/bank-account/hmrc"
-      EXPERIANBASEURL: "https://proxy.review-bav.account.gov.uk/experian"
   TxMAAccounts:
     # EVENTS is used to egress to TxMA.
     dev:
@@ -3310,17 +3305,17 @@ Resources:
             Fn::ImportValue: !Sub "${L2KMSStackName}-encryption-key"
           HMRC_TOKEN_SSM_PATH: !Sub "/${Environment}/HMRC/TOKEN"
           HMRC_BASE_URL: !FindInMap [ EnvironmentVariables, !Ref Environment, HMRCVERIFYBASEURL ]
-          EXPERIAN_BASE_URL: !FindInMap [ EnvironmentVariables, !Ref Environment, EXPERIANBASEURL ]
           HMRC_MAX_RETRIES: 2
           EXPERIAN_MAX_RETRIES: 2
           HMRC_TOKEN_BACKOFF_PERIOD_MS: 5000 # 5 seconds
           CREDENTIAL_VENDOR_SSM_PATH: !Sub "/${Environment}/bav/vendor"
           PARTIAL_MATCHES_QEUEUE_URL: !Ref PartialMatchesQueue
-          EXPERIAN_PASSWORD_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/Username"
-          EXPERIAN_USERNAME_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/Password"
+          EXPERIAN_PASSWORD_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/Password"
+          EXPERIAN_USERNAME_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/Username"
           EXPERIAN_CLIENT_ID_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/clientId"
           EXPERIAN_CLIENT_SECRET_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/clientSecret"
-          EXPERIAN_TENANT_ID_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/tenantId"
+          EXPERIAN_VERIFY_URL_SSM_PATH: "/${Environment}/bav-cri-api/CrosscoreV2/verifyEndpointUrl"
+          EXPERIAN_TOKEN_URL_SSM_PATH: "/${Environment}/bav-cri-api/CrosscoreV2/tokenEndpointUrl"
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
@@ -3337,7 +3332,9 @@ Resources:
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${Environment}/bav-cri-api/CrosscoreV2/clientSecret"
         - SSMParameterReadPolicy:
-            ParameterName: !Sub "${Environment}/bav-cri-api/CrosscoreV2/tenantId"
+            ParameterName: !Sub "${Environment}/bav-cri-api/CrosscoreV2/verifyEndpointUrl"
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub "${Environment}/bav-cri-api/CrosscoreV2/tokenEndpointUrl"
         - DynamoDBWritePolicy:
             TableName:
               Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"

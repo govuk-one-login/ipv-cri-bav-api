@@ -18,21 +18,18 @@ export class ExperianService {
 
 	readonly experianTokenTableName: string;
 
-	readonly experianBaseUrl: string;
-
     readonly maxRetries: number;
 
-    constructor(logger: Logger, experianBaseUrl: string, maxRetries: number, dynamoDbClient: DynamoDBDocument, experianTokenTableName: string) {
+    constructor(logger: Logger, maxRetries: number, dynamoDbClient: DynamoDBDocument, experianTokenTableName: string) {
     	this.logger = logger;
-    	this.experianBaseUrl = experianBaseUrl;
     	this.maxRetries = maxRetries;
     	this.dynamo = dynamoDbClient;
     	this.experianTokenTableName = experianTokenTableName;
     }
 
-    static getInstance(logger: Logger, experianBaseUrl: string, maxRetries: number, dynamoDbClient: DynamoDBDocument, experianTokenTableName: string): ExperianService {
+    static getInstance(logger: Logger, maxRetries: number, dynamoDbClient: DynamoDBDocument, experianTokenTableName: string): ExperianService {
     	if (!ExperianService.instance) {
-    		ExperianService.instance = new ExperianService(logger, experianBaseUrl, maxRetries, dynamoDbClient, experianTokenTableName);
+    		ExperianService.instance = new ExperianService(logger, maxRetries, dynamoDbClient, experianTokenTableName);
     	}
     	return ExperianService.instance;
     }
@@ -44,7 +41,8 @@ export class ExperianService {
     	experianPassword: string,
     	experianClientId: string,
     	experianClientSecret: string,
-    	experianClientTenantId: string,
+    	experianVerifyUrl: string,
+    	experianTokenUrl: string,
     ): Promise<any> {
     		try {
     		const params = {
@@ -87,7 +85,7 @@ export class ExperianService {
     			},
 			  };
 				
-    		const token = await this.generateExperianToken(experianUsername, experianPassword, experianClientId, experianClientSecret);
+    		const token = await this.generateExperianToken(experianUsername, experianPassword, experianClientId, experianClientSecret, experianTokenUrl);
     		const headers = {
     			"User-Agent": Constants.EXPERIAN_USER_AGENT,
     			"Authorization": `Bearer ${token.access_token}`,
@@ -95,7 +93,7 @@ export class ExperianService {
     			"Accept":"application/json",
     		};
 				
-    			const endpoint = `${this.experianBaseUrl}/decisionanalytics/crosscore/${experianClientTenantId}${Constants.EXPERIAN_VERIFY_ENDPOINT_PATH}`;
+    			const endpoint = experianVerifyUrl;
     			this.logger.info("Sending verify request to Experian", { uuid, endpoint });
     			const { data } = await axios.post(endpoint, params, { headers });
 	   			const decisionElements = data?.clientResponsePayload?.decisionElements;
@@ -134,8 +132,7 @@ export class ExperianService {
     	}
     }
 
-
-    async generateExperianToken(clientUsername: string, clientPassword: string, clientId: string, clientSecret: string): Promise<StoredExperianToken | ExperianTokenResponse> {
+    async generateExperianToken(clientUsername: string, clientPassword: string, clientId: string, clientSecret: string, experianTokenUrl: string): Promise<StoredExperianToken | ExperianTokenResponse> {
     	this.logger.info({ message: `Checking ${this.experianTokenTableName} for valid token` });
 
     	const storedToken = await this.getExperianToken();
@@ -147,7 +144,7 @@ export class ExperianService {
 
     	} else {
     		try {
-    			const endpoint = `${this.experianBaseUrl}${Constants.EXPERIAN_TOKEN_ENDPOINT_PATH}`;
+    			const endpoint = experianTokenUrl;
     			
     			const params = {
     				username: clientUsername,

@@ -5,7 +5,7 @@ const body = {
 	account_number: "12345678",
 };
 
-export const VALID_VERFIY_ACCOUNT = {
+export const VALID_VERIFY_ACCOUNT = {
 	body: JSON.stringify(body),
 	httpMethod: "POST",
 	headers: { [Constants.X_SESSION_ID]: "732075c8-08e6-4b25-ad5b-d6cb865a18e5", [Constants.ENCODED_AUDIT_HEADER]: "encoded header" },
