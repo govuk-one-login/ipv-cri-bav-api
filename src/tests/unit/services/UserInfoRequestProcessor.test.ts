@@ -98,7 +98,7 @@ describe("UserInfoRequestProcessor", () => {
 		jest.useRealTimers();
 	});
 
-	it("Return successful response with 200 OK when user data is found for an accessToken", async () => {
+	it("Return successful response with 200 OK when user data is found for an accessToken & VC is issued for passing check", async () => {
 		mockBavService.getSessionById.mockResolvedValue(mockSession);
 		mockSession.personalDetailsScore = 9;
 		mockBavService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
@@ -163,6 +163,211 @@ describe("UserInfoRequestProcessor", () => {
 								"personalDetailsMatchScore": 9,
 							},
 						],
+					 },
+				],
+		 },
+		});
+		expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(2, "MYQUEUE", {
+			"component_id":"https://XXX-c.env.account.gov.uk",
+			"event_name":"BAV_CRI_END",
+			"timestamp":1585695600,
+			"event_timestamp_ms":1585695600000,
+			"user":{
+				"ip_address":"127.0.0.1",
+				"session_id":"sdfsdg",
+				"govuk_signin_journey_id": "sdfssg",
+				"user_id":"sub",
+			},
+		});
+		expect(out.body).toEqual(JSON.stringify({
+			sub: "sub",
+			"https://vocab.account.gov.uk/v1/credentialJWT": ["signedJwt-test"],
+		}));
+		expect(out.statusCode).toBe(HttpCodesEnum.OK);
+		expect(logger.info).toHaveBeenCalledTimes(2);
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			govuk_signin_journey_id: "sdfssg",
+		});
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			sessionId: "sessionId",
+		});
+	});
+
+	it("sends TXMA event for failing check without CI", async () => {
+		mockBavService.getSessionById.mockResolvedValue(mockSession);
+		mockSession.personalDetailsScore = 1;
+		mockSession.experianCheckResult = "NO_MATCH";
+		mockSession.warningsErrors = { 	
+			responseType: "warning",
+			responseCode: "2",
+			responseMessage: "Modulus check algorithm is unavailable for these account details",
+		};
+		mockBavService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
+		// @ts-ignore
+		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
+
+		jest.spyOn(Validations, "eventToSubjectIdentifier").mockResolvedValueOnce("sessionId");
+
+		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+		expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "MYQUEUE", {
+			"component_id":"https://XXX-c.env.account.gov.uk",
+			"event_name":"BAV_CRI_VC_ISSUED",
+			"restricted":{
+				"name":[
+					{
+						"nameParts":[
+							{
+								"type":"GivenName",
+								"value":"FRED",
+							},
+							{
+								"type":"GivenName",
+								"value":"NICK",
+							},
+							{
+								"type":"FamilyName",
+								"value":"Flintstone",
+							},
+						],
+					},
+				],
+				"birthDate": [{
+					"value": "12-01-1986",
+				}],
+				"bankAccount": [
+					{
+						"sortCode": "111111",
+						"accountNumber": "10199283",
+					},
+				],
+			},
+			"timestamp":1585695600,
+			"event_timestamp_ms":1585695600000,
+			"user":{
+				"ip_address":"127.0.0.1",
+				"govuk_signin_journey_id": "sdfssg",
+				"session_id":"sdfsdg",
+				"user_id":"sub",
+			},
+		 "extensions": {
+				"evidence": [
+					 {
+						"txn": "1c756b7e-b5b8-4f33-966d-4aeee9bb0000",
+						"strengthScore": 3,
+						"validityScore": 0,
+						"attemptNum": 1,
+						"checkDetails": [
+							{
+								"personalDetailsMatchScore": 1,
+							},
+						],
+						"responseMessages":[ {
+							"responseType": "warning",
+							"responseCode": "2",
+							"responseMessage": "Modulus check algorithm is unavailable for these account details",
+						}],
+					 },
+				],
+		 },
+		});
+		expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(2, "MYQUEUE", {
+			"component_id":"https://XXX-c.env.account.gov.uk",
+			"event_name":"BAV_CRI_END",
+			"timestamp":1585695600,
+			"event_timestamp_ms":1585695600000,
+			"user":{
+				"ip_address":"127.0.0.1",
+				"session_id":"sdfsdg",
+				"govuk_signin_journey_id": "sdfssg",
+				"user_id":"sub",
+			},
+		});
+		expect(out.body).toEqual(JSON.stringify({
+			sub: "sub",
+			"https://vocab.account.gov.uk/v1/credentialJWT": ["signedJwt-test"],
+		}));
+		expect(out.statusCode).toBe(HttpCodesEnum.OK);
+		expect(logger.info).toHaveBeenCalledTimes(2);
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			govuk_signin_journey_id: "sdfssg",
+		});
+		expect(logger.appendKeys).toHaveBeenCalledWith({
+			sessionId: "sessionId",
+		});
+	});
+
+	it("sends TXMA event for failing check with CI", async () => {
+		mockBavService.getSessionById.mockResolvedValue(mockSession);
+		mockSession.personalDetailsScore = 1;
+		mockSession.experianCheckResult = "NO_MATCH";
+		mockBavService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
+		// @ts-ignore
+		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
+
+		jest.spyOn(Validations, "eventToSubjectIdentifier").mockResolvedValueOnce("sessionId");
+
+		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
+		expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "MYQUEUE", {
+			"component_id":"https://XXX-c.env.account.gov.uk",
+			"event_name":"BAV_CRI_VC_ISSUED",
+			"restricted":{
+				"name":[
+					{
+						"nameParts":[
+							{
+								"type":"GivenName",
+								"value":"FRED",
+							},
+							{
+								"type":"GivenName",
+								"value":"NICK",
+							},
+							{
+								"type":"FamilyName",
+								"value":"Flintstone",
+							},
+						],
+					},
+				],
+				"birthDate": [{
+					"value": "12-01-1986",
+				}],
+				"bankAccount": [
+					{
+						"sortCode": "111111",
+						"accountNumber": "10199283",
+					},
+				],
+			},
+			"timestamp":1585695600,
+			"event_timestamp_ms":1585695600000,
+			"user":{
+				"ip_address":"127.0.0.1",
+				"govuk_signin_journey_id": "sdfssg",
+				"session_id":"sdfsdg",
+				"user_id":"sub",
+			},
+		 "extensions": {
+				"evidence": [
+					 {
+						"txn": "1c756b7e-b5b8-4f33-966d-4aeee9bb0000",
+						"strengthScore": 3,
+						"validityScore": 0,
+						"attemptNum": 1,
+						"checkDetails": [
+							{
+								"personalDetailsMatchScore": 1,
+							},
+						],
+						"ci":  [
+                       "D15",
+                     ],
+                     "ciReasons":  [
+                        {
+                         "ci": "D15",
+                         "reason": "NO_MATCH",
+                       },
+                     ],
 					 },
 				],
 		 },
