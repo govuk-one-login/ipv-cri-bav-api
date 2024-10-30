@@ -62,12 +62,11 @@ export class VerifyAccountRequestProcessor {
   	const maxRetries = +checkEnvironmentVariable(EnvironmentVariables.HMRC_MAX_RETRIES, logger);
   	const hmrcBackoffPeriodMs = +checkEnvironmentVariable(EnvironmentVariables.HMRC_TOKEN_BACKOFF_PERIOD_MS, logger);
   	const experianTokenTableName: string = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_TOKEN_TABLE, this.logger);
-  	const experianBaseUrl = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_BASE_URL, this.logger);
   	const experianMaxRetries = +checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_MAX_RETRIES, logger);
 
   	this.BavService = BavService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
   	this.HmrcService = HmrcService.getInstance(this.logger, hmrcBaseUrl, hmrcBackoffPeriodMs, maxRetries);
-  	this.ExperianService = ExperianService.getInstance(this.logger, experianBaseUrl, experianMaxRetries, createDynamoDbClient(), experianTokenTableName);
+  	this.ExperianService = ExperianService.getInstance(this.logger, experianMaxRetries, createDynamoDbClient(), experianTokenTableName);
   }
 
   static getInstance(logger: Logger, metrics: Metrics, CREDENTIAL_VENDOR: string): VerifyAccountRequestProcessor {
@@ -87,7 +86,8 @@ export class VerifyAccountRequestProcessor {
   	experianPassword: string;
   	experianClientId: string;
   	experianClientSecret: string;
-  		experianTenantId: string;
+  		experianVerifyUrl: string;
+  		experianTokenUrl: string;
   	},
   ): Promise<APIGatewayProxyResult> {
 		  const { account_number: accountNumber, sort_code: sortCode } = body;
@@ -126,7 +126,8 @@ export class VerifyAccountRequestProcessor {
 			  ssmParams.experianPassword,
 			  ssmParams.experianClientId,
 			  ssmParams.experianClientSecret,
-			  ssmParams.experianTenantId,
+			  ssmParams.experianVerifyUrl,
+			  ssmParams.experianTokenUrl,
 		  );
 		
 		  if (!verifyResponse) {

@@ -60,10 +60,18 @@ export class VerifyAccountHandler implements LambdaInterface {
 				const EXPERIAN_CLIENT_ID = await getParameter(experianClientIdSsmPath);
 				const experianClientSecretSsmPath = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_CLIENT_SECRET_SSM_PATH, logger);
 				const EXPERIAN_CLIENT_SECRET = await getParameter(experianClientSecretSsmPath);
-				const experianTenantIdPath = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_TENANT_ID_SSM_PATH, logger);
-				const EXPERIAN_TENANT_ID = await getParameter(experianTenantIdPath);
+				const experianVerifyUrlPath = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_VERIFY_URL_SSM_PATH, logger);
+				const EXPERIAN_VERIFY_URL = await getParameter(experianVerifyUrlPath);
+				const experianTokenUrlPath = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_TOKEN_URL_SSM_PATH, logger);
+				const EXPERIAN_TOKEN_URL = await getParameter(experianTokenUrlPath);
 
-				const ssmParams = { experianUsername: EXPERIAN_USERNAME, experianPassword: EXPERIAN_PASSWORD, experianClientId: EXPERIAN_CLIENT_ID, experianClientSecret: EXPERIAN_CLIENT_SECRET, experianTenantId: EXPERIAN_TENANT_ID };
+				const ssmParams = { experianUsername: EXPERIAN_USERNAME, 
+					experianPassword: EXPERIAN_PASSWORD, 
+					experianClientId: EXPERIAN_CLIENT_ID, 
+					experianClientSecret: EXPERIAN_CLIENT_SECRET, 
+					experianVerifyUrl: EXPERIAN_VERIFY_URL,
+					experianTokenUrl: EXPERIAN_TOKEN_URL, 
+				};
 
 				logger.appendKeys({ sessionId });
 				logger.info("Starting VerifyAccountRequestProcessorExperian");
