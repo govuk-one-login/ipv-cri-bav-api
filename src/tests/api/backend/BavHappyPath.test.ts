@@ -218,8 +218,8 @@ describe("BAV CRI happy path tests", () => {
 			const rawBody = userInfoResponse.data["https://vocab.account.gov.uk/v1/credentialJWT"][0].split(".")[1];
 			const decodedBody = decodeRawBody(rawBody);
 
-			const hmrcUuid = await getKeyFromSession(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "hmrcUuid");
-			expect(decodedBody.vc.evidence[0].txn).toBe(hmrcUuid);
+			const vendorUuid = await getKeyFromSession(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "vendorUuid");
+			expect(decodedBody.vc.evidence[0].txn).toBe(vendorUuid);
 
 			expect(decodedBody.vc.credentialSubject.bankAccount[0].sortCode).toBe(bankDetails.sort_code);
 			expect(decodedBody.vc.credentialSubject.bankAccount[0].accountNumber).toBe(bankDetails.account_number.padStart(8, "0"));
