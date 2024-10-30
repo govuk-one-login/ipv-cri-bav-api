@@ -7,11 +7,9 @@ import { createDynamoDbClient } from "../../../utils/DynamoDBFactory";
 import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
 import axios, { AxiosRequestConfig } from "axios";
 import { Constants } from "../../../utils/Constants";
-import { AppError } from "../../../utils/AppError";
 import { MessageCodes } from "../../../models/enums/MessageCodes";
 
 let experianServiceTest: ExperianService;
-const experianBaseUrl = process.env.EXPERIAN_BASE_URL!;
 const mockDynamoDbClient = jest.mocked(createDynamoDbClient());
 const experianTokenTableName = "EXPERIANSTOKENTABLE";
 const logger = mock<Logger>();
@@ -99,12 +97,13 @@ const clientUsername = "123456";
 const clientPassword = "12345678";
 const clientId = "clientId";
 const clientSecret = "Test";
-const tenantId = "TenanttId";
+const experianVerifyUrl = "https://uk-api.experian.com/verify";
+const experianTokenUrl = "https://uk-api.experian.com/token";
 
 describe("Experian service", () => {
 	
 	beforeAll(() => {
-		experianServiceTest = new ExperianService(logger, experianBaseUrl, 2, mockDynamoDbClient, experianTokenTableName);
+		experianServiceTest = new ExperianService(logger, 2, mockDynamoDbClient, experianTokenTableName);
 	});
 
 	afterEach(() => {
@@ -121,7 +120,7 @@ describe("Experian service", () => {
 		
 
 		it("calls Experian verify endpoint with correct params and headers", async () => {
-			const endpoint = `${experianServiceTest.experianBaseUrl}/decisionanalytics/crosscore/TenanttId${Constants.EXPERIAN_VERIFY_ENDPOINT_PATH}`;
+			const endpoint = experianVerifyUrl;
 			jest.spyOn(axios, "post").mockResolvedValueOnce({ data: experianVerifyResponse });
 			mockDynamoDbClient.send = jest.fn().mockResolvedValue({ Item: storedExperianToken });
 
@@ -130,7 +129,8 @@ describe("Experian service", () => {
 				clientPassword,
 				clientId,
 				clientSecret,
-				tenantId,
+				experianVerifyUrl,
+				experianTokenUrl,
 			);
 
 			expect(logger.info).toHaveBeenNthCalledWith(1, { message: "Checking EXPERIANSTOKENTABLE for valid token" });
@@ -169,7 +169,8 @@ describe("Experian service", () => {
 				clientPassword,
 				clientId,
 				clientSecret,
-				tenantId);
+				experianVerifyUrl,
+				experianTokenUrl);
 		  
 			expect(logger.warn).toHaveBeenCalledWith({ message: expectedMessage });
 		  });
@@ -187,7 +188,8 @@ describe("Experian service", () => {
 				clientPassword,
 				clientId,
 				clientSecret,
-				tenantId);
+				experianVerifyUrl,
+				experianTokenUrl);
 		  
 			expect(logger.error).toHaveBeenCalledWith({ message: expectedMessage });
 		  });
@@ -267,18 +269,15 @@ describe("Experian service", () => {
 
 			it("Should return a valid access token response if a valid access token already exists", async () => {
 				experianServiceTest.getExperianToken = jest.fn().mockResolvedValue(storedExperianToken);
-				const data = await experianServiceTest.generateExperianToken(clientUsername, clientPassword, clientId, clientSecret);
+				const data = await experianServiceTest.generateExperianToken(clientUsername, clientPassword, clientId, clientSecret, experianTokenUrl);
 				expect(data).toBe(storedExperianToken);
 			});
 
 			it("Should generate a new access token if a valid access token does not exist", async () => {
 				experianServiceTest.getExperianToken = jest.fn().mockResolvedValue(expiredToken);
 				jest.spyOn(axios, "post").mockResolvedValueOnce({ data: experianTokenResponse });
-				const data = await experianServiceTest.generateExperianToken(clientUsername, clientPassword, clientId, clientSecret);
-				expect(axios.post).toHaveBeenCalledWith(`${experianBaseUrl}${Constants.EXPERIAN_TOKEN_ENDPOINT_PATH}`,
-					expectedParams,
-					config,
-				);
+				const data = await experianServiceTest.generateExperianToken(clientUsername, clientPassword, clientId, clientSecret, experianTokenUrl);
+				expect(axios.post).toHaveBeenCalledWith(experianTokenUrl, expectedParams, config);
 				expect(data).toBe(experianTokenResponse);
 			});
 
@@ -291,8 +290,8 @@ describe("Experian service", () => {
 
 				experianServiceTest.getExperianToken = jest.fn().mockResolvedValue(expiredToken);
 				jest.spyOn(axios, "post").mockRejectedValueOnce(error);
-				const data = await experianServiceTest.generateExperianToken(clientUsername, clientPassword, clientId, clientSecret);
-				expect(axios.post).toHaveBeenCalledWith(`${experianBaseUrl}${Constants.EXPERIAN_TOKEN_ENDPOINT_PATH}`, expectedParams, config);
+				const data = await experianServiceTest.generateExperianToken(clientUsername, clientPassword, clientId, clientSecret, experianTokenUrl);
+				expect(axios.post).toHaveBeenCalledWith(experianTokenUrl, expectedParams, config);
 				expect(data).toBe(expiredToken);
 				expect(logger.error).toHaveBeenCalledWith(
 					{ error: {
@@ -316,7 +315,7 @@ describe("Experian service", () => {
 
 				experianServiceTest.getExperianToken = jest.fn().mockResolvedValue(undefined);
 				jest.spyOn(axios, "post").mockRejectedValueOnce(error); 
-				await expect(experianServiceTest.generateExperianToken(clientUsername, clientPassword, clientId, clientSecret)).rejects.toThrow(expect.objectContaining({
+				await expect(experianServiceTest.generateExperianToken(clientUsername, clientPassword, clientId, clientSecret, experianTokenUrl)).rejects.toThrow(expect.objectContaining({
 					message: "Error generating Experian token and no previous token found",
 					statusCode: HttpCodesEnum.SERVER_ERROR,
 				}));

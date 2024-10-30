@@ -61,7 +61,8 @@ const ssmParams = {
 	experianPassword: "12345678",
 	experianClientId:"clientId",
 	experianClientSecret:"Test",
-	experianTenantId:"TenantId",
+	experianVerifyUrl: "https://uk-api.experian.com/verify",
+	experianTokenUrl: "https://uk-api.experian.com/token",
 };
 
 const session = require("../data/db_record.json") as ISessionItem;
@@ -218,7 +219,8 @@ describe("VerifyAccountRequestProcessor", () => {
     			"12345678",
     			"clientId",
     			"Test",
-				"TenantId",
+				"https://uk-api.experian.com/verify",
+    			"https://uk-api.experian.com/token",
 			 );
 			expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "MYQUEUE", {
 				event_name: "BAV_EXPERIAN_REQUEST_SENT",
@@ -294,7 +296,8 @@ describe("VerifyAccountRequestProcessor", () => {
     			"12345678",
     			"clientId",
     			"Test",
-				"TenantId",
+				"https://uk-api.experian.com/verify",
+    			"https://uk-api.experian.com/token",
 			 );
 		});
 
