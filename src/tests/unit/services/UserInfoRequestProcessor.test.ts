@@ -193,9 +193,9 @@ describe("UserInfoRequestProcessor", () => {
 		});
 	});
 
-	it("sends TXMA event for failing check without CI", async () => {
+	it("sends TXMA event for failing check without CI in event of response code 2 or 3", async () => {
 		mockBavService.getSessionById.mockResolvedValue(mockSession);
-		mockSession.personalDetailsScore = 1;
+		mockSession.personalDetailsScore = 9;
 		mockSession.experianCheckResult = "NO_MATCH";
 		mockSession.warningsErrors = { 	
 			responseType: "warning",
@@ -258,7 +258,7 @@ describe("UserInfoRequestProcessor", () => {
 						"attemptNum": 1,
 						"checkDetails": [
 							{
-								"personalDetailsMatchScore": 1,
+								"personalDetailsMatchScore": 9,
 							},
 						],
 						"responseMessages":[ {
@@ -360,14 +360,14 @@ describe("UserInfoRequestProcessor", () => {
 							},
 						],
 						"ci":  [
-                       "D15",
-                     ],
-                     "ciReasons":  [
-                        {
-                         "ci": "D15",
-                         "reason": "NO_MATCH",
-                       },
-                     ],
+							"D15",
+						],
+						"ciReasons":  [
+							{
+								"ci": "D15",
+								"reason": "NO_MATCH",
+							},
+						],
 					 },
 				],
 		 },
