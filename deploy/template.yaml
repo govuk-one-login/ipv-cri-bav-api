@@ -3314,8 +3314,8 @@ Resources:
           EXPERIAN_USERNAME_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/Username"
           EXPERIAN_CLIENT_ID_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/clientId"
           EXPERIAN_CLIENT_SECRET_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/clientSecret"
-          EXPERIAN_VERIFY_URL_SSM_PATH: "/${Environment}/bav-cri-api/CrosscoreV2/verifyEndpointUrl"
-          EXPERIAN_TOKEN_URL_SSM_PATH: "/${Environment}/bav-cri-api/CrosscoreV2/tokenEndpointUrl"
+          EXPERIAN_VERIFY_URL_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/verifyEndpointUrl"
+          EXPERIAN_TOKEN_URL_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/tokenEndpointUrl"
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
