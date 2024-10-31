@@ -121,7 +121,7 @@ describe("UserInfoRequestProcessor", () => {
 				identityCheckPolicy: "none"
 			}] as CheckDetails[],
 		}
-		mockVerifiableCredentialService.generateSignedVerifiableCredentialJwt.mockResolvedValue({signedJWT: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c", evidenceInfo})
+		mockVerifiableCredentialService.generateSignedVerifiableCredentialJwt.mockResolvedValue({signedJWT: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c", evidenceInfo}) //pragma: allowlist secret
 
 		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 		expect(mockBavService.getSessionById).toHaveBeenCalledTimes(1);
@@ -199,7 +199,7 @@ describe("UserInfoRequestProcessor", () => {
 		});
 		expect(out.body).toEqual(JSON.stringify({
 			sub: "sub",
-			"https://vocab.account.gov.uk/v1/credentialJWT": ["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"],
+			"https://vocab.account.gov.uk/v1/credentialJWT": ["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"], //pragma: allowlist secret
 		}));
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 		expect(logger.info).toHaveBeenCalledTimes(1);
@@ -235,7 +235,7 @@ describe("UserInfoRequestProcessor", () => {
 				identityCheckPolicy: "none"
 			}] as CheckDetails[],
 		}
-		mockVerifiableCredentialService.generateSignedVerifiableCredentialJwt.mockResolvedValue({signedJWT: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c", evidenceInfo})
+		mockVerifiableCredentialService.generateSignedVerifiableCredentialJwt.mockResolvedValue({signedJWT: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c", evidenceInfo}) //pragma: allowlist secret
 
 		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 		expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "MYQUEUE", {
@@ -309,7 +309,7 @@ describe("UserInfoRequestProcessor", () => {
 		});
 		expect(out.body).toEqual(JSON.stringify({
 			sub: "sub",
-			"https://vocab.account.gov.uk/v1/credentialJWT": ["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"],
+			"https://vocab.account.gov.uk/v1/credentialJWT": ["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"], //pragma: allowlist secret
 		}));
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
 		expect(logger.info).toHaveBeenCalledTimes(1);
