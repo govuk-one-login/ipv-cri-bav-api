@@ -174,7 +174,6 @@ export class UserInfoRequestProcessor {
 
 	private async sendTXMAEvents(session: ISessionItem, evidenceInfo: any, personInfo: any): Promise<any> {
 		const txmaCoreFields = buildCoreEventFields(session, this.issuer, session.clientIpAddress);
-		const warningsErrors = session.warningsErrors;
 		await this.BavService.sendToTXMA(
 			this.txmaQueueUrl,
 			{
