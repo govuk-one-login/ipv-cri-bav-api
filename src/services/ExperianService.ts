@@ -1,6 +1,6 @@
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Constants } from "../utils/Constants";
-import axios, { AxiosRequestConfig } from "axios";
+import axios from "axios";
 import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../models/enums/MessageCodes";
@@ -126,9 +126,8 @@ export class ExperianService {
     			
     		} catch (error: any) {
     			const message = "Error sending verify request to Experian";
-    			this.logger.error({ error, message, messageCode: MessageCodes.FAILED_VERIFYING_ACCOUNT, statusCode: error?.response?.status });
-
-    		throw new AppError(HttpCodesEnum.SERVER_ERROR, message);		
+    			this.logger.error({ errorMessage: error?.message, message, messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT, statusCode: error?.response?.status });
+    		  throw new AppError(HttpCodesEnum.SERVER_ERROR, message);		
     	}
     }
 
@@ -156,18 +155,15 @@ export class ExperianService {
     			this.logger.debug({ message: `Query params: ${params.username} ${params.password} ${params.client_id} ${params.client_secret}` });
 
     			const correlationId = randomUUID();
-    			const config: AxiosRequestConfig<any> = {
-    				headers: {
-    					"Content-Type": "application/json",
-    					"X-Correlation-Id": correlationId,
-    					"X-User-Domain": "cabinetofficegds.com",
-    				},
-    			};
 
     			const { data }: { data: ExperianTokenResponse } = await axios.post(
     				endpoint,
     				params,
-    				config,
+    				{ headers: {
+    					"Content-Type": "application/json",
+    					"X-Correlation-Id": correlationId,
+    					"X-User-Domain": "cabinetofficegds.com",
+    				} },
     			);
     			this.logger.info(`Received response from Experian token endpoint - X-Correlation-Id: ${correlationId}`);
     			await this.saveExperianToken(data);
@@ -176,11 +172,11 @@ export class ExperianService {
     		} catch (error: any) {
     			if (storedToken) {
     				const message = "Error refreshing Experian token - returning previous Experian token";
-    				this.logger.error({ error, message, statusCode: error?.response?.status, messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN });
+    				this.logger.error({ errorMessage: error?.message, message, statusCode: error?.response?.status, messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN });
     				return storedToken;
     			} else {
     				const message = "Error generating Experian token and no previous token found";
-    				this.logger.error({ error, message, messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN });
+    				this.logger.error({ errorMessage: error?.message, message, messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN });
     				throw new AppError(HttpCodesEnum.SERVER_ERROR, message);
     			}
     		}
