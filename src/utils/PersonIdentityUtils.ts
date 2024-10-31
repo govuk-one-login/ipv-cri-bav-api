@@ -7,6 +7,5 @@ export const getNameByType = (name: PersonIdentityName[], targetType?: string): 
 			nameArray.push(value);
 			return nameArray;
 	  }, []) || [];
-	console.log(nameParts.join(" "));
 	return nameParts.join(" ");
 };

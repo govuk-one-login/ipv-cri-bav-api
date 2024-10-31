@@ -150,18 +150,15 @@ export class ExperianService {
     			this.logger.debug({ message: `Query params: ${params.username} ${params.password} ${params.client_id} ${params.client_secret}` });
 
     			const correlationId = randomUUID();
-    			const config: AxiosRequestConfig<any> = {
-    				headers: {
-    					"Content-Type": "application/json",
-    					"X-Correlation-Id": correlationId,
-    					"X-User-Domain": "cabinetofficegds.com",
-    				},
-    			};
 
     			const { data }: { data: ExperianTokenResponse } = await axios.post(
     				endpoint,
     				params,
-    				config,
+    				{headers: {
+    					"Content-Type": "application/json",
+    					"X-Correlation-Id": correlationId,
+    					"X-User-Domain": "cabinetofficegds.com",
+    				}},
     			);
     			this.logger.info(`Received response from Experian token endpoint - X-Correlation-Id: ${correlationId}`);
     			await this.saveExperianToken(data);
