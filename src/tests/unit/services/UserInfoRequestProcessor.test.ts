@@ -118,10 +118,10 @@ describe("UserInfoRequestProcessor", () => {
 			validityScore: 2,
 			checkDetails: [{
 				checkMethod: "data",
-				identityCheckPolicy: "none"
+				identityCheckPolicy: "none",
 			}] as CheckDetails[],
-		}
-		mockVerifiableCredentialService.generateSignedVerifiableCredentialJwt.mockResolvedValue({signedJWT: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c", evidenceInfo}) //pragma: allowlist secret
+		};
+		mockVerifiableCredentialService.generateSignedVerifiableCredentialJwt.mockResolvedValue({ signedJWT: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c", evidenceInfo }); //pragma: allowlist secret
 
 		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 		expect(mockBavService.getSessionById).toHaveBeenCalledTimes(1);
@@ -232,10 +232,10 @@ describe("UserInfoRequestProcessor", () => {
 			validityScore: 0,
 			checkDetails: [{
 				checkMethod: "data",
-				identityCheckPolicy: "none"
+				identityCheckPolicy: "none",
 			}] as CheckDetails[],
-		}
-		mockVerifiableCredentialService.generateSignedVerifiableCredentialJwt.mockResolvedValue({signedJWT: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c", evidenceInfo}) //pragma: allowlist secret
+		};
+		mockVerifiableCredentialService.generateSignedVerifiableCredentialJwt.mockResolvedValue({ signedJWT: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c", evidenceInfo }); //pragma: allowlist secret
 
 		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 		expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "MYQUEUE", {
@@ -290,7 +290,7 @@ describe("UserInfoRequestProcessor", () => {
 								"checkMethod": "data",
 								"identityCheckPolicy": "none",
 							},
-						]
+						],
 					 },
 				],
 		 },
@@ -330,11 +330,11 @@ describe("UserInfoRequestProcessor", () => {
 			validityScore: 0,
 			checkDetails: [{
 				checkMethod: "data",
-				identityCheckPolicy: "none"
+				identityCheckPolicy: "none",
 			}] as CheckDetails[],
-			ci: ["D15"]
-		}
-		mockVerifiableCredentialService.generateSignedVerifiableCredentialJwt.mockResolvedValue({signedJWT: "signedJwt-test", evidenceInfo})
+			ci: ["D15"],
+		};
+		mockVerifiableCredentialService.generateSignedVerifiableCredentialJwt.mockResolvedValue({ signedJWT: "signedJwt-test", evidenceInfo });
 		mockSession.personalDetailsScore = 1;
 		mockSession.experianCheckResult = "NO_MATCH";
 		mockBavService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
