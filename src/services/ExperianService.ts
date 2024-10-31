@@ -154,11 +154,11 @@ export class ExperianService {
     			const { data }: { data: ExperianTokenResponse } = await axios.post(
     				endpoint,
     				params,
-    				{headers: {
+    				{ headers: {
     					"Content-Type": "application/json",
     					"X-Correlation-Id": correlationId,
     					"X-User-Domain": "cabinetofficegds.com",
-    				}},
+    				} },
     			);
     			this.logger.info(`Received response from Experian token endpoint - X-Correlation-Id: ${correlationId}`);
     			await this.saveExperianToken(data);
