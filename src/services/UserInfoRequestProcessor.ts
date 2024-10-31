@@ -195,16 +195,7 @@ export class UserInfoRequestProcessor {
 							strengthScore: evidenceInfo.strengthScore,
 							validityScore: evidenceInfo.validityScore,
 							attemptNum: session.attemptCount || 1,
-							checkDetails: [
-								{ personalDetailsMatchScore: session.personalDetailsScore },
-							],
-							...(warningsErrors ? {
-								responseMessages: [{
-									responseType: warningsErrors.responseType,
-									responseCode: warningsErrors.responseCode,
-									responseMessage: warningsErrors.responseMessage,
-								}],
-							} : {}),
+							checkDetails: evidenceInfo.checkDetails,
 							...(evidenceInfo.ci ? {
 								ci: evidenceInfo.ci,
 								ciReasons: [{

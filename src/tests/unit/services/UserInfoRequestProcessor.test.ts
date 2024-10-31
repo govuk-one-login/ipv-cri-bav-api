@@ -12,12 +12,16 @@ import { absoluteTimeNow } from "../../../utils/DateTimeUtils";
 import { MockKmsJwtAdapter } from "../utils/MockJwtVerifierSigner";
 import * as Validations from "../../../utils/Validations";
 import { APIGatewayProxyResult } from "aws-lambda";
+import { VerifiableCredentialService } from "../../../services/VerifiableCredentialService";
+import { BankAccountInfo, CheckDetails, VerifiedCredential, VerifiedCredentialEvidence } from "../../../models/IVeriCredential";
 
 /* eslint @typescript-eslint/unbound-method: 0 */
 /* eslint jest/unbound-method: error */
 
 let userInforequestProcessorTest: UserInfoRequestProcessor;
 const mockBavService = mock<BavService>();
+const mockVerifiableCredentialService = mock<VerifiableCredentialService>();
+
 let mockSession: ISessionItem;
 let mockPerson: PersonIdentityItem;
 const passingKmsJwtAdapterFactory = (_signingKeys: string) => new MockKmsJwtAdapter(true);
@@ -81,6 +85,8 @@ describe("UserInfoRequestProcessor", () => {
 		userInforequestProcessorTest = new UserInfoRequestProcessor(logger, metrics, credentialVendor);
 		// @ts-ignore
 		userInforequestProcessorTest.BavService = mockBavService;
+		// @ts-ignore
+		userInforequestProcessorTest.verifiableCredentialService = mockVerifiableCredentialService;
 	});
 
 	beforeEach(() => {
@@ -105,6 +111,17 @@ describe("UserInfoRequestProcessor", () => {
 		// @ts-ignore
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 		jest.spyOn(Validations, "eventToSubjectIdentifier").mockResolvedValueOnce("sessionId");
+		const evidenceInfo: VerifiedCredentialEvidence = {
+			type: "identityCheck",
+			txn: "txn123456789",
+			strengthScore: 3,
+			validityScore: 2,
+			checkDetails: [{
+				checkMethod: "data",
+				identityCheckPolicy: "none"
+			}] as CheckDetails[],
+		}
+		mockVerifiableCredentialService.generateSignedVerifiableCredentialJwt.mockResolvedValue({signedJWT: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c", evidenceInfo})
 
 		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 		expect(mockBavService.getSessionById).toHaveBeenCalledTimes(1);
@@ -160,7 +177,8 @@ describe("UserInfoRequestProcessor", () => {
 						"attemptNum": 1,
 						"checkDetails": [
 							{
-								"personalDetailsMatchScore": 9,
+								"checkMethod": "data",
+								"identityCheckPolicy": "none",
 							},
 						],
 					 },
@@ -181,10 +199,10 @@ describe("UserInfoRequestProcessor", () => {
 		});
 		expect(out.body).toEqual(JSON.stringify({
 			sub: "sub",
-			"https://vocab.account.gov.uk/v1/credentialJWT": ["signedJwt-test"],
+			"https://vocab.account.gov.uk/v1/credentialJWT": ["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"],
 		}));
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
-		expect(logger.info).toHaveBeenCalledTimes(2);
+		expect(logger.info).toHaveBeenCalledTimes(1);
 		expect(logger.appendKeys).toHaveBeenCalledWith({
 			govuk_signin_journey_id: "sdfssg",
 		});
@@ -207,6 +225,17 @@ describe("UserInfoRequestProcessor", () => {
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 
 		jest.spyOn(Validations, "eventToSubjectIdentifier").mockResolvedValueOnce("sessionId");
+		const evidenceInfo: VerifiedCredentialEvidence = {
+			type: "identityCheck",
+			txn: "txn123456789",
+			strengthScore: 3,
+			validityScore: 0,
+			checkDetails: [{
+				checkMethod: "data",
+				identityCheckPolicy: "none"
+			}] as CheckDetails[],
+		}
+		mockVerifiableCredentialService.generateSignedVerifiableCredentialJwt.mockResolvedValue({signedJWT: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c", evidenceInfo})
 
 		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 		expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "MYQUEUE", {
@@ -258,14 +287,10 @@ describe("UserInfoRequestProcessor", () => {
 						"attemptNum": 1,
 						"checkDetails": [
 							{
-								"personalDetailsMatchScore": 9,
+								"checkMethod": "data",
+								"identityCheckPolicy": "none",
 							},
-						],
-						"responseMessages":[ {
-							"responseType": "warning",
-							"responseCode": "2",
-							"responseMessage": "Modulus check algorithm is unavailable for these account details",
-						}],
+						]
 					 },
 				],
 		 },
@@ -284,10 +309,10 @@ describe("UserInfoRequestProcessor", () => {
 		});
 		expect(out.body).toEqual(JSON.stringify({
 			sub: "sub",
-			"https://vocab.account.gov.uk/v1/credentialJWT": ["signedJwt-test"],
+			"https://vocab.account.gov.uk/v1/credentialJWT": ["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"],
 		}));
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
-		expect(logger.info).toHaveBeenCalledTimes(2);
+		expect(logger.info).toHaveBeenCalledTimes(1);
 		expect(logger.appendKeys).toHaveBeenCalledWith({
 			govuk_signin_journey_id: "sdfssg",
 		});
@@ -298,6 +323,18 @@ describe("UserInfoRequestProcessor", () => {
 
 	it("sends TXMA event for failing check with CI", async () => {
 		mockBavService.getSessionById.mockResolvedValue(mockSession);
+		const evidenceInfo: VerifiedCredentialEvidence = {
+			type: "identityCheck",
+			txn: "txn123456789",
+			strengthScore: 3,
+			validityScore: 0,
+			checkDetails: [{
+				checkMethod: "data",
+				identityCheckPolicy: "none"
+			}] as CheckDetails[],
+			ci: ["D15"]
+		}
+		mockVerifiableCredentialService.generateSignedVerifiableCredentialJwt.mockResolvedValue({signedJWT: "signedJwt-test", evidenceInfo})
 		mockSession.personalDetailsScore = 1;
 		mockSession.experianCheckResult = "NO_MATCH";
 		mockBavService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
@@ -356,7 +393,8 @@ describe("UserInfoRequestProcessor", () => {
 						"attemptNum": 1,
 						"checkDetails": [
 							{
-								"personalDetailsMatchScore": 1,
+								"checkMethod": "data",
+								"identityCheckPolicy": "none",
 							},
 						],
 						"ci":  [
@@ -389,7 +427,7 @@ describe("UserInfoRequestProcessor", () => {
 			"https://vocab.account.gov.uk/v1/credentialJWT": ["signedJwt-test"],
 		}));
 		expect(out.statusCode).toBe(HttpCodesEnum.OK);
-		expect(logger.info).toHaveBeenCalledTimes(2);
+		expect(logger.info).toHaveBeenCalledTimes(1);
 		expect(logger.appendKeys).toHaveBeenCalledWith({
 			govuk_signin_journey_id: "sdfssg",
 		});
