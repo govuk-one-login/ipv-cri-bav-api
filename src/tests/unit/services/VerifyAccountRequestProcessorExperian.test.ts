@@ -314,7 +314,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				ssmParams,
 			);
 
-			expect(mockBavService.saveExperianCheckResult).toHaveBeenCalledWith(sessionId, ExperianCheckResults.FULL_MATCH, undefined);
+			expect(mockBavService.saveExperianCheckResult).toHaveBeenCalledWith(sessionId, { expRequestId: "1234568", personalDetailsScore: 9 }, ExperianCheckResults.FULL_MATCH, undefined);
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
 			expect(response.body).toBe(JSON.stringify({ message:"Success" }));
 		});
@@ -332,7 +332,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				ssmParams,
 			);
 
-			expect(mockBavService.saveExperianCheckResult).toHaveBeenCalledWith(sessionId, undefined, 1);
+			expect(mockBavService.saveExperianCheckResult).toHaveBeenCalledWith(sessionId, { expRequestId: "1234568", personalDetailsScore: 1 }, undefined, 1);
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
 			expect(response.body).toBe(JSON.stringify({ message:"Success", attemptCount: 1 }));
 		});
@@ -357,7 +357,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				ssmParams,
 			);
 
-			expect(mockBavService.saveExperianCheckResult).toHaveBeenNthCalledWith(2, sessionId, "NO_MATCH", 2);
+			expect(mockBavService.saveExperianCheckResult).toHaveBeenNthCalledWith(2, sessionId, { expRequestId: "1234568", personalDetailsScore: 1 }, "NO_MATCH", 2);
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
 			expect(response.body).toBe(JSON.stringify({ message:"Success", attemptCount: 2 }));
 		});
@@ -365,7 +365,7 @@ describe("VerifyAccountRequestProcessor", () => {
 		it("returns success without attemptCount when there has been a FULL_MATCH", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
 			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, attemptCount: undefined });
-			mockExperianService.verify.mockResolvedValueOnce(experianServiceVerifyResponseSuccess);
+			mockExperianService.verify.mockResolvedValueOnce({ expRequestId: "1234568", personalDetailsScore: 9, warningsErrors: undefined });
 
 			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
 				sessionId, 
@@ -378,5 +378,5 @@ describe("VerifyAccountRequestProcessor", () => {
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
 			expect(response.body).toBe(JSON.stringify({ message:"Success" }));
 		});
-	});
+	 });
 });

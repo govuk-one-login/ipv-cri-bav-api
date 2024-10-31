@@ -16,6 +16,7 @@ import { AuthSessionState } from "../../../models/enums/AuthSessionState";
 import { ISessionItem } from "../../../models/ISessionItem";
 import { PersonIdentityItem } from "../../../models/PersonIdentityItem";
 import { SendMessageCommand } from "@aws-sdk/client-sqs";
+import exp from "constants";
 
 let bavService: BavService;
 const tableName = "SESSIONTABLE";
@@ -515,6 +516,81 @@ describe("BAV Service", () => {
 				message: "saveVendorUuid failed: got error saving vendorUuid",
 			}));
 			expect(logger.error).toHaveBeenCalledWith({ message: "Got error saving vendorUuid", messageCode: MessageCodes.FAILED_UPDATING_SESSION, error: "Error!" });
+		});
+	});
+
+	describe("#saveExperianCheckResult", () => {
+		const experianCheckResultFullMatch = "FULL_MATCH";
+		const experianCheckResultNoMatch = "NO_MATCH";
+
+		const warningsError2 = [{
+			responseType: "warning",
+			responseCode: "2",
+			responseMessage: "Modulus check algorithm is unavailable for these account details and therefore Bank Wizard cannot confirm the details are valid",
+		}];
+		
+		it("saves account information to dynamo", async () => {
+			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+
+			await bavService.saveExperianCheckResult(sessionId, { expRequestId: "1234568", personalDetailsScore: 9, warningsErrors: undefined }, experianCheckResultFullMatch, 1);
+
+			expect(UpdateCommand).toHaveBeenCalledWith({
+				TableName: tableName,
+				Key: { sessionId },
+				UpdateExpression: "SET experianCheckResult = :experianCheckResult, personalDetailsScore = :personalDetailsScore,  authSessionState = :authSessionState, attemptCount = :attemptCount",
+				ExpressionAttributeValues: {
+					":experianCheckResult": experianCheckResultFullMatch,
+					":personalDetailsScore": 9,
+					":authSessionState": AuthSessionState.BAV_DATA_RECEIVED,
+					":attemptCount": 1,
+				},
+			});
+		});
+
+		it("saves account information to dynamo without attemptCount", async () => {
+			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+
+			await bavService.saveExperianCheckResult(sessionId, { expRequestId: "1234568", personalDetailsScore: 9, warningsErrors: undefined }, experianCheckResultFullMatch, undefined);
+
+			expect(UpdateCommand).toHaveBeenCalledWith({
+				TableName: tableName,
+				Key: { sessionId },
+				UpdateExpression: "SET experianCheckResult = :experianCheckResult, personalDetailsScore = :personalDetailsScore,  authSessionState = :authSessionState",
+				ExpressionAttributeValues: {
+					":experianCheckResult": experianCheckResultFullMatch,
+					":personalDetailsScore": 9,
+					":authSessionState": AuthSessionState.BAV_DATA_RECEIVED,
+				},
+			});
+		});
+
+		it("saves account information to dynamo with responseCode if present", async () => {
+			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+
+			await bavService.saveExperianCheckResult(sessionId, { expRequestId: "1234568", personalDetailsScore: 1, warningsErrors: warningsError2 }, experianCheckResultNoMatch, 1);
+
+			expect(UpdateCommand).toHaveBeenCalledWith({
+				TableName: tableName,
+				Key: { sessionId },
+				UpdateExpression: "SET experianCheckResult = :experianCheckResult, personalDetailsScore = :personalDetailsScore, warningsErrors = :warningsErrors, authSessionState = :authSessionState, attemptCount = :attemptCount",
+				ExpressionAttributeValues: {
+					":experianCheckResult": experianCheckResultNoMatch,
+					":personalDetailsScore": 1,
+					":warningsErrors": warningsError2,
+					":authSessionState": AuthSessionState.BAV_DATA_RECEIVED,
+					":attemptCount": 1,
+				},
+			});
+		});
+
+		it("returns an error when account information cannot be saved to dynamo", async () => {
+			mockDynamoDbClient.send = jest.fn().mockRejectedValueOnce("Error!");
+
+			await expect(bavService.saveExperianCheckResult(sessionId, { expRequestId: "1234568", personalDetailsScore: 9, warningsErrors: undefined }, experianCheckResultFullMatch, undefined)).rejects.toThrow(expect.objectContaining({
+				statusCode: HttpCodesEnum.SERVER_ERROR,
+				message: "saveExperianCheckResult failed: got error saving experianCheckResult",
+			}));
+			expect(logger.error).toHaveBeenCalledWith({ message: "Got error saving experianCheckResult", messageCode: MessageCodes.FAILED_UPDATING_SESSION, error: "Error!" });
 		});
 	});
 

@@ -22,6 +22,7 @@ import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { APIGatewayProxyResult } from "aws-lambda";
 import { ExperianService } from "./ExperianService";
 import { ExperianCheckResults } from "../models/enums/Experian";
+import { ExperianVerifyResponse } from "../models/IVeriCredential";
 
 export class VerifyAccountRequestProcessor {
   private static instance: VerifyAccountRequestProcessor;
@@ -174,15 +175,14 @@ export class VerifyAccountRequestProcessor {
 			  this.personIdentityTableName,
 		  );
 		  
-		  const experianCheckResult = this.calculateExperianCheckResult(verifyResponse.personalDetailsScore, session.attemptCount);
+		  const experianCheckResult = this.calculateExperianCheckResult(verifyResponse, session.attemptCount);
 		  this.logger.info(`experianCheckResult is ${experianCheckResult}`);
 	
 		  let attemptCount;
 		  if (experianCheckResult !== ExperianCheckResults.FULL_MATCH || !experianCheckResult) {
 			  attemptCount = session.attemptCount ? session.attemptCount + 1 : 1;
 		  }
-		  await this.BavService.saveExperianCheckResult(sessionId, experianCheckResult, attemptCount);
-		
+		  await this.BavService.saveExperianCheckResult(sessionId, verifyResponse, experianCheckResult, attemptCount);
 		  return Response(HttpCodesEnum.OK, JSON.stringify({
 			  message: "Success",
 			  attemptCount,
@@ -322,10 +322,11 @@ export class VerifyAccountRequestProcessor {
   	}
   }
 
-  calculateExperianCheckResult(verifyResponse: number, attemptCount?: number): ExperianCheckResult {
-  	if (verifyResponse === 9) {
+  calculateExperianCheckResult(verifyResponse: ExperianVerifyResponse, attemptCount?: number): ExperianCheckResult {
+  	const personalDetailsScore = verifyResponse.personalDetailsScore;
+  	if (personalDetailsScore === 9 && !verifyResponse.warningsErrors) {
   		return ExperianCheckResults.FULL_MATCH;
-  	} else if (verifyResponse !== 9 && attemptCount === undefined) {
+  	} else if (personalDetailsScore !== 9 && attemptCount === undefined) {
   		return undefined;
   	} else {
   		return ExperianCheckResults.NO_MATCH;
@@ -341,4 +342,3 @@ export class VerifyAccountRequestProcessor {
   	return vendorUuid;
   }
 }
-
