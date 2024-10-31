@@ -286,6 +286,7 @@ describe("Experian service", () => {
 					response: {
 						status: 400, message: "Bad request",
 					},
+					message: "ERROR",
 				};
 
 				experianServiceTest.getExperianToken = jest.fn().mockResolvedValue(expiredToken);
@@ -294,15 +295,10 @@ describe("Experian service", () => {
 				expect(axios.post).toHaveBeenCalledWith(experianTokenUrl, expectedParams, config);
 				expect(data).toBe(expiredToken);
 				expect(logger.error).toHaveBeenCalledWith(
-					{ error: {
-						response: {
-						  message: "Bad request",
-						  status: 400,
-						},
-					  },
-					message: "Error refreshing Experian token - returning previous Experian token",
-					statusCode: 400,
-					messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN },
+					{ errorMessage: "ERROR",
+						message: "Error refreshing Experian token - returning previous Experian token",
+						statusCode: 400,
+						messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN },
 				);
 			});
 
