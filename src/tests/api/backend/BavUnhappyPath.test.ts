@@ -177,9 +177,9 @@ describe("BAV CRI unhappy path tests", () => {
 		});
 
 		it.each([
-			{ accountNumber: "11111116"},
-			{ accountNumber: "11111118"},
-		])("Contra Indicator Generated - $accountNumber", async ({ accountNumber}: { accountNumber: string }) => {
+			{ accountNumber: "11111116" },
+			{ accountNumber: "11111118" },
+		])("Contra Indicator Generated - $accountNumber", async ({ accountNumber }: { accountNumber: string }) => {
 			expect(sessionId).toBeTruthy();
 
 			bankDetails = new BankDetailsPayload(verifyAccountYesPayload.sort_code, accountNumber);
@@ -215,7 +215,7 @@ describe("BAV CRI unhappy path tests", () => {
 
 
 		it.each([
-			{ accountNumber: "11111117"},
+			{ accountNumber: "11111117" },
 			{ accountNumber: "11111119" },
 
 		])("Contra Indicator Not Generated - $accountNumber", async ({ accountNumber }: { accountNumber: string }) => {
