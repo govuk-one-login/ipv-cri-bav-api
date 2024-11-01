@@ -1,5 +1,5 @@
 import { Logger } from "@aws-lambda-powertools/logger";
-import { Constants } from "../utils/Constants";
+import { Constants, EnvironmentVariables } from "../utils/Constants";
 import axios from "axios";
 import { AppError } from "../utils/AppError";
 import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
@@ -8,6 +8,7 @@ import { ExperianTokenResponse, StoredExperianToken } from "../models/IExperianR
 import { DynamoDBDocument, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
 import { logResponseCode } from "../utils/LogResponseCode";
+import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 
 export class ExperianService {
 	readonly logger: Logger;
@@ -44,7 +45,7 @@ export class ExperianService {
     	experianVerifyUrl: string,
     	experianTokenUrl: string,
     ): Promise<any> {
-    		try {
+    	try {
     		const params = {
     			header: {
 				  requestType: Constants.EXPERIAN_PRODUCT_NAME,
@@ -93,27 +94,33 @@ export class ExperianService {
     			"Accept":"application/json",
     		};
 				
-    			const endpoint = experianVerifyUrl;
-    			this.logger.info("Sending verify request to Experian", { uuid, endpoint });
-    			const { data } = await axios.post(endpoint, params, { headers });
-	   			const decisionElements = data?.clientResponsePayload?.decisionElements;
+    		const endpoint = experianVerifyUrl;
+    		this.logger.info("Sending verify request to Experian", { uuid, endpoint });
+    		const { data } = await axios.post(endpoint, params, { headers });
+
+    		const LOG_THIRDPARTY_API_RESPONSE = checkEnvironmentVariable(EnvironmentVariables.LOG_THIRDPARTY_API_RESPONSE, this.logger);
+    		if (LOG_THIRDPARTY_API_RESPONSE === "true") {
+    			this.logger.info(JSON.stringify(data, function replacer(key: string, value: any): any { return value;}));
+    		}
+
+	   		const decisionElements = data?.clientResponsePayload?.decisionElements;
     		const expRequestId = data?.responseHeader?.expRequestId;
 
-    			const logObject = decisionElements.find((object: { auditLogs: object[] }) => object.auditLogs);
-    			this.logger.info({
-    				message: "Received response from Experian verify request",
-    				eventType: logObject.auditLogs[0]?.eventType,
-    				eventOutcome: logObject.auditLogs[0]?.eventOutcome,
-    			});
+    		const logObject = decisionElements.find((object: { auditLogs: object[] }) => object.auditLogs);
+    		this.logger.info({
+    			message: "Received response from Experian verify request",
+    			eventType: logObject.auditLogs[0]?.eventType,
+    			eventOutcome: logObject.auditLogs[0]?.eventOutcome,
+    		});
 
 				
-    			const errorObject = decisionElements.find((object: { warningsErrors: Array<{ responseType: string; responseCode: string; responseMessage: string }> }) => object.warningsErrors);
-    			const warningsErrors = errorObject?.warningsErrors.find((object: { responseType: string; responseCode: string; responseMessage: string }) => object.responseType !== undefined);
-    			if (warningsErrors) {
-    				logResponseCode(warningsErrors, this.logger);
-    			} 
+    		const errorObject = decisionElements.find((object: { warningsErrors: Array<{ responseType: string; responseCode: string; responseMessage: string }> }) => object.warningsErrors);
+    		const warningsErrors = errorObject?.warningsErrors.find((object: { responseType: string; responseCode: string; responseMessage: string }) => object.responseType !== undefined);
+    		if (warningsErrors) {
+    			logResponseCode(warningsErrors, this.logger);
+    		} 
 				
-    			const bavCheckResults = decisionElements.find((object: { scores: Array<{ name: string; score: number }> }) => object.scores);
+    		const bavCheckResults = decisionElements.find((object: { scores: Array<{ name: string; score: number }> }) => object.scores);
     		const personalDetailsScore = bavCheckResults?.scores.find((object: { name: string; score: number }) => object.name === "Personal details")?.score;
 
     		const verifyObject = {
@@ -124,10 +131,10 @@ export class ExperianService {
     		
     		return verifyObject;
     			
-    		} catch (error: any) {
-    			const message = "Error sending verify request to Experian";
-    			this.logger.error({ errorMessage: error?.message, message, messageCode: MessageCodes.FAILED_VERIFYING_ACCOUNT, statusCode: error?.response?.status });
-    		  throw new AppError(HttpCodesEnum.SERVER_ERROR, message);		
+    	} catch (error: any) {
+    		const message = "Error sending verify request to Experian";
+    		this.logger.error({ errorMessage: error?.message, message, messageCode: MessageCodes.FAILED_VERIFYING_ACCOUNT, statusCode: error?.response?.status });
+    		throw new AppError(HttpCodesEnum.SERVER_ERROR, message);		
     	}
     }
 

@@ -103,6 +103,7 @@ const experianTokenUrl = "https://localhost/token";
 describe("Experian service", () => {
 	
 	beforeAll(() => {
+		process.env.LOG_THIRDPARTY_API_RESPONSE = "false";
 		experianServiceTest = new ExperianService(logger, 2, mockDynamoDbClient, experianTokenTableName);
 	});
 
