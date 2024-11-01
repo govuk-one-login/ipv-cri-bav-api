@@ -1,6 +1,6 @@
-export const logResponseCode = (responseCodeObject: any, logger: any): any => {
-	const responseCode = responseCodeObject.responseCode;
-	const responseMessage = responseCodeObject.responseMessage;
+export const logResponseCode = (warningsErrors: any, logger: any): any => {
+	const responseCode = warningsErrors.responseCode;
+	const responseMessage = warningsErrors.responseMessage;
 	switch (responseCode) {
 		case "2":
 			logger.warn({ message: `Response code ${responseCode}: ${responseMessage}` });

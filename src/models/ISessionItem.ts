@@ -17,6 +17,12 @@ export type ExperianCheckResult =
 	"NO_MATCH" |
 	undefined;
 
+export interface WarningsErrors {
+	responseType?: string;
+	responseCode?: string;
+	responseMessage?: string;
+}
+
 export interface ISessionItem extends IBAVSession {
 	sessionId: string;
 	clientId: string;
@@ -35,7 +41,9 @@ export interface ISessionItem extends IBAVSession {
 	authSessionState: string;
 	evidence_requested?: EvidenceRequested;
 	copCheckResult?: CopCheckResult;
+	personalDetailsScore?: number;
 	experianCheckResult?: ExperianCheckResult;
+	warningsErrors?: WarningsErrors;
 	vendorUuid?: string;
 	attemptCount?: number;
 }

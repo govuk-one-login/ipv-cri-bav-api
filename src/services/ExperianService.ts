@@ -108,16 +108,21 @@ export class ExperianService {
 
 				
     			const errorObject = decisionElements.find((object: { warningsErrors: Array<{ responseType: string; responseCode: string; responseMessage: string }> }) => object.warningsErrors);
-    			const responseCodeObject = errorObject?.warningsErrors.find((object: { responseType: string; responseCode: string; responseMessage: string }) => object.responseType !== undefined);
-				    			
-    			if (responseCodeObject) {
-    				logResponseCode(responseCodeObject, this.logger);
+    			const warningsErrors = errorObject?.warningsErrors.find((object: { responseType: string; responseCode: string; responseMessage: string }) => object.responseType !== undefined);
+    			if (warningsErrors) {
+    				logResponseCode(warningsErrors, this.logger);
     			} 
 				
     			const bavCheckResults = decisionElements.find((object: { scores: Array<{ name: string; score: number }> }) => object.scores);
-    			const personalDetailsScore = bavCheckResults?.scores.find((object: { name: string; score: number }) => object.name === "Personal details")?.score;
+    		const personalDetailsScore = bavCheckResults?.scores.find((object: { name: string; score: number }) => object.name === "Personal details")?.score;
 
-    			return { personalDetailsScore, expRequestId };
+    		const verifyObject = {
+    			expRequestId,
+    			personalDetailsScore,
+    			warningsErrors,
+    		};
+    		
+    		return verifyObject;
     			
     		} catch (error: any) {
     			const message = "Error sending verify request to Experian";
