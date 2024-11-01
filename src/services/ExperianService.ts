@@ -121,7 +121,7 @@ export class ExperianService {
     			
     		} catch (error: any) {
     			const message = "Error sending verify request to Experian";
-    			this.logger.error({ errorMessage: error?.message, message, messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT, statusCode: error?.response?.status });
+    			this.logger.error({ error, message, messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT, statusCode: error?.response?.status });
     		throw new AppError(HttpCodesEnum.SERVER_ERROR, message);		
     	}
     }
@@ -167,11 +167,11 @@ export class ExperianService {
     		} catch (error: any) {
     			if (storedToken) {
     				const message = "Error refreshing Experian token - returning previous Experian token";
-    				this.logger.error({ errorMessage: error?.message, message, statusCode: error?.response?.status, messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN });
+    				this.logger.error({ error, message, statusCode: error?.response?.status, messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN });
     				return storedToken;
     			} else {
     				const message = "Error generating Experian token and no previous token found";
-    				this.logger.error({ errorMessage: error?.message, message, messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN });
+    				this.logger.error({ error, message, messageCode: MessageCodes.FAILED_GENERATING_EXPERIAN_TOKEN });
     				throw new AppError(HttpCodesEnum.SERVER_ERROR, message);
     			}
     		}
