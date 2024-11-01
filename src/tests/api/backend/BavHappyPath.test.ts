@@ -213,7 +213,7 @@ describe("BAV CRI happy path tests", () => {
 			const userInfoResponse = await userInfoPost("Bearer " + tokenResponse.data.access_token);
 			expect(userInfoResponse.status).toBe(200);
 
-			await validateJwtToken(userInfoResponse.data["https://vocab.account.gov.uk/v1/credentialJWT"][0]);
+			await validateJwtToken(userInfoResponse.data["https://vocab.account.gov.uk/v1/credentialJWT"][0], 2);
 
 			const rawBody = userInfoResponse.data["https://vocab.account.gov.uk/v1/credentialJWT"][0].split(".")[1];
 			const decodedBody = decodeRawBody(rawBody);

@@ -1,4 +1,5 @@
 import Ajv from "ajv";
+import { get } from 'lodash';
 import { XMLParser } from "fast-xml-parser";
 import { HARNESS_API_INSTANCE } from "./ApiTestSteps";
 import { TxmaEvent, TxmaEventName } from "../../utils/TxmaEvent";
@@ -12,6 +13,7 @@ import * as BAV_CRI_END_SCHEMA from "../data/BAV_CRI_END_SCHEMA.json";
 import * as BAV_CRI_SESSION_ABORTED_SCHEMA from "../data/BAV_CRI_SESSION_ABORTED_SCHEMA.json";
 import * as BAV_CRI_START_SCHEMA from "../data/BAV_CRI_START_SCHEMA.json";
 import * as BAV_CRI_VC_ISSUED_SCHEMA from "../data/BAV_CRI_VC_ISSUED_SCHEMA.json";
+import * as BAV_CRI_VC_ISSUED_WITH_CI_SCHEMA from "../data/BAV_CRI_VC_ISSUED_WITH_CI_SCHEMA.json";
 
 const ajv = new Ajv({ strictTuples: false });
 ajv.addSchema(BAV_COP_REQUEST_SENT_SCHEMA, "BAV_COP_REQUEST_SENT_SCHEMA");
@@ -22,6 +24,7 @@ ajv.addSchema(BAV_CRI_END_SCHEMA, "BAV_CRI_END_SCHEMA");
 ajv.addSchema(BAV_CRI_START_SCHEMA, "BAV_CRI_START_SCHEMA");
 ajv.addSchema(BAV_CRI_SESSION_ABORTED_SCHEMA, "BAV_CRI_SESSION_ABORTED_SCHEMA");
 ajv.addSchema(BAV_CRI_VC_ISSUED_SCHEMA, "BAV_CRI_VC_ISSUED_SCHEMA");
+ajv.addSchema(BAV_CRI_VC_ISSUED_WITH_CI_SCHEMA, "BAV_CRI_VC_ISSUED_WITH_CI_SCHEMA");
 
 const xmlParser = new XMLParser();
 
@@ -108,6 +111,35 @@ export function validateTxMAEventData(
 			}
 		} catch (error) {
 			console.error(`Error validating event ${eventName}`, error);
+			throw error;
+		}
+	} else {
+		throw new Error(`No event found in the test harness for ${eventName} event`);
+	}
+}
+
+export function validateTxMAEventField(
+	{ eventName, jsonPath, expectedValue }: { eventName: TxmaEventName; jsonPath: string; expectedValue: string | number | string[] | number[] }, 
+	allTxmaEventBodies: AllTxmaEvents = {},
+): void {
+	const currentEventBody: TxmaEvent | undefined = allTxmaEventBodies[eventName];
+
+	if (currentEventBody?.event_name) {
+		try {
+			const actualValue = get(currentEventBody, jsonPath);
+
+			if (Array.isArray(expectedValue)) {
+				if (!Array.isArray(actualValue) || actualValue.length !== expectedValue.length || 
+					!actualValue.every((val, index) => val === expectedValue[index])) {
+					throw new Error(`Validation failed: Expected array ${JSON.stringify(expectedValue)} but found ${JSON.stringify(actualValue)} for key path "${jsonPath}" in event ${eventName}`);
+				}
+			} else {
+				if (actualValue !== expectedValue) {
+					throw new Error(`Validation failed: Expected ${expectedValue} but found ${actualValue} for key path "${jsonPath}" in event ${eventName}`);
+				}
+			}
+		} catch (error) {
+			console.error(`Error validating key path "${jsonPath}" in event ${eventName}`, error);
 			throw error;
 		}
 	} else {
