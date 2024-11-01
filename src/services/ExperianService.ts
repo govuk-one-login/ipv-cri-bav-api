@@ -121,7 +121,7 @@ export class ExperianService {
     			
     		} catch (error: any) {
     			const message = "Error sending verify request to Experian";
-    			this.logger.error({ error, message, messageCode: MessageCodes.FAILED_VERIFYING_ACOUNT, statusCode: error?.response?.status });
+    			this.logger.error({ error, message, messageCode: MessageCodes.FAILED_VERIFYING_ACCOUNT, statusCode: error?.response?.status });
     		throw new AppError(HttpCodesEnum.SERVER_ERROR, message);		
     	}
     }
