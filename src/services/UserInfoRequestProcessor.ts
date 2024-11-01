@@ -154,45 +154,7 @@ export class UserInfoRequestProcessor {
 			this.metrics.addMetric("Generated signed verifiable credential jwt", MetricUnits.Count, 1);
 
 			await this.BavService.updateSessionAuthState(session.sessionId, AuthSessionState.BAV_CRI_VC_ISSUED);
-
-			const txmaCoreFields = buildCoreEventFields(session, this.issuer, session.clientIpAddress);
-			await this.BavService.sendToTXMA(
-				this.txmaQueueUrl,
-				{
-					event_name: TxmaEventNames.BAV_CRI_VC_ISSUED,
-					...txmaCoreFields,
-					restricted:{
-						name: personInfo.name,
-						birthDate: personInfo.birthDate,
-						bankAccount: [{
-							sortCode: personInfo.sortCode,
-							accountNumber: personInfo.accountNumber,
-						}],
-				  },
-					extensions: {
-						evidence: [
-							{
-								txn: session.vendorUuid!,
-								strengthScore: evidenceInfo.strengthScore,
-								validityScore: evidenceInfo.validityScore,
-								attemptNum: session.attemptCount || 1,
-								ci: evidenceInfo.ci,
-								ciReasons: [{
-									ci: evidenceInfo.ci?.[0],
-									reason: session.copCheckResult,
-								}],
-							},
-						],
-				 },
-				});
-
-			await this.BavService.sendToTXMA(
-				this.txmaQueueUrl,
-				{
-					event_name: TxmaEventNames.BAV_CRI_END,
-					...txmaCoreFields,
-				},
-			);
+			await this.sendTXMAEvents(session, evidenceInfo, personInfo);
 
 			return Response(HttpCodesEnum.OK, JSON.stringify({
 				sub: session.subject,
@@ -208,5 +170,47 @@ export class UserInfoRequestProcessor {
 			});
 			return Response(HttpCodesEnum.BAD_REQUEST, "Bad Request");
 		}
+	}
+
+	private async sendTXMAEvents(session: ISessionItem, evidenceInfo: any, personInfo: any): Promise<any> {
+		const txmaCoreFields = buildCoreEventFields(session, this.issuer, session.clientIpAddress);
+		await this.BavService.sendToTXMA(
+			this.txmaQueueUrl,
+			{
+				event_name: TxmaEventNames.BAV_CRI_VC_ISSUED,
+				...txmaCoreFields,
+				restricted: {
+					name: personInfo.name,
+					birthDate: personInfo.birthDate,
+					bankAccount: [{
+						sortCode: personInfo.sortCode,
+						accountNumber: personInfo.accountNumber,
+					}],
+				},
+				extensions: {
+					evidence: [
+						{
+							txn: session.vendorUuid!,
+							strengthScore: evidenceInfo.strengthScore,
+							validityScore: evidenceInfo.validityScore,
+							attemptNum: session.attemptCount || 1,
+							checkDetails: evidenceInfo.checkDetails,
+							...(evidenceInfo.ci ? {
+								ci: evidenceInfo.ci,
+								ciReasons: [{
+									ci: evidenceInfo.ci[0],
+									reason: session.experianCheckResult,
+								}],
+							} : {}),
+						},
+					],
+				},
+			},
+		);
+	
+		await this.BavService.sendToTXMA(
+			this.txmaQueueUrl,
+			{ event_name: TxmaEventNames.BAV_CRI_END, ...txmaCoreFields },
+		);
 	}
 }

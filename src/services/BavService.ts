@@ -14,6 +14,7 @@ import { Constants } from "../utils/Constants";
 import { AuthSessionState } from "../models/enums/AuthSessionState";
 import { PartialNameSQSRecord } from "../models/IHmrcResponse";
 import { SendMessageCommand } from "@aws-sdk/client-sqs";
+import { ExperianVerifyResponse } from "../models/IVeriCredential";
 
 export class BavService {
 	readonly tableName: string;
@@ -125,7 +126,6 @@ export class BavService {
 			};
 
 			this.logger.info({ message: "Sending message to TxMA", eventName: event.event_name });
-
 			const obfuscatedObject = await this.obfuscateJSONValues(event, Constants.TXMA_FIELDS_TO_SHOW);
 			this.logger.info({ message: "Obfuscated TxMA Event", txmaEvent: JSON.stringify(obfuscatedObject, null, 2) });
 
@@ -318,14 +318,20 @@ export class BavService {
 		}
 	}
 
-	async saveExperianCheckResult(sessionId: string, experianCheckResult?: ExperianCheckResult, attemptCount?: number): Promise<void> {
+
+	async saveExperianCheckResult(sessionId: string, verifyResponse: ExperianVerifyResponse, experianCheckResult?: ExperianCheckResult, attemptCount?: number): Promise<void> {
 		this.logger.info({ message: `Updating ${this.tableName} table with experianCheckResult`, experianCheckResult });
+		const personalDetailsScore = verifyResponse.personalDetailsScore;
+		const warningsErrors = verifyResponse.warningsErrors;
+
 		const updateStateCommand = new UpdateCommand({
 			TableName: this.tableName,
 			Key: { sessionId },
-			UpdateExpression: `SET ${experianCheckResult ? "experianCheckResult = :experianCheckResult," : ""} authSessionState = :authSessionState${attemptCount ? ", attemptCount = :attemptCount" : ""}`,
+			UpdateExpression: `SET ${experianCheckResult ? "experianCheckResult = :experianCheckResult," : ""} personalDetailsScore = :personalDetailsScore, ${ warningsErrors ? "warningsErrors = :warningsErrors," : ""} authSessionState = :authSessionState${attemptCount ? ", attemptCount = :attemptCount" : ""}`,
 			ExpressionAttributeValues: {
 				...(experianCheckResult && { ":experianCheckResult": experianCheckResult }),
+				":personalDetailsScore": personalDetailsScore,
+				...(warningsErrors && { ":warningsErrors": warningsErrors }),
 				...(attemptCount && { ":attemptCount": attemptCount }),
 				":authSessionState": AuthSessionState.BAV_DATA_RECEIVED,
 			},
