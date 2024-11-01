@@ -3308,6 +3308,7 @@ Resources:
           HMRC_MAX_RETRIES: 2
           EXPERIAN_MAX_RETRIES: 2
           HMRC_TOKEN_BACKOFF_PERIOD_MS: 5000 # 5 seconds
+          LOG_THIRDPARTY_API_RESPONSE: false
           CREDENTIAL_VENDOR_SSM_PATH: !Sub "/${Environment}/bav/vendor"
           PARTIAL_MATCHES_QEUEUE_URL: !Ref PartialMatchesQueue
           EXPERIAN_PASSWORD_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/Password"
