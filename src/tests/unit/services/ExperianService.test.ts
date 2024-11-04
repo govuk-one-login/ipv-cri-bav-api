@@ -57,12 +57,12 @@ const experianPayload = {
 	  person: {
 					typeOfPerson: "APPLICANT",
 					personDetails: {
-		  dateOfBirth: "",
+		  dateOfBirth: "DATE",
 					},
 					names: [
 		  {
 							firstName: "First",
-							surname: "Last",
+							surName: "Last",
 		  },
 					],
 	  },

@@ -46,13 +46,14 @@ export class ExperianService {
     	experianTokenUrl: string,
     ): Promise<any> {
     	try {
+    		/* eslint-disable */
     		const params = {
     			header: {
 				  requestType: Constants.EXPERIAN_PRODUCT_NAME,
 				  clientReferenceId: uuid,
 				  expRequestId: "",
 				  messageTime: new Date().toISOString(),
-				  options: {},
+				  options: {}
     			},
     			payload: {
 				  source: "WEB",
@@ -61,9 +62,9 @@ export class ExperianService {
 					  {
     							id: "APPLICANT_1",
     							applicantType: "APPLICANT",
-    							contactId: "MainContact_1",
-					  },
-    					],
+    							contactId: "MainContact_1"
+					  }
+    					]
 				  },
 				  contacts: [
     					{
@@ -71,23 +72,24 @@ export class ExperianService {
 					  person: {
     							typeOfPerson: "APPLICANT",
     							personDetails: {
-						  dateOfBirth: "",
+						  dateOfBirth: birthDate,
     							},
     							names: [
     								{
     									firstName: givenName,
-    									surname,
-    								},
-    							],
+    									surName: surname
+    								}
+    							]
 					  },
 					  bankAccount: {
-    							sortCode,
-    							clearAccountNumber: accountNumber,
-					  		},
-    					},
-				  ],
-    			},
+    							sortCode: sortCode,
+    							clearAccountNumber: accountNumber
+					  		}
+    					}
+				  ]
+    			}
 			  };
+			  /* eslint-enable */
 				
     		const token = await this.generateExperianToken(experianUsername, experianPassword, experianClientId, experianClientSecret, experianTokenUrl);
     		const headers = {
