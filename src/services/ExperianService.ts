@@ -50,6 +50,7 @@ export class ExperianService {
     			header: {
 				  requestType: Constants.EXPERIAN_PRODUCT_NAME,
 				  clientReferenceId: uuid,
+				  expRequestId: "",
 				  messageTime: new Date().toISOString(),
 				  options: {},
     			},
@@ -71,16 +72,16 @@ export class ExperianService {
 						  dateOfBirth: birthDate,
     							},
     							names: [
-						  {
+    								{
     									firstName: givenName,
-    									surName: surname,
-						  },
+    									surname,
+    								},
     							],
 					  },
 					  bankAccount: {
     							sortCode,
     							clearAccountNumber: accountNumber,
-					  },
+					  		},
     					},
 				  ],
     			},
