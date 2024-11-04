@@ -57,9 +57,10 @@ export class ExperianService {
     			payload: {
 				  source: "WEB",
 				  application: {
-    					applicant: [
+    					applicants: [
 					  {
     							id: "APPLICANT_1",
+    							applicantType: "APPLICANT",
     							contactId: "MainContact_1",
 					  },
     					],
@@ -68,8 +69,9 @@ export class ExperianService {
     					{
 					  id: "MainContact_1",
 					  person: {
+    							typeOfPerson: "APPLICANT",
     							personDetails: {
-						  dateOfBirth: birthDate,
+						  dateOfBirth: "",
     							},
     							names: [
     								{
