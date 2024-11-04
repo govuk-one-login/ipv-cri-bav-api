@@ -60,7 +60,7 @@ export class ExperianService {
     					applicants: [
 					  {
     							id: "APPLICANT_1",
-								applicantType: "APPLICANT",
+    							applicantType: "APPLICANT",
     							contactId: "MainContact_1",
 					  },
     					],
@@ -69,19 +69,19 @@ export class ExperianService {
     					{
 					  id: "MainContact_1",
 					  person: {
-						typeOfPerson: "APPLICANT",
+    							typeOfPerson: "APPLICANT",
     							personDetails: {
 						  dateOfBirth: "",
     							},
     							names: [
     								{
     									firstName: givenName,
-    									surname: surname,
+    									surname,
     								},
     							],
 					  },
 					  bankAccount: {
-								sortCode: sortCode,
+    							sortCode,
     							clearAccountNumber: accountNumber,
 					  		},
     					},

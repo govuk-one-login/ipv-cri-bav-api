@@ -55,7 +55,7 @@ const experianPayload = {
 			{
 	  id: "MainContact_1",
 	  person: {
-		typeOfPerson: "APPLICANT",
+					typeOfPerson: "APPLICANT",
 					personDetails: {
 		  dateOfBirth: "",
 					},
