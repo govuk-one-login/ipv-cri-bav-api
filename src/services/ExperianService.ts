@@ -50,6 +50,7 @@ export class ExperianService {
     			header: {
 				  requestType: Constants.EXPERIAN_PRODUCT_NAME,
 				  clientReferenceId: uuid,
+				  expRequestId: "",
 				  messageTime: new Date().toISOString(),
 				  options: {},
     			},
@@ -71,16 +72,16 @@ export class ExperianService {
 						  dateOfBirth: birthDate,
     							},
     							names: [
-						  {
+    								{
     									firstName: givenName,
-    									surName: surname,
-						  },
+    									surname,
+    								},
     							],
 					  },
 					  bankAccount: {
     							sortCode,
     							clearAccountNumber: accountNumber,
-					  },
+					  		},
     					},
 				  ],
     			},
@@ -102,6 +103,7 @@ export class ExperianService {
     		this.logger.info(`Additional check: : ${LOG_THIRDPARTY_API_RESPONSE === "true"}`);
     		if (LOG_THIRDPARTY_API_RESPONSE === "true") {
     			const responsePayload = JSON.stringify(data, function replacer(key: string, value: any): any { return value;});
+    			this.logger.info(`Experian request: : ${params}` );
     			this.logger.info(`Experian response: : ${responsePayload}` );
     		}
 
