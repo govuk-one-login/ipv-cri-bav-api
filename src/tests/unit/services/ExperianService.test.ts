@@ -151,7 +151,7 @@ describe("Experian service", () => {
 				},
 			);
 			
-			expect(logger.info).toHaveBeenNthCalledWith(5, {
+			expect(logger.info).toHaveBeenNthCalledWith(7, {
 				message: "Received response from Experian verify request",
 				eventType: experianVerifyResponse.clientResponsePayload.decisionElements[1].auditLogs![0].eventType,
 				eventOutcome: experianVerifyResponse.clientResponsePayload.decisionElements[1].auditLogs![0].eventOutcome,
