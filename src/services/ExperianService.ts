@@ -102,8 +102,9 @@ export class ExperianService {
     		this.logger.info("Logging experian response " + LOG_THIRDPARTY_API_RESPONSE);
     		this.logger.info(`Additional check: : ${LOG_THIRDPARTY_API_RESPONSE === "true"}`);
     		if (LOG_THIRDPARTY_API_RESPONSE === "true") {
+    			const requestPayload = JSON.stringify(params, function replacer(key: string, value: any): any { return value;});
     			const responsePayload = JSON.stringify(data, function replacer(key: string, value: any): any { return value;});
-    			this.logger.info(`Experian request: : ${params}` );
+    			this.logger.info(`Experian request: : ${requestPayload}` );
     			this.logger.info(`Experian response: : ${responsePayload}` );
     		}
 
