@@ -114,7 +114,14 @@ export class VerifyAccountHandler implements LambdaInterface {
 			throw new AppError(HttpCodesEnum.BAD_REQUEST, message);
 		}
 
-		const deserialisedRequestBody: VerifyAccountPayload = JSON.parse(event.body) as VerifyAccountPayload;
+		const THIRDPARTY_DIRECT_SUBMISSION = checkEnvironmentVariable(EnvironmentVariables.THIRDPARTY_DIRECT_SUBMISSION, logger);
+
+		let deserialisedRequestBody: any = "";
+		if (THIRDPARTY_DIRECT_SUBMISSION === "true") {
+			deserialisedRequestBody = JSON.parse(event.body);
+		} else {
+			deserialisedRequestBody = JSON.parse(event.body) as VerifyAccountPayload;
+		}
 		const payloadError = getPayloadValidationErrors(deserialisedRequestBody);
 
 		if (payloadError) {

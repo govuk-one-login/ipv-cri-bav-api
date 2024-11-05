@@ -26,7 +26,7 @@ const metrics = new Metrics({ namespace: "BAV" });
 const CREDENTIAL_VENDOR = "EXPERIAN";
 const sessionId = "SESSIONID";
 const encodedTxmaHeader = "ABCDEFG";
-const body = {
+const verifyAccountPayload = {
 	sort_code: "123456",
 	account_number: "12345678",
 };
@@ -64,6 +64,7 @@ const ssmParams = {
 	experianVerifyUrl: "https://localhost/verify",
 	experianTokenUrl: "https://localhost/token",
 };
+process.env.THIRDPARTY_DIRECT_SUBMISSION = "false";
 
 const session = require("../data/db_record.json") as ISessionItem;
 let verifyAccountRequestProcessorTest: VerifyAccountRequestProcessor;
@@ -114,7 +115,7 @@ describe("VerifyAccountRequestProcessor", () => {
 
 			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
 				sessionId, 
-				body, 
+				verifyAccountPayload, 
 				clientIpAddress, 
 				encodedTxmaHeader,
 				ssmParams,
@@ -133,7 +134,7 @@ describe("VerifyAccountRequestProcessor", () => {
 
 			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
 				sessionId, 
-				body, 
+				verifyAccountPayload, 
 				clientIpAddress, 
 				encodedTxmaHeader,
 				ssmParams,
@@ -153,7 +154,7 @@ describe("VerifyAccountRequestProcessor", () => {
 
 			await verifyAccountRequestProcessorTest.processExperianRequest(
 				sessionId, 
-				body, 
+				verifyAccountPayload, 
 				clientIpAddress, 
 				encodedTxmaHeader,
 				ssmParams,
@@ -168,7 +169,7 @@ describe("VerifyAccountRequestProcessor", () => {
 
 			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
 				sessionId, 
-				body, 
+				verifyAccountPayload, 
 				clientIpAddress, 
 				encodedTxmaHeader,
 				ssmParams,
@@ -188,7 +189,7 @@ describe("VerifyAccountRequestProcessor", () => {
 
 			await verifyAccountRequestProcessorTest.processExperianRequest(
 				sessionId, 
-				body, 
+				verifyAccountPayload, 
 				clientIpAddress, 
 				encodedTxmaHeader,
 				ssmParams,
@@ -196,7 +197,7 @@ describe("VerifyAccountRequestProcessor", () => {
 
 			expect(logger.appendKeys).toHaveBeenCalledWith({ govuk_signin_journey_id: session.clientSessionId });
 			expect(mockBavService.updateAccountDetails).toHaveBeenCalledWith(
-				{	sessionId, accountNumber: body.account_number, sortCode: body.sort_code },
+				{	sessionId, accountNumber: verifyAccountPayload.account_number, sortCode: verifyAccountPayload.sort_code },
 				process.env.PERSON_IDENTITY_TABLE_NAME,
 			);
 		});
@@ -208,13 +209,13 @@ describe("VerifyAccountRequestProcessor", () => {
 
 			await verifyAccountRequestProcessorTest.processExperianRequest(
 				sessionId, 
-				body, 
+				verifyAccountPayload, 
 				clientIpAddress, 
 				encodedTxmaHeader,
 				ssmParams,
 			);
 
-			expect(mockExperianService.verify).toHaveBeenCalledWith({ accountNumber: body.account_number, sortCode: body.sort_code, birthDate: "12-01-1986", givenName: "Frederick Joseph", surname: "Flintstone", uuid: vendorUuid },
+			expect(mockExperianService.verify).toHaveBeenCalledWith({ verifyAccountPayload, birthDate: "12-01-1986", givenName: "Frederick Joseph", surname: "Flintstone", uuid: vendorUuid },
 				"123456",
     			"12345678",
     			"clientId",
@@ -236,8 +237,8 @@ describe("VerifyAccountRequestProcessor", () => {
   				"Experian_request_details": [
 					 {
   						name: "Frederick Joseph Flintstone",
-  						sortCode: body.sort_code,
-  						accountNumber: body.account_number,
+  						sortCode: verifyAccountPayload.sort_code,
+  						accountNumber: verifyAccountPayload.account_number,
   						attemptNum: 1,
 					 },
   				],
@@ -283,15 +284,15 @@ describe("VerifyAccountRequestProcessor", () => {
 
 			await verifyAccountRequestProcessorTest.processExperianRequest(
 				sessionId, 
-				{ ...body, account_number: "123456" }, 
+				{ ...verifyAccountPayload, account_number: "12345678" }, 
 				clientIpAddress, 
 				encodedTxmaHeader,
 				ssmParams);
 			expect(mockBavService.updateAccountDetails).toHaveBeenCalledWith(
-				{ sessionId, accountNumber: "00123456", sortCode: body.sort_code },
+				{ sessionId, accountNumber: "12345678", sortCode: verifyAccountPayload.sort_code },
 				process.env.PERSON_IDENTITY_TABLE_NAME,
 			);
-			expect(mockExperianService.verify).toHaveBeenCalledWith({ accountNumber: "00123456", sortCode: body.sort_code, birthDate: "12-01-1986", givenName: "Frederick Joseph", surname: "Flintstone", uuid: vendorUuid },
+			expect(mockExperianService.verify).toHaveBeenCalledWith({ verifyAccountPayload, birthDate: "12-01-1986", givenName: "Frederick Joseph", surname: "Flintstone", uuid: vendorUuid },
 				"123456",
     			"12345678",
     			"clientId",
@@ -308,7 +309,7 @@ describe("VerifyAccountRequestProcessor", () => {
 
 			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
 				sessionId, 
-				body, 
+				verifyAccountPayload, 
 				clientIpAddress, 
 				encodedTxmaHeader,
 				ssmParams,
@@ -326,7 +327,7 @@ describe("VerifyAccountRequestProcessor", () => {
 
 			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
 				sessionId, 
-				body, 
+				verifyAccountPayload, 
 				clientIpAddress, 
 				encodedTxmaHeader,
 				ssmParams,
@@ -344,14 +345,14 @@ describe("VerifyAccountRequestProcessor", () => {
 
 			await verifyAccountRequestProcessorTest.processExperianRequest(
 				sessionId, 
-				body, 
+				verifyAccountPayload, 
 				clientIpAddress, 
 				encodedTxmaHeader,
 				ssmParams,
 			);
 			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
 				sessionId, 
-				body, 
+				verifyAccountPayload, 
 				clientIpAddress, 
 				encodedTxmaHeader,
 				ssmParams,
@@ -369,7 +370,7 @@ describe("VerifyAccountRequestProcessor", () => {
 
 			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
 				sessionId, 
-				body, 
+				verifyAccountPayload, 
 				clientIpAddress, 
 				encodedTxmaHeader,
 				ssmParams,

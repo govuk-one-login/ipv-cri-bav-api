@@ -103,6 +103,8 @@ const clientSecret = "Test";
 const experianVerifyUrl = "https://localhost/verify";
 const experianTokenUrl = "https://localhost/token";
 
+process.env.THIRDPARTY_DIRECT_SUBMISSION = "false";
+
 describe("Experian service", () => {
 	
 	beforeAll(() => {
@@ -115,6 +117,10 @@ describe("Experian service", () => {
 	});
 
 	describe("#verify", () => {
+		const verifyAccountPayload = {
+			account_number: "12345678",
+			sort_code: "123456",
+		};
 		const accountNumber = "12345678";
 		const sortCode = "123456";
 		const givenName = "First";
@@ -126,9 +132,10 @@ describe("Experian service", () => {
 		it("calls Experian verify endpoint with correct params and headers", async () => {
 			const endpoint = experianVerifyUrl;
 			jest.spyOn(axios, "post").mockResolvedValueOnce({ data: experianVerifyResponse });
+
 			mockDynamoDbClient.send = jest.fn().mockResolvedValue({ Item: storedExperianToken });
 
-			const response = await experianServiceTest.verify({ accountNumber, sortCode, givenName, surname, birthDate, uuid },
+			const response = await experianServiceTest.verify({ verifyAccountPayload, givenName, surname, birthDate, uuid },
 				clientUsername,
 				clientPassword,
 				clientId,
@@ -169,7 +176,7 @@ describe("Experian service", () => {
 			jest.spyOn(axios, "post").mockResolvedValueOnce({ data: errorResponse });
 			mockDynamoDbClient.send = jest.fn().mockResolvedValueOnce({ Item: storedExperianToken });
 		  
-			await experianServiceTest.verify({ accountNumber, sortCode, givenName, surname, birthDate, uuid }, clientUsername,
+			await experianServiceTest.verify({ verifyAccountPayload, givenName, surname, birthDate, uuid }, clientUsername,
 				clientPassword,
 				clientId,
 				clientSecret,
@@ -188,7 +195,7 @@ describe("Experian service", () => {
 			jest.spyOn(axios, "post").mockResolvedValueOnce({ data: errorResponse });
 			mockDynamoDbClient.send = jest.fn().mockResolvedValueOnce({ Item: storedExperianToken });
 		  
-			await experianServiceTest.verify({ accountNumber, sortCode, givenName, surname, birthDate, uuid }, clientUsername,
+			await experianServiceTest.verify({ verifyAccountPayload, givenName, surname, birthDate, uuid }, clientUsername,
 				clientPassword,
 				clientId,
 				clientSecret,
