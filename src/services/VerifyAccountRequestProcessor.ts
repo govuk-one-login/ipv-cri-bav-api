@@ -79,7 +79,7 @@ export class VerifyAccountRequestProcessor {
 
   async processExperianRequest(
   	sessionId: string, 
-  	verifyAccountPayload: VerifyAccountPayload, 
+  	verifyAccountPayload: any, 
   	clientIpAddress: string, 
   	encodedHeader: string,
   	ssmParams: {

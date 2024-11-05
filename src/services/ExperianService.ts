@@ -9,7 +9,6 @@ import { DynamoDBDocument, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb"
 import { randomUUID } from "crypto";
 import { logResponseCode } from "../utils/LogResponseCode";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
-import { VerifyAccountPayload } from "../type/VerifyAccountPayload";
 
 export class ExperianService {
 	readonly logger: Logger;
@@ -52,7 +51,7 @@ export class ExperianService {
 			let params: any = "";
 			if (THIRDPARTY_DIRECT_SUBMISSION === "true") {
 				params = verifyAccountPayload;
-			}
+			} else {
     		/* eslint-disable */
     		params = {
     			header: {
@@ -96,6 +95,7 @@ export class ExperianService {
 				  ]
     			}
 			  };
+			}
 			  /* eslint-enable */
 				
     		const token = await this.generateExperianToken(experianUsername, experianPassword, experianClientId, experianClientSecret, experianTokenUrl);
