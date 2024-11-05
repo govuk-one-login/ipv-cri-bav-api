@@ -9,6 +9,7 @@ import { DynamoDBDocument, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb"
 import { randomUUID } from "crypto";
 import { logResponseCode } from "../utils/LogResponseCode";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
+import { VerifyAccountPayload } from "../type/VerifyAccountPayload";
 
 export class ExperianService {
 	readonly logger: Logger;
@@ -37,7 +38,7 @@ export class ExperianService {
 
 	 // eslint-disable-next-line max-lines-per-function
 	 async verify(
-    	{ accountNumber, sortCode, givenName, surname, birthDate, uuid }: { accountNumber: string; sortCode: string; givenName: string; surname: string; birthDate: string; uuid: string }, 
+    	{  verifyAccountPayload, givenName, surname, birthDate, uuid }: {verifyAccountPayload: any, givenName: string; surname: string; birthDate: string; uuid: string }, 
     	experianUsername: string,
     	experianPassword: string,
     	experianClientId: string,
@@ -46,8 +47,14 @@ export class ExperianService {
     	experianTokenUrl: string,
     ): Promise<any> {
     	try {
+			const THIRDPARTY_DIRECT_SUBMISSION = checkEnvironmentVariable(EnvironmentVariables.THIRDPARTY_DIRECT_SUBMISSION, this.logger);
+
+			let params: any = "";
+			if (THIRDPARTY_DIRECT_SUBMISSION === "true") {
+				params = verifyAccountPayload;
+			}
     		/* eslint-disable */
-    		const params = {
+    		params = {
     			header: {
 				  requestType: Constants.EXPERIAN_PRODUCT_NAME,
 				  clientReferenceId: uuid,
@@ -82,8 +89,8 @@ export class ExperianService {
     							]
 					  },
 					  bankAccount: {
-    							sortCode: sortCode,
-    							clearAccountNumber: accountNumber
+    							sortCode: verifyAccountPayload?.sort_code,
+    							clearAccountNumber: verifyAccountPayload?.account_number?.padStart(8, "0")
 					  		}
     					}
 				  ]
@@ -99,6 +106,16 @@ export class ExperianService {
     			"Accept":"application/json",
     		};
 				
+			axios.interceptors.request.use(request => {
+			console.log('Starting Request', JSON.stringify(request, null, 2))
+			return request
+			})
+				
+			axios.interceptors.response.use(response => {
+			console.log('Response:', JSON.stringify(response, null, 2))
+			return response
+			})
+
     		const endpoint = experianVerifyUrl;
     		this.logger.info("Sending verify request to Experian", { uuid, endpoint });
     		const { data } = await axios.post(endpoint, params, { headers });

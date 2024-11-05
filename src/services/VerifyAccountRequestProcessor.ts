@@ -79,7 +79,7 @@ export class VerifyAccountRequestProcessor {
 
   async processExperianRequest(
   	sessionId: string, 
-  	body: VerifyAccountPayload, 
+  	verifyAccountPayload: VerifyAccountPayload, 
   	clientIpAddress: string, 
   	encodedHeader: string,
   	ssmParams: {
@@ -91,8 +91,6 @@ export class VerifyAccountRequestProcessor {
   		experianTokenUrl: string;
   	},
   ): Promise<APIGatewayProxyResult> {
-		  const { account_number: accountNumber, sort_code: sortCode } = body;
-		  const paddedAccountNumber = accountNumber.padStart(8, "0");
 		  const person: PersonIdentityItem | undefined = await this.BavService.getPersonIdentityById(sessionId, this.personIdentityTableName);
 		  const session: ISessionItem | undefined = await this.BavService.getSessionById(sessionId);
 		
@@ -122,7 +120,7 @@ export class VerifyAccountRequestProcessor {
 		  const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
 		
 		  const verifyResponse = await this.ExperianService.verify(
-			  { accountNumber: paddedAccountNumber, sortCode, givenName, surname, birthDate, uuid: vendorUuid },
+			  { verifyAccountPayload, givenName, surname, birthDate, uuid: vendorUuid },
 			  ssmParams.experianUsername,
 			  ssmParams.experianPassword,
 			  ssmParams.experianClientId,
@@ -150,8 +148,8 @@ export class VerifyAccountRequestProcessor {
   			Experian_request_details: [
   				{
   					name:`${givenName} ${surname}`,
-  					sortCode,
-  					accountNumber: paddedAccountNumber,
+  					sortCode: verifyAccountPayload?.sort_code,
+  					accountNumber: verifyAccountPayload?.account_number,
   					attemptNum: session.attemptCount ?? 1,
   				},
   			],
@@ -171,7 +169,7 @@ export class VerifyAccountRequestProcessor {
 		  }, encodedHeader);
 		
 		  await this.BavService.updateAccountDetails(
-			  { sessionId, accountNumber: paddedAccountNumber, sortCode },
+			  { sessionId, accountNumber: verifyAccountPayload?.account_number?.padStart(8, "0"), sortCode: verifyAccountPayload?.sort_code },
 			  this.personIdentityTableName,
 		  );
 		  
