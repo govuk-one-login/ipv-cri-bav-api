@@ -121,13 +121,15 @@ export class VerifyAccountHandler implements LambdaInterface {
 			deserialisedRequestBody = JSON.parse(event.body);
 		} else {
 			deserialisedRequestBody = JSON.parse(event.body) as VerifyAccountPayload;
-		}
-		const payloadError = getPayloadValidationErrors(deserialisedRequestBody);
 
-		if (payloadError) {
-			logger.error({ message: payloadError, messageCode: MessageCodes.INVALID_REQUEST_PAYLOAD });
-			throw new AppError(HttpCodesEnum.BAD_REQUEST, payloadError);
+			const payloadError = getPayloadValidationErrors(deserialisedRequestBody);
+
+			if (payloadError) {
+				logger.error({ message: payloadError, messageCode: MessageCodes.INVALID_REQUEST_PAYLOAD });
+				throw new AppError(HttpCodesEnum.BAD_REQUEST, payloadError);
+			}
 		}
+		
 
 		return {
 			sessionId,

@@ -58,7 +58,7 @@ export class ExperianService {
 				  requestType: Constants.EXPERIAN_PRODUCT_NAME,
 				  clientReferenceId: uuid,
 				  expRequestId: "",
-				  messageTime: new Date().toISOString(),
+				  messageTime: new Date().toISOString().split('.')[0]+"Z",
 				  options: {}
     			},
     			payload: {
@@ -106,15 +106,15 @@ export class ExperianService {
     			"Accept":"application/json",
     		};
 				
-    		axios.interceptors.request.use(request => {
-    			console.log("Starting Request", JSON.stringify(request, null, 2));
-    			return request;
-    		});
+    		// axios.interceptors.request.use(request => {
+    		// 	console.log("Starting Request", JSON.stringify(request, null, 2));
+    		// 	return request;
+    		// });
 				
-    		axios.interceptors.response.use(response => {
-    			console.log("Response:", JSON.stringify(response, null, 2));
-    			return response;
-    		});
+    		// axios.interceptors.response.use(response => {
+    		// 	console.log("Response:", JSON.stringify(response, null, 2));
+    		// 	return response;
+    		// });
 
     		const endpoint = experianVerifyUrl;
     		this.logger.info("Sending verify request to Experian", { uuid, endpoint });
