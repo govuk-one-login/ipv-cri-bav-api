@@ -37,7 +37,7 @@ const experianPayload = {
 		requestType: "BAVConsumer-Standard",
 		clientReferenceId: "uuid",
 		expRequestId: "",
-		messageTime: "2024-10-11T09:00:00.000Z",
+		messageTime: "2024-10-11T09:00:00Z",
 		options: {},
 	},
 	payload: {
