@@ -14,7 +14,7 @@ jest.mock("../../utils/Config", () => ({
 	getParameter: (parameter: string) => parameter,
 }));
 
-process.env.THIRDPARTY_DIRECT_SUBMISSION = "false"
+process.env.THIRDPARTY_DIRECT_SUBMISSION = "false";
 
 describe("VerifyAccountHandler", () => {
 	let loggerSpy: jest.SpyInstance;

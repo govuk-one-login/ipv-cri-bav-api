@@ -103,7 +103,7 @@ const clientSecret = "Test";
 const experianVerifyUrl = "https://localhost/verify";
 const experianTokenUrl = "https://localhost/token";
 
-process.env.THIRDPARTY_DIRECT_SUBMISSION = "false"
+process.env.THIRDPARTY_DIRECT_SUBMISSION = "false";
 
 describe("Experian service", () => {
 	
@@ -119,8 +119,8 @@ describe("Experian service", () => {
 	describe("#verify", () => {
 		const verifyAccountPayload = {
 			account_number: "12345678",
-			sort_code: "123456"
-		}
+			sort_code: "123456",
+		};
 		const accountNumber = "12345678";
 		const sortCode = "123456";
 		const givenName = "First";

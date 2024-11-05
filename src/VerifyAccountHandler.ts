@@ -118,7 +118,7 @@ export class VerifyAccountHandler implements LambdaInterface {
 
 		let deserialisedRequestBody: any = "";
 		if (THIRDPARTY_DIRECT_SUBMISSION === "true") {
-			deserialisedRequestBody = JSON.parse(event.body)
+			deserialisedRequestBody = JSON.parse(event.body);
 		} else {
 			deserialisedRequestBody = JSON.parse(event.body) as VerifyAccountPayload;
 		}
