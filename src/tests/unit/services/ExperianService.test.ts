@@ -15,7 +15,7 @@ const experianTokenTableName = "EXPERIANSTOKENTABLE";
 const logger = mock<Logger>();
 
 jest.useFakeTimers();
-jest.spyOn(Date, "now").mockReturnValue(1728637200000); // 11/10/2024 10:00:00.000
+jest.spyOn(Date, "now").mockReturnValue(1728637200000); // 11/10/2024 10:00:00.000 - Return value is mocked for 'checkExperianToken()', set as the same time valid token was issued
 jest.setSystemTime(new Date("2024-10-11T09:00:00.000Z"));
 
 jest.mock("crypto", () => ({
@@ -76,7 +76,7 @@ const experianPayload = {
 };
 
 const experianTokenResponse = {
-	"issued_at" : "1728637200000",
+	"issued_at" : "1728637200", // 11/10/2024 10:00:00.000
 	"expires_in" : "1800",
 	"token_type" : "Bearer",
 	"access_token" : "TOKEN",
@@ -85,7 +85,7 @@ const experianTokenResponse = {
 
 // refresh_token field is not stored in DynamoDB
 const storedExperianToken = {
-	"issued_at" : "1728637200000", // 11/10/2024 10:00:00.000
+	"issued_at" : "1728637200", // 11/10/2024 10:00:00.000
 	"expires_in" : "1800",
 	"token_type" : "Bearer",
 	"access_token" : "TOKEN",
@@ -93,7 +93,7 @@ const storedExperianToken = {
 
 const expiredToken = {
 	...storedExperianToken,
-	issued_at: "1728631800000", // 11/10/2024 08:30:00.000
+	issued_at: "1728631800", // 11/10/2024 08:30:00.000
 };
 
 const clientUsername = "123456";
