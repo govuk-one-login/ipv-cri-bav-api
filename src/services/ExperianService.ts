@@ -105,16 +105,6 @@ export class ExperianService {
     			"Content-Type":"application/json",
     			"Accept":"application/json",
     		};
-				
-    		// axios.interceptors.request.use(request => {
-    		// 	console.log("Starting Request", JSON.stringify(request, null, 2));
-    		// 	return request;
-    		// });
-				
-    		// axios.interceptors.response.use(response => {
-    		// 	console.log("Response:", JSON.stringify(response, null, 2));
-    		// 	return response;
-    		// });
 
     		const endpoint = experianVerifyUrl;
     		this.logger.info("Sending verify request to Experian", { uuid, endpoint });
@@ -271,10 +261,10 @@ export class ExperianService {
     		return false;
     	}
 
-    	const twentyFiveMinutesInMillis = 25 * 60 * 1000; 
-    	const tokenValidityWindow = Number(token.issued_at) + twentyFiveMinutesInMillis;
-    	
-    	if (Date.now() < tokenValidityWindow) {
+    	const twentyFiveMinutesInSeconds = 25 * 60; 
+    	const tokenValidityWindow = Number(token.issued_at) + twentyFiveMinutesInSeconds;
+
+    	if (Date.now() / 1000 < tokenValidityWindow) {
     		return true;
     	} else {
     		return false;
