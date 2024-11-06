@@ -15,7 +15,7 @@ const experianTokenTableName = "EXPERIANSTOKENTABLE";
 const logger = mock<Logger>();
 
 jest.useFakeTimers();
-jest.spyOn(Date, "now").mockReturnValue(1728637200000); // 11/10/2024 10:00:00.000 - Return value is mocked for 'checkExperianToken()', set as the same time valid token was issued
+jest.spyOn(Date, "now").mockReturnValue(1728637200); // 11/10/2024 10:00:00.000 - Return value is mocked for 'checkExperianToken()', set as the same time valid token was issued
 jest.setSystemTime(new Date("2024-10-11T09:00:00.000Z"));
 
 jest.mock("crypto", () => ({
