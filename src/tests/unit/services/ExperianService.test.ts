@@ -169,6 +169,50 @@ describe("Experian service", () => {
 			expect(response).toEqual({ "personalDetailsScore": 9, "expRequestId": "1234567890" });
 		});
 
+		it("processes Experian verify request when response is missing Personal Details score and audit logs", async () => {
+			const endpoint = experianVerifyUrl;
+			const experianVerifyResponseNoPDScoreOrAuditLogs = experianVerifyResponse;
+			delete experianVerifyResponseNoPDScoreOrAuditLogs.clientResponsePayload.decisionElements[2].scores;
+			delete experianVerifyResponseNoPDScoreOrAuditLogs.clientResponsePayload.decisionElements[1].auditLogs;
+
+			jest.spyOn(axios, "post").mockResolvedValueOnce({ data: experianVerifyResponseNoPDScoreOrAuditLogs });
+
+			mockDynamoDbClient.send = jest.fn().mockResolvedValue({ Item: storedExperianToken });
+
+			const response = await experianServiceTest.verify({ verifyAccountPayload, givenName, surname, birthDate, uuid },
+				clientUsername,
+				clientPassword,
+				clientId,
+				clientSecret,
+				experianVerifyUrl,
+				experianTokenUrl,
+			);
+
+			expect(logger.info).toHaveBeenNthCalledWith(1, { message: "Checking EXPERIANSTOKENTABLE for valid token" });
+			expect(logger.info).toHaveBeenNthCalledWith(2, "Fetching Experian token from table EXPERIANSTOKENTABLE");
+			expect(logger.info).toHaveBeenNthCalledWith(3, "Valid token found");
+			expect(logger.info).toHaveBeenNthCalledWith(4, "Sending verify request to Experian", { uuid, endpoint });
+			expect(axios.post).toHaveBeenCalledWith(
+				endpoint,
+				experianPayload,
+				{ 
+					headers: {
+						"User-Agent": Constants.EXPERIAN_USER_AGENT,
+						"Authorization": "Bearer TOKEN",
+						"Content-Type":"application/json",
+						"Accept":"application/json",
+					},
+				},
+			);
+			
+			expect(logger.info).toHaveBeenNthCalledWith(7, {
+				message: "Received response from Experian verify request",
+				eventType: undefined,
+				eventOutcome: undefined,
+			});
+			expect(response).toEqual({ "personalDetailsScore": undefined, "expRequestId": "1234567890" });
+		});
+
 		it.each([
 			{ errorResponse: experianVerifyResponseError2, expectedMessage: "Response code 2: Modulus check algorithm is unavailable for these account details and therefore Bank Wizard cannot confirm the details are valid" },
 			{ errorResponse: experianVerifyResponseError3, expectedMessage: "Response code 3: Account number does not use a modulus check algorithm and therefore Bank Wizard cannot confirm the details are valid" },

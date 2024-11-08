@@ -327,10 +327,10 @@ export class BavService {
 		const updateStateCommand = new UpdateCommand({
 			TableName: this.tableName,
 			Key: { sessionId },
-			UpdateExpression: `SET ${experianCheckResult ? "experianCheckResult = :experianCheckResult," : ""} personalDetailsScore = :personalDetailsScore, ${ warningsErrors ? "warningsErrors = :warningsErrors," : ""} authSessionState = :authSessionState${attemptCount ? ", attemptCount = :attemptCount" : ""}`,
+			UpdateExpression: `SET ${experianCheckResult ? "experianCheckResult = :experianCheckResult," : ""} ${personalDetailsScore ? "personalDetailsScore = :personalDetailsScore," : ""} ${ warningsErrors ? "warningsErrors = :warningsErrors," : ""} authSessionState = :authSessionState${attemptCount ? ", attemptCount = :attemptCount" : ""}`,
 			ExpressionAttributeValues: {
 				...(experianCheckResult && { ":experianCheckResult": experianCheckResult }),
-				":personalDetailsScore": personalDetailsScore,
+				...(personalDetailsScore && { ":personalDetailsScore": personalDetailsScore }),
 				...(warningsErrors && { ":warningsErrors": warningsErrors }),
 				...(attemptCount && { ":attemptCount": attemptCount }),
 				":authSessionState": AuthSessionState.BAV_DATA_RECEIVED,
