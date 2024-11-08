@@ -125,8 +125,8 @@ export class ExperianService {
     		const logObject = decisionElements.find((object: { auditLogs: object[] }) => object.auditLogs);
     		this.logger.info({
     			message: "Received response from Experian verify request",
-    			eventType: logObject.auditLogs[0]?.eventType,
-    			eventOutcome: logObject.auditLogs[0]?.eventOutcome,
+    			eventType: logObject?.auditLogs[0]?.eventType,
+    			eventOutcome: logObject?.auditLogs[0]?.eventOutcome,
     		});
 
 				
