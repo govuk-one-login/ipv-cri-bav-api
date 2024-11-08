@@ -215,7 +215,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				ssmParams,
 			);
 
-			expect(mockExperianService.verify).toHaveBeenCalledWith({ verifyAccountPayload, birthDate: "12-01-1986", givenName: "Frederick Joseph", surname: "Flintstone", uuid: vendorUuid },
+			expect(mockExperianService.verify).toHaveBeenCalledWith({ verifyAccountPayload, birthDate: "12-01-1986", firstName: "Frederick", middleNames: "Joseph", surname: "Flintstone", uuid: vendorUuid },
 				"123456",
     			"12345678",
     			"clientId",
@@ -292,7 +292,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				{ sessionId, accountNumber: "12345678", sortCode: verifyAccountPayload.sort_code },
 				process.env.PERSON_IDENTITY_TABLE_NAME,
 			);
-			expect(mockExperianService.verify).toHaveBeenCalledWith({ verifyAccountPayload, birthDate: "12-01-1986", givenName: "Frederick Joseph", surname: "Flintstone", uuid: vendorUuid },
+			expect(mockExperianService.verify).toHaveBeenCalledWith({ verifyAccountPayload, birthDate: "12-01-1986", firstName: "Frederick", middleNames: "Joseph", surname: "Flintstone", uuid: vendorUuid },
 				"123456",
     			"12345678",
     			"clientId",

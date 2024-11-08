@@ -14,7 +14,7 @@ import { CopCheckResult, ExperianCheckResult, ISessionItem } from "../models/ISe
 import { EnvironmentVariables, Constants } from "../utils/Constants";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
-import { getNameByType } from "../utils/PersonIdentityUtils";
+import { getFirstName, getMiddleNames, getLastName, getFullName } from "../utils/PersonIdentityUtils";
 import { Response } from "../utils/Response";
 import { buildCoreEventFields } from "../utils/TxmaEvent";
 import { VerifyAccountPayload } from "../type/VerifyAccountPayload";
@@ -109,8 +109,9 @@ export class VerifyAccountRequestProcessor {
 			  return Response(HttpCodesEnum.UNAUTHORIZED, "Too many attempts");
 		  }
 	
-		  const givenName = getNameByType(person.name, "GivenName");
-		  const surname = getNameByType(person.name, "FamilyName");
+		  const firstName = getFirstName(person.name);
+		  const middleNames = getMiddleNames(person.name);
+		  const surname = getLastName(person.name);
 		  const birthDate = person.birthDate[0].value;
 
 		  this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
@@ -120,7 +121,7 @@ export class VerifyAccountRequestProcessor {
 		  const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
 		
 		  const verifyResponse = await this.ExperianService.verify(
-			  { verifyAccountPayload, givenName, surname, birthDate, uuid: vendorUuid },
+			  { verifyAccountPayload, firstName, middleNames, surname, birthDate, uuid: vendorUuid },
 			  ssmParams.experianUsername,
 			  ssmParams.experianPassword,
 			  ssmParams.experianClientId,
@@ -147,7 +148,7 @@ export class VerifyAccountRequestProcessor {
   		restricted: {
   			Experian_request_details: [
   				{
-  					name:`${givenName} ${surname}`,
+  					name: getFullName(person.name),
   					sortCode: verifyAccountPayload?.sort_code,
   					accountNumber: verifyAccountPayload?.account_number,
   					attemptNum: session.attemptCount ?? 1,
@@ -209,7 +210,7 @@ export class VerifyAccountRequestProcessor {
   		return Response(HttpCodesEnum.UNAUTHORIZED, "Too many attempts");
   	}
 
-  	const name = getNameByType(person.name);
+  	const name = getFullName(person.name);
   	this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
   	const timeOfRequest = absoluteTimeNow();
 
