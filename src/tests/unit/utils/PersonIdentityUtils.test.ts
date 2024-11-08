@@ -1,33 +1,43 @@
-import { getNameByType } from "../../../utils/PersonIdentityUtils";
+import { getFirstName, getMiddleNames, getLastName, getFullName } from "../../../utils/PersonIdentityUtils";
 
 describe("PersonIdentityUtils", () => {
-	describe("#getNameByType", () => {
-		it("returns all full name if no name type provided", () => {
-			const result = getNameByType([{ nameParts: [
-				{ type: "GivenName", value: "First" },
-				{ type: "GivenName", value: "Middle" },
-				{ type: "FamilyName", value: "Last" },
-			] }]);
-			expect(result).toBe("First Middle Last");
-		});
 
-		it("returns name based on type - GivenName", () => {
-			const result = getNameByType([{ nameParts: [
-				{ type: "GivenName", value: "First" },
-				{ type: "GivenName", value: "Middle" },
-				{ type: "FamilyName", value: "Last" },
-			] }], "GivenName");
-			expect(result).toBe("First Middle");
-		});
-
-		it("returns name based on type - FamilyName", () => {
-			const result = getNameByType([{ nameParts: [
-				{ type: "GivenName", value: "First" },
-				{ type: "GivenName", value: "Middle" },
-				{ type: "FamilyName", value: "Last" },
-			] }], "FamilyName");
-			expect(result).toBe("Last");
-		});
-
+	it("returns all full name", () => {
+		const result = getFullName([{ nameParts: [
+			{ type: "GivenName", value: "First" },
+			{ type: "GivenName", value: "Middle" },
+			{ type: "FamilyName", value: "Last" },
+		] }]);
+		expect(result).toBe("First Middle Last");
 	});
+
+	it("returns first name", () => {
+		const result = getFirstName([{ nameParts: [
+			{ type: "GivenName", value: "First" },
+			{ type: "GivenName", value: "Middle" },
+			{ type: "FamilyName", value: "Last" },
+		] }]);
+		expect(result).toBe("First");
+	});
+
+	it("returns middle names", () => {
+		const result = getMiddleNames([{ nameParts: [
+			{ type: "GivenName", value: "First" },
+			{ type: "GivenName", value: "MiddleOne" },
+			{ type: "GivenName", value: "MiddleTwo" },
+			{ type: "FamilyName", value: "Last" },
+		] }]);
+		expect(result).toBe("MiddleOne MiddleTwo");
+	});
+
+	it("returns last name", () => {
+		const result = getLastName([{ nameParts: [
+			{ type: "GivenName", value: "First" },
+			{ type: "GivenName", value: "MiddleOne" },
+			{ type: "GivenName", value: "MiddleTwo" },
+			{ type: "FamilyName", value: "Last" },
+		] }]);
+		expect(result).toBe("Last");
+	});
+
 });
