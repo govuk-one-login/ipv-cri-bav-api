@@ -178,6 +178,8 @@ Conditions:
   CreateDevResources: !Equals
     - !Ref Environment
     - dev
+  NotCreateProdResources: !Not
+    - !Equals [ !Ref Environment, production ]
   IsProdLikeEnvironment: !Or
     - !Equals [!Ref Environment, staging]
     - !Equals [!Ref Environment, integration]
@@ -684,6 +686,7 @@ Resources:
 
   BAVApiBasePath:
     Type: AWS::ApiGateway::BasePathMapping
+    Condition: NotCreateProdResources
     DependsOn: "BAVApiCustomDomainName"
     Properties:
       DomainName: !Ref BAVApiCustomDomainName
