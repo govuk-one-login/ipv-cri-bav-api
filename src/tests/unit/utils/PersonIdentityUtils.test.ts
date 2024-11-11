@@ -20,7 +20,17 @@ describe("PersonIdentityUtils", () => {
 		expect(result).toBe("First");
 	});
 
-	it("returns middle names", () => {
+
+	it("returns middle name", () => {
+		const result = getMiddleNames([{ nameParts: [
+			{ type: "GivenName", value: "First" },
+			{ type: "GivenName", value: "Middle" },
+			{ type: "FamilyName", value: "Last" },
+		] }]);
+		expect(result).toBe("Middle");
+	});
+
+	it("returns multiple middle names", () => {
 		const result = getMiddleNames([{ nameParts: [
 			{ type: "GivenName", value: "First" },
 			{ type: "GivenName", value: "MiddleOne" },
@@ -28,6 +38,15 @@ describe("PersonIdentityUtils", () => {
 			{ type: "FamilyName", value: "Last" },
 		] }]);
 		expect(result).toBe("MiddleOne MiddleTwo");
+	});
+
+	it("returns empty string if no middle names provided", () => {
+		const result = getMiddleNames([{ nameParts: [
+			{ type: "GivenName", value: "First" },
+			{ type: "GivenName", value: "" },
+			{ type: "FamilyName", value: "Last" },
+		] }]);
+		expect(result).toBe("");
 	});
 
 	it("returns last name", () => {

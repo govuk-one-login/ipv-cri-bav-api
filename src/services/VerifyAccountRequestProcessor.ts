@@ -143,21 +143,21 @@ export class VerifyAccountRequestProcessor {
   		extensions: {
   			evidence: [
   				{
-  					txn: verifyResponse?.expRequestId,
-  				},
-  			],
-  		},
-  		restricted: {
-  			Experian_request_details: [
-  				{
-  					name: getFullName(person.name),
-  					sortCode: verifyAccountPayload?.sort_code,
-  					accountNumber: verifyAccountPayload?.account_number,
+  					txn: verifyResponse.expRequestId,
   					attemptNum: session.attemptCount ?? 1,
   				},
   			],
   		},
+  		restricted: {
+  			name: person.name,
+  			birthDate: person.birthDate,
+  			bankAccount: [{
+  				sortCode: verifyAccountPayload?.sort_code,
+  				accountNumber: verifyAccountPayload?.account_number,
+  			}],
+  		},
   	}, encodedHeader);
+
 		
 		  await this.BavService.sendToTXMA(this.txmaQueueUrl, {
 			  event_name: TxmaEventNames.BAV_EXPERIAN_RESPONSE_RECEIVED,
