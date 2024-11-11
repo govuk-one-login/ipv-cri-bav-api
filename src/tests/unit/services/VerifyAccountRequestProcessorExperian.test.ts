@@ -230,19 +230,18 @@ describe("VerifyAccountRequestProcessor", () => {
 					evidence: [
 				 		{
 					 		txn: "1234568",
+							attemptNum: 1,
 						},
 					],
 				},
-				restricted:{
-  				"Experian_request_details": [
-					 {
-  						name: "Frederick Joseph Flintstone",
-  						sortCode: verifyAccountPayload.sort_code,
-  						accountNumber: verifyAccountPayload.account_number,
-  						attemptNum: 1,
-					 },
-  				],
-		 		},
+				 restricted: {
+					name: person.name,
+					birthDate: person.birthDate,
+					bankAccount: [{
+						sortCode: verifyAccountPayload.sort_code,
+						accountNumber: verifyAccountPayload.account_number,
+					}],
+				},
 				timestamp: 1585695600,
 				event_timestamp_ms: 1585695600000,
 				user:  {
