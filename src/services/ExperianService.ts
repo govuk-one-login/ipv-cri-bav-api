@@ -110,9 +110,9 @@ export class ExperianService {
     		const endpoint = experianVerifyUrl;
     		this.logger.info("Sending verify request to Experian", { uuid, endpoint });
     		const { data } = await axios.post(endpoint, params, { headers });
+    		
     		const LOG_THIRDPARTY_API_RESPONSE = checkEnvironmentVariable(EnvironmentVariables.LOG_THIRDPARTY_API_RESPONSE, this.logger);
     		this.logger.info("Logging experian response " + LOG_THIRDPARTY_API_RESPONSE);
-    		this.logger.info(`Additional check: : ${LOG_THIRDPARTY_API_RESPONSE === "true"}`);
     		if (LOG_THIRDPARTY_API_RESPONSE === "true") {
     			const requestPayload = JSON.stringify(params, function replacer(key: string, value: any): any { return value;});
     			const responsePayload = JSON.stringify(data, function replacer(key: string, value: any): any { return value;});
@@ -120,25 +120,54 @@ export class ExperianService {
     			this.logger.info(`Experian response: : ${responsePayload}` );
     		}
 
+    		const responseHeader = data?.responseHeader;
+    		this.logger.info("Experian response header client referenceId" + responseHeader?.clientReferenceId);
+    		this.logger.info("Experian response header expRequestId" + responseHeader?.expRequestId);
+    		this.logger.info("Experian response details: ResponseTye " + responseHeader?.responseType + " Response Code " + responseHeader?.responseCode + " ResponseMessage " + responseHeader?.responseMessage);
+    		this.logger.info("Experian overall response details " + JSON.stringify(responseHeader?.overallResponse));
+
 	   		const decisionElements = data?.clientResponsePayload?.decisionElements;
-    		const expRequestId = data?.responseHeader?.expRequestId;
+    		const expRequestId = responseHeader?.expRequestId;
 
-    		const logObject = decisionElements.find((object: { auditLogs: object[] }) => object.auditLogs);
-    		this.logger.info({
-    			message: "Received response from Experian verify request",
-    			eventType: logObject?.auditLogs[0]?.eventType,
-    			eventOutcome: logObject?.auditLogs[0]?.eventOutcome,
-    		});
+    		if (decisionElements) {
+    			const logObject = decisionElements.find((object: { auditLogs: object[] }) => object.auditLogs);
+    			this.logger.info({
+    				message: "Received response from Experian verify request",
+    				eventType: logObject?.auditLogs[0]?.eventType,
+    				eventOutcome: logObject?.auditLogs[0]?.eventOutcome,
+    			});
+    		} else {
+    			this.logger.info("Decision elements not found. Unable to log audit events");
+    		}
 
-				
-    		const errorObject = decisionElements.find((object: { warningsErrors: Array<{ responseType: string; responseCode: string; responseMessage: string }> }) => object.warningsErrors);
-    		const warningsErrors = errorObject?.warningsErrors.find((object: { responseType: string; responseCode: string; responseMessage: string }) => object.responseType !== undefined);
-    		if (warningsErrors) {
-    			logResponseCode(warningsErrors, this.logger);
+    		let warningsErrors = undefined;
+    		if (decisionElements) {	
+    			const errorObject = decisionElements.find((object: { warningsErrors: Array<{ responseType: string; responseCode: string; responseMessage: string }> }) => object.warningsErrors);
+    			if (errorObject) {	
+    				const thirdPartyWarningsErrors = errorObject?.warningsErrors;
+    				if (thirdPartyWarningsErrors) {
+    					warningsErrors = thirdPartyWarningsErrors.find((object: { responseType: string; responseCode: string; responseMessage: string }) => object.responseType !== undefined);
+    					if (warningsErrors) {
+    						logResponseCode(warningsErrors, this.logger);
+    					}
+    				}
+    			}
+    		} else {
+    			this.logger.info("Decision elements not found. Unable to log specific warnings");
     		} 
-				
-    		const bavCheckResults = decisionElements.find((object: { scores: Array<{ name: string; score: number }> }) => object.scores);
-    		const personalDetailsScore = bavCheckResults?.scores.find((object: { name: string; score: number }) => object.name === "Personal details")?.score;
+			
+    		let personalDetailsScore = undefined;
+    		if (decisionElements) {	
+    			const bavCheckResults = decisionElements.find((object: { scores: Array<{ name: string; score: number }> }) => object.scores);
+    			const scores = bavCheckResults?.scores;
+    			if (scores) {
+    				personalDetailsScore = scores.find((object: { name: string; score: number }) => object.name === "Personal details")?.score;
+    			} else {
+    				this.logger.warn("No scores present in response");
+    			}
+    		} else {
+    			this.logger.info("Decision elements not found. Unable to capture personal details score");
+    		}
 
     		const verifyObject = {
     			expRequestId,

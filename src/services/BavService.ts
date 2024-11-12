@@ -321,8 +321,8 @@ export class BavService {
 
 	async saveExperianCheckResult(sessionId: string, verifyResponse: ExperianVerifyResponse, experianCheckResult?: ExperianCheckResult, attemptCount?: number): Promise<void> {
 		this.logger.info({ message: `Updating ${this.tableName} table with experianCheckResult`, experianCheckResult });
-		const personalDetailsScore = verifyResponse.personalDetailsScore;
-		const warningsErrors = verifyResponse.warningsErrors;
+		const personalDetailsScore = verifyResponse?.personalDetailsScore;
+		const warningsErrors = verifyResponse?.warningsErrors;
 
 		const updateStateCommand = new UpdateCommand({
 			TableName: this.tableName,

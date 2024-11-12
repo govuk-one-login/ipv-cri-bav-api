@@ -128,8 +128,10 @@ export class VerifyAccountRequestProcessor {
 			  ssmParams.experianVerifyUrl,
 			  ssmParams.experianTokenUrl,
 		  );
+
+		  const verifyResponsePresent = verifyResponse?.expRequestId && (verifyResponse?.personalDetailsScore || verifyResponse?.warningsErrors);
 		
-		  if (!verifyResponse) {
+		  if (!verifyResponsePresent) {
 			  this.logger.error("No verify response received", { messageCode: MessageCodes.NO_VERIFY_RESPONSE });
 			  return Response(HttpCodesEnum.SERVER_ERROR, "Could not verify account");
 		  }
@@ -140,7 +142,7 @@ export class VerifyAccountRequestProcessor {
   		extensions: {
   			evidence: [
   				{
-  					txn: verifyResponse.expRequestId,
+  					txn: verifyResponse?.expRequestId,
   					attemptNum: session.attemptCount ?? 1,
   				},
   			],
@@ -162,7 +164,7 @@ export class VerifyAccountRequestProcessor {
 			  extensions: {
 				  evidence: [
 					  {
-						  txn: verifyResponse.expRequestId,
+						  txn: verifyResponse?.expRequestId,
 					  },
 				  ],
 			  },
@@ -321,12 +323,13 @@ export class VerifyAccountRequestProcessor {
   }
 
   calculateExperianCheckResult(verifyResponse: ExperianVerifyResponse, attemptCount?: number): ExperianCheckResult {
-  	const personalDetailsScore = verifyResponse.personalDetailsScore;
-  	if (personalDetailsScore === 9 && !verifyResponse.warningsErrors) {
+  	const personalDetailsScore = verifyResponse?.personalDetailsScore;
+  	if (personalDetailsScore === 9 && !verifyResponse?.warningsErrors) {
   		return ExperianCheckResults.FULL_MATCH;
   	} else if (personalDetailsScore !== 9 && attemptCount === undefined) {
   		return undefined;
   	} else {
+  		this.logger.info("Personal details score is " + personalDetailsScore);
   		return ExperianCheckResults.NO_MATCH;
   	}
   }
