@@ -1,6 +1,6 @@
 export const logResponseCode = (warningsErrors: any, logger: any): any => {
-	const responseCode = warningsErrors.responseCode;
-	const responseMessage = warningsErrors.responseMessage;
+	const responseCode = warningsErrors?.responseCode;
+	const responseMessage = warningsErrors?.responseMessage;
 	switch (responseCode) {
 		case "2":
 			logger.warn({ message: `Response code ${responseCode}: ${responseMessage}` });
@@ -21,7 +21,7 @@ export const logResponseCode = (warningsErrors: any, logger: any): any => {
 			logger.error({ message: `Response code ${responseCode}: ${responseMessage}` });
 			break;
 		default:
-			logger.debug({ message: "No error" });
+			logger.warn({ message: `Unrecognised response code ${responseCode}: ${responseMessage}` });
 			break;
 	}
 };
