@@ -297,9 +297,6 @@ Globals:
           !Ref AWS::StackName,
         ]
     AutoPublishAlias: live
-    DeploymentPreference:
-      Type: !Ref LambdaDeploymentPreference
-      Role: !GetAtt CodeDeployServiceRole.Arn
 
 Resources:
   LambdaEgressSecurityGroup:
@@ -755,6 +752,8 @@ Resources:
     Properties:
       FunctionName: !Sub "BAV-Session-${AWS::StackName}"
       DeploymentPreference:
+        Type: !Ref LambdaDeploymentPreference
+        Role: !GetAtt CodeDeployServiceRole.Arn
         Alarms: !If
           - UseCanaryDeploymentAlarms
           - [!Ref SessionFunctionFatalErrorAlarm, !Ref SessionFunctionCanary5xxErrors, !Ref SessionFunctionLambdaErrors]
@@ -938,7 +937,8 @@ Resources:
       Statistic: Sum
       Unit: Count
       Period: 60
-      EvaluationPeriods: 1
+      EvaluationPeriods: 3
+      DatapointsToAlarm: 2
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
@@ -1267,6 +1267,8 @@ Resources:
     Properties:
       FunctionName: !Sub "BAV-Abort-${AWS::StackName}"
       DeploymentPreference:
+        Type: !Ref LambdaDeploymentPreference
+        Role: !GetAtt CodeDeployServiceRole.Arn
         Alarms: !If
           - UseCanaryDeploymentAlarms
           - [!Ref AbortFunctionFatalErrorAlarm, !Ref AbortFunctionLambdaErrors, !Ref AbortFunctionCanary5xxErrors]
@@ -1439,7 +1441,8 @@ Resources:
       Statistic: Sum
       Unit: Count
       Period: 60
-      EvaluationPeriods: 1
+      EvaluationPeriods: 3
+      DatapointsToAlarm: 2
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
@@ -1687,6 +1690,8 @@ Resources:
     Properties:
       FunctionName: !Sub "BAV-person-info-${AWS::StackName}"
       DeploymentPreference:
+        Type: !Ref LambdaDeploymentPreference
+        Role: !GetAtt CodeDeployServiceRole.Arn
         Alarms: !If
           - UseCanaryDeploymentAlarms
           - [!Ref PersonInfoFunctionFatalErrorAlarm, !Ref PersonInfoFunctionCanary5xxErrors, !Ref PersonInfoFunctionLambdaErrors]
@@ -1879,7 +1884,8 @@ Resources:
       Statistic: Sum
       Unit: Count
       Period: 60
-      EvaluationPeriods: 1
+      EvaluationPeriods: 3
+      DatapointsToAlarm: 2
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
@@ -2102,6 +2108,8 @@ Resources:
     Properties:
       FunctionName: !Sub "BAV-Person-Info-Key-${AWS::StackName}"
       DeploymentPreference:
+        Type: !Ref LambdaDeploymentPreference
+        Role: !GetAtt CodeDeployServiceRole.Arn
         Alarms: !If
           - UseCanaryDeploymentAlarms
           - [!Ref PersonInfoKeyFunctionFatalErrorAlarm, !Ref PersonInfoKeyFunctionCanary5xxErrors, !Ref PersonInfoKeyFunctionLambdaErrors]
@@ -2252,7 +2260,8 @@ Resources:
       Statistic: Sum
       Unit: Count
       Period: 60
-      EvaluationPeriods: 1
+      EvaluationPeriods: 3
+      DatapointsToAlarm: 2
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
@@ -2500,6 +2509,8 @@ Resources:
     Properties:
       FunctionName: !Sub "BAV-UserInfo-${AWS::StackName}"
       DeploymentPreference:
+        Type: !Ref LambdaDeploymentPreference
+        Role: !GetAtt CodeDeployServiceRole.Arn
         Alarms: !If
           - UseCanaryDeploymentAlarms
           - [!Ref UserInfoFunctionFatalErrorAlarm, !Ref UserInfoFunctionCanary5xxErrors, !Ref UserInfoFunctionLambdaErrors]
@@ -2685,7 +2696,8 @@ Resources:
       Statistic: Sum
       Unit: Count
       Period: 60
-      EvaluationPeriods: 1
+      EvaluationPeriods: 3
+      DatapointsToAlarm: 2
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
@@ -2935,6 +2947,8 @@ Resources:
     Properties:
       FunctionName: !Sub "Access-Token-${AWS::StackName}"
       DeploymentPreference:
+        Type: !Ref LambdaDeploymentPreference
+        Role: !GetAtt CodeDeployServiceRole.Arn
         Alarms: !If
           - UseCanaryDeploymentAlarms
           - [!Ref TokenFunctionFatalErrorAlarm, !Ref TokenFunctionCanary5xxErrors, !Ref TokenFunctionLambdaErrors]
@@ -3096,7 +3110,8 @@ Resources:
       Statistic: Sum
       Unit: Count
       Period: 60
-      EvaluationPeriods: 1
+      EvaluationPeriods: 3
+      DatapointsToAlarm: 2
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
@@ -3345,6 +3360,8 @@ Resources:
     Properties:
       FunctionName: !Sub "BAV-Authorization-${AWS::StackName}"
       DeploymentPreference:
+        Type: !Ref LambdaDeploymentPreference
+        Role: !GetAtt CodeDeployServiceRole.Arn
         Alarms: !If
           - UseCanaryDeploymentAlarms
           - [!Ref AuthorizationFunctionFatalErrorAlarm, !Ref AuthorizationFunctionCanary5xxErrors, !Ref AuthorizationFunctionLambdaErrors]
@@ -3510,7 +3527,8 @@ Resources:
       Statistic: Sum
       Unit: Count
       Period: 60
-      EvaluationPeriods: 1
+      EvaluationPeriods: 3
+      DatapointsToAlarm: 2
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
@@ -3710,6 +3728,8 @@ Resources:
     Properties:
       FunctionName: !Sub "BAV-verify-account-${AWS::StackName}"
       DeploymentPreference:
+        Type: !Ref LambdaDeploymentPreference
+        Role: !GetAtt CodeDeployServiceRole.Arn
         Alarms: !If
           - UseCanaryDeploymentAlarms
           - [!Ref VerifyAccountFunctionFatalErrorAlarm, !Ref VerifyAccountFunctionCanary5xxErrors, !Ref VerifyAccountFunctionLambdaErrors]
@@ -3952,7 +3972,8 @@ Resources:
       Statistic: Sum
       Unit: Count
       Period: 60
-      EvaluationPeriods: 1
+      EvaluationPeriods: 3
+      DatapointsToAlarm: 2
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
@@ -4883,11 +4904,13 @@ Resources:
         - ApplyReservedConcurrency
         - !Ref LambdaConcurrency
         - !Ref AWS::NoValue
-      DeploymentPreference:
-        Alarms: !If
-          - UseCanaryDeploymentAlarms
-          - [!Ref HmrcTokenFunctionFatalErrorAlarm, !Ref HmrcTokenFunctionLambdaErrors]
-          - [!Ref AWS::NoValue]
+      # DeploymentPreference:
+      #   Type: !Ref LambdaDeploymentPreference
+      #   Role: !GetAtt CodeDeployServiceRole.Arn
+      #   Alarms: !If
+      #     - UseCanaryDeploymentAlarms
+      #     - [!Ref HmrcTokenFunctionFatalErrorAlarm, !Ref HmrcTokenFunctionLambdaErrors]
+      #     - [!Ref AWS::NoValue]
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: HmrcTokenHandler
@@ -4991,31 +5014,31 @@ Resources:
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
 
-  HmrcTokenFunctionLambdaErrors:
-    Type: AWS::CloudWatch::Alarm
-    Condition: UseCanaryDeploymentAlarms
-    Properties:
-      AlarmName: !Sub "${AWS::StackName}-HmrcTokenFunctionLambdaErrors"
-      AlarmDescription: !Sub Trigger an alarm when lambda errors occurs. ${SupportManualURL}
-      ActionsEnabled: true
-      AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
-      OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
-      InsufficientDataActions: []
-      MetricName: Errors
-      Namespace: AWS/Lambda
-      Statistic: Sum
-      Dimensions:
-        - Name: Resource
-          Value: !Sub "${AWS::StackName}-HmrcTokenFunction:live"
-        - Name: ExecutedVersion
-          Value: !Sub HmrcTokenFunction.Version.Version
-      Period: 60
-      EvaluationPeriods: 1
-      Threshold: 1
-      ComparisonOperator: GreaterThanThreshold
-      TreatMissingData: notBreaching
+  # HmrcTokenFunctionLambdaErrors:
+  #   Type: AWS::CloudWatch::Alarm
+  #   Condition: UseCanaryDeploymentAlarms
+  #   Properties:
+  #     AlarmName: !Sub "${AWS::StackName}-HmrcTokenFunctionLambdaErrors"
+  #     AlarmDescription: !Sub Trigger an alarm when lambda errors occurs. ${SupportManualURL}
+  #     ActionsEnabled: true
+  #     AlarmActions:
+  #       - !ImportValue platform-alarm-topic-slack-warning-alert
+  #     OKActions:
+  #       - !ImportValue platform-alarm-topic-slack-warning-alert
+  #     InsufficientDataActions: []
+  #     MetricName: Errors
+  #     Namespace: AWS/Lambda
+  #     Statistic: Sum
+  #     Dimensions:
+  #       - Name: Resource
+  #         Value: !Sub "${AWS::StackName}-HmrcTokenFunction:live"
+  #       - Name: ExecutedVersion
+  #         Value: !Sub HmrcTokenFunction.Version.Version
+  #     Period: 60
+  #     EvaluationPeriods: 1
+  #     Threshold: 1
+  #     ComparisonOperator: GreaterThanThreshold
+  #     TreatMissingData: notBreaching
 
   HmrcTokenConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
@@ -5073,11 +5096,13 @@ Resources:
     DependsOn: PartialNameMatchFunctionLogGroup
     Properties:
       FunctionName: !Sub "BAV-PartialNameMatch-${AWS::StackName}"
-      DeploymentPreference:
-        Alarms: !If
-          - UseCanaryDeploymentAlarms
-          - [!Ref PartialNameMatchFunctionFatalErrorAlarm, !Ref PartialNameMatchFunctionLambdaErrors]
-          - [!Ref AWS::NoValue]
+      # DeploymentPreference:
+      #   Type: !Ref LambdaDeploymentPreference
+      #   Role: !GetAtt CodeDeployServiceRole.Arn
+      #   Alarms: !If
+      #     - UseCanaryDeploymentAlarms
+      #     - [!Ref PartialNameMatchFunctionFatalErrorAlarm, !Ref PartialNameMatchFunctionLambdaErrors]
+      #     - [!Ref AWS::NoValue]
       Handler: PartialNameMatchHandler.lambdaHandler
       CodeUri: ../src/
       ReservedConcurrentExecutions: !If
@@ -5195,31 +5220,31 @@ Resources:
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
 
-  PartialNameMatchFunctionLambdaErrors:
-    Type: AWS::CloudWatch::Alarm
-    Condition: UseCanaryDeploymentAlarms
-    Properties:
-      AlarmName: !Sub "${AWS::StackName}-PartialNameMatchFunctionLambdaErrors"
-      AlarmDescription: !Sub Trigger an alarm when lambda errors occurs. ${SupportManualURL}
-      ActionsEnabled: true
-      AlarmActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
-      OKActions:
-        - !ImportValue platform-alarm-topic-slack-warning-alert
-      InsufficientDataActions: []
-      MetricName: Errors
-      Namespace: AWS/Lambda
-      Statistic: Sum
-      Dimensions:
-        - Name: Resource
-          Value: !Sub "${AWS::StackName}-PartialNameMatchFunction:live"
-        - Name: ExecutedVersion
-          Value: !Sub PartialNameMatchFunction.Version.Version
-      Period: 60
-      EvaluationPeriods: 1
-      Threshold: 1
-      ComparisonOperator: GreaterThanThreshold
-      TreatMissingData: notBreaching
+  # PartialNameMatchFunctionLambdaErrors:
+  #   Type: AWS::CloudWatch::Alarm
+  #   Condition: UseCanaryDeploymentAlarms
+  #   Properties:
+  #     AlarmName: !Sub "${AWS::StackName}-PartialNameMatchFunctionLambdaErrors"
+  #     AlarmDescription: !Sub Trigger an alarm when lambda errors occurs. ${SupportManualURL}
+  #     ActionsEnabled: true
+  #     AlarmActions:
+  #       - !ImportValue platform-alarm-topic-slack-warning-alert
+  #     OKActions:
+  #       - !ImportValue platform-alarm-topic-slack-warning-alert
+  #     InsufficientDataActions: []
+  #     MetricName: Errors
+  #     Namespace: AWS/Lambda
+  #     Statistic: Sum
+  #     Dimensions:
+  #       - Name: Resource
+  #         Value: !Sub "${AWS::StackName}-PartialNameMatchFunction:live"
+  #       - Name: ExecutedVersion
+  #         Value: !Sub PartialNameMatchFunction.Version.Version
+  #     Period: 60
+  #     EvaluationPeriods: 1
+  #     Threshold: 1
+  #     ComparisonOperator: GreaterThanThreshold
+  #     TreatMissingData: notBreaching
 
   PartialNameMatchConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
