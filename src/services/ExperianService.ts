@@ -37,7 +37,7 @@ export class ExperianService {
 
 	 // eslint-disable-next-line max-lines-per-function
 	 async verify(
-    	{ verifyAccountPayload, firstName, middleNames, surname, birthDate, uuid }: { verifyAccountPayload: any; firstName: string; middleNames: string; surname: string; birthDate: string; uuid: string }, 
+    	{ verifyAccountPayload, firstName, surname, birthDate, uuid }: { verifyAccountPayload: any; firstName: string; surname: string; birthDate: string; uuid: string }, 
     	experianUsername: string,
     	experianPassword: string,
     	experianClientId: string,
@@ -83,7 +83,7 @@ export class ExperianService {
     							names: [
     								{
     									firstName: firstName,
-										middleNames: middleNames,
+										middleNames: "",
     									surName: surname
     								}
     							]

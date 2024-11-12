@@ -14,7 +14,7 @@ import { CopCheckResult, ExperianCheckResult, ISessionItem } from "../models/ISe
 import { EnvironmentVariables, Constants } from "../utils/Constants";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
-import { getFirstName, getMiddleNames, getLastName, getFullName } from "../utils/PersonIdentityUtils";
+import { getFirstName, getLastName, getFullName } from "../utils/PersonIdentityUtils";
 import { Response } from "../utils/Response";
 import { buildCoreEventFields } from "../utils/TxmaEvent";
 import { VerifyAccountPayload } from "../type/VerifyAccountPayload";
@@ -110,7 +110,6 @@ export class VerifyAccountRequestProcessor {
 		  }
 	
 		  const firstName = getFirstName(person.name);
-		  const middleNames = getMiddleNames(person.name);
 		  const surname = getLastName(person.name);
 		  const birthDate = person.birthDate[0].value;
 
@@ -121,7 +120,7 @@ export class VerifyAccountRequestProcessor {
 		  const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
 		
 		  const verifyResponse = await this.ExperianService.verify(
-			  { verifyAccountPayload, firstName, middleNames, surname, birthDate, uuid: vendorUuid },
+			  { verifyAccountPayload, firstName, surname, birthDate, uuid: vendorUuid },
 			  ssmParams.experianUsername,
 			  ssmParams.experianPassword,
 			  ssmParams.experianClientId,
