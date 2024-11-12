@@ -62,7 +62,7 @@ const experianPayload = {
 					names: [
 		  {
 							firstName: "First",
-							middleNames: "Multiple Middle Names",
+							middleNames: "",
 							surName: "Last",
 		  },
 					],
@@ -124,7 +124,6 @@ describe("Experian service", () => {
 		};
 
 		const firstName = "First";
-		const middleNames = "Multiple Middle Names";
 		const surname = "Last";
 		const uuid = "uuid";
 		const birthDate = "DATE";
@@ -136,7 +135,7 @@ describe("Experian service", () => {
 
 			mockDynamoDbClient.send = jest.fn().mockResolvedValue({ Item: storedExperianToken });
 
-			const response = await experianServiceTest.verify({ verifyAccountPayload, firstName, middleNames, surname, birthDate, uuid },
+			const response = await experianServiceTest.verify({ verifyAccountPayload, firstName, surname, birthDate, uuid },
 				clientUsername,
 				clientPassword,
 				clientId,
@@ -180,7 +179,7 @@ describe("Experian service", () => {
 
 			mockDynamoDbClient.send = jest.fn().mockResolvedValue({ Item: storedExperianToken });
 
-			const response = await experianServiceTest.verify({ verifyAccountPayload, firstName, middleNames, surname, birthDate, uuid },
+			const response = await experianServiceTest.verify({ verifyAccountPayload, firstName, surname, birthDate, uuid },
 				clientUsername,
 				clientPassword,
 				clientId,
@@ -221,7 +220,7 @@ describe("Experian service", () => {
 			jest.spyOn(axios, "post").mockResolvedValueOnce({ data: errorResponse });
 			mockDynamoDbClient.send = jest.fn().mockResolvedValueOnce({ Item: storedExperianToken });
 		  
-			await experianServiceTest.verify({ verifyAccountPayload, firstName, surname, middleNames, birthDate, uuid }, clientUsername,
+			await experianServiceTest.verify({ verifyAccountPayload, firstName, surname, birthDate, uuid }, clientUsername,
 				clientPassword,
 				clientId,
 				clientSecret,
@@ -240,7 +239,7 @@ describe("Experian service", () => {
 			jest.spyOn(axios, "post").mockResolvedValueOnce({ data: errorResponse });
 			mockDynamoDbClient.send = jest.fn().mockResolvedValueOnce({ Item: storedExperianToken });
 		  
-			await experianServiceTest.verify({ verifyAccountPayload, firstName, surname, middleNames, birthDate, uuid }, clientUsername,
+			await experianServiceTest.verify({ verifyAccountPayload, firstName, surname, birthDate, uuid }, clientUsername,
 				clientPassword,
 				clientId,
 				clientSecret,
