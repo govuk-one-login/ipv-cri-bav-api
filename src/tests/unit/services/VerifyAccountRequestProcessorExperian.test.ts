@@ -203,6 +203,8 @@ describe("VerifyAccountRequestProcessor", () => {
 		});
 
 		it("verifies the account details given", async () => {
+			const firstName = person.name[0].nameParts[0].value;
+			const lastName = person.name[0].nameParts[2].value;
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
 			mockBavService.getSessionById.mockResolvedValueOnce(session);
 			mockExperianService.verify.mockResolvedValueOnce(experianServiceVerifyResponseSuccess);
@@ -235,7 +237,18 @@ describe("VerifyAccountRequestProcessor", () => {
 					],
 				},
 				 restricted: {
-					name: person.name,
+					name: [ {
+						nameParts:[
+						  {
+								type:"GivenName",
+								value: firstName,
+						  },
+						  {
+								type:"FamilyName",
+								value: lastName,
+						  },
+						],
+					  }],
 					birthDate: person.birthDate,
 					bankAccount: [{
 						sortCode: verifyAccountPayload.sort_code,
