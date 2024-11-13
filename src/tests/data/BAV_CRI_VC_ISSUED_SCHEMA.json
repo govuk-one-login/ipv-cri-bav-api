@@ -150,34 +150,13 @@
                                 },
                                 "attemptNum": {
                                     "type": "integer"
-                                },
-                                "checkDetails": {
-                                    "type": "array",
-                                    "items": [
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "checkMethod": {
-                                                    "type": "string"
-                                                },
-                                                "identityCheckPolicy": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "checkMethod",
-                                                "identityCheckPolicy"
-                                            ]
-                                        }
-                                    ]
                                 }
                             },
                             "required": [
                                 "txn",
                                 "strengthScore",
                                 "validityScore",
-                                "attemptNum",
-                                "checkDetails"
+                                "attemptNum"
                             ]
                         }
                     ]

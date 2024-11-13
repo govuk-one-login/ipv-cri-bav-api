@@ -184,6 +184,7 @@ describe("BAV CRI unhappy path tests", () => {
 
 			bankDetails = new BankDetailsPayload(verifyAccountYesPayload.sort_code, accountNumber);
 			await verifyAccountPost(bankDetails, sessionId);
+			await verifyAccountPost(bankDetails, sessionId);
 
 			const authResponse = await authorizationGet(sessionId);
 
@@ -210,6 +211,8 @@ describe("BAV CRI unhappy path tests", () => {
 			validateTxMAEventData({ eventName: "BAV_CRI_VC_ISSUED", schemaName: "BAV_CRI_VC_ISSUED_WITH_CI_SCHEMA" }, allTxmaEventBodies);
 			validateTxMAEventField({ eventName: "BAV_CRI_VC_ISSUED", jsonPath: "extensions.evidence[0].validityScore", expectedValue: 0 }, allTxmaEventBodies);
 			validateTxMAEventField({ eventName: "BAV_CRI_VC_ISSUED", jsonPath: "extensions.evidence[0].ci", expectedValue: ["D15"] }, allTxmaEventBodies);
+			validateTxMAEventField({ eventName: "BAV_CRI_VC_ISSUED", jsonPath: "extensions.evidence[0].ciReasons[0].ci", expectedValue: "D15" }, allTxmaEventBodies);
+			validateTxMAEventField({ eventName: "BAV_CRI_VC_ISSUED", jsonPath: "extensions.evidence[0].ciReasons[0].reason", expectedValue: "NO_MATCH" }, allTxmaEventBodies);
 			validateTxMAEventData({ eventName: "BAV_CRI_END", schemaName: "BAV_CRI_END_SCHEMA" }, allTxmaEventBodies);
 		});
 
