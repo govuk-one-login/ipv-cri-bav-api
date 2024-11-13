@@ -83,7 +83,6 @@ export class ExperianService {
     							names: [
     								{
     									firstName: firstName,
-										middleNames: "",
     									surName: surname
     								}
     							]

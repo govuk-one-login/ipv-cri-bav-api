@@ -62,7 +62,6 @@ const experianPayload = {
 					names: [
 		  {
 							firstName: "First",
-							middleNames: "",
 							surName: "Last",
 		  },
 					],
