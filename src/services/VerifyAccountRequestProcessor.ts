@@ -148,7 +148,20 @@ export class VerifyAccountRequestProcessor {
   			],
   		},
   		restricted: {
-  			name: person.name,
+  			name:[
+  				{
+  					nameParts:[
+  						{
+  							type:"GivenName",
+  							value: firstName,
+  						},
+  						{
+  							type:"FamilyName",
+  							value: surname,
+  						},
+  					],
+  				},
+  			],
   			birthDate: person.birthDate,
   			bankAccount: [{
   				sortCode: verifyAccountPayload?.sort_code,
