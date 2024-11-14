@@ -233,7 +233,7 @@ describe("BAV CRI happy path tests", () => {
 			validateTxMAEventData({ eventName: "BAV_CRI_END", schemaName: "BAV_CRI_END_SCHEMA" }, allTxmaEventBodies);
 		});
 
-		it.only("Experian Name Validation - Multiple Given Names", async () => {
+		it("Experian Name Validation - Multiple Given Names", async () => {
 			sessionId = await startStubServiceAndReturnSessionId(bavStubPayloadMultipleGivenNames);
 			expect(sessionId).toBeTruthy();
 			const firstName = bavStubPayloadMultipleGivenNames.shared_claims.name[0].nameParts[0].value;
@@ -259,11 +259,15 @@ describe("BAV CRI happy path tests", () => {
 
 			expect(decodedBody.vc.credentialSubject.bankAccount[0].sortCode).toBe(bankDetails.sort_code);
 			expect(decodedBody.vc.credentialSubject.bankAccount[0].accountNumber).toBe(bankDetails.account_number.padStart(8, "0"));
+			expect(decodedBody.vc.credentialSubject.name[0].nameParts).toStrictEqual([
+				{ type: "GivenName", value: firstName },
+				{ type: "GivenName", value: middleName },
+				{ type: "FamilyName", value: lastName },
+			]);
 
 			await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_CRI_VC_ISSUED");
 
 			const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 5);
-			console.log(JSON.stringify(allTxmaEventBodies));
 			validateTxMAEventField(
 				{
 					eventName: "BAV_EXPERIAN_REQUEST_SENT",
