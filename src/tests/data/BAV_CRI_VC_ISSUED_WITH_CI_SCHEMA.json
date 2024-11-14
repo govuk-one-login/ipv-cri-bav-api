@@ -167,10 +167,14 @@
                                             "properties": {
                                                 "ci": {
                                                     "type": "string"
+                                                },
+                                                "reason": {
+                                                    "type": "string"
                                                 }
                                             },
                                             "required": [
-                                                "ci"
+                                                "ci",
+                                                "reason"
                                             ]
                                         }
                                     ]
