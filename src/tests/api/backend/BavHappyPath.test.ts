@@ -3,7 +3,7 @@ import bavStubPayload from "../../data/exampleStubPayload.json";
 import bavStubPayloadMultipleGivenNames from "../../data/exampleStubPayloadMultipleGivenNames.json";
 import verifyAccountYesPayload from "../../data/bankDetailsYes.json";
 import { constants } from "../ApiConstants";
-import { getTxmaEventsFromTestHarness, validateTxMAEventData } from "../ApiUtils";
+import { getTxmaEventsFromTestHarness, validateTxMAEventData, validateTxMAEventField } from "../ApiUtils";
 import {
 	authorizationGet,
 	getSessionAndVerifyKey,
@@ -236,11 +236,14 @@ describe("BAV CRI happy path tests", () => {
 		it.only("Experian Name Validation - Multiple Given Names", async () => {
 			sessionId = await startStubServiceAndReturnSessionId(bavStubPayloadMultipleGivenNames);
 			expect(sessionId).toBeTruthy();
+			const firstName = bavStubPayloadMultipleGivenNames.shared_claims.name[0].nameParts[0].value;
+			const middleName = bavStubPayloadMultipleGivenNames.shared_claims.name[0].nameParts[1].value;
+			const lastName = bavStubPayloadMultipleGivenNames.shared_claims.name[0].nameParts[2].value;
 
 			await verifyAccountPost(bankDetails, sessionId);
 
 			const authResponse = await authorizationGet(sessionId);
-
+		
 			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
 
 			const userInfoResponse = await userInfoPost("Bearer " + tokenResponse.data.access_token);
@@ -261,9 +264,29 @@ describe("BAV CRI happy path tests", () => {
 
 			const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 5);
 			console.log(JSON.stringify(allTxmaEventBodies));
-			// validateTxMAEventData({ eventName: "BAV_CRI_START", schemaName: "BAV_CRI_START_SCHEMA" }, allTxmaEventBodies);
-			// validateTxMAEventData({ eventName: "BAV_CRI_VC_ISSUED", schemaName: "BAV_CRI_VC_ISSUED_SCHEMA" }, allTxmaEventBodies);
-			// validateTxMAEventData({ eventName: "BAV_CRI_END", schemaName: "BAV_CRI_END_SCHEMA" }, allTxmaEventBodies);
+			validateTxMAEventField(
+				{
+					eventName: "BAV_EXPERIAN_REQUEST_SENT",
+					jsonPath: "restricted.name[0].nameParts",
+					expectedValue: [
+						{ type: "GivenName", value: firstName },
+						{ type: "FamilyName", value: lastName },
+					],
+				},
+				allTxmaEventBodies,
+			);
+			validateTxMAEventField(
+				{
+					eventName: "BAV_CRI_VC_ISSUED",
+					jsonPath: "restricted.name[0].nameParts",
+					expectedValue: [
+						{ type: "GivenName", value: firstName },
+						{ type: "GivenName", value: middleName },
+						{ type: "FamilyName", value: lastName },
+					],
+				},
+				allTxmaEventBodies,
+			);
 		});
 	});
 
