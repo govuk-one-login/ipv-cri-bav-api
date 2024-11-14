@@ -1,6 +1,5 @@
 import Ajv from "ajv";
 import { get } from "lodash";
-import { get } from "lodash";
 import { XMLParser } from "fast-xml-parser";
 import { HARNESS_API_INSTANCE } from "./ApiTestSteps";
 import { TxmaEvent, TxmaEventName } from "../../utils/TxmaEvent";
