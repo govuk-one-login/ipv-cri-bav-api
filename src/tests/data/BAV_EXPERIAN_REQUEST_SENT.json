@@ -1,122 +1,184 @@
 {
-    "type": "object",
-    "properties": {
-      "event_name": {
-        "type": "string"
-      },
-      "user": {
-        "type": "object",
-        "properties": {
-          "user_id": {
-            "type": "string"
-          },
-          "session_id": {
-            "type": "string"
-          },
-          "govuk_signin_journey_id": {
-            "type": "string"
-          },
-          "ip_address": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "user_id",
-          "session_id",
-          "govuk_signin_journey_id",
-          "ip_address"
-        ]
-      },
-      "timestamp": {
-        "type": "integer"
-      },
-      "event_timestamp_ms": {
-        "type": "integer"
-      },
-      "component_id": {
-        "type": "string"
-      },
-      "extensions": {
-        "type": "object",
-        "properties": {
-          "evidence": {
-            "type": "array",
-            "items": [
-              {
-                "type": "object",
-                "properties": {
-                  "txn": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "txn"
-                ]
-              }
-            ]
-          }
-        },
-        "required": [
-          "evidence"
-        ]
-      },
-      "restricted": {
-        "type": "object",
-        "properties": {
-          "Experian_request_details": {
-            "type": "array",
-            "items": [
-              {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string"
-                  },
-                  "sortCode": {
-                    "type": "string"
-                  },
-                  "accountNumber": {
-                    "type": "string"
-                  },
-                  "attemptNum": {
-                    "type": "integer"
-                  }
-                },
-                "required": [
-                  "name",
-                  "sortCode",
-                  "accountNumber",
-                  "attemptNum"
-                ]
-              }
-            ]
-          },
-          "device_information": {
-            "type": "object",
-            "properties": {
-              "encoded": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "encoded"
-            ]
-          }
-        },
-        "required": [
-          "Experian_request_details",
-          "device_information"
-        ]
-      }
+  "type": "object",
+  "properties": {
+    "event_name": {
+      "type": "string"
     },
-    "required": [
-      "event_name",
-      "user",
-      "timestamp",
-      "event_timestamp_ms",
-      "component_id",
-      "extensions",
-      "restricted"
-    ],
-    "additionalProperties": false
-  }
+    "user": {
+      "type": "object",
+      "properties": {
+        "user_id": {
+          "type": "string"
+        },
+        "session_id": {
+          "type": "string"
+        },
+        "govuk_signin_journey_id": {
+          "type": "string"
+        },
+        "ip_address": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "user_id",
+        "session_id",
+        "govuk_signin_journey_id",
+        "ip_address"
+      ]
+    },
+    "timestamp": {
+      "type": "integer"
+    },
+    "event_timestamp_ms": {
+      "type": "integer"
+    },
+    "component_id": {
+      "type": "string"
+    },
+    "extensions": {
+      "type": "object",
+      "properties": {
+        "evidence": {
+          "type": "array",
+          "items": [
+            {
+              "type": "object",
+              "properties": {
+                "txn": {
+                  "type": "string"
+                },
+                "attemptNum": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "txn",
+                "attemptNum"
+              ]
+            }
+          ]
+        }
+      },
+      "required": [
+        "evidence"
+      ]
+    },
+    "restricted": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "array",
+          "items": [
+            {
+              "type": "object",
+              "properties": {
+                "nameParts": {
+                  "type": "array",
+                  "items": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "value"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "value"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "nameParts"
+              ]
+            }
+          ]
+        },
+        "birthDate": {
+          "type": "array",
+          "items": [
+            {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "value"
+              ]
+            }
+          ]
+        },
+        "bankAccount": {
+          "type": "array",
+          "items": [
+            {
+              "type": "object",
+              "properties": {
+                "sortCode": {
+                  "type": "string"
+                },
+                "accountNumber": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sortCode",
+                "accountNumber"
+              ]
+            }
+          ]
+        },
+        "device_information": {
+          "type": "object",
+          "properties": {
+            "encoded": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "encoded"
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "birthDate",
+        "bankAccount",
+        "device_information"
+      ]
+    }
+  },
+  "required": [
+    "event_name",
+    "user",
+    "timestamp",
+    "event_timestamp_ms",
+    "component_id",
+    "extensions",
+    "restricted"
+  ],
+  "additionalProperties": false
+}
