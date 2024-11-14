@@ -249,7 +249,7 @@ describe("BAV CRI unhappy path tests", () => {
 
 			const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 3);
 			validateTxMAEventData({ eventName: "BAV_CRI_START", schemaName: "BAV_CRI_START_SCHEMA" }, allTxmaEventBodies);
-			validateTxMAEventData({ eventName: "BAV_CRI_VC_ISSUED", schemaName: "BAV_CRI_VC_ISSUED_SCHEMA" }, allTxmaEventBodies);
+			validateTxMAEventData({ eventName: "BAV_CRI_VC_ISSUED", schemaName: "BAV_CRI_VC_ISSUED_SCHEMA_FAILURE" }, allTxmaEventBodies);
 			validateTxMAEventData({ eventName: "BAV_CRI_END", schemaName: "BAV_CRI_END_SCHEMA" }, allTxmaEventBodies);
 			validateTxMAEventField({ eventName: "BAV_CRI_VC_ISSUED", jsonPath: "extensions.evidence[0].validityScore", expectedValue: 0 }, allTxmaEventBodies);
 		});
