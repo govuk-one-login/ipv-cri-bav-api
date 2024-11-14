@@ -227,7 +227,7 @@ describe("BAV CRI happy path tests", () => {
 
 			await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_CRI_VC_ISSUED");
 
-			const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 5);
+			const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 3);
 			validateTxMAEventData({ eventName: "BAV_CRI_START", schemaName: "BAV_CRI_START_SCHEMA" }, allTxmaEventBodies);
 			validateTxMAEventData({ eventName: "BAV_CRI_VC_ISSUED", schemaName: "BAV_CRI_VC_ISSUED_SCHEMA_SUCCESS" }, allTxmaEventBodies);
 			validateTxMAEventData({ eventName: "BAV_CRI_END", schemaName: "BAV_CRI_END_SCHEMA" }, allTxmaEventBodies);
