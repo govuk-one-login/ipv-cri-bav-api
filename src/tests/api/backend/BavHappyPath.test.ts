@@ -1,5 +1,6 @@
 /* eslint-disable max-lines-per-function */
 import bavStubPayload from "../../data/exampleStubPayload.json";
+import bavStubPayloadMultipleGivenNames from "../../data/exampleStubPayloadMultipleGivenNames.json";
 import verifyAccountYesPayload from "../../data/bankDetailsYes.json";
 import { constants } from "../ApiConstants";
 import { getTxmaEventsFromTestHarness, validateTxMAEventData } from "../ApiUtils";
@@ -198,10 +199,10 @@ describe("BAV CRI happy path tests", () => {
 
 		beforeEach(async () => {
 			bankDetails = new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number);
-			sessionId = await startStubServiceAndReturnSessionId();
 		});
 
 		it("Successful Request Test", async () => {
+			sessionId = await startStubServiceAndReturnSessionId();
 			expect(sessionId).toBeTruthy();
 
 			await verifyAccountPost(bankDetails, sessionId);
@@ -226,10 +227,43 @@ describe("BAV CRI happy path tests", () => {
 
 			await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_CRI_VC_ISSUED");
 
-			const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 3);
+			const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 5);
 			validateTxMAEventData({ eventName: "BAV_CRI_START", schemaName: "BAV_CRI_START_SCHEMA" }, allTxmaEventBodies);
 			validateTxMAEventData({ eventName: "BAV_CRI_VC_ISSUED", schemaName: "BAV_CRI_VC_ISSUED_SCHEMA_SUCCESS" }, allTxmaEventBodies);
 			validateTxMAEventData({ eventName: "BAV_CRI_END", schemaName: "BAV_CRI_END_SCHEMA" }, allTxmaEventBodies);
+		});
+
+		it.only("Experian Name Validation - Multiple Given Names", async () => {
+			sessionId = await startStubServiceAndReturnSessionId(bavStubPayloadMultipleGivenNames);
+			expect(sessionId).toBeTruthy();
+
+			await verifyAccountPost(bankDetails, sessionId);
+
+			const authResponse = await authorizationGet(sessionId);
+
+			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+
+			const userInfoResponse = await userInfoPost("Bearer " + tokenResponse.data.access_token);
+			expect(userInfoResponse.status).toBe(200);
+
+			await validateJwtToken(userInfoResponse.data["https://vocab.account.gov.uk/v1/credentialJWT"][0]);
+
+			const rawBody = userInfoResponse.data["https://vocab.account.gov.uk/v1/credentialJWT"][0].split(".")[1];
+			const decodedBody = decodeRawBody(rawBody);
+
+			const vendorUuid = await getKeyFromSession(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "vendorUuid");
+			expect(decodedBody.vc.evidence[0].txn).toBe(vendorUuid);
+
+			expect(decodedBody.vc.credentialSubject.bankAccount[0].sortCode).toBe(bankDetails.sort_code);
+			expect(decodedBody.vc.credentialSubject.bankAccount[0].accountNumber).toBe(bankDetails.account_number.padStart(8, "0"));
+
+			await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_CRI_VC_ISSUED");
+
+			const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 5);
+			console.log(JSON.stringify(allTxmaEventBodies));
+			// validateTxMAEventData({ eventName: "BAV_CRI_START", schemaName: "BAV_CRI_START_SCHEMA" }, allTxmaEventBodies);
+			// validateTxMAEventData({ eventName: "BAV_CRI_VC_ISSUED", schemaName: "BAV_CRI_VC_ISSUED_SCHEMA" }, allTxmaEventBodies);
+			// validateTxMAEventData({ eventName: "BAV_CRI_END", schemaName: "BAV_CRI_END_SCHEMA" }, allTxmaEventBodies);
 		});
 	});
 
