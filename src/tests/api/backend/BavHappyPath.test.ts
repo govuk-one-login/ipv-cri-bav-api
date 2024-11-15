@@ -197,9 +197,9 @@ describe("BAV CRI happy path tests", () => {
 		let sessionId: string;
 		let bankDetails: BankDetailsPayload;
 
-		beforeEach(async () => {
+		beforeEach(() => {
 			bankDetails = new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number);
-		});
+		});		
 
 		it("Successful Request Test", async () => {
 			sessionId = await startStubServiceAndReturnSessionId();
