@@ -10,7 +10,11 @@ import {
 	verifyAccountPost,
 	tokenPost,
 	getSessionAndVerifyKey,
+	validateJwtToken,
+	decodeRawBody,
+	getKeyFromSession, 
 } from "../ApiTestSteps";
+import { getTxmaEventsFromTestHarness, validateTxMAEventData, validateTxMAEventField } from "../ApiUtils";
 import { constants } from "../ApiConstants";
 import { BankDetailsPayload } from "../../models/BankDetailsPayload";
 import { randomUUID } from "crypto";
@@ -161,6 +165,93 @@ describe("BAV CRI unhappy path tests", () => {
 
 			const userInfoResponse = await userInfoPost("Basic " + tokenResponse.data.access_token);
 			expect(userInfoResponse.status).toBe(401);
+		});
+	});
+
+	describe("Fraud and Data checks VC Validation", () => {
+		let sessionId: string;
+		let bankDetails: BankDetailsPayload;
+
+		beforeEach(async () => {
+			sessionId = await startStubServiceAndReturnSessionId();
+		});
+
+		it.each([
+			{ accountNumber: "11111116" },
+			{ accountNumber: "11111118" },
+		])("Contra Indicator Generated - $accountNumber", async ({ accountNumber }: { accountNumber: string }) => {
+			expect(sessionId).toBeTruthy();
+
+			bankDetails = new BankDetailsPayload(verifyAccountYesPayload.sort_code, accountNumber);
+			await verifyAccountPost(bankDetails, sessionId);
+			await verifyAccountPost(bankDetails, sessionId);
+
+			const authResponse = await authorizationGet(sessionId);
+
+			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+
+			const userInfoResponse = await userInfoPost("Bearer " + tokenResponse.data.access_token);
+			expect(userInfoResponse.status).toBe(200);
+
+			await validateJwtToken(userInfoResponse.data["https://vocab.account.gov.uk/v1/credentialJWT"][0], 0);
+
+			const rawBody = userInfoResponse.data["https://vocab.account.gov.uk/v1/credentialJWT"][0].split(".")[1];
+			const decodedBody = decodeRawBody(rawBody);
+
+			const vendorUuid = await getKeyFromSession(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "vendorUuid");
+			expect(decodedBody.vc.evidence[0].txn).toBe(vendorUuid);
+
+			expect(decodedBody.vc.credentialSubject.bankAccount[0].sortCode).toBe(bankDetails.sort_code);
+			expect(decodedBody.vc.credentialSubject.bankAccount[0].accountNumber).toBe(bankDetails.account_number.padStart(8, "0"));
+
+			await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_CRI_VC_ISSUED");
+
+			const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 3);
+			validateTxMAEventData({ eventName: "BAV_CRI_START", schemaName: "BAV_CRI_START_SCHEMA" }, allTxmaEventBodies);
+			validateTxMAEventData({ eventName: "BAV_CRI_VC_ISSUED", schemaName: "BAV_CRI_VC_ISSUED_WITH_CI_SCHEMA" }, allTxmaEventBodies);
+			validateTxMAEventField({ eventName: "BAV_CRI_VC_ISSUED", jsonPath: "extensions.evidence[0].validityScore", expectedValue: 0 }, allTxmaEventBodies);
+			validateTxMAEventField({ eventName: "BAV_CRI_VC_ISSUED", jsonPath: "extensions.evidence[0].ci", expectedValue: ["D15"] }, allTxmaEventBodies);
+			validateTxMAEventField({ eventName: "BAV_CRI_VC_ISSUED", jsonPath: "extensions.evidence[0].ciReasons[0].ci", expectedValue: "D15" }, allTxmaEventBodies);
+			validateTxMAEventField({ eventName: "BAV_CRI_VC_ISSUED", jsonPath: "extensions.evidence[0].ciReasons[0].reason", expectedValue: "NO_MATCH" }, allTxmaEventBodies);
+			validateTxMAEventData({ eventName: "BAV_CRI_END", schemaName: "BAV_CRI_END_SCHEMA" }, allTxmaEventBodies);
+		});
+
+
+		it.each([
+			{ accountNumber: "11111117" },
+			{ accountNumber: "11111119" },
+
+		])("Contra Indicator Not Generated - $accountNumber", async ({ accountNumber }: { accountNumber: string }) => {
+			expect(sessionId).toBeTruthy();
+
+			bankDetails = new BankDetailsPayload(verifyAccountYesPayload.sort_code, accountNumber);
+			await verifyAccountPost(bankDetails, sessionId);
+
+			const authResponse = await authorizationGet(sessionId);
+
+			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+
+			const userInfoResponse = await userInfoPost("Bearer " + tokenResponse.data.access_token);
+			expect(userInfoResponse.status).toBe(200);
+
+			await validateJwtToken(userInfoResponse.data["https://vocab.account.gov.uk/v1/credentialJWT"][0], 0);
+
+			const rawBody = userInfoResponse.data["https://vocab.account.gov.uk/v1/credentialJWT"][0].split(".")[1];
+			const decodedBody = decodeRawBody(rawBody);
+
+			const vendorUuid = await getKeyFromSession(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "vendorUuid");
+			expect(decodedBody.vc.evidence[0].txn).toBe(vendorUuid);
+
+			expect(decodedBody.vc.credentialSubject.bankAccount[0].sortCode).toBe(bankDetails.sort_code);
+			expect(decodedBody.vc.credentialSubject.bankAccount[0].accountNumber).toBe(bankDetails.account_number.padStart(8, "0"));
+
+			await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_CRI_VC_ISSUED");
+
+			const allTxmaEventBodies = await getTxmaEventsFromTestHarness(sessionId, 3);
+			validateTxMAEventData({ eventName: "BAV_CRI_START", schemaName: "BAV_CRI_START_SCHEMA" }, allTxmaEventBodies);
+			validateTxMAEventData({ eventName: "BAV_CRI_VC_ISSUED", schemaName: "BAV_CRI_VC_ISSUED_SCHEMA_FAILURE" }, allTxmaEventBodies);
+			validateTxMAEventData({ eventName: "BAV_CRI_END", schemaName: "BAV_CRI_END_SCHEMA" }, allTxmaEventBodies);
+			validateTxMAEventField({ eventName: "BAV_CRI_VC_ISSUED", jsonPath: "extensions.evidence[0].validityScore", expectedValue: 0 }, allTxmaEventBodies);
 		});
 	});
 });

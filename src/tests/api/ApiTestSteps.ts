@@ -235,11 +235,11 @@ export async function getSessionAndVerifyKeyExists(sessionId: string, tableName:
 	}
 }
 
-export async function validateJwtToken(jwtToken: string): Promise<void> {
+export async function validateJwtToken(jwtToken: string, validityScore: number): Promise<void> {
 	const [rawHead, rawBody] = jwtToken.split(".");
 
 	await validateRawHead(rawHead);
-	validateRawBody(rawBody);
+	validateRawBody(rawBody, validityScore);
 }
 
 async function validateRawHead(rawHead: any): Promise<void> {
@@ -253,11 +253,11 @@ async function validateRawHead(rawHead: any): Promise<void> {
 	expect(decodeRawHead.kid).toBe("did:web:" + constants.DNS_SUFFIX + "#" + hashHex);
 }
 
-function validateRawBody(rawBody: any): void {
+function validateRawBody(rawBody: any, validityScore: number): void {
 	const decodedBody = decodeRawBody(rawBody);
 	expect(decodedBody.jti).toBeTruthy();
 	expect(decodedBody.vc.evidence[0].strengthScore).toBe(3);
-	expect(decodedBody.vc.evidence[0].validityScore).toBe(2);
+	expect(decodedBody.vc.evidence[0].validityScore).toBe(validityScore);
 }
 
 export function decodeRawBody(rawBody: any): any {

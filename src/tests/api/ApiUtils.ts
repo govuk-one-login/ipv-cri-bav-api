@@ -1,4 +1,5 @@
 import Ajv from "ajv";
+import { get } from "lodash";
 import { XMLParser } from "fast-xml-parser";
 import { HARNESS_API_INSTANCE } from "./ApiTestSteps";
 import { TxmaEvent, TxmaEventName } from "../../utils/TxmaEvent";
@@ -11,7 +12,9 @@ import * as BAV_EXPERIAN_RESPONSE_RECEIVED_SCHEMA from "../data/BAV_EXPERIAN_RES
 import * as BAV_CRI_END_SCHEMA from "../data/BAV_CRI_END_SCHEMA.json";
 import * as BAV_CRI_SESSION_ABORTED_SCHEMA from "../data/BAV_CRI_SESSION_ABORTED_SCHEMA.json";
 import * as BAV_CRI_START_SCHEMA from "../data/BAV_CRI_START_SCHEMA.json";
-import * as BAV_CRI_VC_ISSUED_SCHEMA from "../data/BAV_CRI_VC_ISSUED_SCHEMA.json";
+import * as BAV_CRI_VC_ISSUED_SCHEMA_FAILURE from "../data/BAV_CRI_VC_ISSUED_SCHEMA_FAILURE.json";
+import * as BAV_CRI_VC_ISSUED_SCHEMA_SUCCESS from "../data/BAV_CRI_VC_ISSUED_SCHEMA_SUCCESS.json";
+import * as BAV_CRI_VC_ISSUED_WITH_CI_SCHEMA from "../data/BAV_CRI_VC_ISSUED_WITH_CI_SCHEMA.json";
 
 const ajv = new Ajv({ strictTuples: false });
 ajv.addSchema(BAV_COP_REQUEST_SENT_SCHEMA, "BAV_COP_REQUEST_SENT_SCHEMA");
@@ -21,7 +24,9 @@ ajv.addSchema(BAV_COP_RESPONSE_RECEIVED_SCHEMA, "BAV_COP_RESPONSE_RECEIVED_SCHEM
 ajv.addSchema(BAV_CRI_END_SCHEMA, "BAV_CRI_END_SCHEMA");
 ajv.addSchema(BAV_CRI_START_SCHEMA, "BAV_CRI_START_SCHEMA");
 ajv.addSchema(BAV_CRI_SESSION_ABORTED_SCHEMA, "BAV_CRI_SESSION_ABORTED_SCHEMA");
-ajv.addSchema(BAV_CRI_VC_ISSUED_SCHEMA, "BAV_CRI_VC_ISSUED_SCHEMA");
+ajv.addSchema(BAV_CRI_VC_ISSUED_SCHEMA_FAILURE, "BAV_CRI_VC_ISSUED_SCHEMA_FAILURE");
+ajv.addSchema(BAV_CRI_VC_ISSUED_SCHEMA_SUCCESS, "BAV_CRI_VC_ISSUED_SCHEMA_SUCCESS");
+ajv.addSchema(BAV_CRI_VC_ISSUED_WITH_CI_SCHEMA, "BAV_CRI_VC_ISSUED_WITH_CI_SCHEMA");
 
 const xmlParser = new XMLParser();
 
@@ -114,6 +119,46 @@ export function validateTxMAEventData(
 		throw new Error(`No event found in the test harness for ${eventName} event`);
 	}
 }
+
+function deepEqual(a: any, b: any): boolean {
+	if (a === b) return true;
+
+	if (Array.isArray(a) && Array.isArray(b)) {
+		if (a.length !== b.length) return false;
+		return a.every((item, index) => deepEqual(item, b[index]));
+	}
+
+	if (typeof a === "object" && typeof b === "object" && a !== null && b !== null) {
+		const keysA = Object.keys(a);
+		const keysB = Object.keys(b);
+		if (keysA.length !== keysB.length) return false;
+		return keysA.every(key => deepEqual(a[key], b[key]));
+	}
+	return false;
+}
+
+export function validateTxMAEventField(
+	{ eventName, jsonPath, expectedValue }: { eventName: TxmaEventName; jsonPath: string; expectedValue: any },
+	allTxmaEventBodies: AllTxmaEvents = {},
+): void {
+	const currentEventBody: TxmaEvent | undefined = allTxmaEventBodies[eventName];
+
+	if (currentEventBody?.event_name) {
+		try {
+			const actualValue = get(currentEventBody, jsonPath);
+
+			if (!deepEqual(expectedValue, actualValue)) {
+				throw new Error(`Validation failed: Expected ${JSON.stringify(expectedValue)} but found ${JSON.stringify(actualValue)} for key path "${jsonPath}" in event ${eventName}`);
+			}
+		} catch (error) {
+			console.error(`Error validating key path "${jsonPath}" in event ${eventName}`, error);
+			throw error;
+		}
+	} else {
+		throw new Error(`No event found in the test harness for ${eventName} event`);
+	}
+}
+
 
 export async function describeAlarm(alarmName: string): Promise<any> {
 	try {
