@@ -142,7 +142,7 @@ export class VerifyAccountRequestProcessor {
   		extensions: {
   			evidence: [
   				{
-  					txn: verifyResponse.expRequestId,
+  					txn: verifyResponse?.expRequestId,
   					attemptNum: session.attemptCount ?? 1,
   				},
   			],
