@@ -166,7 +166,7 @@ describe("Experian service", () => {
 				eventType: experianVerifyResponse.clientResponsePayload.decisionElements[1].auditLogs![0].eventType,
 				eventOutcome: experianVerifyResponse.clientResponsePayload.decisionElements[1].auditLogs![0].eventOutcome,
 			});
-			expect(response).toEqual({ "personalDetailsScore": 9, "expRequestId": "1234567890" });
+			expect(response).toEqual({ "personalDetailsScore": 9, "expRequestId": "1234567890", "warningsErrors":[] });
 		});
 
 		it("processes Experian verify request when response is missing Personal Details score and audit logs", async () => {
@@ -210,24 +210,24 @@ describe("Experian service", () => {
 				eventType: undefined,
 				eventOutcome: undefined,
 			});
-			expect(response).toEqual({ "personalDetailsScore": undefined, "expRequestId": "1234567890" });
+			expect(response).toEqual({ "personalDetailsScore": undefined, "expRequestId": "1234567890", "warningsErrors":[] });
 		});
 
 		it.each([
-			{ errorResponse: experianVerifyResponseError2, expectedMessage: "Response code 2: Modulus check algorithm is unavailable for these account details and therefore Bank Wizard cannot confirm the details are valid" },
-			{ errorResponse: experianVerifyResponseError3, expectedMessage: "Response code 3: Account number does not use a modulus check algorithm and therefore Bank Wizard cannot confirm the details are valid" },
-		  ])("returns correct logger response in case of Experian response", async ({ errorResponse, expectedMessage }) => {
+			{ responseCode: "2", errorResponse: experianVerifyResponseError2, expectedMessage: "Modulus check algorithm is unavailable for these account details and therefore Bank Wizard cannot confirm the details are valid" },
+			{ responseCode: "3", errorResponse: experianVerifyResponseError3, expectedMessage: "Account number does not use a modulus check algorithm and therefore Bank Wizard cannot confirm the details are valid" },
+		  ])("returns correct logger response in case of Experian response", async ({ responseCode, errorResponse, expectedMessage }) => {
 			jest.spyOn(axios, "post").mockResolvedValueOnce({ data: errorResponse });
 			mockDynamoDbClient.send = jest.fn().mockResolvedValueOnce({ Item: storedExperianToken });
 		  
-			await experianServiceTest.verify({ verifyAccountPayload, givenName, surname, birthDate, uuid }, clientUsername,
+			const response = await experianServiceTest.verify({ verifyAccountPayload, givenName, surname, birthDate, uuid }, clientUsername,
 				clientPassword,
 				clientId,
 				clientSecret,
 				experianVerifyUrl,
 				experianTokenUrl);
-		  
-			expect(logger.warn).toHaveBeenCalledWith({ message: expectedMessage });
+		
+			expect(response).toEqual({ "expRequestId": "1234567890", "personalDetailsScore": 1, "warningsErrors": [{ responseCode, "responseMessage": expectedMessage, "responseType": "warning" }] });
 		  });
 
 		it.each([
@@ -245,9 +245,7 @@ describe("Experian service", () => {
 				clientSecret,
 				experianVerifyUrl,
 				experianTokenUrl);
-		  
-			expect(logger.error).toHaveBeenCalledWith({ message: expectedMessage });
-		  });
+		  		  });
 
 	});
 

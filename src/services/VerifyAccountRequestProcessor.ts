@@ -339,17 +339,21 @@ export class VerifyAccountRequestProcessor {
   	const criticalErrors = ["6", "7", "11", "12"];
   	const warningError  = verifyResponse?.warningsErrors;
   	let isCriticalResponse = false;
+  	const logger = this.logger;
   	if (warningError) {
-	  warningError.forEach(function (value) {
-		  if (value.responseType === "warning") {
+	  warningError.forEach(function (value): void {
+		  if (value?.responseType === "warning") {
 			  if (criticalWarnings.includes(value.responseCode)) {
 				  isCriticalResponse = true;
 			  }
 		  }
-		  if (value.responseType === "error") {
+		  if (value?.responseType === "error") {
 			  if (criticalErrors.includes(value.responseCode)) {
   					isCriticalResponse = true;
   				}
+		  }
+		  if (value.responseType === undefined || value.responseType === "") {
+  				logger.info("Captured empty response type in warning and errors array ");
 		  }
   		}); 
   	}
