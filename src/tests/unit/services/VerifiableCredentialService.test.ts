@@ -127,7 +127,7 @@ describe("VerifiableCredentialService", () => {
 		});
 
 		it("should return a failure evidence block correctly", () => {
-			const evidenceBlock = service.getFailureEvidenceBlock(vendorUuid);
+			const evidenceBlock = service.getFailureEvidenceBlock(vendorUuid, true);
 			expect(evidenceBlock).toEqual(expect.objectContaining({
 				txn: vendorUuid,
 				strengthScore: 3,
@@ -171,11 +171,11 @@ describe("VerifiableCredentialService", () => {
 		it("should generate a signed JWT with failure evidence without a CI for a failed match result with response code 2 or 3", async () => {
 			mockSessionItem.experianCheckResult = ExperianCheckResult.NO_MATCH;
 			mockSessionItem.warningsErrors = 
-				{ 	
+				[{ 	
 					responseType: "warning",
 					responseCode: "2",
 					responseMessage: "Modulus check algorithm is unavailable for these account details",
-				};
+				}];
 			const signedJWT = "mockSignedJwt";
 			mockKmsJwtAdapter.sign.mockResolvedValue(signedJWT);
 

@@ -1,27 +1,8 @@
-export const logResponseCode = (warningsErrors: any, logger: any): any => {
-	const responseCode = warningsErrors?.responseCode;
-	const responseMessage = warningsErrors?.responseMessage;
-	switch (responseCode) {
-		case "2":
-			logger.warn({ message: `Response code ${responseCode}: ${responseMessage}` });
-			break;
-		case "3":
-			logger.warn({ message: `Response code ${responseCode}: ${responseMessage}` });
-			break;
-		case "6":
-			logger.error({ message: `Response code ${responseCode}: ${responseMessage}` });
-			break;
-		case "7":
-			logger.error({ message: `Response code ${responseCode}: ${responseMessage}` });
-			break;
-		case "11":
-			logger.error({ message: `Response code ${responseCode}: ${responseMessage}` });
-			break;
-		case "12":
-			logger.error({ message: `Response code ${responseCode}: ${responseMessage}` });
-			break;
-		default:
-			logger.warn({ message: `Unrecognised response code ${responseCode}: ${responseMessage}` });
-			break;
+export const logResponseCode = (warningsErrors: Array<{ responseType: string; responseCode: string; responseMessage: string }>, logger: any): any => {
+
+	if (warningsErrors) {
+		warningsErrors.forEach((warningError) => {
+			logger.info(`Response code: ${warningError?.responseCode}, Response message: ${warningError?.responseMessage}`);
+	  });
 	}
 };
