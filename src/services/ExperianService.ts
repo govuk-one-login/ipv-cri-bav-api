@@ -120,8 +120,8 @@ export class ExperianService {
     		}
 
     		const responseHeader = data?.responseHeader;
-    		this.logger.info("Experian response header client referenceId" + responseHeader?.clientReferenceId);
-    		this.logger.info("Experian response header expRequestId" + responseHeader?.expRequestId);
+    		this.logger.info("Experian response header client referenceId " + responseHeader?.clientReferenceId);
+    		this.logger.info("Experian response header expRequestId " + responseHeader?.expRequestId);
     		this.logger.info("Experian response details: ResponseTye " + responseHeader?.responseType + " Response Code " + responseHeader?.responseCode + " ResponseMessage " + responseHeader?.responseMessage);
     		this.logger.info("Experian overall response details " + JSON.stringify(responseHeader?.overallResponse));
 

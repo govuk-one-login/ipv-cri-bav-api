@@ -428,9 +428,9 @@ describe("VerifyAccountRequestProcessor", () => {
 			expect(mockBavService.saveExperianCheckResult).toHaveBeenCalledWith("SESSIONID", { "expRequestId": "1234568", "personalDetailsScore": 9, "warningsErrors": [{ responseCode, "responseMessage": "Should not proceed", responseType }] }, matchResult, attemptCount);
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
 			if (attemptCount === 1) {
-				expect(response.body).toBe(JSON.stringify({ message:"Success", attemptCount: 1 }));
+				expect(response.body).toBe(JSON.stringify({ message:"Success", attemptCount: 1 })); // eslint-disable-line
 			} else {
-				expect(response.body).toBe(JSON.stringify({ message:"Success" }));
+				expect(response.body).toBe(JSON.stringify({ message:"Success" })); // eslint-disable-line
 			}
 		});
 
