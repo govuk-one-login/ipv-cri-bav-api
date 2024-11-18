@@ -37,7 +37,7 @@ export class ExperianService {
 
 	 // eslint-disable-next-line max-lines-per-function
 	 async verify(
-    	{ verifyAccountPayload, givenName, surname, birthDate, uuid }: { verifyAccountPayload: any; givenName: string; surname: string; birthDate: string; uuid: string }, 
+    	{ verifyAccountPayload, firstName, surname, birthDate, uuid }: { verifyAccountPayload: any; firstName: string; surname: string; birthDate: string; uuid: string }, 
     	experianUsername: string,
     	experianPassword: string,
     	experianClientId: string,
@@ -82,7 +82,7 @@ export class ExperianService {
     							},
     							names: [
     								{
-    									firstName: givenName,
+    									firstName: firstName,
     									surName: surname
     								}
     							]
@@ -145,7 +145,7 @@ export class ExperianService {
     			if (errorObject) {	
     				const thirdPartyWarningsErrors = errorObject?.warningsErrors;
     				if (thirdPartyWarningsErrors) {
-    					warningsErrors = thirdPartyWarningsErrors.find((object: { responseType: string; responseCode: string; responseMessage: string }) => object.responseType !== undefined);
+    					warningsErrors = thirdPartyWarningsErrors;
     					if (warningsErrors) {
     						logResponseCode(warningsErrors, this.logger);
     					}

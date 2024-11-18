@@ -14,7 +14,7 @@ import { CopCheckResult, ExperianCheckResult, ISessionItem } from "../models/ISe
 import { EnvironmentVariables, Constants } from "../utils/Constants";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
-import { getNameByType } from "../utils/PersonIdentityUtils";
+import { getFirstName, getLastName, getFullName } from "../utils/PersonIdentityUtils";
 import { Response } from "../utils/Response";
 import { buildCoreEventFields } from "../utils/TxmaEvent";
 import { VerifyAccountPayload } from "../type/VerifyAccountPayload";
@@ -116,8 +116,8 @@ export class VerifyAccountRequestProcessor {
 			  return Response(HttpCodesEnum.UNAUTHORIZED, "Too many attempts");
 		  }
 	
-		  const givenName = getNameByType(person.name, "GivenName");
-		  const surname = getNameByType(person.name, "FamilyName");
+		  const firstName = getFirstName(person.name);
+		  const surname = getLastName(person.name);
 		  const birthDate = person.birthDate[0].value;
 
 		  this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
@@ -127,7 +127,7 @@ export class VerifyAccountRequestProcessor {
 		  const coreEventFields = buildCoreEventFields(session, this.issuer, clientIpAddress);
 		
 		  const verifyResponse = await this.ExperianService.verify(
-			  { verifyAccountPayload, givenName, surname, birthDate, uuid: vendorUuid },
+			  { verifyAccountPayload, firstName, surname, birthDate, uuid: vendorUuid },
 			  ssmParams.experianUsername,
 			  ssmParams.experianPassword,
 			  ssmParams.experianClientId,
@@ -150,20 +150,33 @@ export class VerifyAccountRequestProcessor {
   			evidence: [
   				{
   					txn: verifyResponse?.expRequestId,
-  				},
-  			],
-  		},
-  		restricted: {
-  			Experian_request_details: [
-  				{
-  					name:`${givenName} ${surname}`,
-  					sortCode: verifyAccountPayload?.sort_code,
-  					accountNumber: verifyAccountPayload?.account_number,
   					attemptNum: session.attemptCount ?? 1,
   				},
   			],
   		},
+  		restricted: {
+  			name:[
+  				{
+  					nameParts:[
+  						{
+  							type:"GivenName",
+  							value: firstName,
+  						},
+  						{
+  							type:"FamilyName",
+  							value: surname,
+  						},
+  					],
+  				},
+  			],
+  			birthDate: person.birthDate,
+  			bankAccount: [{
+  				sortCode: verifyAccountPayload?.sort_code,
+  				accountNumber: verifyAccountPayload?.account_number,
+  			}],
+  		},
   	}, encodedHeader);
+
 		
 		  await this.BavService.sendToTXMA(this.txmaQueueUrl, {
 			  event_name: TxmaEventNames.BAV_EXPERIAN_RESPONSE_RECEIVED,
@@ -218,7 +231,7 @@ export class VerifyAccountRequestProcessor {
   		return Response(HttpCodesEnum.UNAUTHORIZED, "Too many attempts");
   	}
 
-  	const name = getNameByType(person.name);
+  	const name = getFullName(person.name);
   	this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
   	const timeOfRequest = absoluteTimeNow();
 
@@ -331,7 +344,7 @@ export class VerifyAccountRequestProcessor {
 
   calculateExperianCheckResult(verifyResponse: ExperianVerifyResponse, attemptCount?: number): ExperianCheckResult {
   	const personalDetailsScore = verifyResponse?.personalDetailsScore;
-  	if (personalDetailsScore === 9 && !verifyResponse?.warningsErrors) {
+  	if (personalDetailsScore === 9 && !this.isCriticalResponseCode(verifyResponse)) {
   		return ExperianCheckResults.FULL_MATCH;
   	} else if (personalDetailsScore !== 9 && attemptCount === undefined) {
   		return undefined;
@@ -339,6 +352,32 @@ export class VerifyAccountRequestProcessor {
   		this.logger.info("Personal details score is " + personalDetailsScore);
   		return ExperianCheckResults.NO_MATCH;
   	}
+  }
+
+  isCriticalResponseCode(verifyResponse: ExperianVerifyResponse): boolean {
+  	const criticalWarnings = ["2", "3"];
+  	const criticalErrors = ["6", "7", "11", "12"];
+  	const warningError  = verifyResponse?.warningsErrors;
+  	let isCriticalResponse = false;
+  	const logger = this.logger;
+  	if (warningError) {
+	  warningError.forEach(function (value): void {
+		  if (value?.responseType === "warning") {
+			  if (criticalWarnings.includes(value.responseCode)) {
+				  isCriticalResponse = true;
+			  }
+		  }
+		  if (value?.responseType === "error") {
+			  if (criticalErrors.includes(value.responseCode)) {
+  					isCriticalResponse = true;
+  				}
+		  }
+		  if (value.responseType === undefined || value.responseType === "") {
+  				logger.info("Captured empty response type in warning and errors array ");
+		  }
+  		}); 
+  	}
+  	return isCriticalResponse;
   }
 
   async updateVendorUuid(session: ISessionItem): Promise<string> {
