@@ -54,21 +54,8 @@ export class VerifiableCredentialService {
 		};
 	}
 
-	getFailureEvidenceBlock(vendorUuid: string, responseCode?: string): VerifiedCredentialEvidence {
-		if (responseCode === "2" || responseCode === "3") {
-			return {
-				type: Constants.IDENTITY_CHECK,
-				txn: vendorUuid,
-				strengthScore: 3,
-				validityScore: 0,
-				failedCheckDetails: [
-					{
-						checkMethod: "data",
-						identityCheckPolicy: "none",
-					},
-				],
-			};
-		} else {
+	getFailureEvidenceBlock(vendorUuid: string, ciRequired?: boolean): VerifiedCredentialEvidence {
+		if (ciRequired) {
 			return {
 				type: Constants.IDENTITY_CHECK,
 				txn: vendorUuid,
@@ -84,6 +71,19 @@ export class VerifiableCredentialService {
 					"D15",
 				],
 			};
+		} else {
+			return {
+				type: Constants.IDENTITY_CHECK,
+				txn: vendorUuid,
+				strengthScore: 3,
+				validityScore: 0,
+				failedCheckDetails: [
+					{
+						checkMethod: "data",
+						identityCheckPolicy: "none",
+					},
+				],
+			};
 		}
 	}
 	
@@ -92,9 +92,18 @@ export class VerifiableCredentialService {
 		sessionItem: ISessionItem, nameParts: PersonIdentityNamePart[], birthDate: PersonIdentityBirthDate[], bankAccountInfo: BankAccountInfo, getNow: () => number): Promise<{ signedJWT: string; evidenceInfo: VerifiedCredentialEvidence }> {
 		const now = getNow();
 		const subject = sessionItem.subject;
-		const responseCode = sessionItem.warningsErrors?.responseCode;
+		let ciRequired = true;
+
+		if (sessionItem.warningsErrors) {
+			sessionItem.warningsErrors.forEach((item) => {
+				if (item.responseCode === "2" || item.responseCode === "3") {
+					ciRequired = false;
+				}
+			});
+		}
+
 		const evidenceInfo = sessionItem.experianCheckResult === ExperianCheckResult.FULL_MATCH ?
-			this.getSuccessEvidenceBlock(sessionItem.vendorUuid!) : this.getFailureEvidenceBlock(sessionItem.vendorUuid!, responseCode);
+			this.getSuccessEvidenceBlock(sessionItem.vendorUuid!) : this.getFailureEvidenceBlock(sessionItem.vendorUuid!, ciRequired);
 		const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, birthDate, bankAccountInfo, evidenceInfo, this.credentialVendor)
 			.build();
 		let result;

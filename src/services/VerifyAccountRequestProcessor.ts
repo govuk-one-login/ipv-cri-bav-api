@@ -337,7 +337,7 @@ export class VerifyAccountRequestProcessor {
 
   calculateExperianCheckResult(verifyResponse: ExperianVerifyResponse, attemptCount?: number): ExperianCheckResult {
   	const personalDetailsScore = verifyResponse?.personalDetailsScore;
-  	if (personalDetailsScore === 9 && !verifyResponse?.warningsErrors) {
+  	if (personalDetailsScore === 9 && !this.isCriticalResponseCode(verifyResponse)) {
   		return ExperianCheckResults.FULL_MATCH;
   	} else if (personalDetailsScore !== 9 && attemptCount === undefined) {
   		return undefined;
@@ -345,6 +345,32 @@ export class VerifyAccountRequestProcessor {
   		this.logger.info("Personal details score is " + personalDetailsScore);
   		return ExperianCheckResults.NO_MATCH;
   	}
+  }
+
+  isCriticalResponseCode(verifyResponse: ExperianVerifyResponse): boolean {
+  	const criticalWarnings = ["2", "3"];
+  	const criticalErrors = ["6", "7", "11", "12"];
+  	const warningError  = verifyResponse?.warningsErrors;
+  	let isCriticalResponse = false;
+  	const logger = this.logger;
+  	if (warningError) {
+	  warningError.forEach(function (value): void {
+		  if (value?.responseType === "warning") {
+			  if (criticalWarnings.includes(value.responseCode)) {
+				  isCriticalResponse = true;
+			  }
+		  }
+		  if (value?.responseType === "error") {
+			  if (criticalErrors.includes(value.responseCode)) {
+  					isCriticalResponse = true;
+  				}
+		  }
+		  if (value.responseType === undefined || value.responseType === "") {
+  				logger.info("Captured empty response type in warning and errors array ");
+		  }
+  		}); 
+  	}
+  	return isCriticalResponse;
   }
 
   async updateVendorUuid(session: ISessionItem): Promise<string> {

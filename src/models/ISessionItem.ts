@@ -43,7 +43,7 @@ export interface ISessionItem extends IBAVSession {
 	copCheckResult?: CopCheckResult;
 	personalDetailsScore?: number;
 	experianCheckResult?: ExperianCheckResult;
-	warningsErrors?: WarningsErrors;
+	warningsErrors?: WarningsErrors[];
 	vendorUuid?: string;
 	attemptCount?: number;
 }

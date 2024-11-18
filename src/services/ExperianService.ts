@@ -145,7 +145,7 @@ export class ExperianService {
     			if (errorObject) {	
     				const thirdPartyWarningsErrors = errorObject?.warningsErrors;
     				if (thirdPartyWarningsErrors) {
-    					warningsErrors = thirdPartyWarningsErrors.find((object: { responseType: string; responseCode: string; responseMessage: string }) => object.responseType !== undefined);
+    					warningsErrors = thirdPartyWarningsErrors;
     					if (warningsErrors) {
     						logResponseCode(warningsErrors, this.logger);
     					}
