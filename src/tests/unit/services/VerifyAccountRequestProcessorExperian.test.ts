@@ -204,6 +204,8 @@ describe("VerifyAccountRequestProcessor", () => {
 		});
 
 		it("verifies the account details given", async () => {
+			const firstName = person.name[0].nameParts[0].value;
+			const lastName = person.name[0].nameParts[2].value;
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
 			mockBavService.getSessionById.mockResolvedValueOnce(session);
 			mockExperianService.verify.mockResolvedValueOnce(experianServiceVerifyResponseSuccess);
@@ -216,7 +218,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				ssmParams,
 			);
 
-			expect(mockExperianService.verify).toHaveBeenCalledWith({ verifyAccountPayload, birthDate: "12-01-1986", givenName: "Frederick Joseph", surname: "Flintstone", uuid: vendorUuid },
+			expect(mockExperianService.verify).toHaveBeenCalledWith({ verifyAccountPayload, birthDate: "12-01-1986", firstName: "Frederick", surname: "Flintstone", uuid: vendorUuid },
 				"123456",
     			"12345678",
     			"clientId",
@@ -231,19 +233,29 @@ describe("VerifyAccountRequestProcessor", () => {
 					evidence: [
 				 		{
 					 		txn: "1234568",
+							attemptNum: 1,
 						},
 					],
 				},
-				restricted:{
-  				"Experian_request_details": [
-					 {
-  						name: "Frederick Joseph Flintstone",
-  						sortCode: verifyAccountPayload.sort_code,
-  						accountNumber: verifyAccountPayload.account_number,
-  						attemptNum: 1,
-					 },
-  				],
-		 		},
+				 restricted: {
+					name: [ {
+						nameParts:[
+						  {
+								type:"GivenName",
+								value: firstName,
+						  },
+						  {
+								type:"FamilyName",
+								value: lastName,
+						  },
+						],
+					  }],
+					birthDate: person.birthDate,
+					bankAccount: [{
+						sortCode: verifyAccountPayload.sort_code,
+						accountNumber: verifyAccountPayload.account_number,
+					}],
+				},
 				timestamp: 1585695600,
 				event_timestamp_ms: 1585695600000,
 				user:  {
@@ -293,7 +305,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				{ sessionId, accountNumber: "12345678", sortCode: verifyAccountPayload.sort_code },
 				process.env.PERSON_IDENTITY_TABLE_NAME,
 			);
-			expect(mockExperianService.verify).toHaveBeenCalledWith({ verifyAccountPayload, birthDate: "12-01-1986", givenName: "Frederick Joseph", surname: "Flintstone", uuid: vendorUuid },
+			expect(mockExperianService.verify).toHaveBeenCalledWith({ verifyAccountPayload, birthDate: "12-01-1986", firstName: "Frederick", surname: "Flintstone", uuid: vendorUuid },
 				"123456",
     			"12345678",
     			"clientId",

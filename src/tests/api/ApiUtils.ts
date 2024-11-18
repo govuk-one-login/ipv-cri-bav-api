@@ -120,8 +120,25 @@ export function validateTxMAEventData(
 	}
 }
 
+function deepEqual(a: any, b: any): boolean {
+	if (a === b) return true;
+
+	if (Array.isArray(a) && Array.isArray(b)) {
+		if (a.length !== b.length) return false;
+		return a.every((item, index) => deepEqual(item, b[index]));
+	}
+
+	if (typeof a === "object" && typeof b === "object" && a !== null && b !== null) {
+		const keysA = Object.keys(a);
+		const keysB = Object.keys(b);
+		if (keysA.length !== keysB.length) return false;
+		return keysA.every(key => deepEqual(a[key], b[key]));
+	}
+	return false;
+}
+
 export function validateTxMAEventField(
-	{ eventName, jsonPath, expectedValue }: { eventName: TxmaEventName; jsonPath: string; expectedValue: string | number | string[] | number[] }, 
+	{ eventName, jsonPath, expectedValue }: { eventName: TxmaEventName; jsonPath: string; expectedValue: any },
 	allTxmaEventBodies: AllTxmaEvents = {},
 ): void {
 	const currentEventBody: TxmaEvent | undefined = allTxmaEventBodies[eventName];
@@ -130,15 +147,8 @@ export function validateTxMAEventField(
 		try {
 			const actualValue = get(currentEventBody, jsonPath);
 
-			if (Array.isArray(expectedValue)) {
-				if (!Array.isArray(actualValue) || actualValue.length !== expectedValue.length || 
-					!actualValue.every((val, index) => val === expectedValue[index])) {
-					throw new Error(`Validation failed: Expected array ${JSON.stringify(expectedValue)} but found ${JSON.stringify(actualValue)} for key path "${jsonPath}" in event ${eventName}`);
-				}
-			} else {
-				if (actualValue !== expectedValue) {
-					throw new Error(`Validation failed: Expected ${expectedValue} but found ${actualValue} for key path "${jsonPath}" in event ${eventName}`);
-				}
+			if (!deepEqual(expectedValue, actualValue)) {
+				throw new Error(`Validation failed: Expected ${JSON.stringify(expectedValue)} but found ${JSON.stringify(actualValue)} for key path "${jsonPath}" in event ${eventName}`);
 			}
 		} catch (error) {
 			console.error(`Error validating key path "${jsonPath}" in event ${eventName}`, error);
