@@ -220,7 +220,7 @@ describe("Experian service", () => {
 			mockDynamoDbClient.send = jest.fn().mockResolvedValueOnce({ Item: storedExperianToken });
 		  
 
-			const response = await experianServiceTest.verify({ verifyAccountPayload, givenName, surname, birthDate, uuid }, clientUsername,
+			const response = await experianServiceTest.verify({ verifyAccountPayload, firstName, surname, birthDate, uuid }, clientUsername,
 				clientPassword,
 				clientId,
 				clientSecret,
