@@ -61,8 +61,6 @@ const ssmParams = {
 	experianPassword: "12345678",
 	experianClientId:"clientId",
 	experianClientSecret:"Test",
-	experianVerifyUrl: "https://localhost/verify",
-	experianTokenUrl: "https://localhost/token",
 };
 process.env.THIRDPARTY_DIRECT_SUBMISSION = "false";
 
@@ -110,7 +108,26 @@ describe("VerifyAccountRequestProcessor", () => {
 	});
 
 	describe("#processExperianRequest", () => {
+		it("returns error response if session cannot be found", async () => {
+			mockBavService.getSessionById.mockResolvedValueOnce(undefined);
+
+			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
+				sessionId, 
+				verifyAccountPayload, 
+				clientIpAddress, 
+				encodedTxmaHeader,
+				ssmParams,
+			);
+
+			expect(response.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
+			expect(response.body).toBe(`No session found with the session id: ${sessionId}`);
+			expect(logger.error).toHaveBeenCalledWith("No session found for session id", {
+				messageCode: MessageCodes.SESSION_NOT_FOUND,
+			});
+		});
+
 		it("returns error response if person identity cannot be found", async () => {
+			mockBavService.getSessionById.mockResolvedValueOnce(session);
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(undefined);
 
 			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
@@ -128,9 +145,9 @@ describe("VerifyAccountRequestProcessor", () => {
 			});
 		});
 
-		it("returns error response if session cannot be found", async () => {
+		it("returns error response if client is unrecognised", async () => {
+			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, clientId: "InvalidClient" });
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
-			mockBavService.getSessionById.mockResolvedValueOnce(undefined);
 
 			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
 				sessionId, 
@@ -141,9 +158,9 @@ describe("VerifyAccountRequestProcessor", () => {
 			);
 
 			expect(response.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
-			expect(response.body).toBe(`No session found with the session id: ${sessionId}`);
-			expect(logger.error).toHaveBeenCalledWith("No session found for session id", {
-				messageCode: MessageCodes.SESSION_NOT_FOUND,
+			expect(response.body).toBe("Unrecognised client in request: InvalidClient");
+			expect(logger.error).toHaveBeenCalledWith("Unrecognised client in request", {
+				messageCode: MessageCodes.UNRECOGNISED_CLIENT,
 			});
 		});
 

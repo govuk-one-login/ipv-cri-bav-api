@@ -1,3 +1,4 @@
 {
-    "sessionId": "SESSIONID"
+    "sessionId": "SESSIONID",
+    "clientId":"ipv-core-stub"
 }
