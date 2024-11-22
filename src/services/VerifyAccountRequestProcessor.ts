@@ -67,7 +67,7 @@ export class VerifyAccountRequestProcessor {
 
   	this.BavService = BavService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
   	this.HmrcService = HmrcService.getInstance(this.logger, hmrcBaseUrl, hmrcBackoffPeriodMs, maxRetries);
-  	this.ExperianService = ExperianService.getInstance(this.logger, experianMaxRetries, createDynamoDbClient(), experianTokenTableName);
+  	this.ExperianService = ExperianService.getInstance(this.logger, this.metrics, experianMaxRetries, createDynamoDbClient(), experianTokenTableName);
   }
 
   static getInstance(logger: Logger, metrics: Metrics, CREDENTIAL_VENDOR: string): VerifyAccountRequestProcessor {
@@ -193,8 +193,14 @@ export class VerifyAccountRequestProcessor {
 	
 		  let attemptCount;
 		  if (experianCheckResult !== ExperianCheckResults.FULL_MATCH || !experianCheckResult) {
-			  attemptCount = session.attemptCount ? session.attemptCount + 1 : 1;
+  		if (session.attemptCount) {
+  			this.metrics.addMetric("retry-attempt-" + session.attemptCount, MetricUnits.Count, 1);
+  			attemptCount = session.attemptCount + 1;
+  		} else {
+  			attemptCount = 1;
+  		}
 		  }
+
 		  await this.BavService.saveExperianCheckResult(sessionId, verifyResponse, experianCheckResult, attemptCount);
 		  return Response(HttpCodesEnum.OK, JSON.stringify({
 			  message: "Success",
@@ -337,17 +343,16 @@ export class VerifyAccountRequestProcessor {
 
   calculateExperianCheckResult(verifyResponse: ExperianVerifyResponse, attemptCount?: number): ExperianCheckResult {
   	const personalDetailsScore = verifyResponse?.personalDetailsScore;
-  	if (personalDetailsScore === 9 && !this.isCriticalResponseCode(verifyResponse)) {
+  	if (personalDetailsScore === 9 && !this.isCriticalResponseCode(verifyResponse, this.metrics)) {
   		return ExperianCheckResults.FULL_MATCH;
   	} else if (personalDetailsScore !== 9 && attemptCount === undefined) {
   		return undefined;
   	} else {
-  		this.logger.info("Personal details score is " + personalDetailsScore);
   		return ExperianCheckResults.NO_MATCH;
   	}
   }
 
-  isCriticalResponseCode(verifyResponse: ExperianVerifyResponse): boolean {
+  isCriticalResponseCode(verifyResponse: ExperianVerifyResponse, metrics: Metrics): boolean {
   	const criticalWarnings = ["2", "3"];
   	const criticalErrors = ["6", "7", "11", "12"];
   	const warningError  = verifyResponse?.warningsErrors;
@@ -357,11 +362,13 @@ export class VerifyAccountRequestProcessor {
 	  warningError.forEach(function (value): void {
 		  if (value?.responseType === "warning") {
 			  if (criticalWarnings.includes(value.responseCode)) {
+				  metrics.addMetric("critical-experian-response-code" + value.responseCode, MetricUnits.Count, 1);
 				  isCriticalResponse = true;
 			  }
 		  }
 		  if (value?.responseType === "error") {
 			  if (criticalErrors.includes(value.responseCode)) {
+  					metrics.addMetric("critical-experian-response-code" + value.responseCode, MetricUnits.Count, 1);
   					isCriticalResponse = true;
   				}
 		  }
