@@ -162,10 +162,11 @@ describe("Experian service", () => {
 			);
 			
 			expect(logger.info).toHaveBeenNthCalledWith(10, {
-				message: "Received response from Experian verify request",
+				message: "Received response from Experian verify request. Match Result:",
 				eventType: experianVerifyResponse.clientResponsePayload.decisionElements[1].auditLogs![0].eventType,
 				eventOutcome: experianVerifyResponse.clientResponsePayload.decisionElements[1].auditLogs![0].eventOutcome,
 			});
+			expect(logger.info).toHaveBeenNthCalledWith(11, "Triggered rules: [\"Rule Id: CNS1018, Rule Name: BAV_OA_GE90D_PDSGE7_ASGE6 , Rule text: Match to an open account, aged >=90 days, Personal Details Score >=7 and Address Score >=6\",\"Rule Id: CNS1019, Rule Name: BAV_OA_GE90D_PDSGE5_ASGE4 , Rule text: Match found to an open account which was opened 90 or more days ago with Personal Details Score >= 5 and Address Score >= 4\",\"Rule Id: CNS1020, Rule Name: BAV_OA_PDSGE5_ASGE4 , Rule text: Match to an open account, aged >=90 days, Personal Details Score >=5 and Address Score >=4\",\"Rule Id: CNS1022, Rule Name: BAV_OA_GE90D_PDSGE5 , Rule text: Match to an open account, aged >=90 days, Personal Details Score >=5\"]");
 			expect(response).toEqual({ "personalDetailsScore": 9, "expRequestId": "1234567890", "warningsErrors":[] });
 			
 			expect(metrics.addMetric).toHaveBeenNthCalledWith(1, "Experian-CONTINUE", "Count", 1);
@@ -211,10 +212,11 @@ describe("Experian service", () => {
 			);
 			
 			expect(logger.info).toHaveBeenNthCalledWith(10, {
-				message: "Received response from Experian verify request",
+				message: "Received response from Experian verify request. Match Result:",
 				eventType: undefined,
 				eventOutcome: undefined,
 			});
+			expect(logger.info).toHaveBeenNthCalledWith(11, "Triggered rules: [\"Rule Id: CNS1018, Rule Name: BAV_OA_GE90D_PDSGE7_ASGE6 , Rule text: Match to an open account, aged >=90 days, Personal Details Score >=7 and Address Score >=6\",\"Rule Id: CNS1019, Rule Name: BAV_OA_GE90D_PDSGE5_ASGE4 , Rule text: Match found to an open account which was opened 90 or more days ago with Personal Details Score >= 5 and Address Score >= 4\",\"Rule Id: CNS1020, Rule Name: BAV_OA_PDSGE5_ASGE4 , Rule text: Match to an open account, aged >=90 days, Personal Details Score >=5 and Address Score >=4\",\"Rule Id: CNS1022, Rule Name: BAV_OA_GE90D_PDSGE5 , Rule text: Match to an open account, aged >=90 days, Personal Details Score >=5\"]");
 			expect(response).toEqual({ "personalDetailsScore": undefined, "expRequestId": "1234567890", "warningsErrors":[] });
 		});
 

@@ -137,13 +137,25 @@ export class ExperianService {
     			const logObject = decisionElements.find((object: { auditLogs: object[] }) => object.auditLogs);
     			const eventOutcome = logObject?.auditLogs[0]?.eventOutcome;
     			this.logger.info({
-    				message: "Received response from Experian verify request",
+    				message: "Received response from Experian verify request. Match Result:",
     				eventType: logObject?.auditLogs[0]?.eventType,
     				eventOutcome,
     			});
     			if (eventOutcome) {
     				this.metrics.addMetric("Experian-" + eventOutcome.replace(" ", "_"), MetricUnits.Count, 1);
     			}
+
+    			const rulesElement = decisionElements.find((object: { rules: object[] }) => object.rules);
+    			const rules: Array<{ ruleId: string; ruleName: string; ruleText: string; ruleScore: number }> = rulesElement ? rulesElement?.rules : [];
+    			const triggeredRules: string[] = [];
+    			if (rules) {
+    				rules.forEach((rule) => {
+    					if (rule?.ruleScore > 0) {
+    						triggeredRules.push(`Rule Id: ${rule?.ruleId}, Rule Name: ${rule?.ruleName} , Rule text: ${rule?.ruleText}`);
+    					}
+				  });
+    			}
+    			this.logger.info("Triggered rules: " + JSON.stringify(triggeredRules));
     		} else {
     			this.logger.info("Decision elements not found. Unable to log audit events");
     		}
