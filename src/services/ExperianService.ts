@@ -9,6 +9,7 @@ import { DynamoDBDocument, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb"
 import { randomUUID } from "crypto";
 import { logResponseCode } from "../utils/LogResponseCode";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
+import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
 
 export class ExperianService {
 	readonly logger: Logger;
@@ -17,20 +18,23 @@ export class ExperianService {
 
 	private readonly dynamo: DynamoDBDocument;
 
+	private readonly metrics: Metrics;
+
 	readonly experianTokenTableName: string;
 
     readonly maxRetries: number;
 
-    constructor(logger: Logger, maxRetries: number, dynamoDbClient: DynamoDBDocument, experianTokenTableName: string) {
+    constructor(logger: Logger, metrics: Metrics, maxRetries: number, dynamoDbClient: DynamoDBDocument, experianTokenTableName: string) {
     	this.logger = logger;
+    	this.metrics = metrics;
     	this.maxRetries = maxRetries;
     	this.dynamo = dynamoDbClient;
     	this.experianTokenTableName = experianTokenTableName;
     }
 
-    static getInstance(logger: Logger, maxRetries: number, dynamoDbClient: DynamoDBDocument, experianTokenTableName: string): ExperianService {
+    static getInstance(logger: Logger, metrics: Metrics, maxRetries: number, dynamoDbClient: DynamoDBDocument, experianTokenTableName: string): ExperianService {
     	if (!ExperianService.instance) {
-    		ExperianService.instance = new ExperianService(logger, maxRetries, dynamoDbClient, experianTokenTableName);
+    		ExperianService.instance = new ExperianService(logger, metrics, maxRetries, dynamoDbClient, experianTokenTableName);
     	}
     	return ExperianService.instance;
     }
@@ -124,17 +128,34 @@ export class ExperianService {
     		this.logger.info("Experian response header expRequestId " + responseHeader?.expRequestId);
     		this.logger.info("Experian response details: ResponseTye " + responseHeader?.responseType + " Response Code " + responseHeader?.responseCode + " ResponseMessage " + responseHeader?.responseMessage);
     		this.logger.info("Experian overall response details " + JSON.stringify(responseHeader?.overallResponse));
+    		this.metrics.addMetric("Experian-" + responseHeader?.overallResponse?.decision, MetricUnits.Count, 1);
 
 	   		const decisionElements = data?.clientResponsePayload?.decisionElements;
     		const expRequestId = responseHeader?.expRequestId;
 
     		if (decisionElements) {
     			const logObject = decisionElements.find((object: { auditLogs: object[] }) => object.auditLogs);
+    			const eventOutcome = logObject?.auditLogs[0]?.eventOutcome;
     			this.logger.info({
-    				message: "Received response from Experian verify request",
+    				message: "Received response from Experian verify request. Match Result:",
     				eventType: logObject?.auditLogs[0]?.eventType,
-    				eventOutcome: logObject?.auditLogs[0]?.eventOutcome,
+    				eventOutcome,
     			});
+    			if (eventOutcome) {
+    				this.metrics.addMetric("Experian-" + eventOutcome.replace(" ", "_"), MetricUnits.Count, 1);
+    			}
+
+    			const rulesElement = decisionElements.find((object: { rules: object[] }) => object.rules);
+    			const rules: Array<{ ruleId: string; ruleName: string; ruleText: string; ruleScore: number }> = rulesElement ? rulesElement?.rules : [];
+    			const triggeredRules: string[] = [];
+    			if (rules) {
+    				rules.forEach((rule) => {
+    					if (rule?.ruleScore > 0) {
+    						triggeredRules.push(`Rule Id: ${rule?.ruleId}, Rule Name: ${rule?.ruleName} , Rule text: ${rule?.ruleText}`);
+    					}
+				  });
+    			}
+    			this.logger.info("Triggered rules: " + JSON.stringify(triggeredRules));
     		} else {
     			this.logger.info("Decision elements not found. Unable to log audit events");
     		}
@@ -147,7 +168,7 @@ export class ExperianService {
     				if (thirdPartyWarningsErrors) {
     					warningsErrors = thirdPartyWarningsErrors;
     					if (warningsErrors) {
-    						logResponseCode(warningsErrors, this.logger);
+    						logResponseCode(warningsErrors, this.logger, this.metrics);
     					}
     				}
     			}
@@ -161,6 +182,8 @@ export class ExperianService {
     			const scores = bavCheckResults?.scores;
     			if (scores) {
     				personalDetailsScore = scores.find((object: { name: string; score: number }) => object.name === "Personal details")?.score;
+    				this.logger.info("Personal details score is " + personalDetailsScore);
+    				this.metrics.addMetric("PersonalDetailsScore-" + personalDetailsScore, MetricUnits.Count, 1);
     			} else {
     				this.logger.warn("No scores present in response");
     			}

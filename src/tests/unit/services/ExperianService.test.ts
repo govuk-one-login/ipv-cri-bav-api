@@ -8,11 +8,21 @@ import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
 import axios, { AxiosRequestConfig } from "axios";
 import { Constants } from "../../../utils/Constants";
 import { MessageCodes } from "../../../models/enums/MessageCodes";
+import { experianVerifyResponse, 
+	experianVerifyResponseError2, 
+	experianVerifyResponseError3, 
+	experianVerifyResponseError6, 
+	experianVerifyResponseError7,
+	experianVerifyResponseError11,
+	experianVerifyResponseError12 } from "../data/experianEvents";
+import { Metrics } from "@aws-lambda-powertools/metrics";
 
 let experianServiceTest: ExperianService;
 const mockDynamoDbClient = jest.mocked(createDynamoDbClient());
 const experianTokenTableName = "EXPERIANSTOKENTABLE";
 const logger = mock<Logger>();
+const metrics = mock<Metrics>();
+
 
 jest.useFakeTimers();
 jest.spyOn(Date, "now").mockReturnValue(1728637200); // 11/10/2024 10:00:00.000 - Return value is mocked for 'checkExperianToken()', set as the same time valid token was issued
@@ -22,15 +32,6 @@ jest.mock("crypto", () => ({
 	...jest.requireActual("crypto"),
 	randomUUID: () => "randomId",
 }));
-
-
-import { experianVerifyResponse, 
-	experianVerifyResponseError2, 
-	experianVerifyResponseError3, 
-	experianVerifyResponseError6, 
-	experianVerifyResponseError7,
-	experianVerifyResponseError11,
-	experianVerifyResponseError12 } from "../data/experianEvents";
 
 const experianPayload = {
 	header: {
@@ -109,7 +110,7 @@ describe("Experian service", () => {
 	
 	beforeAll(() => {
 		process.env.LOG_THIRDPARTY_API_RESPONSE = "false";
-		experianServiceTest = new ExperianService(logger, 2, mockDynamoDbClient, experianTokenTableName);
+		experianServiceTest = new ExperianService(logger, metrics, 2, mockDynamoDbClient, experianTokenTableName);
 	});
 
 	afterEach(() => {
@@ -161,11 +162,17 @@ describe("Experian service", () => {
 			);
 			
 			expect(logger.info).toHaveBeenNthCalledWith(10, {
-				message: "Received response from Experian verify request",
+				message: "Received response from Experian verify request. Match Result:",
 				eventType: experianVerifyResponse.clientResponsePayload.decisionElements[1].auditLogs![0].eventType,
 				eventOutcome: experianVerifyResponse.clientResponsePayload.decisionElements[1].auditLogs![0].eventOutcome,
 			});
+			expect(logger.info).toHaveBeenNthCalledWith(11, "Triggered rules: [\"Rule Id: CNS1018, Rule Name: BAV_OA_GE90D_PDSGE7_ASGE6 , Rule text: Match to an open account, aged >=90 days, Personal Details Score >=7 and Address Score >=6\",\"Rule Id: CNS1019, Rule Name: BAV_OA_GE90D_PDSGE5_ASGE4 , Rule text: Match found to an open account which was opened 90 or more days ago with Personal Details Score >= 5 and Address Score >= 4\",\"Rule Id: CNS1020, Rule Name: BAV_OA_PDSGE5_ASGE4 , Rule text: Match to an open account, aged >=90 days, Personal Details Score >=5 and Address Score >=4\",\"Rule Id: CNS1022, Rule Name: BAV_OA_GE90D_PDSGE5 , Rule text: Match to an open account, aged >=90 days, Personal Details Score >=5\"]");
 			expect(response).toEqual({ "personalDetailsScore": 9, "expRequestId": "1234567890", "warningsErrors":[] });
+			
+			expect(metrics.addMetric).toHaveBeenNthCalledWith(1, "Experian-CONTINUE", "Count", 1);
+			expect(metrics.addMetric).toHaveBeenNthCalledWith(2, "Experian-Match_Found", "Count", 1);
+			expect(metrics.addMetric).toHaveBeenNthCalledWith(3, "PersonalDetailsScore-9", "Count", 1);
+
 		});
 
 		it("processes Experian verify request when response is missing Personal Details score and audit logs", async () => {
@@ -205,10 +212,11 @@ describe("Experian service", () => {
 			);
 			
 			expect(logger.info).toHaveBeenNthCalledWith(10, {
-				message: "Received response from Experian verify request",
+				message: "Received response from Experian verify request. Match Result:",
 				eventType: undefined,
 				eventOutcome: undefined,
 			});
+			expect(logger.info).toHaveBeenNthCalledWith(11, "Triggered rules: [\"Rule Id: CNS1018, Rule Name: BAV_OA_GE90D_PDSGE7_ASGE6 , Rule text: Match to an open account, aged >=90 days, Personal Details Score >=7 and Address Score >=6\",\"Rule Id: CNS1019, Rule Name: BAV_OA_GE90D_PDSGE5_ASGE4 , Rule text: Match found to an open account which was opened 90 or more days ago with Personal Details Score >= 5 and Address Score >= 4\",\"Rule Id: CNS1020, Rule Name: BAV_OA_PDSGE5_ASGE4 , Rule text: Match to an open account, aged >=90 days, Personal Details Score >=5 and Address Score >=4\",\"Rule Id: CNS1022, Rule Name: BAV_OA_GE90D_PDSGE5 , Rule text: Match to an open account, aged >=90 days, Personal Details Score >=5\"]");
 			expect(response).toEqual({ "personalDetailsScore": undefined, "expRequestId": "1234567890", "warningsErrors":[] });
 		});
 
