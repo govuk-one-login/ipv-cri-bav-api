@@ -891,7 +891,7 @@ Resources:
     Condition: UseCanaryDeploymentAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-SessionFunctionLambdaErrors"
-      AlarmDescription: !Sub Trigger an alarm when lambda errors occurs. ${SupportManualURL}
+      AlarmDescription: !Sub "Trigger an alarm when lambda errors occurs. ${SupportManualURL}"
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -1395,7 +1395,7 @@ Resources:
     Condition: UseCanaryDeploymentAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-AbortFunctionLambdaErrors"
-      AlarmDescription: !Sub Trigger an alarm when lambda errors occurs. ${SupportManualURL}
+      AlarmDescription: !Sub "Trigger an alarm when lambda errors occurs. ${SupportManualURL}"
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -1813,7 +1813,7 @@ Resources:
     Condition: UseCanaryDeploymentAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-PersonInfoFunctionLambdaErrors"
-      AlarmDescription: !Sub Trigger an alarm when lambda errors occurs. ${SupportManualURL}
+      AlarmDescription: !Sub "Trigger an alarm when lambda errors occurs. ${SupportManualURL}"
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -2214,7 +2214,7 @@ Resources:
     Condition: UseCanaryDeploymentAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-PersonInfoKeyFunctionLambdaErrors"
-      AlarmDescription: !Sub Trigger an alarm when lambda errors occurs. ${SupportManualURL}
+      AlarmDescription: !Sub "Trigger an alarm when lambda errors occurs. ${SupportManualURL}"
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -2650,7 +2650,7 @@ Resources:
     Condition: UseCanaryDeploymentAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-UserInfoFunctionLambdaErrors"
-      AlarmDescription: !Sub Trigger an alarm when lambda errors occurs. ${SupportManualURL}
+      AlarmDescription: !Sub "Trigger an alarm when lambda errors occurs. ${SupportManualURL}"
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -3064,7 +3064,7 @@ Resources:
     Condition: UseCanaryDeploymentAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-TokenFunctionLambdaErrors"
-      AlarmDescription: !Sub Trigger an alarm when lambda errors occurs. ${SupportManualURL}
+      AlarmDescription: !Sub "Trigger an alarm when lambda errors occurs. ${SupportManualURL}"
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -3481,7 +3481,7 @@ Resources:
     Condition: UseCanaryDeploymentAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-AuthorizationFunctionLambdaErrors"
-      AlarmDescription: !Sub Trigger an alarm when lambda errors occurs. ${SupportManualURL}
+      AlarmDescription: !Sub "Trigger an alarm when lambda errors occurs. ${SupportManualURL}"
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -3926,7 +3926,7 @@ Resources:
     Condition: UseCanaryDeploymentAlarms
     Properties:
       AlarmName: !Sub "${AWS::StackName}-VerifyAccountFunctionLambdaErrors"
-      AlarmDescription: !Sub Trigger an alarm when lambda errors occurs. ${SupportManualURL}
+      AlarmDescription: !Sub "Trigger an alarm when lambda errors occurs. ${SupportManualURL}"
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue platform-alarm-topic-slack-warning-alert
@@ -4904,13 +4904,6 @@ Resources:
         - ApplyReservedConcurrency
         - !Ref LambdaConcurrency
         - !Ref AWS::NoValue
-      # DeploymentPreference:
-      #   Type: !Ref LambdaDeploymentPreference
-      #   Role: !GetAtt CodeDeployServiceRole.Arn
-      #   Alarms: !If
-      #     - UseCanaryDeploymentAlarms
-      #     - [!Ref HmrcTokenFunctionFatalErrorAlarm, !Ref HmrcTokenFunctionLambdaErrors]
-      #     - [!Ref AWS::NoValue]
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: HmrcTokenHandler
@@ -5014,32 +5007,6 @@ Resources:
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
 
-  # HmrcTokenFunctionLambdaErrors:
-  #   Type: AWS::CloudWatch::Alarm
-  #   Condition: UseCanaryDeploymentAlarms
-  #   Properties:
-  #     AlarmName: !Sub "${AWS::StackName}-HmrcTokenFunctionLambdaErrors"
-  #     AlarmDescription: !Sub Trigger an alarm when lambda errors occurs. ${SupportManualURL}
-  #     ActionsEnabled: true
-  #     AlarmActions:
-  #       - !ImportValue platform-alarm-topic-slack-warning-alert
-  #     OKActions:
-  #       - !ImportValue platform-alarm-topic-slack-warning-alert
-  #     InsufficientDataActions: []
-  #     MetricName: Errors
-  #     Namespace: AWS/Lambda
-  #     Statistic: Sum
-  #     Dimensions:
-  #       - Name: Resource
-  #         Value: !Sub "${AWS::StackName}-HmrcTokenFunction:live"
-  #       - Name: ExecutedVersion
-  #         Value: !Sub HmrcTokenFunction.Version.Version
-  #     Period: 60
-  #     EvaluationPeriods: 1
-  #     Threshold: 1
-  #     ComparisonOperator: GreaterThanThreshold
-  #     TreatMissingData: notBreaching
-
   HmrcTokenConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
     Condition: "ApplyReservedConcurrency"
@@ -5096,13 +5063,13 @@ Resources:
     DependsOn: PartialNameMatchFunctionLogGroup
     Properties:
       FunctionName: !Sub "BAV-PartialNameMatch-${AWS::StackName}"
-      # DeploymentPreference:
-      #   Type: !Ref LambdaDeploymentPreference
-      #   Role: !GetAtt CodeDeployServiceRole.Arn
-      #   Alarms: !If
-      #     - UseCanaryDeploymentAlarms
-      #     - [!Ref PartialNameMatchFunctionFatalErrorAlarm, !Ref PartialNameMatchFunctionLambdaErrors]
-      #     - [!Ref AWS::NoValue]
+      DeploymentPreference:
+        Type: !Ref LambdaDeploymentPreference
+        Role: !GetAtt CodeDeployServiceRole.Arn
+        Alarms: !If
+          - UseCanaryDeploymentAlarms
+          - [!Ref PartialNameMatchFunctionFatalErrorAlarm, !Ref PartialNameMatchFunctionLambdaErrors]
+          - [!Ref AWS::NoValue]
       Handler: PartialNameMatchHandler.lambdaHandler
       CodeUri: ../src/
       ReservedConcurrentExecutions: !If
@@ -5185,6 +5152,13 @@ Resources:
       FunctionName: !Ref PartialNameMatchFunction
       Principal: apigateway.amazonaws.com
 
+  PartialNameMatchFunctionPermissionAlias:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref PartialNameMatchFunction.Alias
+      Principal: apigateway.amazonaws.com
+
   PartialNameMatchFunctionFatalErorMetricFilter:
     Type: AWS::Logs::MetricFilter
     Properties:
@@ -5220,31 +5194,31 @@ Resources:
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
 
-  # PartialNameMatchFunctionLambdaErrors:
-  #   Type: AWS::CloudWatch::Alarm
-  #   Condition: UseCanaryDeploymentAlarms
-  #   Properties:
-  #     AlarmName: !Sub "${AWS::StackName}-PartialNameMatchFunctionLambdaErrors"
-  #     AlarmDescription: !Sub Trigger an alarm when lambda errors occurs. ${SupportManualURL}
-  #     ActionsEnabled: true
-  #     AlarmActions:
-  #       - !ImportValue platform-alarm-topic-slack-warning-alert
-  #     OKActions:
-  #       - !ImportValue platform-alarm-topic-slack-warning-alert
-  #     InsufficientDataActions: []
-  #     MetricName: Errors
-  #     Namespace: AWS/Lambda
-  #     Statistic: Sum
-  #     Dimensions:
-  #       - Name: Resource
-  #         Value: !Sub "${AWS::StackName}-PartialNameMatchFunction:live"
-  #       - Name: ExecutedVersion
-  #         Value: !Sub PartialNameMatchFunction.Version.Version
-  #     Period: 60
-  #     EvaluationPeriods: 1
-  #     Threshold: 1
-  #     ComparisonOperator: GreaterThanThreshold
-  #     TreatMissingData: notBreaching
+  PartialNameMatchFunctionLambdaErrors:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-PartialNameMatchFunctionLambdaErrors"
+      AlarmDescription: !Sub Trigger an alarm when lambda errors occurs. ${SupportManualURL}
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      OKActions:
+        - !ImportValue platform-alarm-topic-slack-warning-alert
+      InsufficientDataActions: []
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Dimensions:
+        - Name: Resource
+          Value: !Sub "${AWS::StackName}-PartialNameMatchFunction:live"
+        - Name: ExecutedVersion
+          Value: !Sub PartialNameMatchFunction.Version.Version
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
 
   PartialNameMatchConcurrency80Alarm:
     Type: AWS::CloudWatch::Alarm
