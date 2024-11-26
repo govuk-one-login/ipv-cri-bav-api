@@ -127,7 +127,7 @@ describe("VerifiableCredentialService", () => {
 		});
 
 		it("should return a failure evidence block correctly", () => {
-			const evidenceBlock = service.getFailureEvidenceBlock(vendorUuid, true);
+			const evidenceBlock = service.getFailureEvidenceBlock(vendorUuid, ["D15"]);
 			expect(evidenceBlock).toEqual(expect.objectContaining({
 				txn: vendorUuid,
 				strengthScore: 3,
@@ -156,6 +156,7 @@ describe("VerifiableCredentialService", () => {
 
 		it("should generate a signed JWT with failure evidence including a CI for a failed match result", async () => {
 			mockSessionItem.experianCheckResult = ExperianCheckResult.NO_MATCH;
+			mockSessionItem.cis = ["D15"];
 			const signedJWT = "mockSignedJwt";
 			mockKmsJwtAdapter.sign.mockResolvedValue(signedJWT);
 

@@ -10,6 +10,7 @@ import { randomUUID } from "crypto";
 import { logResponseCode } from "../utils/LogResponseCode";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
+import { ExperianVerifyResponse } from "../models/IVeriCredential";
 
 export class ExperianService {
 	readonly logger: Logger;
@@ -48,7 +49,7 @@ export class ExperianService {
     	experianClientSecret: string,
     	experianVerifyUrl: string,
     	experianTokenUrl: string,
-    ): Promise<any> {
+    ): Promise<ExperianVerifyResponse> {
     	try {
     		const THIRDPARTY_DIRECT_SUBMISSION = checkEnvironmentVariable(EnvironmentVariables.THIRDPARTY_DIRECT_SUBMISSION, this.logger);
 
@@ -128,40 +129,20 @@ export class ExperianService {
     		this.logger.info("Experian response header expRequestId " + responseHeader?.expRequestId);
     		this.logger.info("Experian response details: ResponseTye " + responseHeader?.responseType + " Response Code " + responseHeader?.responseCode + " ResponseMessage " + responseHeader?.responseMessage);
     		this.logger.info("Experian overall response details " + JSON.stringify(responseHeader?.overallResponse));
-    		this.metrics.addMetric("Experian-" + responseHeader?.overallResponse?.decision, MetricUnits.Count, 1);
-
-	   		const decisionElements = data?.clientResponsePayload?.decisionElements;
+    		
     		const expRequestId = responseHeader?.expRequestId;
 
-    		if (decisionElements) {
-    			const logObject = decisionElements.find((object: { auditLogs: object[] }) => object.auditLogs);
-    			const eventOutcome = logObject?.auditLogs[0]?.eventOutcome;
-    			this.logger.info({
-    				message: "Received response from Experian verify request. Match Result:",
-    				eventType: logObject?.auditLogs[0]?.eventType,
-    				eventOutcome,
-    			});
-    			if (eventOutcome) {
-    				this.metrics.addMetric("Experian-" + eventOutcome.replace(" ", "_"), MetricUnits.Count, 1);
-    			}
-
-    			const rulesElement = decisionElements.find((object: { rules: object[] }) => object.rules);
-    			const rules: Array<{ ruleId: string; ruleName: string; ruleText: string; ruleScore: number }> = rulesElement ? rulesElement?.rules : [];
-    			const triggeredRules: string[] = [];
-    			if (rules) {
-    				rules.forEach((rule) => {
-    					if (rule?.ruleScore > 0) {
-    						triggeredRules.push(`Rule Id: ${rule?.ruleId}, Rule Name: ${rule?.ruleName} , Rule text: ${rule?.ruleText}`);
-    					}
-				  });
-    			}
-    			this.logger.info("Triggered rules: " + JSON.stringify(triggeredRules));
-    		} else {
-    			this.logger.info("Decision elements not found. Unable to log audit events");
-    		}
+    		const decision = responseHeader?.overallResponse?.decision;
+    		this.metrics.addMetric("Experian-" + decision, MetricUnits.Count, 1);
 
     		let warningsErrors = undefined;
-    		if (decisionElements) {	
+    		let personalDetailsScore = undefined;
+
+	   		const decisionElements = data?.clientResponsePayload?.decisionElements;
+    		if (decisionElements) {
+    			this.logEventOutcomes(decisionElements);
+    			this.logRules(decisionElements);
+
     			const errorObject = decisionElements.find((object: { warningsErrors: Array<{ responseType: string; responseCode: string; responseMessage: string }> }) => object.warningsErrors);
     			if (errorObject) {	
     				const thirdPartyWarningsErrors = errorObject?.warningsErrors;
@@ -172,12 +153,7 @@ export class ExperianService {
     					}
     				}
     			}
-    		} else {
-    			this.logger.info("Decision elements not found. Unable to log specific warnings");
-    		} 
-			
-    		let personalDetailsScore = undefined;
-    		if (decisionElements) {	
+
     			const bavCheckResults = decisionElements.find((object: { scores: Array<{ name: string; score: number }> }) => object.scores);
     			const scores = bavCheckResults?.scores;
     			if (scores) {
@@ -188,10 +164,11 @@ export class ExperianService {
     				this.logger.warn("No scores present in response");
     			}
     		} else {
-    			this.logger.info("Decision elements not found. Unable to capture personal details score");
+    			this.logger.info("Decision elements not found.");
     		}
 
     		const verifyObject = {
+    			outcome: decision,
     			expRequestId,
     			personalDetailsScore,
     			warningsErrors,
@@ -203,6 +180,33 @@ export class ExperianService {
     		const message = "Error sending verify request to Experian";
     		this.logger.error({ errorMessage: error?.message, message, messageCode: MessageCodes.FAILED_VERIFYING_ACCOUNT, statusCode: error?.response?.status });
     		throw new AppError(HttpCodesEnum.SERVER_ERROR, message);		
+    	}
+    }
+
+    private logRules(decisionElements: any) {
+    	const rulesElement = decisionElements.find((object: { rules: object[] }) => object.rules);
+    	const rules: Array<{ ruleId: string; ruleName: string; ruleText: string; ruleScore: number }> = rulesElement ? rulesElement?.rules : [];
+    	const triggeredRules: string[] = [];
+    	if (rules) {
+    		rules.forEach((rule) => {
+    			if (rule?.ruleScore > 0) {
+    				triggeredRules.push(`Rule Id: ${rule?.ruleId}, Rule Name: ${rule?.ruleName} , Rule text: ${rule?.ruleText}`);
+    			}
+    		});
+    	}
+    	this.logger.info("Triggered rules: " + JSON.stringify(triggeredRules));
+    }
+
+    private logEventOutcomes(decisionElements: any) {
+    	const logObject = decisionElements.find((object: { auditLogs: object[] }) => object.auditLogs);
+    	const eventOutcome = logObject?.auditLogs[0]?.eventOutcome;
+    	this.logger.info({
+    		message: "Received response from Experian verify request. Match Result:",
+    		eventType: logObject?.auditLogs[0]?.eventType,
+    		eventOutcome,
+    	});
+    	if (eventOutcome) {
+    		this.metrics.addMetric("Experian-" + eventOutcome.replace(" ", "_"), MetricUnits.Count, 1);
     	}
     }
 

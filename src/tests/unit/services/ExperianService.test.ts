@@ -167,7 +167,7 @@ describe("Experian service", () => {
 				eventOutcome: experianVerifyResponse.clientResponsePayload.decisionElements[1].auditLogs![0].eventOutcome,
 			});
 			expect(logger.info).toHaveBeenNthCalledWith(11, "Triggered rules: [\"Rule Id: CNS1018, Rule Name: BAV_OA_GE90D_PDSGE7_ASGE6 , Rule text: Match to an open account, aged >=90 days, Personal Details Score >=7 and Address Score >=6\",\"Rule Id: CNS1019, Rule Name: BAV_OA_GE90D_PDSGE5_ASGE4 , Rule text: Match found to an open account which was opened 90 or more days ago with Personal Details Score >= 5 and Address Score >= 4\",\"Rule Id: CNS1020, Rule Name: BAV_OA_PDSGE5_ASGE4 , Rule text: Match to an open account, aged >=90 days, Personal Details Score >=5 and Address Score >=4\",\"Rule Id: CNS1022, Rule Name: BAV_OA_GE90D_PDSGE5 , Rule text: Match to an open account, aged >=90 days, Personal Details Score >=5\"]");
-			expect(response).toEqual({ "personalDetailsScore": 9, "expRequestId": "1234567890", "warningsErrors":[] });
+			expect(response).toEqual({ "personalDetailsScore": 9, "expRequestId": "1234567890", "warningsErrors":[], outcome: "CONTINUE" });
 			
 			expect(metrics.addMetric).toHaveBeenNthCalledWith(1, "Experian-CONTINUE", "Count", 1);
 			expect(metrics.addMetric).toHaveBeenNthCalledWith(2, "Experian-Match_Found", "Count", 1);
@@ -217,7 +217,7 @@ describe("Experian service", () => {
 				eventOutcome: undefined,
 			});
 			expect(logger.info).toHaveBeenNthCalledWith(11, "Triggered rules: [\"Rule Id: CNS1018, Rule Name: BAV_OA_GE90D_PDSGE7_ASGE6 , Rule text: Match to an open account, aged >=90 days, Personal Details Score >=7 and Address Score >=6\",\"Rule Id: CNS1019, Rule Name: BAV_OA_GE90D_PDSGE5_ASGE4 , Rule text: Match found to an open account which was opened 90 or more days ago with Personal Details Score >= 5 and Address Score >= 4\",\"Rule Id: CNS1020, Rule Name: BAV_OA_PDSGE5_ASGE4 , Rule text: Match to an open account, aged >=90 days, Personal Details Score >=5 and Address Score >=4\",\"Rule Id: CNS1022, Rule Name: BAV_OA_GE90D_PDSGE5 , Rule text: Match to an open account, aged >=90 days, Personal Details Score >=5\"]");
-			expect(response).toEqual({ "personalDetailsScore": undefined, "expRequestId": "1234567890", "warningsErrors":[] });
+			expect(response).toEqual({ "personalDetailsScore": undefined, "expRequestId": "1234567890", "warningsErrors":[], outcome: "CONTINUE" });
 		});
 
 		it.each([
@@ -235,7 +235,7 @@ describe("Experian service", () => {
 				experianVerifyUrl,
 				experianTokenUrl);
 		
-			expect(response).toEqual({ "expRequestId": "1234567890", "personalDetailsScore": 1, "warningsErrors": [{ responseCode, "responseMessage": expectedMessage, "responseType": "warning" }] });
+			expect(response).toEqual({ "expRequestId": "1234567890", "personalDetailsScore": 1, "warningsErrors": [{ responseCode, "responseMessage": expectedMessage, "responseType": "warning" }], outcome: "STOP" });
 		  });
 
 		it.each([

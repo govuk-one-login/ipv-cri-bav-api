@@ -54,37 +54,20 @@ export class VerifiableCredentialService {
 		};
 	}
 
-	getFailureEvidenceBlock(vendorUuid: string, ciRequired?: boolean): VerifiedCredentialEvidence {
-		if (ciRequired) {
-			return {
-				type: Constants.IDENTITY_CHECK,
-				txn: vendorUuid,
-				strengthScore: 3,
-				validityScore: 0,
-				failedCheckDetails: [
-					{
-						checkMethod: "data",
-						identityCheckPolicy: "none",
-					},
-				],
-				ci: process.env.USE_MOCKED ? mockCI : [
-					"D15",
-				],
-			};
-		} else {
-			return {
-				type: Constants.IDENTITY_CHECK,
-				txn: vendorUuid,
-				strengthScore: 3,
-				validityScore: 0,
-				failedCheckDetails: [
-					{
-						checkMethod: "data",
-						identityCheckPolicy: "none",
-					},
-				],
-			};
-		}
+	getFailureEvidenceBlock(vendorUuid: string, cis?: string[]): VerifiedCredentialEvidence {
+		return {
+			type: Constants.IDENTITY_CHECK,
+			txn: vendorUuid,
+			strengthScore: 3,
+			validityScore: 0,
+			failedCheckDetails: [
+				{
+					checkMethod: "data",
+					identityCheckPolicy: "none",
+				},
+			],
+			...(cis ? { ci: process.env.USE_MOCKED ? mockCI : cis } : {}),
+		};
 	}
 	
 
@@ -92,18 +75,19 @@ export class VerifiableCredentialService {
 		sessionItem: ISessionItem, nameParts: PersonIdentityNamePart[], birthDate: PersonIdentityBirthDate[], bankAccountInfo: BankAccountInfo, getNow: () => number): Promise<{ signedJWT: string; evidenceInfo: VerifiedCredentialEvidence }> {
 		const now = getNow();
 		const subject = sessionItem.subject;
-		let ciRequired = true;
 
+		// To be removed
+		let cis = sessionItem?.cis;
 		if (sessionItem.warningsErrors) {
 			sessionItem.warningsErrors.forEach((item) => {
 				if (item.responseCode === "2" || item.responseCode === "3") {
-					ciRequired = false;
+					cis = undefined;
 				}
 			});
 		}
 
 		const evidenceInfo = sessionItem.experianCheckResult === ExperianCheckResult.FULL_MATCH ?
-			this.getSuccessEvidenceBlock(sessionItem.vendorUuid!) : this.getFailureEvidenceBlock(sessionItem.vendorUuid!, ciRequired);
+			this.getSuccessEvidenceBlock(sessionItem.vendorUuid!) : this.getFailureEvidenceBlock(sessionItem.vendorUuid!, cis);
 		const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, birthDate, bankAccountInfo, evidenceInfo, this.credentialVendor)
 			.build();
 		let result;
