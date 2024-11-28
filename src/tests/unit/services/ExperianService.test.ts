@@ -108,7 +108,10 @@ process.env.THIRDPARTY_DIRECT_SUBMISSION = "false";
 
 describe("Experian service", () => {
 	
-	beforeAll(() => {
+	beforeEach(() => {
+		
+		metrics.singleMetric.calledWith().mockReturnValue(metrics);
+
 		process.env.LOG_THIRDPARTY_API_RESPONSE = "false";
 		experianServiceTest = new ExperianService(logger, metrics, 2, mockDynamoDbClient, experianTokenTableName);
 	});

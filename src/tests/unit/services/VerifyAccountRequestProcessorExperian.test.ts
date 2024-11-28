@@ -379,7 +379,7 @@ describe("VerifyAccountRequestProcessor", () => {
 		it("returns success without attemptCount when there has been a FULL_MATCH", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
 			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, attemptCount: undefined });
-			mockExperianService.verify.mockResolvedValueOnce({ expRequestId: "1234568", personalDetailsScore: 9, warningsErrors: undefined, outcome: "CONTINUE" 
+			mockExperianService.verify.mockResolvedValueOnce({ expRequestId: "1234568", personalDetailsScore: 9, warningsErrors: undefined, outcome: "CONTINUE", 
 			});
 
 			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
@@ -415,7 +415,7 @@ describe("VerifyAccountRequestProcessor", () => {
 					responseType,
 					responseMessage: "Should not proceed",
 				}],
-				outcome: "REFER"
+				outcome: "REFER",
 			 });
 
 			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
@@ -427,7 +427,7 @@ describe("VerifyAccountRequestProcessor", () => {
 			);
 
 			const attemptCount = matchResult === "FULL_MATCH" ? undefined : 1;
-			const cis = responseType === "error" && (responseCode === "6" || responseCode === "7" || responseCode === "11" || responseCode === "12") ? ["D15"] : undefined
+			const cis = responseType === "error" && (responseCode === "6" || responseCode === "7" || responseCode === "11" || responseCode === "12") ? ["D15"] : undefined;
 			expect(mockBavService.saveExperianCheckResult).toHaveBeenCalledWith("SESSIONID", { "expRequestId": "1234568", "personalDetailsScore": 9, "warningsErrors": [{ responseCode, "responseMessage": "Should not proceed", responseType }], "outcome": "REFER" }, matchResult, attemptCount, cis);
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
 			if (attemptCount === 1) {
@@ -447,7 +447,7 @@ describe("VerifyAccountRequestProcessor", () => {
 					responseType: "error",
 					responseMessage: "Should proceed",
 				}],
-				outcome: "REFER" 
+				outcome: "REFER", 
 			 });
 
 			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
@@ -468,15 +468,15 @@ describe("VerifyAccountRequestProcessor", () => {
 			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, attemptCount: 1 });
 			mockExperianService.verify.mockResolvedValueOnce(
 				{
-				expRequestId: "1234568",
-				personalDetailsScore: 7,
-				warningsErrors: [{
-					responseCode: "1",
-					responseType: "error",
-					responseMessage: "Should proceed",
-				}],
-				outcome: "REFER" 
-			});
+					expRequestId: "1234568",
+					personalDetailsScore: 7,
+					warningsErrors: [{
+						responseCode: "1",
+						responseType: "error",
+						responseMessage: "Should proceed",
+					}],
+					outcome: "REFER", 
+				});
 
 			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
 				sessionId, 
@@ -486,7 +486,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				ssmParams,
 			);
 
-			expect(mockBavService.saveExperianCheckResult).toHaveBeenCalledWith("SESSIONID", { "expRequestId": "1234568", "personalDetailsScore": 7, "warningsErrors": [{ "responseCode": "1", "responseMessage": "Should proceed", "responseType": "error" }], "outcome": "REFER"}, "NO_MATCH", 2, undefined);
+			expect(mockBavService.saveExperianCheckResult).toHaveBeenCalledWith("SESSIONID", { "expRequestId": "1234568", "personalDetailsScore": 7, "warningsErrors": [{ "responseCode": "1", "responseMessage": "Should proceed", "responseType": "error" }], "outcome": "REFER" }, "NO_MATCH", 2, undefined);
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
 			expect(response.body).toBe(JSON.stringify({ message:"Success", attemptCount: 2 }));
 		});
@@ -496,15 +496,15 @@ describe("VerifyAccountRequestProcessor", () => {
 			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, attemptCount: 1 });
 			mockExperianService.verify.mockResolvedValueOnce(
 				{
-				expRequestId: "1234568",
-				personalDetailsScore: 9,
-				warningsErrors: [{
-					responseCode: "1",
-					responseType: "error",
-					responseMessage: "Should proceed",
-				}],
-				outcome: "STOP" 
-			});
+					expRequestId: "1234568",
+					personalDetailsScore: 9,
+					warningsErrors: [{
+						responseCode: "1",
+						responseType: "error",
+						responseMessage: "Should proceed",
+					}],
+					outcome: "STOP", 
+				});
 
 			const response = await verifyAccountRequestProcessorTest.processExperianRequest(
 				sessionId, 
@@ -514,7 +514,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				ssmParams,
 			);
 
-			expect(mockBavService.saveExperianCheckResult).toHaveBeenCalledWith("SESSIONID", { "expRequestId": "1234568", "personalDetailsScore": 9, "warningsErrors": [{ "responseCode": "1", "responseMessage": "Should proceed", "responseType": "error" }], "outcome": "STOP"}, "NO_MATCH", 2, ["D15"]);
+			expect(mockBavService.saveExperianCheckResult).toHaveBeenCalledWith("SESSIONID", { "expRequestId": "1234568", "personalDetailsScore": 9, "warningsErrors": [{ "responseCode": "1", "responseMessage": "Should proceed", "responseType": "error" }], "outcome": "STOP" }, "NO_MATCH", 2, ["D15"]);
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
 			expect(response.body).toBe(JSON.stringify({ message:"Success", attemptCount: 2 }));
 		});

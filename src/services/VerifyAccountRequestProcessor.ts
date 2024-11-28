@@ -22,7 +22,7 @@ import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { APIGatewayProxyResult } from "aws-lambda";
 import { ExperianService } from "./ExperianService";
 import { ExperianCheckResults } from "../models/enums/Experian";
-import { ExperianVerifyResponse, WarningsErrors } from "../models/IVeriCredential";
+import { ExperianVerifyResponse } from "../models/IVeriCredential";
 
 export class VerifyAccountRequestProcessor {
   private static instance: VerifyAccountRequestProcessor;
@@ -213,12 +213,12 @@ export class VerifyAccountRequestProcessor {
 		  }));
 	  }
 
-  private logCis(cis: string[] | undefined, metrics: Metrics) {
-	if (cis) {
-		cis.forEach(function (ci): void {
-			metrics.addMetric("ci-" + ci, MetricUnits.Count, 1);
-		});
-	}
+  private logCis(cis: string[] | undefined, metrics: Metrics): void {
+  	if (cis) {
+  		cis.forEach(function (ci): void {
+  			metrics.addMetric("ci-" + ci, MetricUnits.Count, 1);
+  		});
+  	}
   }
 
   // eslint-disable-next-line max-lines-per-function, complexity
@@ -370,7 +370,6 @@ export class VerifyAccountRequestProcessor {
   }
 
   calculateCIs(verifyResponse: ExperianVerifyResponse): string[] | undefined {
-  	const warningsErrors: WarningsErrors[] | undefined = verifyResponse?.warningsErrors;
   	let cisRequired: string[] = [];
 
   	const criticalErrors = ["6", "7", "11", "12"];
@@ -390,7 +389,7 @@ export class VerifyAccountRequestProcessor {
   	}
 	
   	cisRequired = [...new Set(cisRequired)];
-  	return cisRequired.length === 0 ? undefined : cisRequired;;
+  	return cisRequired.length === 0 ? undefined : cisRequired;
   }
 
   isCriticalResponseCode(verifyResponse: ExperianVerifyResponse, metrics: Metrics): boolean {

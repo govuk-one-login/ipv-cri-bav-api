@@ -183,7 +183,7 @@ export class ExperianService {
     	}
     }
 
-    private logRules(decisionElements: any) {
+    private logRules(decisionElements: any): void {
     	const rulesElement = decisionElements.find((object: { rules: object[] }) => object.rules);
     	const rules: Array<{ ruleId: string; ruleName: string; ruleText: string; ruleScore: number }> = rulesElement ? rulesElement?.rules : [];
     	const triggeredRules: string[] = [];
@@ -197,7 +197,7 @@ export class ExperianService {
     	this.logger.info("Triggered rules: " + JSON.stringify(triggeredRules));
     }
 
-    private logEventOutcomes(decisionElements: any) {
+    private logEventOutcomes(decisionElements: any): void {
     	const logObject = decisionElements.find((object: { auditLogs: object[] }) => object.auditLogs);
     	const eventOutcome = logObject?.auditLogs[0]?.eventOutcome;
     	this.logger.info({
