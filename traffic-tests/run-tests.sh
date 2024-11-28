@@ -20,10 +20,14 @@ export DNS_SUFFIX=$(remove_quotes "$CFN_DNSSuffix")
 # disabling error_check to allow report generation for successful + failed tests
 set +e
 cd /src
-npm run test:api 
+npm run test:api &
+sleep 10
+npm run test:api &
+sleep 10
+npm run test:api &
+sleep 10
 npm run test:api
-npm run test:api
-npm run test:api
+wait
 
 error_code=$?
 if [ $error_code -ne 0 ]
