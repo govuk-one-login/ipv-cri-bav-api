@@ -75,9 +75,16 @@ export class VerifiableCredentialService {
 		sessionItem: ISessionItem, nameParts: PersonIdentityNamePart[], birthDate: PersonIdentityBirthDate[], bankAccountInfo: BankAccountInfo, getNow: () => number): Promise<{ signedJWT: string; evidenceInfo: VerifiedCredentialEvidence }> {
 		const now = getNow();
 		const subject = sessionItem.subject;
+		const experianResultIsMatch = sessionItem.experianCheckResult === ExperianCheckResult.FULL_MATCH;
+
+		let cis = sessionItem?.cis;
 
 		// To be removed
-		let cis = sessionItem?.cis;
+		if (cis === undefined && !experianResultIsMatch) {
+			const ci = process.env.USE_MOCKED ? mockCI : ["D15"];
+			cis = experianResultIsMatch ? undefined : ci;
+		}
+
 		if (sessionItem.warningsErrors) {
 			sessionItem.warningsErrors.forEach((item) => {
 				if (item.responseCode === "2" || item.responseCode === "3") {
@@ -86,7 +93,7 @@ export class VerifiableCredentialService {
 			});
 		}
 
-		const evidenceInfo = sessionItem.experianCheckResult === ExperianCheckResult.FULL_MATCH ?
+		const evidenceInfo = experianResultIsMatch ?
 			this.getSuccessEvidenceBlock(sessionItem.vendorUuid!) : this.getFailureEvidenceBlock(sessionItem.vendorUuid!, cis);
 		const verifiedCredential: VerifiedCredential = new VerifiableCredentialBuilder(nameParts, birthDate, bankAccountInfo, evidenceInfo, this.credentialVendor)
 			.build();
