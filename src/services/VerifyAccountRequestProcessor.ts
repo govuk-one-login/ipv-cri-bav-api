@@ -23,6 +23,7 @@ import { APIGatewayProxyResult } from "aws-lambda";
 import { ExperianService } from "./ExperianService";
 import { ExperianCheckResults } from "../models/enums/Experian";
 import { ExperianVerifyResponse } from "../models/IVeriCredential";
+import { mockCI } from "../tests/contract/mocks/VerifiableCredential";
 
 export class VerifyAccountRequestProcessor {
   private static instance: VerifyAccountRequestProcessor;
@@ -371,6 +372,7 @@ export class VerifyAccountRequestProcessor {
 
   calculateCIs(verifyResponse: ExperianVerifyResponse): string[] | undefined {
   	let cisRequired: string[] = [];
+  	const ci = process.env.USE_MOCKED ? mockCI[0] : "D15";
 
   	const criticalErrors = ["6", "7", "11", "12"];
   	const warningError  = verifyResponse?.warningsErrors;
@@ -378,14 +380,14 @@ export class VerifyAccountRequestProcessor {
   		warningError.forEach(function (value): void {
   			if (value?.responseType === "error") {
   				if (criticalErrors.includes(value.responseCode)) {
-  					cisRequired.push("D15");
+  					cisRequired.push(ci);
   				}
   			}
   		}); 
   	}
 
   	if (verifyResponse.outcome === "STOP") {
-  		cisRequired.push("D15");
+  		cisRequired.push(ci);
   	}
 	
   	cisRequired = [...new Set(cisRequired)];

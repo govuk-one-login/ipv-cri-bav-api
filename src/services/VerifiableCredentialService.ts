@@ -77,21 +77,7 @@ export class VerifiableCredentialService {
 		const subject = sessionItem.subject;
 		const experianResultIsMatch = sessionItem.experianCheckResult === ExperianCheckResult.FULL_MATCH;
 
-		let cis = sessionItem?.cis;
-
-		// To be removed
-		if (cis === undefined && !experianResultIsMatch) {
-			const ci = process.env.USE_MOCKED ? mockCI : ["D15"];
-			cis = experianResultIsMatch ? undefined : ci;
-		}
-
-		if (sessionItem.warningsErrors) {
-			sessionItem.warningsErrors.forEach((item) => {
-				if (item.responseCode === "2" || item.responseCode === "3") {
-					cis = undefined;
-				}
-			});
-		}
+		const cis = sessionItem?.cis;
 
 		const evidenceInfo = experianResultIsMatch ?
 			this.getSuccessEvidenceBlock(sessionItem.vendorUuid!) : this.getFailureEvidenceBlock(sessionItem.vendorUuid!, cis);
