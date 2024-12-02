@@ -116,6 +116,7 @@ export type ExperianVerifyResponse = {
 	expRequestId: string;
 	personalDetailsScore: number;
 	warningsErrors?: WarningsErrors[];
+	outcome: string;
 };
 
 export type BankAccountInfo = {

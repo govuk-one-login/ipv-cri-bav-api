@@ -77,7 +77,7 @@ const failureBlock = {
 		},
 	],
 	ci: [
-		"D15",
+		"dummyCi",
 	],
 };
 
@@ -99,7 +99,6 @@ describe("VerifiableCredentialService", () => {
 	let service: VerifiableCredentialService;
 
 	beforeEach(() => {
-		jest.clearAllMocks();
 		service = new VerifiableCredentialService( mockKmsJwtAdapter, mockIssuer, mockLogger, dnsSuffix, credentialVendorExperian);
 	});
 
@@ -127,12 +126,12 @@ describe("VerifiableCredentialService", () => {
 		});
 
 		it("should return a failure evidence block correctly", () => {
-			const evidenceBlock = service.getFailureEvidenceBlock(vendorUuid, true);
+			const evidenceBlock = service.getFailureEvidenceBlock(vendorUuid, ["dummyCi"]);
 			expect(evidenceBlock).toEqual(expect.objectContaining({
 				txn: vendorUuid,
 				strengthScore: 3,
 				validityScore: 0,
-				ci: expect.arrayContaining(["D15"]),
+				ci: expect.arrayContaining(["dummyCi"]),
 			}));
 		});
 	});
@@ -156,6 +155,7 @@ describe("VerifiableCredentialService", () => {
 
 		it("should generate a signed JWT with failure evidence including a CI for a failed match result", async () => {
 			mockSessionItem.experianCheckResult = ExperianCheckResult.NO_MATCH;
+			mockSessionItem.cis = ["dummyCi"];
 			const signedJWT = "mockSignedJwt";
 			mockKmsJwtAdapter.sign.mockResolvedValue(signedJWT);
 

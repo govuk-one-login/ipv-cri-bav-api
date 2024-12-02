@@ -189,24 +189,37 @@ export class VerifyAccountRequestProcessor {
 		  );
 		  
 		  const experianCheckResult = this.calculateExperianCheckResult(verifyResponse, session.attemptCount);
+		  const cis = this.calculateCIs(verifyResponse);
+
 		  this.logger.info(`experianCheckResult is ${experianCheckResult}`);
-	
+		  this.logger.info(`CIs generated: ${cis}`);
+
+		  this.logCis(cis, this.metrics); 
+
 		  let attemptCount;
 		  if (experianCheckResult !== ExperianCheckResults.FULL_MATCH || !experianCheckResult) {
   		if (session.attemptCount) {
-  			this.metrics.addMetric("retry-attempt-" + session.attemptCount, MetricUnits.Count, 1);
   			attemptCount = session.attemptCount + 1;
   		} else {
   			attemptCount = 1;
   		}
+  		this.metrics.addMetric("retry-attempt-" + attemptCount, MetricUnits.Count, 1);
 		  }
 
-		  await this.BavService.saveExperianCheckResult(sessionId, verifyResponse, experianCheckResult, attemptCount);
+		  await this.BavService.saveExperianCheckResult(sessionId, verifyResponse, experianCheckResult, attemptCount, cis);
 		  return Response(HttpCodesEnum.OK, JSON.stringify({
 			  message: "Success",
 			  attemptCount,
 		  }));
 	  }
+
+  private logCis(cis: string[] | undefined, metrics: Metrics): void {
+  	if (cis) {
+  		cis.forEach(function (ci): void {
+  			metrics.addMetric("ci-" + ci, MetricUnits.Count, 1);
+  		});
+  	}
+  }
 
   // eslint-disable-next-line max-lines-per-function, complexity
   async processHmrcRequest(sessionId: string, body: VerifyAccountPayload, clientIpAddress: string, encodedHeader: string, HMRC_TOKEN: string): Promise<APIGatewayProxyResult> {
@@ -343,13 +356,40 @@ export class VerifyAccountRequestProcessor {
 
   calculateExperianCheckResult(verifyResponse: ExperianVerifyResponse, attemptCount?: number): ExperianCheckResult {
   	const personalDetailsScore = verifyResponse?.personalDetailsScore;
-  	if (personalDetailsScore === 9 && !this.isCriticalResponseCode(verifyResponse, this.metrics)) {
-  		return ExperianCheckResults.FULL_MATCH;
-  	} else if (personalDetailsScore !== 9 && attemptCount === undefined) {
+  	if (verifyResponse?.outcome === "STOP" && attemptCount === undefined) {
   		return undefined;
-  	} else {
-  		return ExperianCheckResults.NO_MATCH;
   	}
+  	if (personalDetailsScore !== 9 && attemptCount === undefined) {
+  		return undefined;
+  	}
+  	if (personalDetailsScore === 9 && !this.isCriticalResponseCode(verifyResponse, this.metrics) && verifyResponse?.outcome !== "STOP") {
+  		return ExperianCheckResults.FULL_MATCH;
+  	}
+
+  	return ExperianCheckResults.NO_MATCH;
+  }
+
+  calculateCIs(verifyResponse: ExperianVerifyResponse): string[] | undefined {
+  	let cisRequired: string[] = [];
+
+  	const criticalErrors = ["6", "7", "11", "12"];
+  	const warningError  = verifyResponse?.warningsErrors;
+  	if (warningError) {
+  		warningError.forEach(function (value): void {
+  			if (value?.responseType === "error") {
+  				if (criticalErrors.includes(value.responseCode)) {
+  					cisRequired.push("D15");
+  				}
+  			}
+  		}); 
+  	}
+
+  	if (verifyResponse.outcome === "STOP") {
+  		cisRequired.push("D15");
+  	}
+	
+  	cisRequired = [...new Set(cisRequired)];
+  	return cisRequired.length === 0 ? undefined : cisRequired;
   }
 
   isCriticalResponseCode(verifyResponse: ExperianVerifyResponse, metrics: Metrics): boolean {

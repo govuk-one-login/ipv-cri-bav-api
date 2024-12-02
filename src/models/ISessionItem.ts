@@ -44,6 +44,7 @@ export interface ISessionItem extends IBAVSession {
 	personalDetailsScore?: number;
 	experianCheckResult?: ExperianCheckResult;
 	warningsErrors?: WarningsErrors[];
+	cis?: string[];
 	vendorUuid?: string;
 	attemptCount?: number;
 }
