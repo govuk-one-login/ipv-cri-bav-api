@@ -170,12 +170,7 @@ describe("VerifiableCredentialService", () => {
 
 		it("should generate a signed JWT with failure evidence without a CI for a failed match result with response code 2 or 3", async () => {
 			mockSessionItem.experianCheckResult = ExperianCheckResult.NO_MATCH;
-			mockSessionItem.warningsErrors = 
-				[{ 	
-					responseType: "warning",
-					responseCode: "2",
-					responseMessage: "Modulus check algorithm is unavailable for these account details",
-				}];
+			mockSessionItem.cis = undefined;
 			const signedJWT = "mockSignedJwt";
 			mockKmsJwtAdapter.sign.mockResolvedValue(signedJWT);
 
