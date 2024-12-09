@@ -21,6 +21,7 @@ import exp from "constants";
 let bavService: BavService;
 const tableName = "SESSIONTABLE";
 const sessionId = "SESSIONID";
+const clientId = "ipv-core-stub";
 const encodedTxmaHeader = "ABCDEFG";
 const fakeTime = 1684933200.123;
 const SESSION_RECORD = require("../data/db_record.json") as ISessionItem;
@@ -177,7 +178,7 @@ describe("BAV Service", () => {
 		it("Should return a session item when passed a valid session Id", async () => {
 			mockDynamoDbClient.send = jest.fn().mockResolvedValue({ Item: SESSION_RECORD });
 			const result = await bavService.getSessionById(sessionId);
-			expect(result).toEqual({ sessionId });
+			expect(result).toEqual({ clientId: "ipv-core-stub", "sessionId": "SESSIONID" });
 		});
 	
 		it("Should return undefined when session doesn't exist", async () => {
@@ -300,6 +301,7 @@ describe("BAV Service", () => {
 				input: {
 					Item: {
 						sessionId,
+						clientId,
 					},
 					TableName: tableName,
 				},

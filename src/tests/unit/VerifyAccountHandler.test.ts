@@ -45,8 +45,6 @@ describe("VerifyAccountHandler", () => {
 			  "experianClientSecret": "secret", 
 			  "experianPassword": "password", 
 			  "experianUsername": "username", 
-			  "experianVerifyUrl": "https://localhost/verify", 
-			  "experianTokenUrl": "https://localhost/token",
 			},
 		);
 	});
@@ -65,8 +63,6 @@ describe("VerifyAccountHandler", () => {
 				"experianClientSecret": "secret", 
 				"experianPassword": "password", 
 				"experianUsername": "username", 
-				"experianVerifyUrl": "https://localhost/verify", 
-				"experianTokenUrl": "https://localhost/token",
 			  },
 		);
 	});

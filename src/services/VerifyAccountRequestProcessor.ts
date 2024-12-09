@@ -23,6 +23,7 @@ import { APIGatewayProxyResult } from "aws-lambda";
 import { ExperianService } from "./ExperianService";
 import { ExperianCheckResults } from "../models/enums/Experian";
 import { ExperianVerifyResponse } from "../models/IVeriCredential";
+import { getClientConfig } from "../utils/ClientConfig";
 import { mockCI } from "../tests/contract/mocks/VerifiableCredential";
 
 export class VerifyAccountRequestProcessor {
@@ -46,7 +47,9 @@ export class VerifyAccountRequestProcessor {
 
   private readonly partialNameQueueUrl: string;
 
-  private readonly ExperianService: ExperianService;	
+  private readonly ExperianService: ExperianService;
+  
+  private readonly clientConfig: string;
 
   constructor(logger: Logger, metrics: Metrics, CREDENTIAL_VENDOR: string) {
   	this.logger = logger;
@@ -65,6 +68,7 @@ export class VerifyAccountRequestProcessor {
   	const hmrcBackoffPeriodMs = +checkEnvironmentVariable(EnvironmentVariables.HMRC_TOKEN_BACKOFF_PERIOD_MS, logger);
   	const experianTokenTableName: string = checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_TOKEN_TABLE, this.logger);
   	const experianMaxRetries = +checkEnvironmentVariable(EnvironmentVariables.EXPERIAN_MAX_RETRIES, logger);
+  	this.clientConfig = checkEnvironmentVariable(EnvironmentVariables.CLIENT_CONFIG, logger);
 
   	this.BavService = BavService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
   	this.HmrcService = HmrcService.getInstance(this.logger, hmrcBaseUrl, hmrcBackoffPeriodMs, maxRetries);
@@ -88,22 +92,25 @@ export class VerifyAccountRequestProcessor {
   	experianPassword: string;
   	experianClientId: string;
   	experianClientSecret: string;
-  		experianVerifyUrl: string;
-  		experianTokenUrl: string;
   	},
   ): Promise<APIGatewayProxyResult> {
-		  const person: PersonIdentityItem | undefined = await this.BavService.getPersonIdentityById(sessionId, this.personIdentityTableName);
-		  const session: ISessionItem | undefined = await this.BavService.getSessionById(sessionId);
-		
-		  if (!person) {
-			  this.logger.error("No person found for session id", { messageCode: MessageCodes.PERSON_NOT_FOUND });
-			  return Response(HttpCodesEnum.UNAUTHORIZED, `No person found with the session id: ${sessionId}`);
-		  }
-	
-		  if (!session) {
-			  this.logger.error("No session found for session id", { messageCode: MessageCodes.SESSION_NOT_FOUND });
-			  return Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
-		  }
+  	const session: ISessionItem | undefined = await this.BavService.getSessionById(sessionId);	
+  	if (!session) {
+  		this.logger.error("No session found for session id", { messageCode: MessageCodes.SESSION_NOT_FOUND });
+  		return Response(HttpCodesEnum.UNAUTHORIZED, `No session found with the session id: ${sessionId}`);
+  	}
+
+  	const person: PersonIdentityItem | undefined = await this.BavService.getPersonIdentityById(sessionId, this.personIdentityTableName);
+  	if (!person) {
+  		this.logger.error("No person found for session id", { messageCode: MessageCodes.PERSON_NOT_FOUND });
+  		return Response(HttpCodesEnum.UNAUTHORIZED, `No person found with the session id: ${sessionId}`);
+  	}
+
+  	const userClientConfig = getClientConfig(this.clientConfig, session.clientId, this.logger);
+  	if (!userClientConfig) {
+  		this.logger.error("Unrecognised client in request", { messageCode: MessageCodes.UNRECOGNISED_CLIENT });
+  		return Response(HttpCodesEnum.UNAUTHORIZED, `Unrecognised client in request: ${session.clientId}`);
+  	}
 	
 		  if (session.attemptCount && session.attemptCount >= Constants.MAX_VERIFY_ATTEMPTS) {
 			  this.logger.error(`Session attempt count is ${session.attemptCount}, cannot have another attempt`, { messageCode: MessageCodes.TOO_MANY_RETRIES });
@@ -126,8 +133,8 @@ export class VerifyAccountRequestProcessor {
 			  ssmParams.experianPassword,
 			  ssmParams.experianClientId,
 			  ssmParams.experianClientSecret,
-			  ssmParams.experianVerifyUrl,
-			  ssmParams.experianTokenUrl,
+			  userClientConfig.experianVerifyEndpoint,
+			  userClientConfig.experianTokenEndpoint,
 		  );
 
 		  const verifyResponsePresent = verifyResponse?.expRequestId && (verifyResponse?.personalDetailsScore || verifyResponse?.warningsErrors);

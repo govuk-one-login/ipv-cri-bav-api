@@ -26,6 +26,9 @@ export const handler = async (
   if (overrides?.target != null) {
     config.jwksUri = overrides.target;
   }
+  if (overrides?.clientId != null) {
+    config.clientId = overrides.clientId;
+  }
 	frontendURL = overrides?.frontendURL != null ? overrides.frontendURL : config.oauthUri
   const defaultClaims = {
     name: [

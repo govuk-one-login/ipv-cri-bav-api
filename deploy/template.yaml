@@ -106,8 +106,17 @@ Mappings:
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
-      CLIENTS: '[{"jwksEndpoint":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/.well-known/jwks.json","clientId":"5C584572","redirectUri":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/redirect?id=bav"}]'
-      AUTHSESSIONTTLSECS: 7200 # 2 hours in seconds
+      CLIENTS: 
+          '[
+            {
+              "jwksEndpoint":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/.well-known/jwks.json",
+              "clientId":"5C584572",
+              "redirectUri":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/redirect?id=bav",
+              "experianTokenEndpoint":"https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev/oauth2/experianone/v1/token",
+              "experianVerifyEndpoint":"https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev/services/v0/applications/3"
+            }
+          ]'
+      AUTHSESSIONTTLSECS: 86400 # 1 day in seconds
       TESTHARNESSURL: "https://bav-test-harness-testharness.review-bav.dev.account.gov.uk"
       HMRCBASEURL: "https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev"
       HMRCVERIFYBASEURL: "https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev/misc/bank-account"
@@ -118,8 +127,24 @@ Mappings:
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
-      CLIENTS: '[{"jwksEndpoint":"https://ipvstub.review-bav.build.account.gov.uk/.well-known/jwks.json","clientId":"BD7B2A5D","redirectUri":"https://ipvstub.review-bav.build.account.gov.uk/redirect?id=bav"}]'
-      AUTHSESSIONTTLSECS: 7200 # 2 hours in seconds
+      CLIENTS: # TODO: Swap sandbox journey experian URLs to outbound proxy URLs
+          '[
+            {
+              "jwksEndpoint":"https://ipvstub.review-bav.build.account.gov.uk/.well-known/jwks.json",
+              "clientId":"BD7B2A5D",
+              "redirectUri":"https://ipvstub.review-bav.build.account.gov.uk/redirect?id=bav",
+              "experianTokenEndpoint":"https://c99d36403h.execute-api.eu-west-2.amazonaws.com/build/oauth2/experianone/v1/token",
+              "experianVerifyEndpoint":"https://c99d36403h.execute-api.eu-west-2.amazonaws.com/build/services/v0/applications/3"
+            },
+            {
+              "jwksEndpoint":"https://ipvstub.review-bav.build.account.gov.uk/.well-known/jwks.json",
+              "clientId":"SandboxJourneyFlow",
+              "redirectUri":"https://ipvstub.review-bav.build.account.gov.uk/redirect?id=bav",
+              "experianTokenEndpoint":"https://uk-api.experian.com/oauth2/experianone/v1/token",
+              "experianVerifyEndpoint":"https://uk-api.experian.com/decisionanalytics/crosscore/nprxuz82vn3d/services/v0/applications/3"
+            },
+          ]'
+      AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
       HMRCBASEURL: "https://c99d36403h.execute-api.eu-west-2.amazonaws.com/build"
       HMRCVERIFYBASEURL: "https://c99d36403h.execute-api.eu-west-2.amazonaws.com/build/misc/bank-account"
       TESTHARNESSURL: "https://testharness.review-bav.build.account.gov.uk"
@@ -130,8 +155,17 @@ Mappings:
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
-      CLIENTS: '[{"jwksEndpoint":"https://api.identity.staging.account.gov.uk/.well-known/jwks.json","clientId":"03A5A659-17AA-453F-B905-95D2804823D1","redirectUri":"https://identity.staging.account.gov.uk/credential-issuer/callback?id=bav"}]'
-      AUTHSESSIONTTLSECS: 7200 # 2 hours in seconds
+      CLIENTS:
+          '[
+            {
+              "jwksEndpoint":"https://api.identity.staging.account.gov.uk/.well-known/jwks.json",
+              "clientId":"03A5A659-17AA-453F-B905-95D2804823D1",
+              "redirectUri":"https://identity.staging.account.gov.uk/credential-issuer/callback?id=bav",
+              "experianTokenEndpoint":"https://x0ch9rvyhe.execute-api.eu-west-2.amazonaws.com/staging/services/v0/applications/3",
+              "experianVerifyEndpoint":"https://x0ch9rvyhe.execute-api.eu-west-2.amazonaws.com/staging/oauth2/experianone/v1/token"
+            }
+          ]'
+      AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
       HMRCBASEURL: "https://x0ch9rvyhe.execute-api.eu-west-2.amazonaws.com/staging"
       HMRCVERIFYBASEURL: "https://x0ch9rvyhe.execute-api.eu-west-2.amazonaws.com/staging/misc/bank-account"
     integration:
@@ -141,8 +175,17 @@ Mappings:
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
-      CLIENTS: '[{"jwksEndpoint":"https://api.identity.integration.account.gov.uk/.well-known/jwks.json","clientId":"AE140E43-1987-4EE8-86CC-BEF19FC9FF3F","redirectUri":"https://identity.integration.account.gov.uk/credential-issuer/callback?id=bav"}]'
-      AUTHSESSIONTTLSECS: 7200 # 2 hours in seconds
+      CLIENTS:
+          '[
+            {
+              "jwksEndpoint":"https://api.identity.integration.account.gov.uk/.well-known/jwks.json",
+              "clientId":"AE140E43-1987-4EE8-86CC-BEF19FC9FF3F",
+              "redirectUri":"https://identity.integration.account.gov.uk/credential-issuer/callback?id=bav",
+              "experianTokenEndpoint":"https://uk-api.experian.com/decisionanalytics/crosscore/nprxuz82vn3d/services/v0/applications/3",
+              "experianVerifyEndpoint":"https://uk-api.experian.com/oauth2/experianone/v1/token"
+            }
+          ]'
+      AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
       HMRCBASEURL: "https://proxy.review-bav.integration.account.gov.uk/hmrc"
       HMRCVERIFYBASEURL: "https://proxy.review-bav.integration.account.gov.uk/hmrc/misc/bank-account"
     production:
@@ -152,8 +195,17 @@ Mappings:
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
-      CLIENTS: '[{"jwksEndpoint":"https://api.identity.account.gov.uk/.well-known/jwks.json","clientId":"C910A762-4BB2-400D-8F3D-4D7E6C84E342","redirectUri":"https://identity.account.gov.uk/credential-issuer/callback?id=bav"}]'
-      AUTHSESSIONTTLSECS: 7200 # 2 hours in seconds
+      CLIENTS:
+          '[
+            {
+              "jwksEndpoint":"https://api.identity.account.gov.uk/.well-known/jwks.json",
+              "clientId":"C910A762-4BB2-400D-8F3D-4D7E6C84E342",
+              "redirectUri":"https://identity.account.gov.uk/credential-issuer/callback?id=bav",
+              "experianTokenEndpoint":"https://uk-api.experian.com/decisionanalytics/crosscore/npfygurfzc3g/services/v0/applications/3",
+              "experianVerifyEndpoint":"https://uk-api.experian.com/oauth2/experianone/v1/token"
+            }
+          ]'
+      AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
       HMRCBASEURL: "https://proxy.review-bav.account.gov.uk/hmrc"
       HMRCVERIFYBASEURL: "https://proxy.review-bav.account.gov.uk/misc/bank-account/hmrc"
   TxMAAccounts:
@@ -3316,8 +3368,6 @@ Resources:
           EXPERIAN_USERNAME_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/Username"
           EXPERIAN_CLIENT_ID_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/clientId"
           EXPERIAN_CLIENT_SECRET_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/clientSecret"
-          EXPERIAN_VERIFY_URL_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/verifyEndpointUrl"
-          EXPERIAN_TOKEN_URL_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/tokenEndpointUrl"
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
@@ -3333,10 +3383,6 @@ Resources:
             ParameterName: !Sub "${Environment}/bav-cri-api/CrosscoreV2/clientId"
         - SSMParameterReadPolicy:
             ParameterName: !Sub "${Environment}/bav-cri-api/CrosscoreV2/clientSecret"
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub "${Environment}/bav-cri-api/CrosscoreV2/verifyEndpointUrl"
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub "${Environment}/bav-cri-api/CrosscoreV2/tokenEndpointUrl"
         - DynamoDBWritePolicy:
             TableName:
               Fn::ImportValue: !Sub "${L2DynamoStackName}-session-table-name"
