@@ -534,7 +534,7 @@ describe("BAV Service", () => {
 		it("saves account information to dynamo", async () => {
 			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
 
-			await bavService.saveExperianCheckResult(sessionId, { expRequestId: "1234568", personalDetailsScore: 9, warningsErrors: undefined }, experianCheckResultFullMatch, 1);
+			await bavService.saveExperianCheckResult(sessionId, { expRequestId: "1234568", personalDetailsScore: 9, warningsErrors: undefined, outcome: "CONTINUE" }, experianCheckResultFullMatch, 1);
 
 			expect(UpdateCommand).toHaveBeenCalledWith({
 				TableName: tableName,
@@ -552,7 +552,7 @@ describe("BAV Service", () => {
 		it("saves account information to dynamo without attemptCount", async () => {
 			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
 
-			await bavService.saveExperianCheckResult(sessionId, { expRequestId: "1234568", personalDetailsScore: 9, warningsErrors: undefined }, experianCheckResultFullMatch, undefined);
+			await bavService.saveExperianCheckResult(sessionId, { expRequestId: "1234568", personalDetailsScore: 9, warningsErrors: undefined, outcome: "continue" }, experianCheckResultFullMatch, undefined);
 
 			expect(UpdateCommand).toHaveBeenCalledWith({
 				TableName: tableName,
@@ -569,16 +569,15 @@ describe("BAV Service", () => {
 		it("saves account information to dynamo with responseCode if present", async () => {
 			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
 
-			await bavService.saveExperianCheckResult(sessionId, { expRequestId: "1234568", personalDetailsScore: 1, warningsErrors: warningsError2 }, experianCheckResultNoMatch, 1);
+			await bavService.saveExperianCheckResult(sessionId, { expRequestId: "1234568", personalDetailsScore: 1, warningsErrors: warningsError2, outcome: "REFER" }, experianCheckResultNoMatch, 1);
 
 			expect(UpdateCommand).toHaveBeenCalledWith({
 				TableName: tableName,
 				Key: { sessionId },
-				UpdateExpression: "SET experianCheckResult = :experianCheckResult, personalDetailsScore = :personalDetailsScore, warningsErrors = :warningsErrors, authSessionState = :authSessionState, attemptCount = :attemptCount",
+				UpdateExpression: "SET experianCheckResult = :experianCheckResult, personalDetailsScore = :personalDetailsScore,  authSessionState = :authSessionState, attemptCount = :attemptCount",
 				ExpressionAttributeValues: {
 					":experianCheckResult": experianCheckResultNoMatch,
 					":personalDetailsScore": 1,
-					":warningsErrors": warningsError2,
 					":authSessionState": AuthSessionState.BAV_DATA_RECEIVED,
 					":attemptCount": 1,
 				},
@@ -588,7 +587,7 @@ describe("BAV Service", () => {
 		it("returns an error when account information cannot be saved to dynamo", async () => {
 			mockDynamoDbClient.send = jest.fn().mockRejectedValueOnce("Error!");
 
-			await expect(bavService.saveExperianCheckResult(sessionId, { expRequestId: "1234568", personalDetailsScore: 9, warningsErrors: undefined }, experianCheckResultFullMatch, undefined)).rejects.toThrow(expect.objectContaining({
+			await expect(bavService.saveExperianCheckResult(sessionId, { expRequestId: "1234568", personalDetailsScore: 9, warningsErrors: undefined, outcome: "CONTINUE" }, experianCheckResultFullMatch, undefined)).rejects.toThrow(expect.objectContaining({
 				statusCode: HttpCodesEnum.SERVER_ERROR,
 				message: "saveExperianCheckResult failed: got error saving experianCheckResult",
 			}));

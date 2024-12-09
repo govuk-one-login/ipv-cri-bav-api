@@ -215,11 +215,7 @@ describe("UserInfoRequestProcessor", () => {
 		mockBavService.getSessionById.mockResolvedValue(mockSession);
 		mockSession.personalDetailsScore = 9;
 		mockSession.experianCheckResult = "NO_MATCH";
-		mockSession.warningsErrors = [{	
-			responseType: "warning",
-			responseCode: "2",
-			responseMessage: "Modulus check algorithm is unavailable for these account details",
-		}];
+
 		mockBavService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
 		// @ts-ignore
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();

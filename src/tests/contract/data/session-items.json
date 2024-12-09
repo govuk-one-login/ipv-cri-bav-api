@@ -140,9 +140,13 @@
               },
               "subject": {
                 "S": "test-subject"
-              }
-            }
+              },
+              "cis": {
+                "L": [{
+                      "S": "dummyCi"
+              }]}
         }
-    }        
-    ]
+    }
+  }        
+]
 }

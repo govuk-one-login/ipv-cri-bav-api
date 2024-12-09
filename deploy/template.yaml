@@ -4489,7 +4489,7 @@ Resources:
     Properties: 
       Description: "ScheduledRule"
       ScheduleExpression: cron(0 0/3 * * ? *)
-      State: "ENABLED"
+      State: "DISABLED"
       Targets: 
         - 
           Arn: 
