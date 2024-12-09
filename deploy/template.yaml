@@ -142,7 +142,7 @@ Mappings:
               "redirectUri":"https://ipvstub.review-bav.build.account.gov.uk/redirect?id=bav",
               "experianTokenEndpoint":"https://uk-api.experian.com/oauth2/experianone/v1/token",
               "experianVerifyEndpoint":"https://uk-api.experian.com/decisionanalytics/crosscore/nprxuz82vn3d/services/v0/applications/3"
-            },
+            }
           ]'
       AUTHSESSIONTTLSECS: 950400 # 11 days in seconds
       HMRCBASEURL: "https://c99d36403h.execute-api.eu-west-2.amazonaws.com/build"
