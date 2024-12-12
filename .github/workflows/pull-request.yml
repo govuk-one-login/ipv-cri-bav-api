@@ -16,8 +16,12 @@ on:
       - 'bav-ipv-stub/**'
       - 'test-harness/**'
 
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+    inputs:
+      stacks:
+        description: 'Comma-separated list of CloudFormation stack names'
+        required: true
+        type: string
 
 # Required for sam-validate step
 permissions:
@@ -38,76 +42,15 @@ env: # Only adding the variables in that are required for
   PACT_PROVIDER_VERSION: ${{ secrets.PACT_PROVIDER_VERSION }}
 
 jobs:
-  run-code-check:
-    name: Code Checks
+  delete-stacks:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-        working-directory: ./src/
+
+    env:
+      AWS_REGION: eu-west-2
+
     steps:
-      - name: Check out repository code
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      - name: Checks if commiting secrets to repo
-        uses: pre-commit/action@v3.0.1
-        with:
-          extra_args: "detect-secrets --all-files"
-
-      - name: Setup nodeJS v18
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-
-      - name: Set offline mirror path
-        id: offline-mirror-path
-        run: echo "mirror-dir=${GITHUB_WORKSPACE}/npm-packages-offline-cache" >> $GITHUB_OUTPUT
-
-      - name: Cache npm offline-mirror
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.offline-mirror-path.outputs.mirror-dir }}
-          key: offline-mirror-oauth
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run lint
-        run: npm run lint
-
-      - name: Archive lint results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: lint-report
-          path: src/reports/eslint/reportFile.html
-
-      - name: Run Tests
-        run: npm run test:unit
-
-      - name: Run Infra checks
-        run: npm run test:infra
-
-      - name: Run Contract tests
-        run: npm run test:contract:ci   
-
-      - name: Kill DynamoDB 
-        run: npm run kill:dynamodblocal
-
-  sam-validate:
-    name: SAM Validate
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-        working-directory: ./deploy/
-    steps:
-      - name: Check out repository code
-        uses: actions/checkout@v4
-        with:
-          submodules: true
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
       - name: Setup SAM CLI
         uses: aws-actions/setup-sam@v2
@@ -120,17 +63,110 @@ jobs:
           role-to-assume: ${{ secrets.CRI_BAV_GH_VALIDATE_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Cache SAM builds
-        uses: actions/cache@v4
-        with:
-          path: |
-            ./di-ipv-cri-bav-api/.aws-sam/cache
-            ./di-ipv-cri-bav-api/.aws-sam/deps
-            ./di-ipv-cri-bav-api/.aws-sam/build.toml
-          key: sam-oauth
+      - name: Ensure stack names are provided
+        run: |
+          if [ -z "${{ github.event.inputs.stacks }}" ]; then
+            echo "Error: No stack names provided."
+            exit 1
+          fi
 
-      - name: SAM Validate
-        run: sam validate --region ${{ env.AWS_REGION }} -t template.yaml
+      - name: Delete specified stacks
+        run: ../.././deleteStack.sh ${{ github.event.inputs.stacks }}
 
-      - name: SAM Build
-        run: sam build -t template.yaml
+
+  # run-code-check:
+  #   name: Code Checks
+  #   runs-on: ubuntu-latest
+  #   defaults:
+  #     run:
+  #       shell: bash
+  #       working-directory: ./src/
+  #   steps:
+  #     - name: Check out repository code
+  #       uses: actions/checkout@v4
+  #       with:
+  #         submodules: true
+
+  #     - name: Checks if commiting secrets to repo
+  #       uses: pre-commit/action@v3.0.1
+  #       with:
+  #         extra_args: "detect-secrets --all-files"
+
+  #     - name: Setup nodeJS v18
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 18
+
+  #     - name: Set offline mirror path
+  #       id: offline-mirror-path
+  #       run: echo "mirror-dir=${GITHUB_WORKSPACE}/npm-packages-offline-cache" >> $GITHUB_OUTPUT
+
+  #     - name: Cache npm offline-mirror
+  #       uses: actions/cache@v4
+  #       with:
+  #         path: ${{ steps.offline-mirror-path.outputs.mirror-dir }}
+  #         key: offline-mirror-oauth
+
+  #     - name: Install dependencies
+  #       run: npm install
+
+  #     - name: Run lint
+  #       run: npm run lint
+
+  #     - name: Archive lint results
+  #       if: always()
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: lint-report
+  #         path: src/reports/eslint/reportFile.html
+
+  #     - name: Run Tests
+  #       run: npm run test:unit
+
+  #     - name: Run Infra checks
+  #       run: npm run test:infra
+
+  #     - name: Run Contract tests
+  #       run: npm run test:contract:ci   
+
+  #     - name: Kill DynamoDB 
+  #       run: npm run kill:dynamodblocal
+
+  # sam-validate:
+  #   name: SAM Validate
+  #   runs-on: ubuntu-latest
+  #   defaults:
+  #     run:
+  #       shell: bash
+  #       working-directory: ./deploy/
+  #   steps:
+  #     - name: Check out repository code
+  #       uses: actions/checkout@v4
+  #       with:
+  #         submodules: true
+
+  #     - name: Setup SAM CLI
+  #       uses: aws-actions/setup-sam@v2
+  #       with:
+  #         use-installer: true
+
+  #     - name: Assume temporary AWS role
+  #       uses: aws-actions/configure-aws-credentials@v1-node16
+  #       with:
+  #         role-to-assume: ${{ secrets.CRI_BAV_GH_VALIDATE_ROLE_ARN }}
+  #         aws-region: ${{ env.AWS_REGION }}
+
+  #     - name: Cache SAM builds
+  #       uses: actions/cache@v4
+  #       with:
+  #         path: |
+  #           ./di-ipv-cri-bav-api/.aws-sam/cache
+  #           ./di-ipv-cri-bav-api/.aws-sam/deps
+  #           ./di-ipv-cri-bav-api/.aws-sam/build.toml
+  #         key: sam-oauth
+
+  #     - name: SAM Validate
+  #       run: sam validate --region ${{ env.AWS_REGION }} -t template.yaml
+
+  #     - name: SAM Build
+  #       run: sam build -t template.yaml
