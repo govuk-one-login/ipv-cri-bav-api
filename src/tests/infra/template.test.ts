@@ -1,4 +1,4 @@
-import { Template, Match } from 'aws-cdk-lib/assertions';
+import { Template, Match } from "aws-cdk-lib/assertions";
 const { schema } = require("yaml-cfn");
 import { readFileSync } from "fs";
 import { load } from "js-yaml";
@@ -8,288 +8,301 @@ import { load } from "js-yaml";
 let template: Template;
 
 describe("Infra", () => {
-	beforeAll(() => {
-		const yamltemplate: any = load(
-			readFileSync("../deploy/template.yaml", "utf-8"),
-			{ schema },
-		);
-		delete yamltemplate.Resources.BAVRestApi.Properties.DefinitionBody; // To be removed, not SAM compatible.
-		template = Template.fromJSON(yamltemplate);
-	});
+  beforeAll(() => {
+    const yamltemplate: any = load(
+      readFileSync("../deploy/template.yaml", "utf-8"),
+      { schema },
+    );
+    delete yamltemplate.Resources.BAVRestApi.Properties.DefinitionBody; // To be removed, not SAM compatible.
+    template = Template.fromJSON(yamltemplate);
+  });
 
-	it.skip("Should define a DefinitionBody as part of the serverless::api", () => {
-		// N.B this only passes as we currently delete it on line 14 in the test setup step.
-		template.hasResourceProperties("AWS::Serverless::Api", {
-			DefinitionBody: Match.anyValue(),
-		});
-	});
+  it.skip("Should define a DefinitionBody as part of the serverless::api", () => {
+    // N.B this only passes as we currently delete it on line 14 in the test setup step.
+    template.hasResourceProperties("AWS::Serverless::Api", {
+      DefinitionBody: Match.anyValue(),
+    });
+  });
 
-	it.skip("API specification in the spec folder should match the DefinitionBody", () => {
-		const api_definition: any = load(readFileSync("../deploy/spec/private-api.yaml", "utf-8"), { schema });
-		template.hasResourceProperties("AWS::Serverless::Api", {
-			DefinitionBody: Match.objectEquals(api_definition),
-		});
+  it.skip("API specification in the spec folder should match the DefinitionBody", () => {
+    const api_definition: any = load(
+      readFileSync("../deploy/spec/private-api.yaml", "utf-8"),
+      { schema },
+    );
+    template.hasResourceProperties("AWS::Serverless::Api", {
+      DefinitionBody: Match.objectEquals(api_definition),
+    });
+  });
 
-	});
+  it.skip("Should not define a Events section as part of the serverless::function", () => {
+    // N.B this only passes as we currently delete it on line 14 in the test setup step.
+    template.hasResourceProperties("AWS::Serverless::Function", {
+      Events: Match.absent(),
+    });
+  });
 
-	it.skip("Should not define a Events section as part of the serverless::function", () => {
-		// N.B this only passes as we currently delete it on line 14 in the test setup step.
-		template.hasResourceProperties("AWS::Serverless::Function", {
-			Events: Match.absent(),
-		});
-	});
+  it("The template contains one API gateway resource", () => {
+    template.resourceCountIs("AWS::Serverless::Api", 1);
+  });
 
-	it("The template contains one API gateway resource", () => {
-		template.resourceCountIs("AWS::Serverless::Api", 1);
-	});
+  it("Each API Gateway should have TracingEnabled", () => {
+    const apiGateways = template.findResources("AWS::Serverless::Api");
+    const apiGatewayList = Object.keys(apiGateways);
+    apiGatewayList.forEach((apiGatewayId) => {
+      expect(apiGateways[apiGatewayId].Properties.TracingEnabled).toEqual(true);
+    });
+  });
 
-	it("Each API Gateway should have TracingEnabled", () => {
-		const apiGateways = template.findResources("AWS::Serverless::Api");
-		const apiGatewayList = Object.keys(apiGateways);
-		apiGatewayList.forEach((apiGatewayId) => {
-			expect(apiGateways[apiGatewayId].Properties.TracingEnabled).toEqual(true);
-		});
-	});
+  it("Each API Gateway should have MethodSettings defined", () => {
+    const apiGateways = template.findResources("AWS::Serverless::Api");
+    const apiGatewayList = Object.keys(apiGateways);
+    apiGatewayList.forEach((apiGatewayId) => {
+      expect(apiGateways[apiGatewayId].Properties.MethodSettings).toBeTruthy();
+    });
+  });
 
-	it("Each API Gateway should have MethodSettings defined", () => {
-		const apiGateways = template.findResources("AWS::Serverless::Api");
-		const apiGatewayList = Object.keys(apiGateways);
-		apiGatewayList.forEach((apiGatewayId) => {
-			expect(apiGateways[apiGatewayId].Properties.MethodSettings).toBeTruthy();
-		});
-	});
+  it("There are 11 lambdas defined, all with a specific permission:", () => {
+    const lambdaCount = 11;
+    template.resourceCountIs("AWS::Serverless::Function", lambdaCount);
+    template.resourceCountIs("AWS::Lambda::Permission", lambdaCount + 1);
+  });
 
-	it("There are 11 lambdas defined, all with a specific permission:", () => {
-		const lambdaCount = 11;
-		template.resourceCountIs("AWS::Serverless::Function", lambdaCount);
-		template.resourceCountIs("AWS::Lambda::Permission", lambdaCount);
-	});
+  it("All lambdas must have a FunctionName defined", () => {
+    const lambdas = template.findResources("AWS::Serverless::Function");
+    const lambdaList = Object.keys(lambdas);
+    lambdaList.forEach((lambda) => {
+      expect(lambdas[lambda].Properties.FunctionName).toBeTruthy();
+    });
+  });
 
-	it("All lambdas must have a FunctionName defined", () => {
-		const lambdas = template.findResources("AWS::Serverless::Function");
-		const lambdaList = Object.keys(lambdas);
-		lambdaList.forEach((lambda) => {
-			expect(lambdas[lambda].Properties.FunctionName).toBeTruthy();
-		});
-	});
+  it("All Lambdas must have an associated LogGroup named after their FunctionName.", () => {
+    const lambdas = template.findResources("AWS::Serverless::Function");
+    const lambdaList = Object.keys(lambdas);
+    lambdaList.forEach((lambda) => {
+      // These are functions we know are broken, but have to skip for now.
+      // They should be resolved and removed from this list ASAP.
+      const functionName = lambdas[lambda].Properties.FunctionName["Fn::Sub"];
+      console.log(functionName);
+      const expectedLogName = {
+        "Fn::Sub": `/aws/lambda/${functionName}`,
+      };
+      template.hasResourceProperties("AWS::Logs::LogGroup", {
+        LogGroupName: Match.objectLike(expectedLogName),
+      });
+    });
+  });
 
-	it("All Lambdas must have an associated LogGroup named after their FunctionName.", () => {
-		const lambdas = template.findResources("AWS::Serverless::Function");
-		const lambdaList = Object.keys(lambdas);
-		lambdaList.forEach((lambda) => {
-			// These are functions we know are broken, but have to skip for now.
-			// They should be resolved and removed from this list ASAP.
-			const functionName = lambdas[lambda].Properties.FunctionName["Fn::Sub"];
-			console.log(functionName);
-			const expectedLogName = {
-				"Fn::Sub": `/aws/lambda/${functionName}`,
-			};
-			template.hasResourceProperties("AWS::Logs::LogGroup", {
-				LogGroupName: Match.objectLike(expectedLogName),
-			});
-		});
-	});
+  it("Each log group defined must have a retention period", () => {
+    const logGroups = template.findResources("AWS::Logs::LogGroup");
+    const logGroupList = Object.keys(logGroups);
+    logGroupList.forEach((logGroup) => {
+      expect(logGroups[logGroup].Properties.RetentionInDays).toBeTruthy();
+    });
+  });
 
-	it("Each log group defined must have a retention period", () => {
-		const logGroups = template.findResources("AWS::Logs::LogGroup");
-		const logGroupList = Object.keys(logGroups);
-		logGroupList.forEach((logGroup) => {
-			expect(logGroups[logGroup].Properties.RetentionInDays).toBeTruthy();
-		});
-	});
+  it("Each regional API Gateway should have at least one custom domain base path mapping name defined", () => {
+    const gateways = template.findResources("AWS::Serverless::Api");
+    const gatewayList = Object.keys(gateways);
+    gatewayList.forEach((gateway) => {
+      template.hasResourceProperties("AWS::ApiGateway::BasePathMapping", {
+        RestApiId: {
+          Ref: gateway,
+        },
+      });
+    });
+  });
 
-	it("Each regional API Gateway should have at least one custom domain base path mapping name defined", () => {
-		const gateways = template.findResources("AWS::Serverless::Api");
-		const gatewayList = Object.keys(gateways);
-		gatewayList.forEach((gateway) => {
-			template.hasResourceProperties("AWS::ApiGateway::BasePathMapping", {
-				RestApiId: {
-					Ref: gateway,
-				}
-			});
-		});
-	});
+  it.skip("Each custom domain referenced in a BasePathMapping should be defined", () => {
+    const basePathMappings = template.findResources(
+      "AWS::ApiGateway::BasePathMapping",
+    );
+    const basePathMappingList = Object.keys(basePathMappings);
+    basePathMappingList.forEach((basePathMapping) => {
+      template.hasResourceProperties("AWS::ApiGateway::DomainName", {
+        DomainName: basePathMappings[basePathMapping].Properties.DomainName,
+      });
+    });
+  });
 
-	it.skip("Each custom domain referenced in a BasePathMapping should be defined", () => {
-		const basePathMappings = template.findResources("AWS::ApiGateway::BasePathMapping");
-		const basePathMappingList = Object.keys(basePathMappings);
-		basePathMappingList.forEach((basePathMapping) => {
-			template.hasResourceProperties("AWS::ApiGateway::DomainName", {
-				DomainName: basePathMappings[basePathMapping].Properties.DomainName
-			});
-		});
-	});
+  it.skip("should define a DNS record for each custom domain", () => {
+    const customDomainNames = template.findResources(
+      "AWS::ApiGateway::DomainName",
+    );
+    const customDomainNameList = Object.keys(customDomainNames);
+    customDomainNameList.forEach((customDomainName) => {
+      template.hasResourceProperties("AWS::Route53::RecordSet", {
+        Name: customDomainNames[customDomainName].Properties.DomainName,
+      });
+    });
+  });
 
-	it.skip("should define a DNS record for each custom domain", () => {
-		const customDomainNames = template.findResources("AWS::ApiGateway::DomainName");
-		const customDomainNameList = Object.keys(customDomainNames);
-		customDomainNameList.forEach((customDomainName) => {
-			template.hasResourceProperties("AWS::Route53::RecordSet", {
-				Name: customDomainNames[customDomainName].Properties.DomainName
-			});
-		});
-	});
+  it("should define an output with the API Gateway ID", () => {
+    template.hasOutput("BAVApiGatewayId", {
+      Value: {
+        "Fn::Sub": "${BAVRestApi}",
+      },
+    });
+  });
 
-	it("should define an output with the API Gateway ID", () => {
-		template.hasOutput("BAVApiGatewayId", {
-			Value: {
-				"Fn::Sub": "${BAVRestApi}",
-			},
-		});
-	});
+  it("should define an output with the BAV Backend URL using the custom domain name", () => {
+    template.hasOutput("BAVBackendURL", {
+      Value: {
+        "Fn::Sub": [
+          "https://${CustomDomainName}",
+          {
+            CustomDomainName: {
+              Ref: "BAVApiCustomDomainName",
+            },
+          },
+        ],
+      },
+    });
+  });
 
-	it("should define an output with the BAV Backend URL using the custom domain name", () => {
-		template.hasOutput("BAVBackendURL", {
-			Value: {
-				"Fn::Sub": [
-					"https://${CustomDomainName}",
-					{
-						CustomDomainName: {
-							Ref: "BAVApiCustomDomainName"
-						},
-					},
-				],
-			},
-		});
-	});
+  it("should define CloudWatch alarms", () => {
+    const alarms = template.findResources("AWS::CloudWatch::Alarm");
+    expect(Object.keys(alarms).length).toBeGreaterThan(0);
+  });
 
-	it("should define CloudWatch alarms", () => {
-		const alarms = template.findResources("AWS::CloudWatch::Alarm");
-		expect(Object.keys(alarms).length).toBeGreaterThan(0);
-	});
+  it("Each CloudWatch alarm should have an AlarmName defined", () => {
+    const alarms = template.findResources("AWS::CloudWatch::Alarm");
+    const alarmList = Object.keys(alarms);
+    alarmList.forEach((alarmId) => {
+      expect(alarms[alarmId].Properties.AlarmName).toBeTruthy();
+    });
+  });
 
-	it("Each CloudWatch alarm should have an AlarmName defined", () => {
-		const alarms = template.findResources("AWS::CloudWatch::Alarm");
-		const alarmList = Object.keys(alarms);
-		alarmList.forEach((alarmId) => {
-			expect(alarms[alarmId].Properties.AlarmName).toBeTruthy();
-		});
-	});
+  it("Each CloudWatch alarm should have Metrics defined if TreatMissingData is not 'notBreaching'", () => {
+    const alarms = template.findResources("AWS::CloudWatch::Alarm");
+    const alarmList = Object.keys(alarms);
 
-	it("Each CloudWatch alarm should have Metrics defined if TreatMissingData is not 'notBreaching'", () => {
-		const alarms = template.findResources("AWS::CloudWatch::Alarm");
-		const alarmList = Object.keys(alarms);
+    alarmList.forEach((alarmId) => {
+      const properties = alarms[alarmId].Properties;
+      if (properties.TreatMissingData !== "notBreaching") {
+        expect(properties.Metrics).toBeTruthy();
+      }
+    });
+  });
 
-		alarmList.forEach((alarmId) => {
-			const properties = alarms[alarmId].Properties;
-			if (properties.TreatMissingData !== "notBreaching") {
-				expect(properties.Metrics).toBeTruthy();
-			}
-		});
-	});
+  it("Each CloudWatch alarm should have a ComparisonOperator defined", () => {
+    const alarms = template.findResources("AWS::CloudWatch::Alarm");
+    const alarmList = Object.keys(alarms);
+    alarmList.forEach((alarmId) => {
+      expect(alarms[alarmId].Properties.ComparisonOperator).toBeTruthy();
+    });
+  });
 
-	it("Each CloudWatch alarm should have a ComparisonOperator defined", () => {
-		const alarms = template.findResources("AWS::CloudWatch::Alarm");
-		const alarmList = Object.keys(alarms);
-		alarmList.forEach((alarmId) => {
-			expect(alarms[alarmId].Properties.ComparisonOperator).toBeTruthy();
-		});
-	});
+  it("Each CloudWatch alarm should have a Threshold defined", () => {
+    const alarms = template.findResources("AWS::CloudWatch::Alarm");
+    const alarmList = Object.keys(alarms);
+    alarmList.forEach((alarmId) => {
+      expect(alarms[alarmId].Properties.Threshold).toBeTruthy();
+    });
+  });
 
-	it("Each CloudWatch alarm should have a Threshold defined", () => {
-		const alarms = template.findResources("AWS::CloudWatch::Alarm");
-		const alarmList = Object.keys(alarms);
-		alarmList.forEach((alarmId) => {
-			expect(alarms[alarmId].Properties.Threshold).toBeTruthy();
-		});
-	});
+  it("Each CloudWatch alarm should have an EvaluationPeriods defined", () => {
+    const alarms = template.findResources("AWS::CloudWatch::Alarm");
+    const alarmList = Object.keys(alarms);
+    alarmList.forEach((alarmId) => {
+      expect(alarms[alarmId].Properties.EvaluationPeriods).toBeTruthy();
+    });
+  });
 
-	it("Each CloudWatch alarm should have an EvaluationPeriods defined", () => {
-		const alarms = template.findResources("AWS::CloudWatch::Alarm");
-		const alarmList = Object.keys(alarms);
-		alarmList.forEach((alarmId) => {
-			expect(alarms[alarmId].Properties.EvaluationPeriods).toBeTruthy();
-		});
-	});
+  it("Each CloudWatch alarm should have an AlarmActions defined", () => {
+    const alarms = template.findResources("AWS::CloudWatch::Alarm");
+    const alarmList = Object.keys(alarms);
+    alarmList.forEach((alarmId) => {
+      expect(alarms[alarmId].Properties.AlarmActions).toBeTruthy();
+    });
+  });
 
-	it("Each CloudWatch alarm should have an AlarmActions defined", () => {
-		const alarms = template.findResources("AWS::CloudWatch::Alarm");
-		const alarmList = Object.keys(alarms);
-		alarmList.forEach((alarmId) => {
-			expect(alarms[alarmId].Properties.AlarmActions).toBeTruthy();
-		});
-	});
+  it("Each CloudWatch alarm should have OKActions defined", () => {
+    const alarms = template.findResources("AWS::CloudWatch::Alarm");
+    const alarmList = Object.keys(alarms);
+    alarmList.forEach((alarmId) => {
+      expect(alarms[alarmId].Properties.OKActions).toBeTruthy();
+    });
+  });
 
-	it("Each CloudWatch alarm should have OKActions defined", () => {
-		const alarms = template.findResources("AWS::CloudWatch::Alarm");
-		const alarmList = Object.keys(alarms);
-		alarmList.forEach((alarmId) => {
-			expect(alarms[alarmId].Properties.OKActions).toBeTruthy();
-		});
-	});
+  it("All CloudWatch alarms should have InsufficientDataActions and DatapointsToAlarm if TreatMissingData is not 'notBreaching'", () => {
+    const alarms = template.findResources("AWS::CloudWatch::Alarm");
+    Object.keys(alarms).forEach((alarmKey) => {
+      const alarm = alarms[alarmKey];
+      if (alarm.Properties.TreatMissingData !== "notBreaching") {
+        expect(alarm.Properties.InsufficientDataActions).toBeDefined();
+        expect(alarm.Properties.DatapointsToAlarm).toBeDefined();
+      }
+    });
+  });
 
+  describe("Log group retention", () => {
+    it.each`
+      environment      | retention
+      ${"dev"}         | ${30}
+      ${"build"}       | ${30}
+      ${"staging"}     | ${30}
+      ${"integration"} | ${30}
+      ${"production"}  | ${30}
+    `(
+      "Log group retention period for $environment has correct value in mappings",
+      ({ environment, retention }) => {
+        const mappings = template.findMappings("EnvironmentConfiguration");
+        expect(
+          mappings.EnvironmentConfiguration[environment].logretentionindays,
+        ).toBe(retention);
+      },
+    );
+  });
 
-	it("All CloudWatch alarms should have InsufficientDataActions and DatapointsToAlarm if TreatMissingData is not 'notBreaching'", () => {
-		const alarms = template.findResources("AWS::CloudWatch::Alarm");
-		Object.keys(alarms).forEach((alarmKey) => {
-			const alarm = alarms[alarmKey];
-			if (alarm.Properties.TreatMissingData !== "notBreaching") {
-				expect(alarm.Properties.InsufficientDataActions).toBeDefined();
-				expect(alarm.Properties.DatapointsToAlarm).toBeDefined();
-			}
-		});
-	});
+  describe("KMS", () => {
+    it("Each KMS Key should have an associated alias", () => {
+      const kmsKeys = template.findResources("AWS::KMS::Key");
+      const kmsKeyList = Object.keys(kmsKeys);
+      kmsKeyList.forEach((kmsKey) => {
+        template.hasResourceProperties("AWS::KMS::Alias", {
+          TargetKeyId: {
+            Ref: kmsKey,
+          },
+        });
+      });
+    });
+  });
 
+  describe("S3", () => {
+    it("All S3 buckets should have public access blocked", () => {
+      const buckets = template.findResources("AWS::S3::Bucket");
+      const bucketList = Object.keys(buckets);
+      bucketList.forEach((bucket) => {
+        expect(
+          buckets[bucket].Properties.PublicAccessBlockConfiguration,
+        ).toEqual(
+          expect.objectContaining({
+            BlockPublicAcls: true,
+            BlockPublicPolicy: true,
+            IgnorePublicAcls: true,
+            RestrictPublicBuckets: true,
+          }),
+        );
+      });
+    });
 
-	describe("Log group retention", () => {
-		it.each`
-    environment      | retention
-    ${"dev"}         | ${30}
-    ${"build"}       | ${30}
-    ${"staging"}     | ${30}
-    ${"integration"} | ${30}
-    ${"production"}  | ${30}
-  `(
-			"Log group retention period for $environment has correct value in mappings",
-			({ environment, retention }) => {
-				const mappings = template.findMappings("EnvironmentConfiguration");
-				expect(
-					mappings.EnvironmentConfiguration[environment].logretentionindays,
-				).toBe(retention);
-			},
-		);
-	});
-
-	describe("KMS", () => {
-		it("Each KMS Key should have an associated alias", () => {
-			const kmsKeys = template.findResources("AWS::KMS::Key");
-			const kmsKeyList = Object.keys(kmsKeys);
-			kmsKeyList.forEach((kmsKey) => {
-				template.hasResourceProperties("AWS::KMS::Alias", {
-					TargetKeyId: {
-						"Ref": kmsKey,
-					},
-				});
-			});
-		});
-	});
-
-	describe("S3", () => {
-		it("All S3 buckets should have public access blocked", () => {
-			const buckets = template.findResources("AWS::S3::Bucket");
-			const bucketList = Object.keys(buckets);
-			bucketList.forEach((bucket) => {
-				expect(buckets[bucket].Properties.PublicAccessBlockConfiguration).toEqual(expect.objectContaining({
-					BlockPublicAcls: true,
-					BlockPublicPolicy: true,
-					IgnorePublicAcls: true,
-					RestrictPublicBuckets: true,
-				}));
-			});
-		});
-
-		it("All S3 buckets should be encrypted", () => {
-			const buckets = template.findResources("AWS::S3::Bucket");
-			const bucketList = Object.keys(buckets);
-			bucketList.forEach((bucket) => {
-				expect(buckets[bucket].Properties.BucketEncryption.ServerSideEncryptionConfiguration).toEqual(expect.arrayContaining([
-					expect.objectContaining({
-						ServerSideEncryptionByDefault: expect.objectContaining({
-							SSEAlgorithm: expect.any(String),
-						}),
-					})
-				]));
-			});
-		});
-	});
+    it("All S3 buckets should be encrypted", () => {
+      const buckets = template.findResources("AWS::S3::Bucket");
+      const bucketList = Object.keys(buckets);
+      bucketList.forEach((bucket) => {
+        expect(
+          buckets[bucket].Properties.BucketEncryption
+            .ServerSideEncryptionConfiguration,
+        ).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              ServerSideEncryptionByDefault: expect.objectContaining({
+                SSEAlgorithm: expect.any(String),
+              }),
+            }),
+          ]),
+        );
+      });
+    });
+  });
 });
