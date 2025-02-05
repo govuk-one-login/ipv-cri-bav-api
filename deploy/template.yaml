@@ -712,6 +712,14 @@ Resources:
         - Key: Name
           Value: APIGatewayAccessLogGroup
 
+  ### End of API Gateway definition.
+
+  WAFv2ACLAssociation:
+    Type: AWS::WAFv2::WebACLAssociation
+    Properties:
+      ResourceArn: !Sub "arn:aws:apigateway:${AWS::Region}::/restapis/${BAVRestApi}/stages/${BAVRestApi.Stage}"
+      WebACLArn: !Sub "{{resolve:ssm:/${Environment}/Platform/Security/Block/WafArn}}"
+
   ## API Gateway Custom Domain definition
 
   BAVApiCustomDomainName:
