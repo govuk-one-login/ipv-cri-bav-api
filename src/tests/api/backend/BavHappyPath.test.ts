@@ -32,7 +32,7 @@ describe("BAV CRI happy path tests", () => {
 			sessionId = await startStubServiceAndReturnSessionId();
 		});
 
-		it("Successful Request Test", async () => {
+		it("Successful Request Test - authSessionState and TxMA event validation", async () => {
 			expect(sessionId).toBeTruthy();
 
 			await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "authSessionState", "BAV_SESSION_CREATED");
@@ -68,7 +68,7 @@ describe("BAV CRI happy path tests", () => {
 			"99990086",
 			// "0111111",
 			// "111111",
-		])("Successful Request Test for $accountNumber", async (accountNumber: string) => {
+		])("Successful Request Test - DynamoDB and TxMA event validation for $accountNumber", async (accountNumber: string) => {
 			const sessionId = await startStubServiceAndReturnSessionId();
 			expect(sessionId).toBeTruthy();
 
@@ -98,7 +98,7 @@ describe("BAV CRI happy path tests", () => {
 			// ["22222222"],
 			// ["33333333"],
 			// ["44444444"],
-		])("Name Retry Test for Account Number: $accountNumber", async (accountNumber: string) => {
+		])("Retry Test for Account Number: $accountNumber", async (accountNumber: string) => {
 			const newVerifyAccountYesPayload = structuredClone(verifyAccountYesPayload);
 			newVerifyAccountYesPayload.account_number = accountNumber;
 
@@ -153,7 +153,7 @@ describe("BAV CRI happy path tests", () => {
 			sessionId = await startStubServiceAndReturnSessionId();
 		});
 
-		it("Successful Request Test", async () => {
+		it("Successful Request Test - authSessionState validation", async () => {
 			expect(sessionId).toBeTruthy();
 
 			await verifyAccountPost(
@@ -178,7 +178,7 @@ describe("BAV CRI happy path tests", () => {
 			sessionId = await startStubServiceAndReturnSessionId();
 		});
 
-		it("Successful Request Test", async () => {
+		it("Successful Request Test - authSessionState validation", async () => {
 			await verifyAccountPost(new BankDetailsPayload(
 				verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number), sessionId,
 			);
@@ -201,7 +201,7 @@ describe("BAV CRI happy path tests", () => {
 			bankDetails = new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number);
 		});		
 
-		it("Successful Request Test", async () => {
+		it("Successful Request Test - authSessionState and TxMA event validation", async () => {
 			sessionId = await startStubServiceAndReturnSessionId();
 			expect(sessionId).toBeTruthy();
 
@@ -233,7 +233,7 @@ describe("BAV CRI happy path tests", () => {
 			validateTxMAEventData({ eventName: "BAV_CRI_END", schemaName: "BAV_CRI_END_SCHEMA" }, allTxmaEventBodies);
 		});
 
-		it("Experian Name Validation - Multiple Given Names", async () => {
+		it("Experian Name Validation - Multiple Given Names - authSessionState and TxMA event validation", async () => {
 			sessionId = await startStubServiceAndReturnSessionId(bavStubPayloadMultipleGivenNames);
 			expect(sessionId).toBeTruthy();
 			const firstName = bavStubPayloadMultipleGivenNames.shared_claims.name[0].nameParts[0].value;
@@ -301,7 +301,7 @@ describe("BAV CRI happy path tests", () => {
 			sessionId = await startStubServiceAndReturnSessionId();
 		});
 
-		it("Successful Request Test - Abort After Session Request", async () => {
+		it("Successful Request Test - Abort After Session Request with abort response, authSessionState and TxMA event validation", async () => {
 			const response = await abortPost(sessionId);
 			expect(response.status).toBe(200);
 			expect(response.data).toBe("Session has been aborted");
@@ -324,7 +324,7 @@ describe("BAV CRI happy path tests", () => {
 			await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "state", "" + responseURIParameters.get("state"));
 		});
 
-		it("Successful Request Test - Abort After Verify Account Request", async () => {
+		it("Successful Request Test - Abort After Verify Account Request with abort response, authSessionState and TxMA event validation", async () => {
 			await verifyAccountPost(
 				new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number),
 				sessionId,
@@ -355,7 +355,7 @@ describe("BAV CRI happy path tests", () => {
 			await getSessionAndVerifyKey(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "state", "" + responseURIParameters.get("state"));
 		});
 
-		it("Repeated Request Test", async () => {
+		it("Successful Request Test - Repeated Abort Request Test with abort response and authSessionState validation", async () => {
 			await abortPost(sessionId);
 			const response = await abortPost(sessionId);
 
