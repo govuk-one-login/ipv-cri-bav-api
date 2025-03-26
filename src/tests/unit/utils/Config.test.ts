@@ -8,6 +8,9 @@ jest.mock("@aws-sdk/client-ssm", () => ({
 	})),
 	GetParameterCommand: jest.fn().mockImplementation((args) => args),
 	PutParameterCommand: jest.fn().mockImplementation((args) => args),
+	ParameterType: {
+		STRING: "String"
+	}
 }));
 
 describe("Config utils", () => {
@@ -40,13 +43,13 @@ describe("Config utils", () => {
 	describe("#putParameter", () => {
 
 		it("returns successfully if putParameter stores the value to SSM Parameter", async () => {
-			await putParameter(path, "token", "String", "HMRC Token");
+			await putParameter(path, "token", "HMRC Token");
 			expect(sendMock).toHaveBeenCalledWith({ Name: path, Value: "token", Type: "String", Overwrite: true, Description: "HMRC Token" });
 		});
 
 		it("throws error if putParameter fails to write to SSM parameter", async () => {
 			sendMock.mockRejectedValueOnce(new Error("Failed to write SSM Parameter"));
-			await expect(putParameter(path, "token", "String", "HMRC Token")).rejects.toThrow(expect.objectContaining({
+			await expect(putParameter(path, "token", "HMRC Token")).rejects.toThrow(expect.objectContaining({
 				message: "Failed to write SSM Parameter",
 			}));
 			expect(sendMock).toHaveBeenCalledWith({ Name: path, Value: "token", Type: "String", Overwrite: true, Description: "HMRC Token" });

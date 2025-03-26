@@ -42,10 +42,10 @@ jobs:
         with:
           extra_args: "detect-secrets --all-files"
 
-      - name: Setup nodeJS v18
+      - name: Setup nodeJS v20
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Set offline mirror path
         id: offline-mirror-path
@@ -81,7 +81,7 @@ jobs:
           use-installer: true
 
       - name: Assume temporary AWS role
-        uses: aws-actions/configure-aws-credentials@v1-node16
+        uses: aws-actions/configure-aws-credentials@v4.0.2
         with:
           role-to-assume: ${{ secrets.GH_BAV_DDB_VALIDATE_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}

@@ -54,16 +54,18 @@ const person: PersonIdentityItem = {
 	expiryDate: 123456789,
 	createdDate: 123456789,
 };
-const session = require("../data/db_record.json") as ISessionItem;
+import sampleSession from "../data/db_record.json";
+let session: ISessionItem;
 let verifyAccountRequestProcessorTest: VerifyAccountRequestProcessor;
 
 describe("VerifyAccountRequestProcessor", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		verifyAccountRequestProcessorTest = new VerifyAccountRequestProcessor(logger, metrics, CREDENTIAL_VENDOR);
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		verifyAccountRequestProcessorTest.BavService = mockBavService;
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		verifyAccountRequestProcessorTest.HmrcService = mockHmrcService;
+		session = await sampleSession as ISessionItem;
 	});
 
 	beforeEach(() => {

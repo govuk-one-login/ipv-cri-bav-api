@@ -40,7 +40,6 @@ describe("BAV CRI Alarms Tests", () => {
 
 	it("/token Endpoint 4xx Api Gateway Alarm", async () => {
 		const sessionId = await startStubServiceAndReturnSessionId();
-		const bankDetails = new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number);
 		await verifyAccountPost(new BankDetailsPayload(
 			verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number), sessionId,
 		);

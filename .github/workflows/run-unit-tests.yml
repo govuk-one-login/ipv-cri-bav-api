@@ -28,10 +28,10 @@ jobs:
       - name: Pull repository
         uses: actions/checkout@v4
 
-      - name: Install Node
+      - name: Install Node v20
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Set offline mirror path
         id: offline-mirror-path

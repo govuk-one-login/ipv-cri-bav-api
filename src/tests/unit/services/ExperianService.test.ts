@@ -16,6 +16,7 @@ import { experianVerifyResponse,
 	experianVerifyResponseError11,
 	experianVerifyResponseError12 } from "../data/experianEvents";
 import { Metrics } from "@aws-lambda-powertools/metrics";
+import { WarningsErrors } from "../../../models/IVeriCredential";
 
 let experianServiceTest: ExperianService;
 const mockDynamoDbClient = jest.mocked(createDynamoDbClient());
@@ -242,21 +243,23 @@ describe("Experian service", () => {
 		  });
 
 		it.each([
-			{ errorResponse: experianVerifyResponseError6, expectedMessage: "Response code 6: Bank or branch code is not in use" },
-			{ errorResponse: experianVerifyResponseError7, expectedMessage: "Response code 7: Modulus check has failed. Although the formats of the supplied fields are correct, one or more of them are incorrect" },
-			{ errorResponse: experianVerifyResponseError11, expectedMessage: "Response code 11: Sort Code has been closed" },
-			{ errorResponse: experianVerifyResponseError12, expectedMessage: "Response code 12: Branch has been transferred and the accounts have been redirected to another branch" },
+			{ errorResponse: experianVerifyResponseError6, expectedMessage: "Bank or branch code is not in use" },
+			{ errorResponse: experianVerifyResponseError7, expectedMessage: "Modulus check has failed. Although the formats of the supplied fields are correct, one or more of them are incorrect" },
+			{ errorResponse: experianVerifyResponseError11, expectedMessage: "Sort Code has been closed" },
+			{ errorResponse: experianVerifyResponseError12, expectedMessage: "Branch has been transferred and the accounts have been redirected to another branch" },
 		  ])("returns correct logger response in case of Experian response", async ({ errorResponse, expectedMessage }) => {
 			jest.spyOn(axios, "post").mockResolvedValueOnce({ data: errorResponse });
 			mockDynamoDbClient.send = jest.fn().mockResolvedValueOnce({ Item: storedExperianToken });
 		  
-			await experianServiceTest.verify({ verifyAccountPayload, firstName, surname, birthDate, uuid }, clientUsername,
+			const response = await experianServiceTest.verify({ verifyAccountPayload, firstName, surname, birthDate, uuid }, clientUsername,
 				clientPassword,
 				clientId,
 				clientSecret,
 				experianVerifyUrl,
 				experianTokenUrl);
-		  		  });
+			const responseError: WarningsErrors | undefined = response?.warningsErrors?.[0];
+			expect(responseError?.responseMessage).toEqual(expectedMessage)
+		});
 
 	});
 

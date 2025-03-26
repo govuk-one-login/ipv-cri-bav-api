@@ -1,11 +1,11 @@
-import { Context, SQSBatchResponse, SQSEvent, SQSRecord } from "aws-lambda";
+import { Context, SQSBatchResponse, SQSEvent } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { LambdaInterface } from "@aws-lambda-powertools/commons";
 import { Constants, EnvironmentVariables } from "./utils/Constants";
 import { failEntireBatch, passEntireBatch } from "./utils/SqsBatchResponseHelper";
-import { PutObjectCommand, PutObjectCommandInput, S3Client } from "@aws-sdk/client-s3";
-import { NodeHttpHandler } from "@aws-sdk/node-http-handler";
+import { PutObjectCommand, S3Client, ServerSideEncryption } from "@aws-sdk/client-s3";
+import { NodeHttpHandler } from "@smithy/node-http-handler";
 import { checkEnvironmentVariable } from "./utils/EnvironmentVariables";
 import { absoluteTimeNow } from "./utils/DateTimeUtils";
 
@@ -56,7 +56,7 @@ class PartialNameMatchHandler implements LambdaInterface {
 					Key: `${absoluteTimeNow()}-${record.messageId}.json`, // Using record.messageId to avoid overwriting files
 					Body: JSON.stringify(body),
 					ContentType: "application/json",
-					ServerSideEncryption: "aws:kms",
+					ServerSideEncryption: ServerSideEncryption.aws_kms,
 					SSEKMSKeyId: partialMatchesBucketKey,
 				};
 

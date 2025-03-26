@@ -50,6 +50,8 @@ export class BavService {
 		let session;
 		try {
 			session = await this.dynamo.send(getSessionCommand);
+			// ignored so as not log PII
+			/* eslint-disable @typescript-eslint/no-unused-vars */
 		} catch (error) {
 			this.logger.error({ message: "getSessionById - failed executing get from dynamodb:" }, {
 				messageCode: MessageCodes.FAILED_FETCHING_SESSION,
@@ -131,6 +133,8 @@ export class BavService {
 
 			await sqsClient.send(new SendMessageCommand(params));
 			this.logger.info("Sent message to TxMA");
+			// ignored so as not log PII
+			/* eslint-disable @typescript-eslint/no-unused-vars */
 		} catch (error) {
 			this.logger.error({
 				message: `Error when sending event ${event.event_name} to TXMA Queue`,
@@ -151,6 +155,8 @@ export class BavService {
 
 			await sqsClient.send(new SendMessageCommand(params));
 			this.logger.info("Sent message to PartialName Queue");
+			// ignored so as not log PII
+			/* eslint-disable @typescript-eslint/no-unused-vars */
 		} catch (error) {
 			this.logger.error({
 				message: "Error when sending event partial name info to SQS Queue",

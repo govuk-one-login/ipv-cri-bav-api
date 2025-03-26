@@ -16,16 +16,17 @@ import { AuthSessionState } from "../../../models/enums/AuthSessionState";
 import { ISessionItem } from "../../../models/ISessionItem";
 import { PersonIdentityItem } from "../../../models/PersonIdentityItem";
 import { SendMessageCommand } from "@aws-sdk/client-sqs";
-import exp from "constants";
 
 let bavService: BavService;
 const tableName = "SESSIONTABLE";
 const sessionId = "SESSIONID";
 const clientId = "ipv-core-stub";
-const encodedTxmaHeader = "ABCDEFG";
 const fakeTime = 1684933200.123;
-const SESSION_RECORD = require("../data/db_record.json") as ISessionItem;
-const PERSON_IDENTITY_RECORD = require("../data/person_identity_record.json") as PersonIdentityItem;
+import SAMPLE_SESSION_RECORD  from "../data/db_record.json"
+import SAMPLE_PERSON_IDENTITY_RECORD from "../data/person_identity_record.json"
+
+let SESSION_RECORD: ISessionItem;
+let PERSON_IDENTITY_RECORD: PersonIdentityItem;
 
 const logger = mock<Logger>();
 const mockDynamoDbClient = jest.mocked(createDynamoDbClient());
@@ -60,111 +61,23 @@ function createBaseTXMAEventPayload(): TxmaEvent {
 		timestamp: 123,
 		event_timestamp_ms: 123000,
 		component_id: "issuer",
-	};
-}
-
-function getTXMAEventPayload(): TxmaEvent {
-	const txmaEventPayload: TxmaEvent = {
-		event_name: "BAV_CRI_START",
-		user: {
-			user_id: "sessionCliendId",
-			session_id: "sessionID",
-			govuk_signin_journey_id: "clientSessionId",
-			ip_address: "sourceIp",
-		},
-		timestamp: 123,
-		event_timestamp_ms: 123000,
-		component_id: "issuer",
-	};
-	return txmaEventPayload;
-}
-
-function getTXMAEventPayloadWithHeader(): TxmaEvent {
-	const txmaEventPayload: TxmaEvent = {
-		event_name: "BAV_CRI_START",
-		user: {
-			user_id: "sessionCliendId",
-			session_id: "sessionID",
-			govuk_signin_journey_id: "clientSessionId",
-			ip_address: "sourceIp",
-		},
-		timestamp: 123,
-		event_timestamp_ms: 123000,
-		component_id: "issuer",
-		restricted:{
-			device_information:{
-				encoded: "ABCDEFG",
-			},
-		},
-	};
-	return txmaEventPayload;
-}
-
-function getTXMAEventPayloadWithRestricted(): TxmaEvent {
-	const txmaEventPayload: TxmaEvent = {
-		event_name: "BAV_CRI_START",
-		user: {
-			user_id: "sessionCliendId",
-			session_id: "sessionID",
-			govuk_signin_journey_id: "clientSessionId",
-			ip_address: "sourceIp",
-		},
-		timestamp: 123,
-		event_timestamp_ms: 123000,
-		component_id: "issuer",
-		restricted:{
-			"CoP_request_details": [
-			 {
-					name: "Frederick Joseph Flintstone",
-					sortCode: "111111",
-					accountNumber: "111111",
-					attemptNum: 1,
-			 },
-			],
-		 },
-	};
-	return txmaEventPayload;
-}
-
-function getTXMAEventPayloadWithRestrictedWithHeader(): TxmaEvent {
-	const txmaEventPayload: TxmaEvent = {
-		event_name: "BAV_CRI_START",
-		user: {
-			user_id: "sessionCliendId",
-			session_id: "sessionID",
-			govuk_signin_journey_id: "clientSessionId",
-			ip_address: "sourceIp",
-		},
-		timestamp: 123,
-		event_timestamp_ms: 123000,
-		component_id: "issuer",
-		restricted:{
-			"CoP_request_details": [
-			 {
-					name: "Frederick Joseph Flintstone",
-					sortCode: "111111",
-					accountNumber: "111111",
-					attemptNum: 1,
-			 },
-			],
-			device_information:{
-				encoded: "ABCDEFG",
-			},
-		 },
-	};
-	return txmaEventPayload;
+	}
 }
 
 describe("BAV Service", () => {
-	let txmaEventPayload: TxmaEvent, txmaEventPayloadWithHeader: TxmaEvent;
+	let txmaEventPayload: TxmaEvent;
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		txmaEventPayload = createBaseTXMAEventPayload();
-		txmaEventPayloadWithHeader = getTXMAEventPayloadWithHeader();
+
+		SESSION_RECORD = await SAMPLE_SESSION_RECORD as ISessionItem;
+		PERSON_IDENTITY_RECORD = await SAMPLE_PERSON_IDENTITY_RECORD as PersonIdentityItem;
 	});
 
 	beforeEach(() => {
 		jest.resetAllMocks();
+		jest.restoreAllMocks();
+		
 		bavService = BavService.getInstance(tableName, logger, mockDynamoDbClient);
 		jest.useFakeTimers();
 		jest.setSystemTime(new Date(fakeTime * 1000)); // 2023-05-24T13:00:00.123Z

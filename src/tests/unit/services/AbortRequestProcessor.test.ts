@@ -38,7 +38,7 @@ const session: ISessionItem = {
 describe("AbortRequestProcessor", () => {
 	beforeAll(() => {
 		abortRequestProcessor = new AbortRequestProcessor(logger, metrics);
-    		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		abortRequestProcessor.BavService = mockBavService;
 	});
 

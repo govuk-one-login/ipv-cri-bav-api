@@ -57,7 +57,7 @@ export class HmrcTokenRequestProcessor {
 			}
 
 			this.logger.info("Storing the HMRC access token to SSM");
-			await putParameter(this.hmrcTokenSsmPath, data.access_token, "String", "HMRC Access token");
+			await putParameter(this.hmrcTokenSsmPath, data.access_token, "HMRC Access token");
 			this.logger.info("Successfully Stored the HMRC token to SSM");
 		} catch (error) {
 			this.logger.error("Server Error", { error });

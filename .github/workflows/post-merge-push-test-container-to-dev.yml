@@ -29,12 +29,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Assume temporary AWS role
-        uses: aws-actions/configure-aws-credentials@v1-node16
+        uses: aws-actions/configure-aws-credentials@v4.0.2
         with:
           role-to-assume: ${{ secrets.DEV_CRI_BAV_GH_ACTIONS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-
-      # ... Build and validate SAM application ...
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -66,5 +64,3 @@ jobs:
           dockerfile: traffic-tests/Dockerfile
           build-and-push-image-only: true
           push-latest-tag: true
-
-      # ... Push build artefacts to S3 ...

@@ -12,8 +12,14 @@ jest.mock("@aws-sdk/client-kms", () => ({
 		})),
 		verify: jest.fn().mockImplementation(() => ({
 			SignatureValid: true,
-		})),
+		}))
 	})),
+	SigningAlgorithmSpec: {
+		ECDSA_SHA_256: "ECDSA_SHA_256",
+	},
+	MessageType: {
+		RAW: "RAW"
+	}
 }));
 
 jest.mock("ecdsa-sig-formatter", () => ({

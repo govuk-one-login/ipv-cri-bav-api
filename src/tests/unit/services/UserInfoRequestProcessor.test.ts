@@ -13,10 +13,7 @@ import { MockKmsJwtAdapter } from "../utils/MockJwtVerifierSigner";
 import * as Validations from "../../../utils/Validations";
 import { APIGatewayProxyResult } from "aws-lambda";
 import { VerifiableCredentialService } from "../../../services/VerifiableCredentialService";
-import { BankAccountInfo, CheckDetails, VerifiedCredential, VerifiedCredentialEvidence } from "../../../models/IVeriCredential";
-
-/* eslint @typescript-eslint/unbound-method: 0 */
-/* eslint jest/unbound-method: error */
+import { CheckDetails, VerifiedCredentialEvidence } from "../../../models/IVeriCredential";
 
 let userInforequestProcessorTest: UserInfoRequestProcessor;
 const mockBavService = mock<BavService>();
@@ -24,7 +21,11 @@ const mockVerifiableCredentialService = mock<VerifiableCredentialService>();
 
 let mockSession: ISessionItem;
 let mockPerson: PersonIdentityItem;
+// ignored to allow mocking
+/* eslint-disable @typescript-eslint/no-unused-vars */
 const passingKmsJwtAdapterFactory = (_signingKeys: string) => new MockKmsJwtAdapter(true);
+// ignored to allow mocking
+/* eslint-disable @typescript-eslint/no-unused-vars */
 const failingKmsJwtAdapterFactory = (_signingKeys: string) => new MockKmsJwtAdapter(false);
 
 
@@ -83,15 +84,15 @@ describe("UserInfoRequestProcessor", () => {
 		mockSession = getMockSessionItem();
 		mockPerson = getMockPersonItem();
 		userInforequestProcessorTest = new UserInfoRequestProcessor(logger, metrics, credentialVendor);
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.BavService = mockBavService;
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.verifiableCredentialService = mockVerifiableCredentialService;
 	});
 
 	beforeEach(() => {
 		jest.clearAllMocks();
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 		mockSession = getMockSessionItem();
 		mockPerson = getMockPersonItem();
@@ -108,7 +109,7 @@ describe("UserInfoRequestProcessor", () => {
 		mockBavService.getSessionById.mockResolvedValue(mockSession);
 		mockSession.personalDetailsScore = 9;
 		mockBavService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 		jest.spyOn(Validations, "eventToSubjectIdentifier").mockResolvedValueOnce("sessionId");
 		const evidenceInfo: VerifiedCredentialEvidence = {
@@ -217,7 +218,7 @@ describe("UserInfoRequestProcessor", () => {
 		mockSession.experianCheckResult = "NO_MATCH";
 
 		mockBavService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 
 		jest.spyOn(Validations, "eventToSubjectIdentifier").mockResolvedValueOnce("sessionId");
@@ -334,7 +335,7 @@ describe("UserInfoRequestProcessor", () => {
 		mockSession.personalDetailsScore = 1;
 		mockSession.experianCheckResult = "NO_MATCH";
 		mockBavService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 
 		jest.spyOn(Validations, "eventToSubjectIdentifier").mockResolvedValueOnce("sessionId");
@@ -435,7 +436,6 @@ describe("UserInfoRequestProcessor", () => {
 	it("Return 401 when Authorization header is missing in the request", async () => {
 		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(MISSING_AUTH_HEADER_USERINFO);
 
-		// @ts-ignore
 		expect(out.body).toBe("Error Validating Token");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledTimes(1);
@@ -448,11 +448,10 @@ describe("UserInfoRequestProcessor", () => {
 	});
 
 	it("Return 401 when access_token JWT validation fails", async () => {
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.kmsJwtAdapter = failingKmsJwtAdapterFactory();
 		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
-		// @ts-ignore
 		expect(out.body).toBe("Error Validating Token");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledTimes(1);
@@ -465,11 +464,10 @@ describe("UserInfoRequestProcessor", () => {
 	});
 
 	it("Return 401 when sub is missing from JWT access_token", async () => {
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.kmsJwtAdapter.mockJwt.payload.sub = null;
 		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
-		// @ts-ignore
 		expect(out.body).toBe("Error Validating Token");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledTimes(1);
@@ -482,11 +480,10 @@ describe("UserInfoRequestProcessor", () => {
 	});
 
 	it("Return 401 when we receive expired JWT access_token", async () => {
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.kmsJwtAdapter.mockJwt.payload.exp = absoluteTimeNow() - 500;
 		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 
-		// @ts-ignore
 		expect(out.body).toBe("Error Validating Token");
 		expect(out.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledTimes(1);
@@ -538,7 +535,6 @@ describe("UserInfoRequestProcessor", () => {
 	it("Return error when person names are missing", async () => {
 		jest.spyOn(Validations, "eventToSubjectIdentifier").mockResolvedValueOnce("sessionId");
 		mockBavService.getSessionById.mockResolvedValue(mockSession);
-		// @ts-ignore
 		mockPerson.name[0].nameParts = [];
 		mockBavService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
 
