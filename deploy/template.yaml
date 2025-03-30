@@ -107,7 +107,7 @@ Mappings:
       ISSUER: 'https://review-bav.dev.account.gov.uk'
       DNSSUFFIX: review-bav.dev.account.gov.uk
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
-      TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
+      TXMAMESSAGERETENTIONPERIODDAYS: 1209600 # Default: 14 days
       PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: 
@@ -128,7 +128,7 @@ Mappings:
       ISSUER: 'https://review-bav.build.account.gov.uk'
       DNSSUFFIX: review-bav.build.account.gov.uk
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
-      TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
+      TXMAMESSAGERETENTIONPERIODDAYS: 1209600 # Default: 14 days
       PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS: # TODO: Swap sandbox journey experian URLs to outbound proxy URLs
@@ -156,7 +156,7 @@ Mappings:
       ISSUER: 'https://review-bav.staging.account.gov.uk'
       DNSSUFFIX: review-bav.staging.account.gov.uk
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
-      TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
+      TXMAMESSAGERETENTIONPERIODDAYS: 1209600 # Default: 14 days
       PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS:
@@ -176,7 +176,7 @@ Mappings:
       ISSUER: 'https://review-bav.integration.account.gov.uk'
       DNSSUFFIX: review-bav.integration.account.gov.uk
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
-      TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
+      TXMAMESSAGERETENTIONPERIODDAYS: 1209600 # Default: 14 days
       PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS:
@@ -196,7 +196,7 @@ Mappings:
       ISSUER: 'https://review-bav.account.gov.uk'
       DNSSUFFIX: review-bav.account.gov.uk
       MESSAGERETENTIONPERIODDAYS: 345600 # Default: 4 days
-      TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
+      TXMAMESSAGERETENTIONPERIODDAYS: 1209600 # Default: 14 days
       PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
       CLIENTS:
@@ -4270,7 +4270,7 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       MessageRetentionPeriod: !FindInMap [EnvironmentVariables, !Ref Environment, TXMAMESSAGERETENTIONPERIODDAYS]
-      VisibilityTimeout: 60
+      VisibilityTimeout: 70
       KmsMasterKeyId: !Ref TxMAKeyAlias
       RedrivePolicy:
         deadLetterTargetArn:
