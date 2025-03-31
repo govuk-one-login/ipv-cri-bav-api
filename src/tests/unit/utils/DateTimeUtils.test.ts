@@ -1,7 +1,7 @@
 import { getAuthorizationCodeExpirationEpoch } from "../../../utils/DateTimeUtils";
 
 const mockDateObject = new Date("2023-02-09T15:00:00.652Z");
-const spy = jest
+jest
 	.spyOn(Date, "now")
 	.mockImplementation(() => mockDateObject.getTime());
 

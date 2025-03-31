@@ -45,14 +45,16 @@ const person: PersonIdentityItem = {
 	expiryDate: 123456789,
 	createdDate: 123456789,
 };
-const session = require("../data/db_record.json") as ISessionItem;
+import sampleSession  from "../data/db_record.json";
+let session: ISessionItem;
 let personInfoRequestProcessorTest: PersonInfoRequestProcessor;
 
 describe("PersonInfoRequestProcessor", () => {
-	beforeAll(() => {
+	beforeAll(async () => {
 		personInfoRequestProcessorTest = new PersonInfoRequestProcessor(logger, metrics, PUBLIC_KEY_SSM_PARAM);
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		personInfoRequestProcessorTest.BavService = mockBavService;
+		session = await sampleSession as ISessionItem;
 	});
 
 	describe("#processRequest", () => {

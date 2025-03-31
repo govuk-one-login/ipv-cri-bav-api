@@ -8,7 +8,7 @@ import { constants } from "./ApiConstants";
 import { ISessionItem } from "../../models/ISessionItem";
 import { jwtUtils } from "../../utils/JwtUtils";
 import { BankDetailsPayload } from "../models/BankDetailsPayload";
-import NodeRSA = require("node-rsa");
+import NodeRSA from "node-rsa";
 import crypto from "node:crypto";
 import {
 	StubStartRequest,
@@ -228,8 +228,7 @@ export async function getSessionAndVerifyKey(sessionId: string, tableName: strin
 export async function getSessionAndVerifyKeyExists(sessionId: string, tableName: string, key: string): Promise<void> {
 	const sessionInfo = await getSessionById(sessionId, tableName);
 	try {
-		// eslint-disable-next-line jest/valid-expect, no-unused-expressions, @typescript-eslint/no-unused-expressions
-		expect(sessionInfo![key as keyof ISessionItem]).toBeTruthy;
+		expect(sessionInfo![key as keyof ISessionItem]).toBeTruthy();
 	} catch (error: any) {
 		throw new Error("getSessionAndVerifyKeyExists - Failed to verify " + key + " exists: " + error);
 	}

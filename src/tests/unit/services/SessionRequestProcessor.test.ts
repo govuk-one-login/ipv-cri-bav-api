@@ -1,6 +1,5 @@
 /* eslint-disable max-lines */
 /* eslint-disable max-lines-per-function */
-/* eslint @typescript-eslint/unbound-method: 0 */
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { mock } from "jest-mock-extended";
@@ -23,7 +22,6 @@ const mockBavService = mock<BavService>();
 const mockKmsJwtAdapter = mock<KmsJwtAdapter>();
 const logger = mock<Logger>();
 const metrics = mock<Metrics>();
-jest.spyOn(TxmaEventUtils, "buildCoreEventFields");
 
 const decodedJwtFactory = ():Jwt => {
 	return {
@@ -71,18 +69,21 @@ const decryptedJwtPayloadFactory = ():JWTPayload => {
 
 describe("SessionRequestProcessor", () => {
 	beforeEach(() => {
+		jest.spyOn(TxmaEventUtils, "buildCoreEventFields");
+
 		jest.useFakeTimers();
 		jest.setSystemTime(new Date(1585695600000)); // == 2020-03-31T23:00:00.000Z
 		sessionRequestProcessor = new SessionRequestProcessor(logger, metrics);
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		sessionRequestProcessor.BavService = mockBavService;
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		sessionRequestProcessor.kmsDecryptor = mockKmsJwtAdapter;
 	});
 
 	afterEach(() => {
 		jest.useRealTimers();
 		jest.resetAllMocks();
+		jest.restoreAllMocks();
 	});
 
 	it("should throw error where client config cannot be processed", async () => {

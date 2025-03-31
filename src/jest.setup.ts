@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 process.env.REGION = 'eu-west-2'
 process.env.PERSON_IDENTITY_TABLE_NAME = 'PERSONALIDENTITYTABLE'
 process.env.SESSION_TABLE = 'SESSIONTABLE'

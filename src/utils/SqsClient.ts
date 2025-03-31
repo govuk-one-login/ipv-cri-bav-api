@@ -1,5 +1,5 @@
 import { SQSClient } from "@aws-sdk/client-sqs";
-import { NodeHttpHandler } from "@aws-sdk/node-http-handler";
+import { NodeHttpHandler } from "@smithy/node-http-handler";
 import AWSXRay from "aws-xray-sdk-core";
 import { mockSqsCient } from "../tests/contract/mocks/sqsClient";
 import { Logger } from "@aws-lambda-powertools/logger";

@@ -1,3 +1,4 @@
+import { ParameterType } from "@aws-sdk/client-ssm";
 import { createSsmClient, GetParameterCommand, PutParameterCommand } from "./SSMClient";
 
 export const getParameter = async (path: string): Promise<string> => {
@@ -11,11 +12,11 @@ export const getParameter = async (path: string): Promise<string> => {
 	return response.Parameter?.Value;
 };
 
-export const putParameter = async (parameterName: string, parameterValue: string, type: string, description: string): Promise<void | undefined> => {
+export const putParameter = async (parameterName: string, parameterValue: string, description: string): Promise<void | undefined> => {
 	const client = createSsmClient();
 	const input = { 
 		Name: parameterName, 
-		Type: type,
+		Type: ParameterType.STRING,
 		Description: description,
 		Value: parameterValue,
 		Overwrite: true,

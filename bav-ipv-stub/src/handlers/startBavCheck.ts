@@ -3,7 +3,7 @@ import { KMSClient, SignCommand } from "@aws-sdk/client-kms";
 import crypto from "node:crypto";
 import { util } from "node-jose";
 import format from "ecdsa-sig-formatter";
-import { NodeHttpHandler } from "@aws-sdk/node-http-handler";
+import { NodeHttpHandler } from "@smithy/node-http-handler";
 import { JarPayload, Jwks, JwtHeader } from "../auth.types";
 import axios from "axios";
 

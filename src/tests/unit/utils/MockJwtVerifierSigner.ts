@@ -27,20 +27,30 @@ export class MockKmsJwtAdapter {
     	this.mockJwt = mockJwT;
     }
 
+	// ignored to allow mocking
+	/* eslint-disable @typescript-eslint/no-unused-vars */
     verify(_urlEncodedJwt: string): boolean { return this.result; }
 
+	// ignored to allow mocking
+	/* eslint-disable @typescript-eslint/no-unused-vars */
     decode(_urlEncodedJwt: string): Jwt { return this.mockJwt; }
 
+	// ignored to allow mocking
+	/* eslint-disable @typescript-eslint/no-unused-vars */
     sign(_jwtPayload: JwtPayload): string { return "signedJwt-test"; }
 }
 
 export class MockFailingKmsSigningJwtAdapter {
 
+	// ignored to allow mocking
+	/* eslint-disable @typescript-eslint/no-unused-vars */
 	sign(_jwtPayload: JwtPayload): string { throw new Error("Failed to sign Jwt"); }
 }
 
 export class MockKmsSigningTokenJwtAdapter {
 
+	// ignored to allow mocking
+	/* eslint-disable @typescript-eslint/no-unused-vars */
 	sign(_jwtPayload: JwtPayload): string { return ACCESS_TOKEN; }
 }
 
@@ -51,6 +61,8 @@ export class MockKmsJwtAdapterForVc {
     	this.result = result;
     }
 
+	// ignored to allow mocking
+	/* eslint-disable @typescript-eslint/no-unused-vars */
     verify(_urlEncodedJwt: string): boolean { return this.result; }
 
     sign(jwtPayload: JwtPayload): string {

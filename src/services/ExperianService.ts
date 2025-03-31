@@ -297,6 +297,8 @@ export class ExperianService {
     	let token;
     	try {
     		token = await this.dynamo.send(getExperianTokenCommand);
+			// ignored so as not log PII
+			/* eslint-disable @typescript-eslint/no-unused-vars */
     	} catch (error) {
     		this.logger.error({ message: "getExperianTokenById - failed executing get from dynamodb:" }, {
     			messageCode: MessageCodes.FAILED_FETCHING_EXPERIAN_TOKEN,

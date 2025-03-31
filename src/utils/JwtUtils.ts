@@ -1,10 +1,11 @@
 import * as jose from "node-jose";
 import crypto from "crypto";
+import { WithImplicitCoercion } from "buffer";
 
 export const jwtUtils = {
 
 	// convert non-base64 string or uint8array into base64 encoded string
-	base64Encode(value: string | Uint8Array): string {
+	base64Encode(value: string | WithImplicitCoercion<string>): string {
 		return jose.util.base64url.encode(Buffer.from(value), "utf8");
 	},
 

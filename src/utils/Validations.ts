@@ -93,6 +93,8 @@ export const eventToSubjectIdentifier = async (jwtAdapter: KmsJwtAdapter, event:
 		if (!await jwtAdapter.verify(token)) {
 			throw new AppError(HttpCodesEnum.UNAUTHORIZED, "Verification of JWT failed");
 		}
+		// ignored so as not log PII
+		/* eslint-disable @typescript-eslint/no-unused-vars */
 	} catch (err) {
 		throw new AppError(HttpCodesEnum.UNAUTHORIZED, "Failed to verify signature");
 	}

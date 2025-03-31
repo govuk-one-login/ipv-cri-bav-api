@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/unbound-method */
-import { lambdaHandler, logger } from "../../UserInfoHandler";
+import { lambdaHandler } from "../../UserInfoHandler";
 import { mock } from "jest-mock-extended";
 import { VALID_USERINFO } from "./data/userInfo-events";
 import { UserInfoRequestProcessor } from "../../services/UserInfoRequestProcessor";
@@ -12,10 +12,8 @@ jest.mock("../../utils/Config", () => ({
 }));
 
 describe("UserInfoHandler", () => {
-	let loggerSpy: jest.SpyInstance;
   
 	beforeEach(() => {
-		loggerSpy = jest.spyOn(logger, "error");
 	});
 
 	it("return success when UserInfoRequestProcessor completes successfully", async () => {

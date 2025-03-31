@@ -19,7 +19,11 @@ let accessTokenRequestProcessorTest: AccessTokenRequestProcessor;
 const mockBavService = mock<BavService>();
 let mockSession: ISessionItem;
 jest.mock("../../../utils/KmsJwtAdapter");
+// ignored to allow mocking
+/* eslint-disable @typescript-eslint/no-unused-vars */
 const passingKmsJwtAdapterFactory = (_signingKeys: string) => new MockKmsSigningTokenJwtAdapter();
+// ignored to allow mocking
+/* eslint-disable @typescript-eslint/no-unused-vars */
 const failingKmsJwtSigningAdapterFactory = (_signingKeys: string) => new MockFailingKmsSigningJwtAdapter();
 const logger = mock<Logger>();
 const metrics = mock<Metrics>();
@@ -52,14 +56,14 @@ describe("AccessTokenRequestProcessor", () => {
 	beforeAll(() => {
 		mockSession = getMockSessionItem();
 		accessTokenRequestProcessorTest = new AccessTokenRequestProcessor(logger, metrics);
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		accessTokenRequestProcessorTest.bavService = mockBavService;
 		request = VALID_ACCESSTOKEN;
 	});
 
 	beforeEach(() => {
 		jest.clearAllMocks();
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		accessTokenRequestProcessorTest.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 		// Setting the request body with a valid params
 		request.body = `code=${AUTHORIZATION_CODE}&grant_type=authorization_code&redirect_uri=${ENCODED_REDIRECT_URI}`;
@@ -148,7 +152,7 @@ describe("AccessTokenRequestProcessor", () => {
 	});
 
 	it("Return 500 Server Error when Failed to sign the access token Jwt", async () => {
-		// @ts-ignore
+		// @ts-expect-error private access manipulation used for testing
 		accessTokenRequestProcessorTest.kmsJwtAdapter = failingKmsJwtSigningAdapterFactory();
 		const out: APIGatewayProxyResult = await accessTokenRequestProcessorTest.processRequest(request);
 
@@ -157,7 +161,6 @@ describe("AccessTokenRequestProcessor", () => {
 	});
 
 	it("Return 401 when getting session from dynamoDB errors", async () => {
-		// @ts-ignore
 		mockBavService.getSessionByAuthorizationCode.mockImplementation(() => {
 			throw new AppError(HttpCodesEnum.UNAUTHORIZED, "Error retrieving Session by authorization code");
 		});
@@ -168,7 +171,6 @@ describe("AccessTokenRequestProcessor", () => {
 	});
 
 	it("Return 500 when updating the session returns an error", async () => {
-		// @ts-ignore
 		mockBavService.updateSessionWithAccessTokenDetails.mockImplementation(() => {
 			throw new AppError(HttpCodesEnum.SERVER_ERROR, "updateItem - failed: got error saving Access token details");
 		});
