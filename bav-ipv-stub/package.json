@@ -7,7 +7,7 @@
     "@aws-sdk/client-kms": "^3.352.0",
     "@aws-sdk/node-http-handler": "^3.282.0",
     "@babel/preset-typescript": "^7.21.0",
-    "axios": "^0.27.2",
+    "axios": "^1.8.2",
     "ecdsa-sig-formatter": "^1.0.11",
     "esbuild": "0.14.14",
     "node-jose": "^2.1.1"
