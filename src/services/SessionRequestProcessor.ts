@@ -62,7 +62,7 @@ export class SessionRequestProcessor {
   	this.personIdentityTableName = checkEnvironmentVariable(EnvironmentVariables.PERSON_IDENTITY_TABLE_NAME, this.logger);
 
   	this.BavService = BavService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
-  	this.kmsDecryptor = new KmsJwtAdapter(encryptionKeyIds);
+  	this.kmsDecryptor = new KmsJwtAdapter(encryptionKeyIds, this.logger);
   }
 
   static getInstance(logger: Logger, metrics: Metrics): SessionRequestProcessor {
@@ -126,17 +126,18 @@ export class SessionRequestProcessor {
   	}
 
   	const jwtPayload: JwtPayload = parsedJwt.payload;
+	const jwtTargetKid: string | undefined = parsedJwt.header?.kid; 
   	this.logger.appendKeys({
   		govuk_signin_journey_id: jwtPayload.govuk_signin_journey_id as string,
   	});
 
   	try {
   		if (configClient.jwksEndpoint) {
-  			const payload = await this.kmsDecryptor.verifyWithJwks(urlEncodedJwt, configClient.jwksEndpoint);
+  			const payload = await this.kmsDecryptor.verifyWithJwks(urlEncodedJwt, configClient.jwksEndpoint, jwtTargetKid);
 
   			if (!payload) {
   				this.logger.error("Failed to verify JWT", {
-  					messageCode: MessageCodes.FAILED_VERIFYING_JWT,
+  					messageCode: MessageCodes.BAV_FAILED_VERIFYING_JWT,
   				});
   				return Response(HttpCodesEnum.UNAUTHORIZED, "Unauthorized");
   			}
@@ -147,9 +148,9 @@ export class SessionRequestProcessor {
   			return Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
   		}
   	} catch (error: any) {
-  		this.logger.error("Invalid request: Could not verify jwt", {
+  		this.logger.error("Invalid request: Could not verify JWT", {
   			error,
-  			messageCode: MessageCodes.FAILED_VERIFYING_JWT,
+  			messageCode: MessageCodes.BAV_FAILED_VERIFYING_JWT,
   		});
   		return Response(HttpCodesEnum.UNAUTHORIZED, "Unauthorized");
   	}

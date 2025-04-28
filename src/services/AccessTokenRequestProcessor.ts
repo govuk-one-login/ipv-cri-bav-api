@@ -40,7 +40,7 @@ export class AccessTokenRequestProcessor {
 		this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, this.logger);
 		this.dnsSuffix = checkEnvironmentVariable(EnvironmentVariables.DNSSUFFIX, this.logger);
 		
-		this.kmsJwtAdapter = new KmsJwtAdapter(signingKeyArn);
+		this.kmsJwtAdapter = new KmsJwtAdapter(signingKeyArn, this.logger);
 		this.bavService = BavService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
 	}
 

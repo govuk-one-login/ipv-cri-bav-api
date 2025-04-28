@@ -159,7 +159,7 @@ describe("SessionRequestProcessor", () => {
 		expect(logger.error).toHaveBeenCalledWith(
 			"Failed to verify JWT",
 			expect.objectContaining({
-				messageCode: MessageCodes.FAILED_VERIFYING_JWT,
+				messageCode: MessageCodes.BAV_FAILED_VERIFYING_JWT,
 			}),
 		);
 	});
@@ -174,10 +174,10 @@ describe("SessionRequestProcessor", () => {
 		expect(response.statusCode).toBe(HttpCodesEnum.UNAUTHORIZED);
 		expect(logger.error).toHaveBeenCalledTimes(1);
 		expect(logger.error).toHaveBeenCalledWith(
-			"Invalid request: Could not verify jwt",
+			"Invalid request: Could not verify JWT",
 			expect.objectContaining({
 				error: {},
-				messageCode: MessageCodes.FAILED_VERIFYING_JWT,
+				messageCode: MessageCodes.BAV_FAILED_VERIFYING_JWT,
 			}),
 		);
 	});

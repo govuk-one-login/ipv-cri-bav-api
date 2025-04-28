@@ -9,10 +9,11 @@ import {
 } from "@jest/globals";
 import { mockClient } from "aws-sdk-client-mock";
 import "aws-sdk-client-mock-jest";
-import startDefault from "../events/startDefault.json";
 import axios from "axios";
 import { KMSClient, SignCommand } from "@aws-sdk/client-kms";
 import format from "ecdsa-sig-formatter";
+
+const testData = require("../events/startEvents.js")
 
 jest.setTimeout(30000);
 
@@ -38,6 +39,16 @@ const mockJwks = {
   ],
 };
 
+process.env.REDIRECT_URI = "test.com/callback";
+process.env.JWKS_URI = "test.com/.well-known/jwks.json";
+process.env.CLIENT_ID = "test-id";
+process.env.SIGNING_KEY = "key-id";
+process.env.ADDITIONAL_KEY = "additional-key-id"
+process.env.OIDC_API_BASE_URI = "api-target.com";
+process.env.OIDC_FRONT_BASE_URI = "test-target.com";
+
+const kmsClient = mockClient(KMSClient);
+
 describe("Start BAV Check Endpoint", () => {
   beforeEach(() => {
     jest.useFakeTimers();
@@ -49,7 +60,6 @@ describe("Start BAV Check Endpoint", () => {
 
     // format.derToJose = jest.fn();
 
-    const kmsClient = mockClient(KMSClient);
     kmsClient.on(SignCommand).resolves({
       Signature: new Uint8Array([
         197, 213, 5, 202, 58, 74, 45, 36, 122, 168, 27, 155, 70, 15, 9, 123, 11,
@@ -76,7 +86,7 @@ describe("Start BAV Check Endpoint", () => {
     process.env.SIGNING_KEY = "key-id";
     process.env.OAUTH_FRONT_BASE_URI = "test-target.com";
 
-    const response = await handler(startDefault);
+    const response = await handler(testData.startDefault);
     expect(response.statusCode).toBe(201);
     expect(response.body).toBeDefined();
 
@@ -86,4 +96,27 @@ describe("Start BAV Check Endpoint", () => {
     expect(body.clientId).toBeDefined();
     expect(body.AuthorizeLocation).toBeDefined();
   });
+
+  describe("Sign function", () => {
+    it("should sign the JWT using the correct key", async () => {
+      const response = await handler(testData.startDefault);
+      const signCommandInput = kmsClient.commandCalls(SignCommand)[0].args[0].input; 
+      expect(signCommandInput.KeyId).toBe("key-id");
+      expect(response.statusCode).toBe(201);
+    });
+
+    it("should sign a JWT using the correct key when provided with a custom payload for 'invalidKid'", async () => {
+      const response = await handler(testData.startCustomInvalidSigningKey);
+      const signCommandInput = kmsClient.commandCalls(SignCommand)[0].args[0].input; 
+      expect(signCommandInput.KeyId).toBe("key-id");
+      expect(response.statusCode).toBe(201);
+    });
+
+    it("should sign a JWT using the correct key when provided with a custom payload for 'missingKid'", async () => {
+      const response = await handler(testData.startCustomMissingSigningKey);
+      const signCommandInput = kmsClient.commandCalls(SignCommand)[0].args[0].input; 
+      expect(signCommandInput.KeyId).toBe("key-id");
+      expect(response.statusCode).toBe(201);
+    });
+  })
 });
