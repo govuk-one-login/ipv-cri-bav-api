@@ -8,7 +8,6 @@ import { Logger } from "@aws-lambda-powertools/logger";
 import { mock } from "jest-mock-extended";
 import axios from "axios";
 
-jest.mock('axios');
 const logger = mock<Logger>();
 
 jest.mock("@aws-sdk/client-kms", () => ({
@@ -164,7 +163,7 @@ describe("KmsJwtAdapter utils", () => {
 		beforeEach(() => {
 			kmsJwtAdapter.cachedJwks = undefined;
 			kmsJwtAdapter.cachedTime = undefined;
-			(axios.get as jest.Mock).mockResolvedValue(mockJwksResponse);
+			jest.spyOn(axios, "get").mockResolvedValue(mockJwksResponse);
 		});
 
 		// Jose validation is not mocked for this test
