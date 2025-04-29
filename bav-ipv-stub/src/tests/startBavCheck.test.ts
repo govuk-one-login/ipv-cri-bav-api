@@ -45,7 +45,7 @@ process.env.CLIENT_ID = "test-id";
 process.env.SIGNING_KEY = "key-id";
 process.env.ADDITIONAL_KEY = "additional-key-id"
 process.env.OIDC_API_BASE_URI = "api-target.com";
-process.env.OIDC_FRONT_BASE_URI = "test-target.com";
+process.env.OAUTH_FRONT_BASE_URI = "test-target.com";
 
 const kmsClient = mockClient(KMSClient);
 
@@ -53,12 +53,7 @@ describe("Start BAV Check Endpoint", () => {
   beforeEach(() => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date(1585695600000)); // == 2020-03-31T23:00:00.000Z
-
-    jest.mock("axios");
-    axios.get = jest.fn()<() => Promise<object>>;
-    axios.get.mockResolvedValue({ data: mockJwks });
-
-    // format.derToJose = jest.fn();
+    jest.spyOn(axios, "get").mockResolvedValue({ data: mockJwks });
 
     kmsClient.on(SignCommand).resolves({
       Signature: new Uint8Array([
@@ -80,11 +75,6 @@ describe("Start BAV Check Endpoint", () => {
   });
 
   it("returns JAR data and target uri", async () => {
-    process.env.REDIRECT_URI = "test.com/callback";
-    process.env.JWKS_URI = "test.com/.well-known/jwks.json";
-    process.env.CLIENT_ID = "test-id";
-    process.env.SIGNING_KEY = "key-id";
-    process.env.OAUTH_FRONT_BASE_URI = "test-target.com";
 
     const response = await handler(testData.startDefault);
     expect(response.statusCode).toBe(201);
