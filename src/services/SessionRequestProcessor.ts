@@ -218,7 +218,7 @@ export class SessionRequestProcessor {
   		expiryDate: absoluteTimeNow() + +this.authSessionTtlInSecs,
   		createdDate: absoluteTimeNow(),
   		state: jwtPayload.state,
-  		subject: jwtPayload.sub ? jwtPayload.sub : "",
+  		subject: jwtPayload.sub ?? "",
   		persistentSessionId: jwtPayload.persistent_session_id,
   		clientIpAddress,
   		authSessionState: AuthSessionState.BAV_SESSION_CREATED,
