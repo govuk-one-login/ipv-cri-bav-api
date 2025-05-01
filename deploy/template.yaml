@@ -1042,7 +1042,7 @@ Resources:
               MetricName: VerifyAuthorizeRequest-lambda-messageCode
               Dimensions:
                 - Name: MessageCode
-                  Value: BAV_FAILED_VERIFYING_JWT
+                  Value: FAILED_VERIFYING_JWT
             Period: 60
             Stat: Sum
 
@@ -1077,7 +1077,7 @@ Resources:
               MetricName: VerifyAuthorizeRequest-lambda-messageCode
               Dimensions:
                 - Name: MessageCode
-                  Value: BAV_FAILED_VERIFYING_JWT
+                  Value: FAILED_VERIFYING_JWT
             Period: 300
             Stat: Sum
 

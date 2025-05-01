@@ -137,7 +137,7 @@ export class SessionRequestProcessor {
 
   			if (!payload) {
   				this.logger.error("Failed to verify JWT", {
-  					messageCode: MessageCodes.BAV_FAILED_VERIFYING_JWT,
+  					messageCode: MessageCodes.FAILED_VERIFYING_JWT,
   				});
   				return Response(HttpCodesEnum.UNAUTHORIZED, "Unauthorized");
   			}
@@ -150,7 +150,7 @@ export class SessionRequestProcessor {
   	} catch (error: any) {
   		this.logger.error("Invalid request: Could not verify JWT", {
   			error,
-  			messageCode: MessageCodes.BAV_FAILED_VERIFYING_JWT,
+  			messageCode: MessageCodes.FAILED_VERIFYING_JWT,
   		});
   		return Response(HttpCodesEnum.UNAUTHORIZED, "Unauthorized");
   	}
