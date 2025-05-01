@@ -34,7 +34,7 @@ export class KmsJwtAdapter {
     }
 
 	setCachedDataForTest(cachedJwks: any, cachedTime: Date) {
-        this.cachedJwks = cachedJwks,
+        this.cachedJwks = cachedJwks
 		this.cachedTime = cachedTime
     }
 
