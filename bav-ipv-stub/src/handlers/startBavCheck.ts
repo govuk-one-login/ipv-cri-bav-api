@@ -6,6 +6,7 @@ import format from "ecdsa-sig-formatter";
 import { NodeHttpHandler } from "@smithy/node-http-handler";
 import { JarPayload, Jwks, JwtHeader } from "../auth.types";
 import axios from "axios";
+import { getHashedKid } from "../utils/hashing";
 
 export const v3KmsClient = new KMSClient({
   region: process.env.REGION ?? "eu-west-2",
@@ -79,7 +80,16 @@ export const handler = async (
     delete payload.evidence_requested
   }
 
-  const signedJwt = await sign(payload, config.signingKey);
+    // Unhappy path testing enabled by optional flag provided in stub paylod
+    let invalidKey;
+    if (overrides?.missingKid != null) {
+      invalidKey = crypto.randomUUID();
+    }
+    if (overrides?.invalidKid != null) {
+      invalidKey = config.additionalKey;
+    }
+
+  const signedJwt = await sign(payload, config.signingKey, invalidKey);
   const publicEncryptionKey: CryptoKey = await getPublicEncryptionKey(config);
   const request = await encrypt(signedJwt, publicEncryptionKey);
 
@@ -101,6 +111,7 @@ export function getConfig(): {
   jwksUri: string;
   clientId: string;
   signingKey: string;
+  additionalKey: string;
   oauthUri: string;
 } {
   if (
@@ -108,6 +119,7 @@ export function getConfig(): {
     process.env.JWKS_URI == null ||
     process.env.CLIENT_ID == null ||
     process.env.SIGNING_KEY == null ||
+    process.env.ADDITIONAL_KEY == null ||
     process.env.OAUTH_FRONT_BASE_URI == null
   ) {
     throw new Error("Missing configuration");
@@ -118,6 +130,7 @@ export function getConfig(): {
     jwksUri: process.env.JWKS_URI,
     clientId: process.env.CLIENT_ID,
     signingKey: process.env.SIGNING_KEY,
+    additionalKey: process.env.ADDITIONAL_KEY,
     oauthUri: process.env.OAUTH_FRONT_BASE_URI,
   };
 }
@@ -141,10 +154,14 @@ async function getPublicEncryptionKey(config: {
   return publicEncryptionKey;
 }
 
-async function sign(payload: JarPayload, keyId: string): Promise<string> {
-  const kid = keyId.split("/").pop() ?? "";
+async function sign(payload: JarPayload, keyId: string, invalidKeyId: string | undefined): Promise<string> {
+  const signingKid = keyId.split("/").pop() ?? "";
+  const invalidKid = invalidKeyId?.split("/").pop() ?? "";
+  // If an additional kid is provided to the function, return it in the header to create a mismatch - enable unhappy path testing
+  const kid = invalidKeyId ? invalidKid : signingKid;
+  const hashedKid = getHashedKid(kid);
   const alg = "ECDSA_SHA_256";
-  const jwtHeader: JwtHeader = { alg: "ES256", typ: "JWT", kid };
+  const jwtHeader: JwtHeader = { alg: "ES256", typ: "JWT", kid: hashedKid };
   const tokenComponents = {
     header: util.base64url.encode(
       Buffer.from(JSON.stringify(jwtHeader)),
@@ -159,7 +176,8 @@ async function sign(payload: JarPayload, keyId: string): Promise<string> {
 
   const res = await v3KmsClient.send(
     new SignCommand({
-      KeyId: kid,
+      // Key used to sign will always be default key
+      KeyId: signingKid,
       SigningAlgorithm: alg,
       MessageType: "RAW",
       Message: Buffer.from(

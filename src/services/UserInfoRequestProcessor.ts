@@ -56,7 +56,7 @@ export class UserInfoRequestProcessor {
 		this.dnsSuffix = checkEnvironmentVariable(EnvironmentVariables.DNSSUFFIX, this.logger);
 
   	this.BavService = BavService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
-  	this.kmsDecryptor = new KmsJwtAdapter(signinKeyIds);
+  	this.kmsDecryptor = new KmsJwtAdapter(signinKeyIds, this.logger);
 		this.credentialVendor = CREDENTIAL_VENDOR;
 		this.verifiableCredentialService = VerifiableCredentialService.getInstance(this.kmsDecryptor, this.issuer, this.logger, this.dnsSuffix, this.credentialVendor);
 	}

@@ -6,8 +6,11 @@ import { AppError } from "../../../utils/AppError";
 import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
 import { VALID_USERINFO, MISSING_AUTH_HEADER_USERINFO } from "../data/userInfo-events";
 import { Constants } from "../../../utils/Constants";
+import { Logger } from "@aws-lambda-powertools/logger";
+import { mock } from "jest-mock-extended";
 
 jest.mock("../../../utils/KmsJwtAdapter");
+const logger = mock<Logger>();
 
 describe("Validations", () => {
 	describe("#isValidStrings", () => {
@@ -67,7 +70,7 @@ describe("Validations", () => {
 		let jwtAdapter: KmsJwtAdapter;
 
 		beforeEach(() => {
-			jwtAdapter = new KmsJwtAdapter("keys");
+			jwtAdapter = new KmsJwtAdapter("keys", logger);
 		});
 
 		it("throws an error if Authorization header is missing", async () => {

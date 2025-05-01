@@ -21,12 +21,9 @@ import { randomUUID } from "crypto";
 
 describe("BAV CRI unhappy path tests", () => {
 	describe("/session Endpoint Unhappy Path Tests", () => {
-		let stubResponse: any;
-		beforeEach(async () => {
-			stubResponse = await stubStartPost();
-		});
 
 		it("Empty Request Test", async () => {
+			const stubResponse = await stubStartPost();
 			const sessionResponse = await sessionPost(stubResponse.data.clientId, "");
 
 			expect(sessionResponse.status).toBe(401);
@@ -34,10 +31,25 @@ describe("BAV CRI unhappy path tests", () => {
 		});
 
 		it("Empty ClientID Test", async () => {
+			const stubResponse = await stubStartPost();
 			const sessionResponse = await sessionPost("", stubResponse.data.request);
 
 			expect(sessionResponse.status).toBe(400);
 			expect(sessionResponse.data).toBe("Bad Request");
+		});
+
+		it("Invalid Kid Test", async () => {
+			const stubResponse = await stubStartPost(undefined, { journeyType: 'invalidKid' });
+			const sessionResponse = await sessionPost(stubResponse.data.clientId, stubResponse.data.request);
+			expect(sessionResponse.status).toBe(401);
+			expect(sessionResponse.data).toBe("Unauthorized");
+		});
+
+		it("Missing Kid Test", async () => {
+			const stubResponse = await stubStartPost(undefined, { journeyType: 'missingKid' });
+			const sessionResponse = await sessionPost(stubResponse.data.clientId, stubResponse.data.request);
+			expect(sessionResponse.status).toBe(401);
+			expect(sessionResponse.data).toBe("Unauthorized");
 		});
 	});
 

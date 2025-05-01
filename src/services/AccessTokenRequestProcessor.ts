@@ -40,7 +40,7 @@ export class AccessTokenRequestProcessor {
 		this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, this.logger);
 		this.dnsSuffix = checkEnvironmentVariable(EnvironmentVariables.DNSSUFFIX, this.logger);
 		
-		this.kmsJwtAdapter = new KmsJwtAdapter(signingKeyArn);
+		this.kmsJwtAdapter = new KmsJwtAdapter(signingKeyArn, this.logger);
 		this.bavService = BavService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
 	}
 
@@ -91,7 +91,7 @@ export class AccessTokenRequestProcessor {
 					// ignored so as not log PII
 					/* eslint-disable @typescript-eslint/no-unused-vars */
 				} catch (error) {
-					this.logger.error("Failed to sign the accessToken Jwt", { messageCode: MessageCodes.FAILED_SIGNING_JWT });
+					this.logger.error("Failed to sign the accessToken Jwt", { error, messageCode: MessageCodes.FAILED_SIGNING_JWT });
 					return Response(HttpCodesEnum.SERVER_ERROR, "Failed to sign the accessToken Jwt");
 				}
 

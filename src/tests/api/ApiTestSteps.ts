@@ -49,21 +49,42 @@ export async function startStubServiceAndReturnSessionId(bavStubPayload?: StubSt
 	return postRequest.data.session_id;
 }
 
-export async function stubStartPost(bavStubPayload?: StubStartRequest): Promise<AxiosResponse<StubStartResponse>> {
-	let postRequest: AxiosResponse<StubStartResponse>;
-	const path = constants.DEV_IPV_BAV_STUB_URL;
-	try {
-		if (bavStubPayload) {
-			postRequest = await axios.post(`${path}`, bavStubPayload);
-		} else {
-			postRequest = await axios.post(`${path}`);
-		}
-		expect(postRequest.status).toBe(201);
-		return postRequest;
-	} catch (error: any) {
-		console.log(`Error response from ${path} endpoint: ${error}.`);
+interface KidOptions {
+	journeyType: 'invalidKid' | 'missingKid';
+}
+
+export async function stubStartPost(bavStubPayload?: StubStartRequest, options?: KidOptions): Promise<AxiosResponse<any>> {
+	const path = constants.DEV_IPV_BAV_STUB_URL!;
+  
+	let postRequest: AxiosResponse<any>;
+  
+	if (bavStubPayload || options) { 
+	  const payload: StubStartRequest = {
+		shared_claims: { name: [], birthDate: [] },
+		...(bavStubPayload ?? {}),
+	  };
+  
+	  if (options) {
+		payload[options.journeyType] = true;
+	  }
+  
+	  try {
+		postRequest = await axios.post(path, payload);
+	  } catch (error: any) {
+		console.error(`Error response from ${path} endpoint: ${error}`);
 		return error.response;
+	  }
+	} else {
+	  try {
+		postRequest = await axios.post(path);
+	  } catch (error: any) {
+		console.error(`Error response from ${path} endpoint: ${error}`);
+		return error.response;
+	  }
 	}
+  
+	expect(postRequest.status).toBe(201);
+	return postRequest;
 }
 
 export async function sessionPost(clientId: string, request: string): Promise<AxiosResponse<SessionResponse>> {
