@@ -7,10 +7,18 @@ export interface NamePart {
 	type: string;
 }
 
+interface BirthDate {
+	value: string;
+}
+
 export interface StubStartRequest {
 	shared_claims: {
 		name: Name[];
+		birthDate: BirthDate[];
 	};
+	context?: string;
+	invalidKid?: boolean;
+	missingKid?: boolean;
 }
 
 export interface StubStartResponse {
