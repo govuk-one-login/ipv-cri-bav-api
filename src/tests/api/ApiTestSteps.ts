@@ -82,7 +82,7 @@ export async function stubStartPost(bavStubPayload?: StubStartRequest, options?:
 	  }
 	}
   
-	expect(postRequest.status).toBe(201);
+	expect(postRequest.status).toBe(200);
 	return postRequest;
 }
 
