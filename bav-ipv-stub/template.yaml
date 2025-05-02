@@ -130,7 +130,7 @@ Resources:
       Parameters:
         endpointConfigurationTypes: REGIONAL
 
-  # Redirect ---------------------------------------
+# Redirect ---------------------------------------
   RedirectPath:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -167,7 +167,7 @@ Resources:
         - StatusCode: 400
         - StatusCode: 500
 
-  # JWKS -----------------------------------------
+# JWKS -----------------------------------------
   WellKnownPath:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -213,7 +213,7 @@ Resources:
         - StatusCode: 400
         - StatusCode: 500
 
-  # Start check-----------------------------------------
+# Start check-----------------------------------------
   StartBAVPath:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -249,8 +249,45 @@ Resources:
         - StatusCode: 200
         - StatusCode: 400
         - StatusCode: 500
+  
+# Start token-----------------------------------------
+  StartTokenBAVPath:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref IPVStubApiGw
+      ParentId: !GetAtt IPVStubApiGw.RootResourceId
+      PathPart: start-token
 
-  # -----------------------------------------
+  StartTokenBAVMethodGet:
+    DependsOn:
+      - StartTokenBAVPath
+      - StartTokenBAVFunction
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      RestApiId: !Ref IPVStubApiGw
+      ResourceId: !Ref StartTokenBAVPath
+      HttpMethod: POST
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Join
+          - ""
+          - - "arn:"
+            - !Ref "AWS::Partition"
+            - ":apigateway:"
+            - !Ref "AWS::Region"
+            - ":lambda:path/2015-03-31/functions/"
+            - !GetAtt StartTokenBAVFunction.Arn
+            - /invocations
+        IntegrationResponses:
+          - StatusCode: 200
+      MethodResponses:
+        - StatusCode: 200
+        - StatusCode: 400
+        - StatusCode: 500
+
+# -----------------------------------------
   IPVStubApiGwDeployment:
     DependsOn:
       - RedirectMethodGet
@@ -286,7 +323,7 @@ Resources:
       LogGroupName: !Sub /aws/apigateway/AccessLog-IPVStubApiGateway-${AWS::StackName}/${Environment}
       RetentionInDays: 30
 
-  # ------------------------------------
+# ------------------------------------
   StartBAVCheckFunction:
     DependsOn:
       - StartBAVCheckFunctionLogGroup
@@ -294,6 +331,54 @@ Resources:
     Properties:
       FunctionName: !Sub "StartBAVCheckFunction-${AWS::StackName}"
       Handler: startBavCheck.handler
+      CodeUri: src/handlers/
+      Environment:
+        Variables:
+          SIGNING_KEY: !Ref IPVStubKMSSigningKey
+          ADDITIONAL_KEY: !Ref IPVStubKMSAdditionalKey
+      Policies:
+        - Statement:
+            - Sid: KMSSignPolicy
+              Effect: Allow
+              Action:
+                - kms:Sign
+              Resource:
+                - !GetAtt IPVStubKMSSigningKey.Arn
+      Role: !GetAtt IPVStubLambdaRole.Arn
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - startBavCheck.ts
+
+  StartBAVCheckFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 30
+      LogGroupName: !Sub "/aws/lambda/StartBAVCheckFunction-${AWS::StackName}" # Important as this is derived from the FunctionName
+
+  StartBAVCheckFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt StartBAVCheckFunction.Arn
+      Principal: apigateway.amazonaws.com
+
+# ------------------------------------
+  StartTokenBAVFunction:
+    DependsOn:
+      - StartTokenBAVFunctionLogGroup
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "StartTokenBAVFunction-${AWS::StackName}"
+      Handler: startTokenBav.handler
       CodeUri: src/handlers/
       Environment:
         Variables:
@@ -332,22 +417,22 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - startBavCheck.ts
+          - startTokenBav.ts
 
-  StartBAVCheckFunctionLogGroup:
+  StartTokenBAVFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/StartBAVCheckFunction-${AWS::StackName}" # Important as this is derived from the FunctionName
+      LogGroupName: !Sub "/aws/lambda/StartTokenBAVFunction-${AWS::StackName}"
 
-  StartBAVCheckFunctionPermission:
+  StartTokenBAVFunctionPermission:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: !GetAtt StartBAVCheckFunction.Arn
+      FunctionName: !GetAtt StartTokenBAVFunction.Arn
       Principal: apigateway.amazonaws.com
 
-  #----------------------------
+#----------------------------
   JwksFunction:
     DependsOn:
       - JwksFunctionLogGroup
@@ -396,7 +481,7 @@ Resources:
       RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/IPVStubJWKS-${AWS::StackName}"
 
-  #----------------------------
+#----------------------------
   IPVStubRedirectFunction:
     DependsOn:
       - IPVStubRedirectFunctionLogGroup
@@ -428,6 +513,7 @@ Resources:
       RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/IPVStubRedirect-${AWS::StackName}"
 
+#----------------------------
   IPVStubKMSSigningKey:
     Type: AWS::KMS::Key
     Properties:
@@ -480,7 +566,7 @@ Resources:
         - Key: Environment
           Value: !Sub ${Environment}
 
-  # SSMParameter for .env variable
+# SSMParameter for .env variable
   ProviderBaseUri:
     Type: AWS::SSM::Parameter
     Properties:
@@ -536,6 +622,7 @@ Resources:
       Tags:
         APP: !Sub bav-${AWS::StackName}
 
+#----------------------------
   IPVStubExternalApiCustomDomain:
     Type: AWS::ApiGatewayV2::DomainName
     Properties:
@@ -572,6 +659,7 @@ Resources:
     DependsOn:
       - IPVStubApiGwDeployment
 
+#----------------------------
 Outputs:
   IPVStubExecuteUrl:
     Description: "API Gateway endpoint URL for the environment stage"
