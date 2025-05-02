@@ -336,6 +336,19 @@ Resources:
         Variables:
           SIGNING_KEY: !Ref IPVStubKMSSigningKey
           ADDITIONAL_KEY: !Ref IPVStubKMSAdditionalKey
+          CLIENT_ID: !FindInMap [Configuration, !Ref Environment, IPVStubID]
+          REDIRECT_URI: !If
+          - CreateDevResources
+          - !Sub
+            - "https://${AWS::StackName}-${IPVSTUBURL}/redirect?id=bav"
+            - IPVSTUBURL:
+                !FindInMap [ Configuration, !Ref Environment, IPVSTUBURL ]
+          - !Sub
+            - "https://${IPVSTUBURL}/redirect?id=bav"
+            - IPVSTUBURL:
+                !FindInMap [ Configuration, !Ref Environment, IPVSTUBURL ]
+          JWKS_URI: !FindInMap [Configuration, !Ref Environment, JWKSURI]
+          OAUTH_FRONT_BASE_URI: !FindInMap [Configuration, !Ref Environment, OAUTHFRONTBASEURI]
       Policies:
         - Statement:
             - Sid: KMSSignPolicy
@@ -384,19 +397,6 @@ Resources:
         Variables:
           SIGNING_KEY: !Ref IPVStubKMSSigningKey
           ADDITIONAL_KEY: !Ref IPVStubKMSAdditionalKey
-          CLIENT_ID: !FindInMap [Configuration, !Ref Environment, IPVStubID]
-          REDIRECT_URI: !If
-          - CreateDevResources
-          - !Sub
-            - "https://${AWS::StackName}-${IPVSTUBURL}/redirect?id=bav"
-            - IPVSTUBURL:
-                !FindInMap [ Configuration, !Ref Environment, IPVSTUBURL ]
-          - !Sub
-            - "https://${IPVSTUBURL}/redirect?id=bav"
-            - IPVSTUBURL:
-                !FindInMap [ Configuration, !Ref Environment, IPVSTUBURL ]
-          JWKS_URI: !FindInMap [Configuration, !Ref Environment, JWKSURI]
-          OAUTH_FRONT_BASE_URI: !FindInMap [Configuration, !Ref Environment, OAUTHFRONTBASEURI]
       Policies:
         - Statement:
             - Sid: KMSSignPolicy

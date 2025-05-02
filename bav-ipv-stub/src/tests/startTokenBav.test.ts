@@ -51,7 +51,6 @@ describe("Start BAV Check Endpoint", () => {
     expect(response.body).toBeDefined();
   });
 
-
   describe("Sign function", () => {
     it("should sign the JWT using the correct key", async () => {
       const response = await handler(testData.startDefault);
