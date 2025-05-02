@@ -12,7 +12,6 @@ import NodeRSA from "node-rsa";
 import crypto from "node:crypto";
 import {
 	StubStartRequest,
-	StubStartResponse,
 	SessionResponse,
 	VerifyAccountResponse,
 	AuthorizationResponse,

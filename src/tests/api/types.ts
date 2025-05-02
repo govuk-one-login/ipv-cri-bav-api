@@ -20,7 +20,7 @@ export interface StubStartRequest {
 	invalidKid?: boolean;
 	missingKid?: boolean;
 }
-
+//This is not used anywhere, should we be using it?
 export interface StubStartResponse {
 	clientId: string;
 	request: string;
