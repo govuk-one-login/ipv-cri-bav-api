@@ -95,7 +95,7 @@ export const handler = async (
   const request = await encrypt(signedJwt, publicEncryptionKey);
 
   return {
-    statusCode: 201,
+    statusCode: 200,
     body: JSON.stringify({
       request,
       responseType: "code",

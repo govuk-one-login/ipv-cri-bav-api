@@ -26,7 +26,7 @@ export const handler = async (
   const payload: JWTPayload = {
     iss: "https://ipv.core.account.gov.uk",
     sub: crypto.randomUUID(),
-    aud: "https://review-bav.dev.account.gov.uk",
+    aud: config.aud,
     jti: crypto.randomBytes(16).toString("hex"),
     exp: iat + 3 * 60,
     iat,
@@ -44,7 +44,7 @@ export const handler = async (
   const signedJwt = await sign(payload, config.signingKey, invalidKey);
 
   return {
-    statusCode: 201,
+    statusCode: 200,
     body: signedJwt,
   };
 };
@@ -52,17 +52,19 @@ export const handler = async (
 export function getConfig(): {
   signingKey: string;
   additionalKey: string;
-
+  aud: string;
 } {
   if (
     process.env.SIGNING_KEY == null ||
-    process.env.ADDITIONAL_KEY == null
+    process.env.ADDITIONAL_KEY == null ||
+    process.env.JWT_AUDIENCE == null
   ) {
     throw new Error("Missing configuration");
   }
   return {
     signingKey: process.env.SIGNING_KEY,
     additionalKey: process.env.ADDITIONAL_KEY,
+    aud: process.env.JWT_AUDIENCE
   };
 }
 

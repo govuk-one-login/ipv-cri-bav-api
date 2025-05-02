@@ -45,11 +45,13 @@ Mappings:
       JWKSURI: "https://api-bav-cri-api.review-bav.dev.account.gov.uk"
       IPVSTUBURL: "ipvstub.review-bav.dev.account.gov.uk"
       OAUTHFRONTBASEURI: "https://bav-cri-front.review-bav.dev.account.gov.uk"
+      AUD: "https://review-bav.dev.account.gov.uk"
     build:
       IPVStubID: "BD7B2A5D"
       JWKSURI: "https://api.review-bav.build.account.gov.uk"
       IPVSTUBURL: "ipvstub.review-bav.build.account.gov.uk"
       OAUTHFRONTBASEURI:  "https://www.review-bav.build.account.gov.uk"
+      AUD: "https://review-bav.build.account.gov.uk"
     staging:
       IPVStubID: "9CDA6F61"
     integration:
@@ -397,6 +399,7 @@ Resources:
         Variables:
           SIGNING_KEY: !Ref IPVStubKMSSigningKey
           ADDITIONAL_KEY: !Ref IPVStubKMSAdditionalKey
+          JWT_AUDIENCE: !FindInMap [Configuration, !Ref Environment, AUD]
       Policies:
         - Statement:
             - Sid: KMSSignPolicy
