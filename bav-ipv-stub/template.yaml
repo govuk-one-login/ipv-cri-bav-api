@@ -394,7 +394,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "GenerateTokenRequestBAVFunction-${AWS::StackName}"
-      Handler: generateTokenRequestBAVFunction.handler
+      Handler: generateTokenRequest.handler
       CodeUri: src/handlers/
       Environment:
         Variables:
