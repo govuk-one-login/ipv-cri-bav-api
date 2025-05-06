@@ -1,4 +1,4 @@
-import { handler } from "../handlers/startBavCheck";
+import { handler } from "../handlers/generateTokenRequest";
 import {
   expect,
   jest,
@@ -9,7 +9,6 @@ import {
 } from "@jest/globals";
 import { mockClient } from "aws-sdk-client-mock";
 import "aws-sdk-client-mock-jest";
-import axios from "axios";
 import { KMSClient, SignCommand } from "@aws-sdk/client-kms";
 import format from "ecdsa-sig-formatter";
 
@@ -17,35 +16,9 @@ const testData = require("../events/startEvents.js")
 
 jest.setTimeout(30000);
 
-const mockJwks = {
-  keys: [
-    {
-      kty: "EC",
-      x: "lQ8yEvZF5s0Dq22uy8yVTQ4v17O_W4_Q9GdIU_QEnEU",
-      y: "O1snym8cBxAWcCVkecKkpD1m7caeJWgMx6VFRz7HolM",
-      crv: "P-256",
-      use: "sig",
-      kid: "ce69575a-c31b-4c45-b6e5-8dea4611d453",
-      alg: "ES256",
-    },
-    {
-      kty: "RSA",
-      n: "0d4C16pyGlryLFDbmw_OqThVCkeB5IjW1qfHLYj-dSOmgYKFktw_BWCD2kjkA69SvX6R4OxRTb4c6Xn3DnyxNJBK7oX9XZYUaTWZy_Fs3lbaCE22u60KARECLQCbijxFCfFQn8Pz0eBnaFyEg36wT_FbktGWtIDwAd0G79Y1FCMt9G9ri-LOT8N542vQXsFxzq6l6lCcf4zRPrMj-tarMIp0Vk3goLeN_1vN9zjlHCB0xMXCv2jiKnJp6OJxqJVqU6oaWG-Ob9DC5XtSlTn5VX_QbAJGgmmhioSfGq1mTUzaZRw3dhPT9Hbguo5yMUHjB-8zl4auvigfaCjbOMisKQ",
-      e: "AQAB",
-      use: "enc",
-      kid: "569c43c6-8136-42c9-932d-fbcdddbfd778",
-      alg: "RS256",
-    },
-  ],
-};
-
-process.env.REDIRECT_URI = "test.com/callback";
-process.env.JWKS_URI = "test.com/.well-known/jwks.json";
-process.env.CLIENT_ID = "test-id";
 process.env.SIGNING_KEY = "key-id";
 process.env.ADDITIONAL_KEY = "additional-key-id"
-process.env.OIDC_API_BASE_URI = "api-target.com";
-process.env.OAUTH_FRONT_BASE_URI = "test-target.com";
+process.env.JWT_AUDIENCE = "test-AUD"
 
 const kmsClient = mockClient(KMSClient);
 
@@ -53,7 +26,6 @@ describe("Start BAV Check Endpoint", () => {
   beforeEach(() => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date(1585695600000)); // == 2020-03-31T23:00:00.000Z
-    jest.spyOn(axios, "get").mockResolvedValue({ data: mockJwks });
 
     kmsClient.on(SignCommand).resolves({
       Signature: new Uint8Array([
@@ -74,30 +46,10 @@ describe("Start BAV Check Endpoint", () => {
     jest.resetAllMocks();
   });
 
-  it("returns JAR data and target uri", async () => {
-
+  it("returns JWT data", async () => {
     const response = await handler(testData.startDefault);
     expect(response.statusCode).toBe(200);
     expect(response.body).toBeDefined();
-
-    const body = JSON.parse(response.body);
-    expect(body.request).toBeDefined();
-    expect(body.responseType).toBeDefined();
-    expect(body.clientId).toBeDefined();
-    expect(body.AuthorizeLocation).toBeDefined();
-  });
-
-  it("returns JAR data and target uri with custom payload", async () => {
-
-    const response = await handler(testData.startCustom);
-    expect(response.statusCode).toBe(200);
-    expect(response.body).toBeDefined();
-
-    const body = JSON.parse(response.body);
-    expect(body.request).toBeDefined();
-    expect(body.responseType).toBeDefined();
-    expect(body.clientId).toBeDefined();
-    expect(body.AuthorizeLocation).toBeDefined();
   });
 
   describe("Sign function", () => {

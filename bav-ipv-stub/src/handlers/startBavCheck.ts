@@ -4,7 +4,7 @@ import crypto from "node:crypto";
 import { util } from "node-jose";
 import format from "ecdsa-sig-formatter";
 import { NodeHttpHandler } from "@smithy/node-http-handler";
-import { JarPayload, Jwks, JwtHeader } from "../auth.types";
+import { JWTPayload, Jwks, JwtHeader } from "../auth.types";
 import axios from "axios";
 import { getHashedKid } from "../utils/hashing";
 
@@ -54,7 +54,7 @@ export const handler = async (
   };
 
   const iat = Math.floor(Date.now() / 1000);
-  const payload: JarPayload = {
+  const payload: JWTPayload = {
     sub: crypto.randomUUID(),
     redirect_uri: config.redirectUri,
     response_type: "code",
@@ -73,7 +73,8 @@ export const handler = async (
       overrides?.shared_claims != null
         ? overrides.shared_claims
         : defaultClaims,
-    evidence_requested: overrides?.evidence_requested
+    evidence_requested: overrides?.evidence_requested,
+    jti: crypto.randomBytes(16).toString("hex")
   };
 
   if(!overrides?.evidence_requested){
@@ -94,7 +95,7 @@ export const handler = async (
   const request = await encrypt(signedJwt, publicEncryptionKey);
 
   return {
-    statusCode: 201,
+    statusCode: 200,
     body: JSON.stringify({
       request,
       responseType: "code",
@@ -154,7 +155,7 @@ async function getPublicEncryptionKey(config: {
   return publicEncryptionKey;
 }
 
-async function sign(payload: JarPayload, keyId: string, invalidKeyId: string | undefined): Promise<string> {
+async function sign(payload: JWTPayload, keyId: string, invalidKeyId: string | undefined): Promise<string> {
   const signingKid = keyId.split("/").pop() ?? "";
   const invalidKid = invalidKeyId?.split("/").pop() ?? "";
   // If an additional kid is provided to the function, return it in the header to create a mismatch - enable unhappy path testing
