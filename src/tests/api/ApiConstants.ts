@@ -8,4 +8,5 @@ export const constants = {
 	DEV_BAV_PERSONAL_IDENTITY_TABLE_NAME: "person-identity-bav-cri-ddb",
 	VC_SIGNING_KEY_ID: process.env.VC_SIGNING_KEY_ID,
 	DNS_SUFFIX: process.env.DNS_SUFFIX,
+	CLIENT_ASSERTION_TYPE: process.env.CLIENT_ASSERTION_TYPE,
 };
