@@ -12,6 +12,7 @@ import NodeRSA from "node-rsa";
 import crypto from "node:crypto";
 import {
 	StubStartRequest,
+	StubStartResponse,
 	SessionResponse,
 	VerifyAccountResponse,
 	AuthorizationResponse,
@@ -52,10 +53,10 @@ interface KidOptions {
 	journeyType: 'invalidKid' | 'missingKid';
 }
 
-export async function stubStartPost(bavStubPayload?: StubStartRequest, options?: KidOptions): Promise<AxiosResponse<any>> {
+export async function stubStartPost(bavStubPayload?: StubStartRequest, options?: KidOptions): Promise<AxiosResponse<StubStartResponse>> {
 	const path = constants.DEV_IPV_BAV_STUB_URL!;
   
-	let postRequest: AxiosResponse<any>;
+	let postRequest: AxiosResponse<StubStartResponse>;
   
 	if (bavStubPayload || options) { 
 	  const payload: StubStartRequest = {
@@ -82,7 +83,7 @@ export async function stubStartPost(bavStubPayload?: StubStartRequest, options?:
 	  }
 	}
   
-	expect(postRequest.status).toBe(201);
+	expect(postRequest.status).toBe(200);
 	return postRequest;
 }
 
