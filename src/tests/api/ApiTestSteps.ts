@@ -5,6 +5,7 @@ import { aws4Interceptor } from "aws4-axios";
 import Ajv from "ajv";
 import wellKnownGetSchema from "../data/wellKnownJwksResponseSchema.json";
 import { constants } from "./ApiConstants";
+import { Constants } from "../../utils/Constants";
 import { ISessionItem } from "../../models/ISessionItem";
 import { jwtUtils } from "../../utils/JwtUtils";
 import { BankDetailsPayload } from "../models/BankDetailsPayload";
@@ -176,7 +177,7 @@ export async function authorizationGet(sessionId: string): Promise<AxiosResponse
 export async function tokenPost(authCode: string, redirectUri: string, clientAssertionJwt: string): Promise<AxiosResponse<TokenResponse>> {
 	const path = "/token";
 	try {
-		const postRequest = await API_INSTANCE.post(path, `code=${authCode}&grant_type=authorization_code&redirect_uri=${redirectUri}&client_assertion_type=${constants.CLIENT_ASSERTION_TYPE}&client_assertion=${clientAssertionJwt}`, { headers: { "Content-Type": "text/plain" } });
+		const postRequest = await API_INSTANCE.post(path, `code=${authCode}&grant_type=authorization_code&redirect_uri=${redirectUri}&client_assertion_type=${Constants.CLIENT_ASSERTION_TYPE_JWT_BEARER}&client_assertion=${clientAssertionJwt}`, { headers: { "Content-Type": "text/plain" } });
 		return postRequest;
 	} catch (error: any) {
 		console.log(`Error response from ${path} endpoint ${error}.`);
