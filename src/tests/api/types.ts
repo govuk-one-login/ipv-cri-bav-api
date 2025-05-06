@@ -20,6 +20,7 @@ export interface StubStartRequest {
 	invalidKid?: boolean;
 	missingKid?: boolean;
 }
+
 export interface StubStartResponse {
 	clientId: string;
 	request: string;

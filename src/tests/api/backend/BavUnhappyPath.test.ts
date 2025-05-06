@@ -12,7 +12,8 @@ import {
 	getSessionAndVerifyKey,
 	validateJwtToken,
 	decodeRawBody,
-	getKeyFromSession, 
+	getKeyFromSession,
+	startTokenPost, 
 } from "../ApiTestSteps";
 import { getTxmaEventsFromTestHarness, validateTxMAEventData, validateTxMAEventField } from "../ApiUtils";
 import { constants } from "../ApiConstants";
@@ -157,11 +158,75 @@ describe("BAV CRI unhappy path tests", () => {
 
 			const authResponse = await authorizationGet(sessionId);
 
-			await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+			const startTokenResponse = await startTokenPost();
+			
+			await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri, startTokenResponse.data);
 
 			// Request to /token endpoint again (which now has an incorrect session state)
-			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri, startTokenResponse.data);
 			expect(tokenResponse.status).toBe(401);
+		});
+
+		it("Invalid Kid in Token JWT Test", async () => {
+			await verifyAccountPost(
+				new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number),
+				sessionId,
+			);
+
+			const authResponse = await authorizationGet(sessionId);
+
+			const startTokenResponse = await startTokenPost({ journeyType: 'invalidKid' });
+			
+			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri, startTokenResponse.data);
+
+			expect(tokenResponse.status).toBe(401);
+			expect(tokenResponse.data).toBe("Unauthorized");
+		});
+
+		it("Missing Kid in Token JWT Test", async () => {
+			await verifyAccountPost(
+				new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number),
+				sessionId,
+			);
+
+			const authResponse = await authorizationGet(sessionId);
+
+			const startTokenResponse = await startTokenPost({ journeyType: 'missingKid' });
+			
+			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri, startTokenResponse.data);
+
+			expect(tokenResponse.status).toBe(401);
+			expect(tokenResponse.data).toBe("Unauthorized");
+		});
+
+		it("Request does not include client_assertion", async () => {
+			await verifyAccountPost(
+				new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number),
+				sessionId,
+			);
+
+			const authResponse = await authorizationGet(sessionId);
+			
+			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri, "");
+
+			expect(tokenResponse.status).toBe(401);
+			expect(tokenResponse.data).toBe("Invalid request: Missing client_assertion parameter");
+		});
+
+		it("Request does not include client_assertion_type", async () => {
+			await verifyAccountPost(
+				new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number),
+				sessionId,
+			);
+
+			const authResponse = await authorizationGet(sessionId);
+
+			const startTokenResponse = await startTokenPost();
+			
+			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri, startTokenResponse.data, " ");
+
+			expect(tokenResponse.status).toBe(401);
+			expect(tokenResponse.data).toBe("Invalid client_assertion_type parameter");		
 		});
 	});
 
@@ -173,7 +238,9 @@ describe("BAV CRI unhappy path tests", () => {
 
 			const authResponse = await authorizationGet(sessionId);
 
-			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+			const startTokenResponse = await startTokenPost();
+
+			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri, startTokenResponse.data);
 
 			const userInfoResponse = await userInfoPost("Basic " + tokenResponse.data.access_token);
 			expect(userInfoResponse.status).toBe(401);
@@ -200,7 +267,9 @@ describe("BAV CRI unhappy path tests", () => {
 
 			const authResponse = await authorizationGet(sessionId);
 
-			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+			const startTokenResponse = await startTokenPost();
+
+			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri, startTokenResponse.data);
 
 			const userInfoResponse = await userInfoPost("Bearer " + tokenResponse.data.access_token);
 			expect(userInfoResponse.status).toBe(200);
@@ -241,7 +310,9 @@ describe("BAV CRI unhappy path tests", () => {
 
 			const authResponse = await authorizationGet(sessionId);
 
-			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+			const startTokenResponse = await startTokenPost();
+
+			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri, startTokenResponse.data);
 
 			const userInfoResponse = await userInfoPost("Bearer " + tokenResponse.data.access_token);
 			expect(userInfoResponse.status).toBe(200);
