@@ -1,5 +1,5 @@
 /* eslint-disable max-lines-per-function */
-import { abortPost, authorizationGet, personInfoGet, sessionPost, startStubServiceAndReturnSessionId, stubStartPost, tokenPost, userInfoPost, verifyAccountPost } from "../ApiTestSteps";
+import { abortPost, authorizationGet, personInfoGet, sessionPost, startStubServiceAndReturnSessionId, stubStartPost, startTokenPost, tokenPost, userInfoPost, verifyAccountPost } from "../ApiTestSteps";
 import { sleep } from "../../../../src/utils/Sleep";
 import { describeAlarm } from "../ApiUtils";
 import verifyAccountYesPayload from "../../data/bankDetailsYes.json";
@@ -45,8 +45,10 @@ describe("BAV CRI Alarms Tests", () => {
 		);
 		const authResponse = await authorizationGet(sessionId);
 		const authCode = randomUUID();
+		const startTokenResponse = await startTokenPost();
+
 		for (let i = 1; i <= 250; i++) {
-			await tokenPost(authCode, authResponse.data.redirect_uri);
+			await tokenPost(authCode, authResponse.data.redirect_uri, startTokenResponse.data);
 		}
 		await sleep(300000);
 

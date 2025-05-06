@@ -21,6 +21,7 @@ import {
 	validatePersonInfoResponse,
 	decodeRawBody,
 	getKeyFromSession,
+	startTokenPost,
 } from "../ApiTestSteps";
 import { BankDetailsPayload } from "../../models/BankDetailsPayload";
 
@@ -184,8 +185,9 @@ describe("BAV CRI happy path tests", () => {
 			);
 
 			const authResponse = await authorizationGet(sessionId);
+			const startTokenResponse = await startTokenPost();
 
-			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri, startTokenResponse.data);
 			expect(tokenResponse.status).toBe(200);
 
 			await getSessionAndVerifyKeyExists(sessionId, constants.DEV_BAV_SESSION_TABLE_NAME, "accessTokenExpiryDate");
@@ -209,7 +211,9 @@ describe("BAV CRI happy path tests", () => {
 
 			const authResponse = await authorizationGet(sessionId);
 
-			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+			const startTokenResponse = await startTokenPost();
+
+			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri, startTokenResponse.data);
 
 			const userInfoResponse = await userInfoPost("Bearer " + tokenResponse.data.access_token);
 			expect(userInfoResponse.status).toBe(200);
@@ -244,7 +248,9 @@ describe("BAV CRI happy path tests", () => {
 
 			const authResponse = await authorizationGet(sessionId);
 		
-			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri);
+			const startTokenResponse = await startTokenPost();
+
+			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri, startTokenResponse.data);
 
 			const userInfoResponse = await userInfoPost("Bearer " + tokenResponse.data.access_token);
 			expect(userInfoResponse.status).toBe(200);

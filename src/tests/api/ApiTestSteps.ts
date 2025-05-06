@@ -5,6 +5,7 @@ import { aws4Interceptor } from "aws4-axios";
 import Ajv from "ajv";
 import wellKnownGetSchema from "../data/wellKnownJwksResponseSchema.json";
 import { constants } from "./ApiConstants";
+import { Constants } from "../../utils/Constants";
 import { ISessionItem } from "../../models/ISessionItem";
 import { jwtUtils } from "../../utils/JwtUtils";
 import { BankDetailsPayload } from "../models/BankDetailsPayload";
@@ -54,8 +55,8 @@ interface KidOptions {
 }
 
 export async function stubStartPost(bavStubPayload?: StubStartRequest, options?: KidOptions): Promise<AxiosResponse<StubStartResponse>> {
-	const path = constants.DEV_IPV_BAV_STUB_URL!;
-  
+	const path = constants.DEV_IPV_BAV_STUB_URL! + "/start";
+
 	let postRequest: AxiosResponse<StubStartResponse>;
   
 	if (bavStubPayload || options) { 
@@ -86,6 +87,33 @@ export async function stubStartPost(bavStubPayload?: StubStartRequest, options?:
 	expect(postRequest.status).toBe(200);
 	return postRequest;
 }
+
+export async function startTokenPost(options?: KidOptions): Promise<AxiosResponse<string>> {
+	const path = constants.DEV_IPV_BAV_STUB_URL! + "/generate-token-request";
+	let postRequest: AxiosResponse<string>;
+
+	if (options) {
+		const payload = { [options.journeyType]: true };
+
+		try {
+			postRequest = await axios.post(path, payload);
+		} catch (error: any) {
+			console.error(`Error response from ${path} endpoint: ${error}`);
+			return error.response;
+		}
+	} else {
+		try {
+			postRequest = await axios.post(path);
+		} catch (error: any) {
+			console.error(`Error response from ${path} endpoint: ${error}`);
+			return error.response;
+		}
+	}
+
+	expect(postRequest.status).toBe(200);
+	return postRequest;
+}
+
 
 export async function sessionPost(clientId: string, request: string): Promise<AxiosResponse<SessionResponse>> {
 	const path = "/session";
@@ -146,11 +174,13 @@ export async function authorizationGet(sessionId: string): Promise<AxiosResponse
 	}
 }
 
-export async function tokenPost(authCode: string, redirectUri: string): Promise<AxiosResponse<TokenResponse>> {
+export async function tokenPost(authCode: string, redirectUri: string, clientAssertionJwt: string, clientAssertionType?: string): Promise<AxiosResponse<TokenResponse>> {
 	const path = "/token";
+  
+	const assertionType = clientAssertionType || Constants.CLIENT_ASSERTION_TYPE_JWT_BEARER;
+  
 	try {
-
-		const postRequest = await API_INSTANCE.post(path, `code=${authCode}&grant_type=authorization_code&redirect_uri=${redirectUri}`, { headers: { "Content-Type": "text/plain" } });
+		const postRequest = await API_INSTANCE.post(path, `code=${authCode}&grant_type=authorization_code&redirect_uri=${redirectUri}&client_assertion_type=${assertionType}&client_assertion=${clientAssertionJwt}`, { headers: { "Content-Type": "text/plain" } });
 		return postRequest;
 	} catch (error: any) {
 		console.log(`Error response from ${path} endpoint ${error}.`);
