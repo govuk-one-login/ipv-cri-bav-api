@@ -198,6 +198,36 @@ describe("BAV CRI unhappy path tests", () => {
 			expect(tokenResponse.status).toBe(401);
 			expect(tokenResponse.data).toBe("Unauthorized");
 		});
+
+		it("Request does not include client_assertion", async () => {
+			await verifyAccountPost(
+				new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number),
+				sessionId,
+			);
+
+			const authResponse = await authorizationGet(sessionId);
+			
+			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri, "");
+
+			expect(tokenResponse.status).toBe(401);
+			expect(tokenResponse.data).toBe("Invalid request: Missing client_assertion parameter");
+		});
+
+		it("Request does not include client_assertion_type", async () => {
+			await verifyAccountPost(
+				new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number),
+				sessionId,
+			);
+
+			const authResponse = await authorizationGet(sessionId);
+
+			const startTokenResponse = await startTokenPost();
+			
+			const tokenResponse = await tokenPost(authResponse.data.authorizationCode.value, authResponse.data.redirect_uri, startTokenResponse.data, " ");
+
+			expect(tokenResponse.status).toBe(401);
+			expect(tokenResponse.data).toBe("Invalid client_assertion_type parameter");		
+		});
 	});
 
 	describe("/userinfo Endpoint Unhappy Path Tests", () => {

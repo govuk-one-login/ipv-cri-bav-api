@@ -174,10 +174,13 @@ export async function authorizationGet(sessionId: string): Promise<AxiosResponse
 	}
 }
 
-export async function tokenPost(authCode: string, redirectUri: string, clientAssertionJwt: string): Promise<AxiosResponse<TokenResponse>> {
+export async function tokenPost(authCode: string, redirectUri: string, clientAssertionJwt: string, clientAssertionType?: string): Promise<AxiosResponse<TokenResponse>> {
 	const path = "/token";
+  
+	const assertionType = clientAssertionType || Constants.CLIENT_ASSERTION_TYPE_JWT_BEARER;
+  
 	try {
-		const postRequest = await API_INSTANCE.post(path, `code=${authCode}&grant_type=authorization_code&redirect_uri=${redirectUri}&client_assertion_type=${Constants.CLIENT_ASSERTION_TYPE_JWT_BEARER}&client_assertion=${clientAssertionJwt}`, { headers: { "Content-Type": "text/plain" } });
+		const postRequest = await API_INSTANCE.post(path, `code=${authCode}&grant_type=authorization_code&redirect_uri=${redirectUri}&client_assertion_type=${assertionType}&client_assertion=${clientAssertionJwt}`, { headers: { "Content-Type": "text/plain" } });
 		return postRequest;
 	} catch (error: any) {
 		console.log(`Error response from ${path} endpoint ${error}.`);
