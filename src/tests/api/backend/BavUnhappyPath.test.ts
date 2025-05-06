@@ -167,7 +167,7 @@ describe("BAV CRI unhappy path tests", () => {
 			expect(tokenResponse.status).toBe(401);
 		});
 
-		it.skip("Invalid Kid in Token JWT Test", async () => {
+		it("Invalid Kid in Token JWT Test", async () => {
 			await verifyAccountPost(
 				new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number),
 				sessionId,
@@ -183,7 +183,7 @@ describe("BAV CRI unhappy path tests", () => {
 			expect(tokenResponse.data).toBe("Unauthorized");
 		});
 
-		it.skip("Missing Kid in Token JWT Test", async () => {
+		it("Missing Kid in Token JWT Test", async () => {
 			await verifyAccountPost(
 				new BankDetailsPayload(verifyAccountYesPayload.sort_code, verifyAccountYesPayload.account_number),
 				sessionId,

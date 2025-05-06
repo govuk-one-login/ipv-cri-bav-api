@@ -93,7 +93,6 @@ export async function startTokenPost(options?: KidOptions): Promise<AxiosRespons
 
 	if (options) {
 		const payload = { [options.journeyType]: true };
-		console.log("Request Payload: " + JSON.stringify(payload));
 
 		try {
 			postRequest = await axios.post(path, payload);
