@@ -7,15 +7,15 @@ import { ISessionItem } from "../../../models/ISessionItem";
 import { AccessTokenRequestProcessor } from "../../../services/AccessTokenRequestProcessor";
 import { AuthSessionState } from "../../../models/enums/AuthSessionState";
 import { MISSING_BODY_ACCESSTOKEN, VALID_ACCESSTOKEN } from "../data/accessToken-events";
-import { Constants } from "../../../utils/Constants";
+//import { Constants } from "../../../utils/Constants";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { randomUUID } from "crypto";
 import { AppError } from "../../../utils/AppError";
 import { BavService } from "../../../services/BavService";
 import { MockFailingKmsSigningJwtAdapter, MockKmsSigningTokenJwtAdapter } from "../utils/MockJwtVerifierSigner";
 import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
-import * as envVarUtils from "../../../utils/EnvironmentVariables";
-import { MessageCodes } from "../../../models/enums/MessageCodes";
+//import * as envVarUtils from "../../../utils/EnvironmentVariables";
+//import { MessageCodes } from "../../../models/enums/MessageCodes";
 
 let accessTokenRequestProcessorTest: AccessTokenRequestProcessor;
 const mockBavService = mock<BavService>();
