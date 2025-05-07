@@ -45,7 +45,7 @@ Parameters:
   SupportManualURL:
     Description: "Link to the BAV support manual"
     Type: String
-    Default: 'https://govukverify.atlassian.net/wiki/spaces/BAC/pages/3785916803/BAV+BE+Metrics+Alerts'
+    Default: 'https://govukverify.atlassian.net/wiki/spaces/Kiwi/pages/4373512222/6.6+BAV+Support+documentation'
   IPVStubStackName:
     Type: String
     Default: "bav-ipv-stub"
