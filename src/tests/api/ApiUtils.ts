@@ -1,10 +1,10 @@
 import Ajv from "ajv";
-import { get } from "lodash";
 import { XMLParser } from "fast-xml-parser";
 import { HARNESS_API_INSTANCE } from "./ApiTestSteps";
 import { TxmaEvent, TxmaEventName } from "../../utils/TxmaEvent";
 import { CloudWatchClient, DescribeAlarmsCommand, DescribeAlarmsCommandInput } from "@aws-sdk/client-cloudwatch";
 const client = new CloudWatchClient({ region: "eu-west-2" });
+import jp from "jsonpath";
 import * as BAV_COP_REQUEST_SENT_SCHEMA from "../data/BAV_COP_REQUEST_SENT_SCHEMA.json";
 import * as BAV_EXPERIAN_REQUEST_SENT_SCHEMA from "../data/BAV_EXPERIAN_REQUEST_SENT.json";
 import * as BAV_COP_RESPONSE_RECEIVED_SCHEMA from "../data/BAV_COP_RESPONSE_RECEIVED_SCHEMA.json";
@@ -145,9 +145,12 @@ export function validateTxMAEventField(
 
 	if (currentEventBody?.event_name) {
 		try {
-			const actualValue = get(currentEventBody, jsonPath);
+			const actualValue = jp.query(currentEventBody, jsonPath);
+			if (actualValue.length === 0) {
+				throw new Error(`No value found for JSONPath ${jsonPath} in event ${eventName}`);
+			}
 
-			if (!deepEqual(expectedValue, actualValue)) {
+			if (!deepEqual(expectedValue, actualValue[0])) {
 				throw new Error(`Validation failed: Expected ${JSON.stringify(expectedValue)} but found ${JSON.stringify(actualValue)} for key path "${jsonPath}" in event ${eventName}`);
 			}
 		} catch (error) {
