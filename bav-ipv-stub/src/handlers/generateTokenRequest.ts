@@ -6,6 +6,7 @@ import format from "ecdsa-sig-formatter";
 import { NodeHttpHandler } from "@smithy/node-http-handler";
 import { JWTPayload, JwtHeader } from "../auth.types";
 import { getHashedKid } from "../utils/hashing";
+import { __ServiceException } from "@aws-sdk/client-kms/dist-types/models/KMSServiceException";
 
 export const v3KmsClient = new KMSClient({
   region: process.env.REGION ?? "eu-west-2",
@@ -100,7 +101,7 @@ async function sign(payload: JWTPayload, keyId: string, invalidKeyId: string | u
     })
   );
   if (res?.Signature == null) {
-    throw res as unknown as AWS.AWSError;
+    throw res as unknown as __ServiceException;
   }
   tokenComponents.signature = format.derToJose(
     Buffer.from(res.Signature),
