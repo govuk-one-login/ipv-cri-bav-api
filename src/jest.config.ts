@@ -8,18 +8,12 @@ dotenv.config();
 
 export default {
   transform: {
-    '^.+\\.ts?$': 'ts-jest'
+    '^.+\\.tsx?$': 'ts-jest',
+    '^.+\\.m?[tj]sx?$': ['babel-jest', { presets: ['@babel/preset-env'] }],
   },
   testTimeout: 30000,
   clearMocks: true,
   collectCoverage: true,
-  coverageDirectory: 'coverage',
-  coverageProvider: 'v8',
-  coveragePathIgnorePatterns: ['config.ts', 'node_modules/'],
-  testMatch: ['**/tests/**/*.test.ts'],
-  setupFiles: [
-    './jest.setup.ts'
-  ],
 	collectCoverageFrom: [
     './**/*.ts',
     '!./**/tests/**/*.ts',
@@ -27,6 +21,13 @@ export default {
     '!./type/**/*.ts',
     '!./tests/**/*.ts',
     '!./jest.config.ts'
+  ],
+  coverageDirectory: 'coverage',
+  coverageProvider: 'v8',
+  coveragePathIgnorePatterns: ['config.ts', 'node_modules/'],
+  testMatch: ['**/tests/**/*.test.ts'],
+  setupFiles: [
+    './jest.setup.ts'
   ],
   testEnvironment: 'node',
   reporters: [
