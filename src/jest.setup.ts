@@ -3,7 +3,6 @@ process.env.REGION = 'eu-west-2'
 process.env.PERSON_IDENTITY_TABLE_NAME = 'PERSONALIDENTITYTABLE'
 process.env.SESSION_TABLE = 'SESSIONTABLE'
 process.env.TXMA_QUEUE_URL = "MYQUEUE"
-process.env.RANDOM = "RANDOM"
 process.env.KMS_KEY_ARN = 'MYKMSKEY'
 process.env.DNSSUFFIX = "DNSSUFFIX"
 process.env.AUTH_SESSION_TTL_SECS = '950400'
