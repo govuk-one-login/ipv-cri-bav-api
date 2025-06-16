@@ -1,18 +1,19 @@
 import { Logger } from "@aws-lambda-powertools/logger";
-import { MetricUnits, Metrics } from "@aws-lambda-powertools/metrics";
+import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
+import { BavService } from "./BavService";
 import { KmsJwtAdapter } from "../utils/KmsJwtAdapter";
+import { HttpCodesEnum } from "../utils/HttpCodesEnum";
 import { createDynamoDbClient } from "../utils/DynamoDBFactory";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { Response } from "../utils/Response";
+import { AccessTokenRequestValidationHelper } from "../utils/AccessTokenRequestValidationHelper";
+import { ISessionItem } from "../models/ISessionItem";
 import { absoluteTimeNow } from "../utils/DateTimeUtils";
 import { Constants, EnvironmentVariables } from "../utils/Constants";
+import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
+import { AuthSessionState } from "../models/enums/AuthSessionState";
 import { MessageCodes } from "../models/enums/MessageCodes";
 import { AppError } from "../utils/AppError";
-import { BavService } from "./BavService";
-import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
-import { HttpCodesEnum } from "../models/enums/HttpCodesEnum";
-import { isPayloadValid, validateTokenRequestToRecord } from "../utils/AccessTokenRequestValidations";
-import { AuthSessionState } from "../models/enums/AuthSessionState";
 import { Jwt } from "../models/IVeriCredential";
 
 interface ClientConfig {
@@ -27,6 +28,8 @@ export class AccessTokenRequestProcessor {
 
 	private readonly metrics: Metrics;
 
+	private readonly accessTokenRequestValidationHelper: AccessTokenRequestValidationHelper;
+
 	private readonly bavService: BavService;
 
 	private readonly kmsJwtAdapter: KmsJwtAdapter;
@@ -39,18 +42,13 @@ export class AccessTokenRequestProcessor {
 
 	constructor(logger: Logger, metrics: Metrics) {
 		this.logger = logger;
+		this.kmsJwtAdapter = new KmsJwtAdapter(checkEnvironmentVariable(EnvironmentVariables.KMS_KEY_ARN, logger), logger);
+		this.accessTokenRequestValidationHelper = new AccessTokenRequestValidationHelper();
 		this.metrics = metrics;
-  		logger.debug("metrics is  " + JSON.stringify(this.metrics));
-  		this.metrics.addMetric("Called", MetricUnits.Count, 1);
-
-		const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, this.logger);
-  		const signingKeyArn: string = checkEnvironmentVariable(EnvironmentVariables.KMS_KEY_ARN, this.logger);
+		this.bavService = BavService.getInstance(checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, logger), this.logger, createDynamoDbClient());
 		this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, this.logger);
 		this.dnsSuffix = checkEnvironmentVariable(EnvironmentVariables.DNSSUFFIX, this.logger);
-		this.clientConfig = checkEnvironmentVariable(EnvironmentVariables.CLIENT_CONFIG, this.logger);
-		
-		this.kmsJwtAdapter = new KmsJwtAdapter(signingKeyArn, this.logger);
-		this.bavService = BavService.getInstance(sessionTableName, this.logger, createDynamoDbClient());
+		this.clientConfig = checkEnvironmentVariable(EnvironmentVariables.CLIENT_CONFIG, logger);
 	}
 
 	static getInstance(logger: Logger, metrics: Metrics): AccessTokenRequestProcessor {
@@ -64,51 +62,46 @@ export class AccessTokenRequestProcessor {
 		try {
 			let requestPayload;
 			try {
-				requestPayload = isPayloadValid(event.body);
-			} catch (error) {
-				this.logger.error("Failed validating the Access token request body.", { error, messageCode: MessageCodes.FAILED_VALIDATING_REQUEST_BODY });
-				if (error instanceof AppError) {
-					return Response(error.statusCode, error.message);
-				}
-				return Response(HttpCodesEnum.UNAUTHORIZED, "An error has occurred while validating the Access token request payload.");
-			}
-						
-			const session = await this.bavService.getSessionByAuthorizationCode(requestPayload.code);
-			if (!session) {
-				this.logger.info(`No session found by authorization code: : ${requestPayload.code}`, { messageCode: MessageCodes.SESSION_NOT_FOUND });
-				return Response(HttpCodesEnum.UNAUTHORIZED, `No session found by authorization code: ${requestPayload.code}`);
-			}
-			this.logger.appendKeys({ sessionId: session.sessionId });
-			this.logger.info({ message: "Found Session" });
-			this.logger.appendKeys({
-				govuk_signin_journey_id: session?.clientSessionId,
-			});
-
-			let configClient: ClientConfig | undefined;
-			try {
-				const config = JSON.parse(this.clientConfig) as ClientConfig[];
-				configClient = config.find(c => c.clientId === session.clientId);
+				requestPayload = this.accessTokenRequestValidationHelper.validatePayload(event.body);
 			} catch (error: any) {
-				this.logger.error("Invalid or missing client configuration table", {
-					error,
-					messageCode: MessageCodes.MISSING_CONFIGURATION,
-				});
-				return Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
+				const statusCode = error instanceof AppError ? error.statusCode : HttpCodesEnum.UNAUTHORIZED;
+				this.logger.error("Failed validating the Access token request body.", { messageCode: MessageCodes.FAILED_VALIDATING_ACCESS_TOKEN_REQUEST_BODY, error: error.message });
+				return Response(statusCode, error.message);
 			}
 
-			console.log("CLIENTS", this.clientConfig)
+			let session: ISessionItem | undefined;
 
-			if (!configClient) {
-				this.logger.error("Unrecognised client in request", {
-					messageCode: MessageCodes.UNRECOGNISED_CLIENT,
+				session = await this.bavService.getSessionByAuthorizationCode(requestPayload.code);
+				if (!session) {
+					this.logger.info(`No session found by authorization code: : ${requestPayload.code}`, { messageCode: MessageCodes.SESSION_NOT_FOUND });
+					return Response(HttpCodesEnum.UNAUTHORIZED, `No session found by authorization code: ${requestPayload.code}`);
+				}
+				this.logger.appendKeys({ sessionId: session.sessionId });
+				this.logger.info({ message: "Found Session" });
+				this.logger.appendKeys({
+					govuk_signin_journey_id: session?.clientSessionId,
 				});
-				return Response(HttpCodesEnum.BAD_REQUEST, "Bad Request");
-			}
+				let configClient: ClientConfig | undefined;
+				try {
+					const config = JSON.parse(this.clientConfig) as ClientConfig[];
+					configClient = config.find(c => c.clientId === session?.clientId);
+				} catch (error: any) {
+					this.logger.error("Invalid or missing client configuration table", {
+						error,
+						messageCode: MessageCodes.MISSING_CONFIGURATION,
+					});
+					return Response(HttpCodesEnum.SERVER_ERROR, "Server Error");
+				}
+		
+				if (!configClient) {
+					this.logger.error("Unrecognised client in request", {
+						messageCode: MessageCodes.UNRECOGNISED_CLIENT,
+					});
+					return Response(HttpCodesEnum.BAD_REQUEST, "Bad Request");
+				}	
 
 			if (session.authSessionState === AuthSessionState.BAV_AUTH_CODE_ISSUED) {
-
 				const jwt: string = requestPayload.client_assertion;
-				console.log("JWT", jwt);
 
 				let parsedJwt: Jwt;
 				try {
@@ -121,12 +114,10 @@ export class AccessTokenRequestProcessor {
 					return Response(HttpCodesEnum.UNAUTHORIZED, "Unauthorized");
 				}
 
-				console.log("ParsedJWT", parsedJwt);
-
 				try {
 					if (configClient.jwksEndpoint) {
 						const payload = await this.kmsJwtAdapter.verifyWithJwks(jwt, configClient.jwksEndpoint, parsedJwt.header.kid);
-		  
+
 						if (!payload) {
 							this.logger.error("Failed to verify JWT", {
 								messageCode: MessageCodes.FAILED_VERIFYING_JWT,
@@ -147,7 +138,7 @@ export class AccessTokenRequestProcessor {
 					return Response(HttpCodesEnum.UNAUTHORIZED, "Unauthorized");
 				}
 
-				validateTokenRequestToRecord(session, requestPayload.redirectUri);
+				this.accessTokenRequestValidationHelper.validateTokenRequestToRecord(session, requestPayload.redirectUri);
 				// Generate access token
 				const jwtPayload = {
 					sub: session.sessionId,
@@ -158,10 +149,11 @@ export class AccessTokenRequestProcessor {
 				let accessToken;
 				try {
 					accessToken = await this.kmsJwtAdapter.sign(jwtPayload, this.dnsSuffix);
-					// ignored so as not log PII
-					/* eslint-disable @typescript-eslint/no-unused-vars */
 				} catch (error) {
-					this.logger.error("Failed to sign the accessToken Jwt", { error, messageCode: MessageCodes.FAILED_SIGNING_JWT });
+					this.logger.error("Failed to sign the accessToken Jwt", { messageCode: MessageCodes.FAILED_SIGNING_JWT });
+					if (error instanceof AppError) {
+						return Response(error.statusCode, error.message);
+					}
 					return Response(HttpCodesEnum.SERVER_ERROR, "Failed to sign the accessToken Jwt");
 				}
 
@@ -179,12 +171,14 @@ export class AccessTokenRequestProcessor {
 					}),
 				};
 			} else {
-				this.logger.warn(`Session is in the wrong state: ${session.authSessionState}, expected state should be ${AuthSessionState.BAV_AUTH_CODE_ISSUED}`, { messageCode: MessageCodes.INCORRECT_SESSION_STATE });
-				return Response(HttpCodesEnum.UNAUTHORIZED, `Session is in the wrong state: ${session.authSessionState}`);
+				this.metrics.addMetric("AccessToken_error_user_state_incorrect", MetricUnits.Count, 1);
+				this.logger.warn(`Session for journey ${session?.clientSessionId} is in the wrong Auth state: expected state - ${AuthSessionState.BAV_AUTH_CODE_ISSUED}, actual state - ${session.authSessionState}`, { messageCode: MessageCodes.INCORRECT_SESSION_STATE });
+				return Response(HttpCodesEnum.UNAUTHORIZED, `Session for journey ${session?.clientSessionId} is in the wrong Auth state: expected state - ${AuthSessionState.BAV_AUTH_CODE_ISSUED}, actual state - ${session.authSessionState}`);
 			}
 		} catch (err: any) {
+			const statusCode = err instanceof AppError ? err.statusCode : HttpCodesEnum.UNAUTHORIZED;
 			this.logger.error({ message: "Error processing access token request", err });
-			return Response(err.statusCode, err.message);
+			return Response(statusCode, err.message);
 		}
 	}
 }

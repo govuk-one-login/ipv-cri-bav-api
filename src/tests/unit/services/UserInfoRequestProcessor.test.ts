@@ -129,7 +129,7 @@ describe("UserInfoRequestProcessor", () => {
 		expect(mockBavService.getPersonIdentityBySessionId).toHaveBeenCalledTimes(1);
 		expect(mockBavService.updateSessionAuthState).toHaveBeenCalledTimes(1);
 		expect(mockBavService.updateSessionAuthState).toHaveBeenCalledWith("sdfsdg", "BAV_CRI_VC_ISSUED");
-		expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "MYQUEUE", {
+		expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "TXMA_QUEUE_URL", {
 			"component_id":"https://XXX-c.env.account.gov.uk",
 			"event_name":"BAV_CRI_VC_ISSUED",
 			"restricted":{
@@ -186,7 +186,7 @@ describe("UserInfoRequestProcessor", () => {
 				],
 		 },
 		});
-		expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(2, "MYQUEUE", {
+		expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(2, "TXMA_QUEUE_URL", {
 			"component_id":"https://XXX-c.env.account.gov.uk",
 			"event_name":"BAV_CRI_END",
 			"timestamp":1585695600,
@@ -235,7 +235,7 @@ describe("UserInfoRequestProcessor", () => {
 		mockVerifiableCredentialService.generateSignedVerifiableCredentialJwt.mockResolvedValue({ signedJWT: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c", evidenceInfo }); //pragma: allowlist secret
 
 		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
-		expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "MYQUEUE", {
+		expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "TXMA_QUEUE_URL", {
 			"component_id":"https://XXX-c.env.account.gov.uk",
 			"event_name":"BAV_CRI_VC_ISSUED",
 			"restricted":{
@@ -292,7 +292,7 @@ describe("UserInfoRequestProcessor", () => {
 				],
 		 },
 		});
-		expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(2, "MYQUEUE", {
+		expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(2, "TXMA_QUEUE_URL", {
 			"component_id":"https://XXX-c.env.account.gov.uk",
 			"event_name":"BAV_CRI_END",
 			"timestamp":1585695600,
@@ -341,7 +341,7 @@ describe("UserInfoRequestProcessor", () => {
 		jest.spyOn(Validations, "eventToSubjectIdentifier").mockResolvedValueOnce("sessionId");
 
 		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
-		expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "MYQUEUE", {
+		expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "TXMA_QUEUE_URL", {
 			"component_id":"https://XXX-c.env.account.gov.uk",
 			"event_name":"BAV_CRI_VC_ISSUED",
 			"restricted":{
@@ -407,7 +407,7 @@ describe("UserInfoRequestProcessor", () => {
 				],
 		 },
 		});
-		expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(2, "MYQUEUE", {
+		expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(2, "TXMA_QUEUE_URL", {
 			"component_id":"https://XXX-c.env.account.gov.uk",
 			"event_name":"BAV_CRI_END",
 			"timestamp":1585695600,

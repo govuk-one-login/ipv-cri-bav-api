@@ -8,14 +8,14 @@ import { BavService } from "../../../services/BavService";
 import { createDynamoDbClient } from "../../../utils/DynamoDBFactory";
 import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../../../models/enums/MessageCodes";
-import { sqsClient } from "../../../utils/SqsClient";
+import { createSqsClient } from "../../../utils/SqsClient";
 import { TxmaEvent } from "../../../utils/TxmaEvent";
+import { ISessionItem } from "../../../models/ISessionItem";
 import { absoluteTimeNow } from "../../../utils/DateTimeUtils";
 import { personIdentityInputRecord, personIdentityOutputRecord } from "../data/personIdentity-records";
 import { AuthSessionState } from "../../../models/enums/AuthSessionState";
-import { ISessionItem } from "../../../models/ISessionItem";
 import { PersonIdentityItem } from "../../../models/PersonIdentityItem";
-import { SendMessageCommand } from "@aws-sdk/client-sqs";
+import { SendMessageCommand, SQSClient } from "@aws-sdk/client-sqs";
 
 let bavService: BavService;
 const tableName = "SESSIONTABLE";
@@ -34,20 +34,14 @@ jest.mock("crypto", () => ({
 	...jest.requireActual("crypto"),
 	randomUUID: () => "randomId",
 }));
-jest.mock("@aws-sdk/client-sqs", () => ({
-	SendMessageCommand: jest.fn().mockImplementation(() => {}),
+jest.mock('@aws-sdk/client-sqs', () => ({
+    SQSClient: jest.fn(),
+    SendMessageCommand: jest.fn(),
 }));
 jest.mock("@aws-sdk/lib-dynamodb", () => ({
 	...jest.requireActual("@aws-sdk/lib-dynamodb"),
 	UpdateCommand: jest.fn().mockImplementation(() => {}),
 }));
-
-jest.mock("../../../utils/SqsClient", () => ({
-	sqsClient: {
-		send: jest.fn(),
-	},
-}));
-
 
 function createBaseTXMAEventPayload(): TxmaEvent {
 	return {
@@ -66,6 +60,7 @@ function createBaseTXMAEventPayload(): TxmaEvent {
 
 describe("BAV Service", () => {
 	let txmaEventPayload: TxmaEvent;
+	let mockSend: jest.Mock;
 
 	beforeAll(async () => {
 		txmaEventPayload = createBaseTXMAEventPayload();
@@ -81,6 +76,10 @@ describe("BAV Service", () => {
 		bavService = BavService.getInstance(tableName, logger, mockDynamoDbClient);
 		jest.useFakeTimers();
 		jest.setSystemTime(new Date(fakeTime * 1000)); // 2023-05-24T13:00:00.123Z
+		mockSend = jest.fn();
+		(SQSClient as jest.Mock).mockImplementation(() => ({
+			send: mockSend,
+		}));
 	});
 
 	afterEach(() => {
@@ -128,7 +127,7 @@ describe("BAV Service", () => {
 
 	describe("#sendToTXMA", () => {
 		it("Should send event to TxMA with the correct details for a payload with restricted present", async () => {  
-			await bavService.sendToTXMA("MYQUEUE", txmaEventPayload, "ABCDEFG");
+			await bavService.sendToTXMA("TXMA_QUEUE_URL", txmaEventPayload, "ABCDEFG");
 	
 			const messageBody = JSON.stringify({
 				...createBaseTXMAEventPayload(),
@@ -141,9 +140,9 @@ describe("BAV Service", () => {
 	
 			expect(SendMessageCommand).toHaveBeenCalledWith({
 				MessageBody: messageBody,
-				QueueUrl: "MYQUEUE",
+				QueueUrl: "TXMA_QUEUE_URL",
 			});
-			expect(sqsClient.send).toHaveBeenCalled();
+			expect(createSqsClient().send).toHaveBeenCalled();
 			expect(bavService.logger.info).toHaveBeenCalledWith("Sent message to TxMA");
 		});
 
@@ -163,20 +162,20 @@ describe("BAV Service", () => {
 			const payload = createBaseTXMAEventPayload();
 			payload.restricted = restrictedDetails;
 	
-			await bavService.sendToTXMA("MYQUEUE", payload, "ABCDEFG");
+			await bavService.sendToTXMA("TXMA_QUEUE_URL", payload, "ABCDEFG");
 	
 			const messageBody = JSON.stringify(payload);
 	
 			expect(SendMessageCommand).toHaveBeenCalledWith({
 				MessageBody: messageBody,
-				QueueUrl: "MYQUEUE",
+				QueueUrl: "TXMA_QUEUE_URL",
 			});
-			expect(sqsClient.send).toHaveBeenCalled();
+			expect(createSqsClient().send).toHaveBeenCalled();
 			expect(bavService.logger.info).toHaveBeenCalledWith("Sent message to TxMA");
 		});
 
 		it("Should send event to TxMA without encodedHeader if encodedHeader is empty string", async () => {  
-			await bavService.sendToTXMA("MYQUEUE", txmaEventPayload);
+			await bavService.sendToTXMA("TXMA_QUEUE_URL", txmaEventPayload);
 	
 			const messageBody = JSON.stringify({
 				...createBaseTXMAEventPayload(),
@@ -189,19 +188,19 @@ describe("BAV Service", () => {
 	
 			expect(SendMessageCommand).toHaveBeenCalledWith({
 				MessageBody: messageBody,
-				QueueUrl: "MYQUEUE",
+				QueueUrl: "TXMA_QUEUE_URL",
 			});
-			expect(sqsClient.send).toHaveBeenCalled();
+			expect(createSqsClient().send).toHaveBeenCalled();
 			expect(bavService.logger.info).toHaveBeenCalledWith("Sent message to TxMA");
 		});
 
 		it("show log error if failed to send to TXMA queue", async () => {
-			sqsClient.send = jest.fn().mockRejectedValueOnce({});
-			await bavService.sendToTXMA("MYQUEUE", txmaEventPayload, "ABCDEFG");
+			mockSend.mockRejectedValueOnce("Simulated SQS error");
+			await bavService.sendToTXMA("TXMA_QUEUE_URL", txmaEventPayload, "ABCDEFG");
 	
-			expect(bavService.logger.error).toHaveBeenCalledWith({
-				message: "Error when sending event BAV_CRI_START to TXMA Queue",
-				messageCode: MessageCodes.FAILED_TO_WRITE_TXMA,
+			expect(logger.error).toHaveBeenCalledWith({
+				"message": "Error when sending event BAV_CRI_START to TXMA Queue",
+    			"messageCode": "FAILED_TO_WRITE_TXMA",
 			});
 		});
 	});

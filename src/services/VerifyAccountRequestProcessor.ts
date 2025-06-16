@@ -379,7 +379,7 @@ export class VerifyAccountRequestProcessor {
 
   calculateCIs(verifyResponse: ExperianVerifyResponse): string[] | undefined {
   	let cisRequired: string[] = [];
-  	const ci = process.env.USE_MOCKED ? mockCI[0] : "D15";
+  	const ci = process.env.USE_MOCKED === "true" ? mockCI[0] : "D15";
 
   	const criticalErrors = ["6", "7", "11", "12"];
   	const warningError  = verifyResponse?.warningsErrors;
