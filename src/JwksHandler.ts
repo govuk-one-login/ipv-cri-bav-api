@@ -1,7 +1,7 @@
 import { Logger } from "@aws-lambda-powertools/logger";
 import { LambdaInterface } from "@aws-lambda-powertools/commons";
 import { Constants, EnvironmentVariables } from "./utils/Constants";
-import { Jwk, JWKSBody, Algorithm } from "./utils/IVeriCredential";
+import { Jwk, JWKSBody, Algorithm } from "./models/IVeriCredential";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { NodeHttpHandler } from "@smithy/node-http-handler";
 import crypto from "crypto";

@@ -244,7 +244,7 @@ describe("VerifyAccountRequestProcessor", () => {
 				"https://localhost/verify",
     			"https://localhost/token",
 			 );
-			expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "MYQUEUE", {
+			expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "TXMA_QUEUE_URL", {
 				event_name: "BAV_EXPERIAN_REQUEST_SENT",
 				component_id: "https://XXX-c.env.account.gov.uk",
 				extensions: {
@@ -285,7 +285,7 @@ describe("VerifyAccountRequestProcessor", () => {
 			},
 			"ABCDEFG",
 			);
-			expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(2, "MYQUEUE", {
+			expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(2, "TXMA_QUEUE_URL", {
 				event_name: "BAV_EXPERIAN_RESPONSE_RECEIVED",
 				component_id: "https://XXX-c.env.account.gov.uk",
 				extensions: {

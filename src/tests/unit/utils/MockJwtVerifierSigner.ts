@@ -1,8 +1,26 @@
-import { Jwt, JwtPayload } from "../../../models/IVeriCredential";
 import { absoluteTimeNow } from "../../../utils/DateTimeUtils";
+import { Jwt, JwtPayload } from "../../../models/IVeriCredential";
 
 const ACCESS_TOKEN = "ACCESS_TOKEN";
-
+const testJwt = {
+		header: {
+			"alg": "ES256",
+			"typ": "JWT",
+			// pragma: allowlist nextline secret
+			"kid": "5d6ec7413ae8bf2ea7c416e766ba9b9299b67eaf9e14f984e2f798a48bf6c921"
+		},
+		payload: {
+			"iss": "https://ipv.core.account.gov.uk",
+			// pragma: allowlist nextline secret
+			"sub": "5ad58c01-3672-4e22-bd1b-9151f3d766c1",
+			"aud": "https://review-bav.dev.account.gov.uk",
+			// pragma: allowlist nextline secret
+			"jti": "4b5067a335b158598eb217887cfe8322",
+			"iat": 1749636899,
+			exp: absoluteTimeNow() + 1000,
+		},
+		signature: "testSignature",
+	};
 export class MockKmsJwtAdapter {
     result: boolean;
 
@@ -27,31 +45,34 @@ export class MockKmsJwtAdapter {
     	this.mockJwt = mockJwT;
     }
 
-	// ignored to allow mocking
+	// ignored so as not log PII
 	/* eslint-disable @typescript-eslint/no-unused-vars */
     verify(_urlEncodedJwt: string): boolean { return this.result; }
-
-	// ignored to allow mocking
+	
+	// ignored so as not log PII
 	/* eslint-disable @typescript-eslint/no-unused-vars */
     decode(_urlEncodedJwt: string): Jwt { return this.mockJwt; }
 
-	// ignored to allow mocking
+	// ignored so as not log PII
 	/* eslint-disable @typescript-eslint/no-unused-vars */
     sign(_jwtPayload: JwtPayload): string { return "signedJwt-test"; }
 }
 
 export class MockFailingKmsSigningJwtAdapter {
 
-	// ignored to allow mocking
-	/* eslint-disable @typescript-eslint/no-unused-vars */
 	sign(_jwtPayload: JwtPayload): string { throw new Error("Failed to sign Jwt"); }
+	decode(_urlEncodedJwt: string): Jwt { return testJwt }
+	verifyWithJwks(jwt: Jwt, jwksEndpoint: string, kid: string) {
+		return jwt;
+	}
 }
 
 export class MockKmsSigningTokenJwtAdapter {
-
-	// ignored to allow mocking
-	/* eslint-disable @typescript-eslint/no-unused-vars */
 	sign(_jwtPayload: JwtPayload): string { return ACCESS_TOKEN; }
+	decode(_urlEncodedJwt: string): Jwt { return testJwt }
+	verifyWithJwks(jwt: Jwt, jwksEndpoint: string, kid: string) {
+		return jwt;
+	}
 }
 
 export class MockKmsJwtAdapterForVc {
@@ -61,8 +82,6 @@ export class MockKmsJwtAdapterForVc {
     	this.result = result;
     }
 
-	// ignored to allow mocking
-	/* eslint-disable @typescript-eslint/no-unused-vars */
     verify(_urlEncodedJwt: string): boolean { return this.result; }
 
     sign(jwtPayload: JwtPayload): string {

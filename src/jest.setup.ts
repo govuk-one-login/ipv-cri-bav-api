@@ -2,7 +2,6 @@
 process.env.REGION = 'eu-west-2'
 process.env.PERSON_IDENTITY_TABLE_NAME = 'PERSONALIDENTITYTABLE'
 process.env.SESSION_TABLE = 'SESSIONTABLE'
-process.env.TXMA_QUEUE_URL = "MYQUEUE"
 process.env.KMS_KEY_ARN = 'MYKMSKEY'
 process.env.DNSSUFFIX = "DNSSUFFIX"
 process.env.AUTH_SESSION_TTL_SECS = '950400'
@@ -30,3 +29,5 @@ process.env.EXPERIAN_CLIENT_ID_SSM_PATH = "id",
 process.env.EXPERIAN_CLIENT_SECRET_SSM_PATH = "secret"
 process.env.EXPERIAN_VERIFY_URL_SSM_PATH = "https://localhost/verify"
 process.env.EXPERIAN_TOKEN_URL_SSM_PATH = "https://localhost/token"
+process.env.USE_MOCKED = "false";
+process.env.TXMA_QUEUE_URL = "TXMA_QUEUE_URL"
