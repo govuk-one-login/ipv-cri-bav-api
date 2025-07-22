@@ -43,8 +43,5 @@
   },
   "engines": {
     "node": "20.18.3"
-  },
-  "overrides": {
-    "form-data": ">=4.0.4"
   }
 }
