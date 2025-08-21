@@ -100,7 +100,7 @@ Mappings:
 
   StaticVariables:
     urls:
-      BAVSupportManual: "hhttps://govukverify.atlassian.net/wiki/spaces/Kiwi/pages/4373512222/6.6+BAV+Support+documentation"
+      BAVSupportManual: "https://govukverify.atlassian.net/wiki/spaces/Kiwi/pages/4373512222/6.6+BAV+Support+documentation"
 
   EnvironmentVariables: # This is all the environment specific environment variables that don't belong in globals.
     dev:
