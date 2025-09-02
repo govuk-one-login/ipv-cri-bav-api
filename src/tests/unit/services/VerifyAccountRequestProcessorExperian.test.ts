@@ -1,5 +1,5 @@
-/* eslint-disable max-lines-per-function */
-/* eslint-disable @typescript-eslint/unbound-method */
+ 
+ 
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { mock } from "jest-mock-extended";
@@ -449,9 +449,9 @@ describe("VerifyAccountRequestProcessor", () => {
 			expect(mockBavService.saveExperianCheckResult).toHaveBeenCalledWith("SESSIONID", { "expRequestId": "1234568", "personalDetailsScore": 9, "warningsErrors": [{ responseCode, "responseMessage": "Should not proceed", responseType }], "outcome": "REFER" }, matchResult, attemptCount, cis);
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
 			if (attemptCount === 1) {
-				expect(response.body).toBe(JSON.stringify({ message:"Success", attemptCount: 1 })); // eslint-disable-line
+				expect(response.body).toBe(JSON.stringify({ message:"Success", attemptCount: 1 }));  
 			} else {
-				expect(response.body).toBe(JSON.stringify({ message:"Success" })); // eslint-disable-line
+				expect(response.body).toBe(JSON.stringify({ message:"Success" }));  
 			}
 		});
 

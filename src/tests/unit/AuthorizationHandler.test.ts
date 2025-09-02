@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/unbound-method */
+ 
 import { lambdaHandler } from "../../AuthorizationHandler";
 import { VALID_AUTH } from "./data/auth-events";
 import { CONTEXT } from "./data/context";

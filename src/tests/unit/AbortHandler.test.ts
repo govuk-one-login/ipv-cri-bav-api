@@ -1,5 +1,5 @@
-/* eslint-disable max-lines-per-function */
-/* eslint-disable @typescript-eslint/unbound-method */
+ 
+ 
 import { lambdaHandler, logger } from "../../AbortHandler";
 import { VALID_ABORT } from "./data/abort-events";
 import { CONTEXT } from "./data/context";

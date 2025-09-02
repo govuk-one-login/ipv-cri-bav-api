@@ -1,5 +1,5 @@
-/* eslint-disable max-lines-per-function */
-/* eslint-disable @typescript-eslint/unbound-method */
+ 
+ 
 import { mock } from "jest-mock-extended";
 import { CONTEXT } from "./data/context";
 import { VALID_VERIFY_ACCOUNT } from "./data/verify-account-events";

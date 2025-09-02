@@ -1,4 +1,4 @@
-/* eslint-disable max-lines-per-function */
+ 
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { randomUUID } from "crypto";
@@ -229,7 +229,7 @@ export class VerifyAccountRequestProcessor {
   	}
   }
 
-  // eslint-disable-next-line max-lines-per-function, complexity
+   
   async processHmrcRequest(sessionId: string, body: VerifyAccountPayload, clientIpAddress: string, encodedHeader: string, HMRC_TOKEN: string): Promise<APIGatewayProxyResult> {
   	const { account_number: accountNumber, sort_code: sortCode } = body;
   	const paddedAccountNumber = accountNumber.padStart(8, "0");

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/unbound-method */
+ 
 import { mock } from "jest-mock-extended";
 import { AccessTokenRequestProcessor } from "../../services/AccessTokenRequestProcessor";
 import { lambdaHandler } from "../../AccessTokenHandler";

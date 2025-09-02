@@ -68,7 +68,7 @@ export class UserInfoRequestProcessor {
   	return UserInfoRequestProcessor.instance;
 	}
 
-	// eslint-disable-next-line max-lines-per-function, complexity
+	 
 	async processRequest(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
 		let sessionId: string;
 

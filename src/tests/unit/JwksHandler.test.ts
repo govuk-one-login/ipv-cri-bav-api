@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/unbound-method */
+ 
 import { handlerClass, lambdaHandler, logger } from "../../JwksHandler";
 import { HttpCodesEnum } from "../../models/enums/HttpCodesEnum";
 import { Jwk, Algorithm } from "../../models/IVeriCredential";

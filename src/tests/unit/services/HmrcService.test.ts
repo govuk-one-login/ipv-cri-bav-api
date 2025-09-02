@@ -1,5 +1,5 @@
-/* eslint-disable max-lines-per-function */
-/* eslint-disable @typescript-eslint/unbound-method */
+ 
+ 
 import { Logger } from "@aws-lambda-powertools/logger";
 import axios, { AxiosRequestConfig } from "axios";
 import { mock } from "jest-mock-extended";
@@ -148,7 +148,7 @@ describe("HMRC Service", () => {
 			};
 			jest.spyOn(axios, "post").mockRejectedValueOnce(error);
 
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+			 
 			await expect(hmrcServiceTest.verify({ accountNumber, sortCode, name, uuid }, hmrcTokenSsmPath))
 				.rejects.toThrow(expect.objectContaining({
 					statusCode: HttpCodesEnum.SERVER_ERROR,

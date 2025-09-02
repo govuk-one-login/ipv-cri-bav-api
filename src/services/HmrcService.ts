@@ -32,7 +32,7 @@ export class HmrcService {
     	return HmrcService.instance;
     }
 
-    // eslint-disable-next-line max-lines-per-function
+     
     async verify(
     	{ accountNumber, sortCode, name, uuid }: { accountNumber: string; sortCode: string; name: string; uuid: string }, token: string,
     ): Promise<HmrcVerifyResponse | undefined> {
@@ -82,7 +82,7 @@ export class HmrcService {
     	}
     }
 
-    // eslint-disable-next-line max-lines-per-function
+     
     async generateToken(clientSecret: string, clientId: string): Promise<HmrcTokenResponse | undefined> {
     	this.logger.debug("generateToken", HmrcService.name);
 

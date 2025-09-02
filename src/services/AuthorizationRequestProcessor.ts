@@ -35,7 +35,7 @@ export class AuthorizationRequestProcessor {
 		return AuthorizationRequestProcessor.instance;
 	}
 
-	// eslint-disable-next-line max-lines-per-function
+	 
 	async processRequest(sessionId: string): Promise<APIGatewayProxyResult> {
 		const session = await this.BavService.getSessionById(sessionId);
 
