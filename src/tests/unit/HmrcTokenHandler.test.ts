@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/unbound-method */
+ 
 import { lambdaHandler } from "../../HmrcTokenHandler";
 import { mock } from "jest-mock-extended";
 import { HmrcTokenRequestProcessor } from "../../services/HmrcTokenRequestProcessor";

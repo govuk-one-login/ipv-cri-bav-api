@@ -40,7 +40,7 @@ export class ExperianService {
     	return ExperianService.instance;
     }
 
-	 // eslint-disable-next-line max-lines-per-function
+	  
 	 async verify(
     	{ verifyAccountPayload, firstName, surname, birthDate, uuid }: { verifyAccountPayload: any; firstName: string; surname: string; birthDate: string; uuid: string }, 
     	experianUsername: string,
@@ -57,7 +57,7 @@ export class ExperianService {
     		if (THIRDPARTY_DIRECT_SUBMISSION === "true") {
     			params = verifyAccountPayload;
     		} else {
-    		/* eslint-disable */
+    		 
     		params = {
     			header: {
 				  requestType: Constants.EXPERIAN_PRODUCT_NAME,
@@ -101,7 +101,7 @@ export class ExperianService {
     			}
 			  };
 			}
-			  /* eslint-enable */
+			   
 				
     		const token = await this.generateExperianToken(experianUsername, experianPassword, experianClientId, experianClientSecret, experianTokenUrl);
     		const headers = {

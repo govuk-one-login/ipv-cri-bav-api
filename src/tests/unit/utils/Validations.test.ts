@@ -1,4 +1,4 @@
-/* eslint-disable max-lines-per-function */
+ 
 import { randomUUID } from "crypto";
 import { isValidStrings, isPersonNameValid, isValidUUID, eventToSubjectIdentifier, getSessionIdHeaderErrors } from "../../../utils/Validations";
 import { KmsJwtAdapter } from "../../../utils/KmsJwtAdapter";

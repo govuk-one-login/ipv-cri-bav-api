@@ -1,4 +1,4 @@
-/* eslint-disable max-lines-per-function */
+ 
 import { abortPost, authorizationGet, personInfoGet, sessionPost, startStubServiceAndReturnSessionId, stubStartPost, startTokenPost, tokenPost, userInfoPost, verifyAccountPost } from "../ApiTestSteps";
 import { sleep } from "../../../../src/utils/Sleep";
 import { describeAlarm } from "../ApiUtils";
