@@ -1,4 +1,4 @@
-/* eslint-disable max-lines-per-function */
+ 
 import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { randomUUID } from "crypto";
@@ -229,7 +229,7 @@ export class VerifyAccountRequestProcessor {
   	}
   }
 
-  // eslint-disable-next-line max-lines-per-function, complexity
+   
   async processHmrcRequest(sessionId: string, body: VerifyAccountPayload, clientIpAddress: string, encodedHeader: string, HMRC_TOKEN: string): Promise<APIGatewayProxyResult> {
   	const { account_number: accountNumber, sort_code: sortCode } = body;
   	const paddedAccountNumber = accountNumber.padStart(8, "0");
@@ -379,7 +379,7 @@ export class VerifyAccountRequestProcessor {
 
   calculateCIs(verifyResponse: ExperianVerifyResponse): string[] | undefined {
   	let cisRequired: string[] = [];
-  	const ci = process.env.USE_MOCKED ? mockCI[0] : "D15";
+  	const ci = process.env.USE_MOCKED === "true" ? mockCI[0] : "D15";
 
   	const criticalErrors = ["6", "7", "11", "12"];
   	const warningError  = verifyResponse?.warningsErrors;

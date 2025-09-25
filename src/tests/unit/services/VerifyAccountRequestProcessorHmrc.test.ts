@@ -1,5 +1,5 @@
-/* eslint-disable max-lines-per-function */
-/* eslint-disable @typescript-eslint/unbound-method */
+ 
+ 
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { mock } from "jest-mock-extended";
@@ -150,7 +150,7 @@ describe("VerifyAccountRequestProcessor", () => {
 			await verifyAccountRequestProcessorTest.processHmrcRequest(sessionId, body, clientIpAddress, encodedTxmaHeader, HMRC_TOKEN);
 
 			expect(mockHmrcService.verify).toHaveBeenCalledWith({ accountNumber: body.account_number, sortCode: body.sort_code, name: "Frederick Joseph Flintstone", uuid: vendorUuid }, HMRC_TOKEN);
-			expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "MYQUEUE", {
+			expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "TXMA_QUEUE_URL", {
 				event_name: "BAV_COP_REQUEST_SENT",
 				component_id: "https://XXX-c.env.account.gov.uk",
 				extensions: {
@@ -181,7 +181,7 @@ describe("VerifyAccountRequestProcessor", () => {
 			},
 			"ABCDEFG",
 			);
-			expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(2, "MYQUEUE", {
+			expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(2, "TXMA_QUEUE_URL", {
 				event_name: "BAV_COP_RESPONSE_RECEIVED",
 				component_id: "https://XXX-c.env.account.gov.uk",
 				extensions: {

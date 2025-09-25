@@ -1,4 +1,4 @@
-/* eslint-disable max-lines-per-function */
+ 
 import bavStubPayload from "../../data/exampleStubPayload.json";
 import bavStubPayloadMultipleGivenNames from "../../data/exampleStubPayloadMultipleGivenNames.json";
 import verifyAccountYesPayload from "../../data/bankDetailsYes.json";

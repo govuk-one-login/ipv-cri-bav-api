@@ -1,4 +1,4 @@
-/* eslint-disable max-lines-per-function */
+ 
 import verifyAccountYesPayload from "../../data/bankDetailsYes.json";
 import {
 	authorizationGet,

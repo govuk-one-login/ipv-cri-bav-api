@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/unbound-method */
+ 
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 import { aws4Interceptor } from "aws4-axios";
@@ -219,7 +219,7 @@ export function validateWellKnownResponse(response: WellKnownReponse): void {
 	expect(valid).toBeTruthy();
 }
 
-export async function getSessionById(sessionId: string, tableName: string): Promise<ISessionItem | undefined> {
+export async function getSessionById(sessionId: string, tableName: string | undefined): Promise<ISessionItem | undefined> {
 	interface OriginalValue {
 		N?: string;
 		S?: string;
@@ -258,7 +258,7 @@ export async function getAthenaRecordByFirstNameAndTime(startTime: number, first
 	return [];
 }
 
-export async function getKeyFromSession(sessionId: string, tableName: string, key: string): Promise<any> {
+export async function getKeyFromSession(sessionId: string, tableName: string | undefined, key: string): Promise<any> {
 	const sessionInfo = await getSessionById(sessionId, tableName);
 	try {
 		return sessionInfo![key as keyof ISessionItem];
@@ -267,7 +267,7 @@ export async function getKeyFromSession(sessionId: string, tableName: string, ke
 	}
 }
 
-export async function getSessionAndVerifyKey(sessionId: string, tableName: string, key: string, expectedValue: string): Promise<void> {
+export async function getSessionAndVerifyKey(sessionId: string, tableName: string | undefined, key: string, expectedValue: string): Promise<void> {
 	const sessionInfo = await getSessionById(sessionId, tableName);
 	try {
 		expect(sessionInfo![key as keyof ISessionItem]).toBe(expectedValue);
@@ -276,7 +276,7 @@ export async function getSessionAndVerifyKey(sessionId: string, tableName: strin
 	}
 }
 
-export async function getSessionAndVerifyKeyExists(sessionId: string, tableName: string, key: string): Promise<void> {
+export async function getSessionAndVerifyKeyExists(sessionId: string, tableName: string | undefined, key: string): Promise<void> {
 	const sessionInfo = await getSessionById(sessionId, tableName);
 	try {
 		expect(sessionInfo![key as keyof ISessionItem]).toBeTruthy();

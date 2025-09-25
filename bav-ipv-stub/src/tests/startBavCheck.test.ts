@@ -1,19 +1,12 @@
 import { handler } from "../handlers/startBavCheck";
-import {
-  expect,
-  jest,
-  it,
-  beforeEach,
-  afterEach,
-  describe,
-} from "@jest/globals";
 import { mockClient } from "aws-sdk-client-mock";
 import "aws-sdk-client-mock-jest";
 import axios from "axios";
 import { KMSClient, SignCommand } from "@aws-sdk/client-kms";
 import format from "ecdsa-sig-formatter";
 
-const testData = require("../events/startEvents.js")
+// @ts-ignore
+import testData from "../events/startEvents";
 
 jest.setTimeout(30000);
 
@@ -34,7 +27,7 @@ const mockJwks = {
       e: "AQAB",
       use: "enc",
       kid: "569c43c6-8136-42c9-932d-fbcdddbfd778",
-      alg: "RS256",
+      alg: "RSA-OAEP-256",
     },
   ],
 };

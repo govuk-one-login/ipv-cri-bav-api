@@ -32,19 +32,14 @@ jobs:
         working-directory: bav-ipv-stub
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: true
 
-      - name: Checks if committing secrets to repo
-        uses: pre-commit/action@v3.0.1
+      - name: Setup nodeJS v22
+        uses: actions/setup-node@v5
         with:
-          extra_args: "detect-secrets --all-files"
-
-      - name: Setup nodeJS v20
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+          node-version: 22
 
       - name: Set offline mirror path
         id: offline-mirror-path
@@ -57,13 +52,13 @@ jobs:
           key: offline-mirror-oauth
 
       - name: Install dependencies
-        run: npm install
+        run: cd src && npm install
 
       - name: Run lint
-        run: npm run lint
+        run: cd src && npm run lint
 
       - name: Run Tests
-        run: npm run test
+        run: cd src && npm run test
   sam-validate:
     name: SAM Validate
     runs-on: ubuntu-latest
@@ -73,7 +68,7 @@ jobs:
         working-directory: bav-ipv-stub
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: true
 
@@ -99,12 +94,6 @@ jobs:
 
       - name: SAM Validate
         run: sam validate --region ${{ env.AWS_REGION }} -t template.yaml
-
-      - name: Install Nodejs Npm Esbuild Builder
-        run: npm -g install esbuild
-
-      - name: Install Dependencies
-        run: npm install
 
       - name: SAM Build
         run: sam build -t template.yaml

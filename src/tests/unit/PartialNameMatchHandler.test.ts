@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/unbound-method */
+ 
 import { SQSEvent } from "aws-lambda";
 import { s3Client, lambdaHandler } from "../../PartialNameMatchHandler";
 import { CONTEXT } from "./data/context";

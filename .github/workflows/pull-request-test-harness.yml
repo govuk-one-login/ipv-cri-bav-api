@@ -29,22 +29,17 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: test-harness/src/
+        working-directory: test-harness/
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: true
 
-      - name: Checks if committing secrets to repo
-        uses: pre-commit/action@v3.0.1
+      - name: Setup nodeJS v22
+        uses: actions/setup-node@v5
         with:
-          extra_args: "detect-secrets --all-files"
-
-      - name: Setup nodeJS v20
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+          node-version: 22
 
       - name: Set offline mirror path
         id: offline-mirror-path
@@ -57,13 +52,13 @@ jobs:
           key: offline-mirror-oauth
 
       - name: Install dependencies
-        run: npm install
+        run: cd src && npm install
 
       - name: Run lint
-        run: npm run lint
+        run: cd src && npm run lint
 
       - name: Run Tests
-        run: npm run test:unit
+        run: cd src && npm run test:unit
 
   sam-validate:
     name: SAM Validate
@@ -74,7 +69,7 @@ jobs:
         working-directory: test-harness
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: true
 

@@ -1,7 +1,7 @@
 import { SQSClient } from "@aws-sdk/client-sqs";
 import { NodeHttpHandler } from "@smithy/node-http-handler";
 import AWSXRay from "aws-xray-sdk-core";
-import { mockSqsCient } from "../tests/contract/mocks/sqsClient";
+import { mockSqsClient } from "../tests/contract/mocks/sqsClient";
 import { Logger } from "@aws-lambda-powertools/logger";
 
 const logger = new Logger({
@@ -9,12 +9,11 @@ const logger = new Logger({
 	serviceName: "SqsClient",
 });
 
-function createSqsClient(): SQSClient {
-
+const createSqsClient = () => {
 	let sqsClient: SQSClient;
-	if (process.env.USE_MOCKED) {
+	if (process.env.USE_MOCKED === "true") {
 		logger.info("SqsClient: USING MOCKED");
-		sqsClient = mockSqsCient as unknown as SQSClient;
+		sqsClient = mockSqsClient as unknown as SQSClient;
 	} else {
 
 		AWSXRay.setContextMissingStrategy("LOG_ERROR");
@@ -31,6 +30,6 @@ function createSqsClient(): SQSClient {
 
 	}
 	return sqsClient;
-}
+};
 
-export const sqsClient = createSqsClient();
+export { createSqsClient };

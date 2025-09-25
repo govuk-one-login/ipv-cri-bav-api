@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/unbound-method */
+ 
 import format from "ecdsa-sig-formatter";
 import { KmsJwtAdapter } from "../../../utils/KmsJwtAdapter";
 import { Constants } from "../../../utils/Constants";
@@ -45,6 +45,7 @@ describe("KmsJwtAdapter utils", () => {
 	const dnsSuffix = process.env.DNSSUFFIX!;
 
 	beforeEach(() => {
+		process.env.USE_MOCKED="false";
 		kmsJwtAdapter = new KmsJwtAdapter(process.env.KMS_KEY_ARN!, logger);
 	});
 
@@ -211,6 +212,16 @@ describe("KmsJwtAdapter utils", () => {
 			const cacheData = kmsJwtAdapter.getCachedDataForTest()
 			expect(cacheData.cachedJwks).toEqual(mockJwksResponse.data.keys);
 			expect(cacheData.cachedTime?.getTime()).toBeGreaterThanOrEqual(new Date().getTime());
+		});
+
+		it("should successfully verify a JWT when using a mocked client", async () => {
+			process.env.USE_MOCKED="true";
+			const mockTargetKid = "1234"; //kid to retrieve correct key from mocked axios response
+			const result: any = await kmsJwtAdapter.verifyWithJwks(encodedJwt, mockPublicKeyEndpoint, mockTargetKid);
+			expect(axios.get).toHaveBeenCalledWith(mockPublicKeyEndpoint);
+    		expect(result?.payload?.data).toEqual("mockPayloadClaims");
+			process.env.USE_MOCKED="false";
+
 		});
 	});
 });
