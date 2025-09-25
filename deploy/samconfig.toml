@@ -7,5 +7,5 @@ s3_prefix = "bav-cri-api"
 region = "eu-west-2"
 confirm_changeset = false
 capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM"
-parameter_overrides = "CodeSigningConfigArn=\"none\" Environment=\"dev\" PermissionsBoundary=\"none\" SecretPrefix=\"none\" VpcStackName=\"vpc-cri\" L2DynamoStackName=\"bav-cri-ddb\" L2KMSStackName=\"bav-cri-kms\""
+parameter_overrides = "CodeSigningConfigArn=\"none\" Environment=\"dev\" PermissionsBoundary=\"none\" SecretPrefix=\"none\" VpcStackName=\"vpc-cri\" L2DynamoStackName=\"bav-cri-ddb\" L2KMSStackName=\"bav-cri-kms\" IPVStubStackName=\"bav-ipv-stub\""
 image_repositories = []

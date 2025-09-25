@@ -42,7 +42,7 @@ Mappings:
   Configuration:
     dev:
       IPVStubID: "5C584572"
-      JWKSURI: "https://api-bav-cri-api.review-bav.dev.account.gov.uk"
+      JWKSURI: !Sub "https://api-${BackendStack}.review-bav.dev.account.gov.uk"
       IPVSTUBURL: "ipvstub.review-bav.dev.account.gov.uk"
       OAUTHFRONTBASEURI: "https://bav-cri-front.review-bav.dev.account.gov.uk"
       AUD: "https://review-bav.dev.account.gov.uk"
@@ -577,10 +577,10 @@ Resources:
       Description: The Base URI from backend stack to test
       Name: !Sub "/${Environment}/${AWS::StackName}/API/PROVIDER_BASE_URI"
       Type: String
-      Value: !Sub
-        - "$https://${ImportProviderStack}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/"
-        - ImportProviderStack:
-            Fn::ImportValue: !Sub "${BackendStack}-BAVApiGatewayId"
+      Value: !If
+        - CreateDevResources
+        - !Sub "https://api-${BackendStack}.review-bav.dev.account.gov.uk"
+        - "https://api.review-bav.build.account.gov.uk"
       Tags:
         APP: !Sub bav-${AWS::StackName}
 
