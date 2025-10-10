@@ -42,7 +42,7 @@ Mappings:
   Configuration:
     dev:
       IPVStubID: "5C584572"
-      JWKSURI: !Sub "https://api-${BackendStack}.review-bav.dev.account.gov.uk"
+      JWKSURI: "https://api-bav-cri-api.review-bav.dev.account.gov.uk"
       IPVSTUBURL: "ipvstub.review-bav.dev.account.gov.uk"
       OAUTHFRONTBASEURI: "https://bav-cri-front.review-bav.dev.account.gov.uk"
       AUD: "https://review-bav.dev.account.gov.uk"
