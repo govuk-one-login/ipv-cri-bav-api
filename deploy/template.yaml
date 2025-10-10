@@ -284,6 +284,10 @@ Conditions:
               - Fn::Equals:
                   - !Sub "${AWS::StackName}"
                   - "bav-cri-api"
+  IsDevOrBuildOrStaging: !Or
+    - !Equals [ !Ref Environment, dev ]
+    - !Equals [ !Ref Environment, build ]
+    - !Equals [ !Ref Environment, staging ]
 
 Globals:
   Function:
@@ -686,8 +690,8 @@ Resources:
         Service: backend
         Name: BavRestApi
         Source: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
-        FMSRegionalPolicy: false
-        CustomPolicy: true
+        FMSRegionalPolicy: !If [ IsDevOrBuildOrStaging, "false", "none" ]
+        CustomPolicy: !If [ IsDevOrBuildOrStaging, "true", "none" ]
 
   BAVAPIGatewayAccessLogGroup:
     Type: AWS::Logs::LogGroup
