@@ -5570,8 +5570,10 @@ Outputs:
   BAVIPVStubExecuteURL:
     Condition: IsNotProdLikeEnvironment
     Description: "BAV IPV Stub"
-    Value:
-      Fn::ImportValue: !Sub '${IPVStubStackName}-IPVStubExecuteUrl'
+    Value: !If
+      - CreateDevResources
+      - !Sub "https://${IPVStubStackName}-ipvstub.review-bav.dev.account.gov.uk/"
+      - "https://ipvstub.review-o.build.account.gov.uk/"
   BAVTestHarnessURL:
     Condition: IsNotProdLikeEnvironment
     Description: "BAV Test Harness"
