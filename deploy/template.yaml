@@ -5573,7 +5573,7 @@ Outputs:
     Value: !If
       - CreateDevResources
       - !Sub "https://${IPVStubStackName}-ipvstub.review-bav.dev.account.gov.uk"
-      - "https://ipvstub.review-o.build.account.gov.uk"
+      - "https://ipvstub.review-bav.build.account.gov.uk"
   BAVTestHarnessURL:
     Condition: IsNotProdLikeEnvironment
     Description: "BAV Test Harness"
