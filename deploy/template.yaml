@@ -716,13 +716,6 @@ Resources:
 
   ### End of API Gateway definition.
 
-  WAFv2ACLAssociation:
-    #Condition: IsNotDevelopment
-    Type: AWS::WAFv2::WebACLAssociation
-    Properties:
-      ResourceArn: !Sub "arn:aws:apigateway:${AWS::Region}::/restapis/${BAVRestApi}/stages/${BAVRestApi.Stage}"
-      WebACLArn: !Sub "{{resolve:ssm:/${Environment}/Platform/Security/Block/WafArn}}"
-
   ## API Gateway Custom Domain definition
 
   BAVApiCustomDomainName:
@@ -5581,8 +5574,10 @@ Outputs:
   BAVIPVStubExecuteURL:
     Condition: IsNotProdLikeEnvironment
     Description: "BAV IPV Stub"
-    Value:
-      Fn::ImportValue: !Sub '${IPVStubStackName}-IPVStubExecuteUrl'
+    Value: !If
+      - CreateDevResources
+      - !Sub "https://${IPVStubStackName}-ipvstub.review-bav.dev.account.gov.uk"
+      - "https://ipvstub.review-bav.build.account.gov.uk"
   BAVTestHarnessURL:
     Condition: IsNotProdLikeEnvironment
     Description: "BAV Test Harness"
