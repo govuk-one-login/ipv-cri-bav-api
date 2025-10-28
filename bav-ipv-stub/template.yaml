@@ -373,7 +373,7 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - handlers/startBavCheck.ts
-        UseNpmCi: True
+        UseNpmCi: true
 
   StartBAVCheckFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -423,7 +423,7 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - handlers/generateTokenRequest.ts
-        UseNpmCi: True
+        UseNpmCi: true
 
   GenerateTokenRequestBAVFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -473,7 +473,7 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - handlers/jsonWebKeys.ts
-        UseNpmCi: True
+        UseNpmCi: true
 
   JwksFunctionPermission:
     Type: AWS::Lambda::Permission
@@ -506,7 +506,7 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - handlers/callback.ts
-        UseNpmCi: True
+        UseNpmCi: true
 
   IPVStubRedirectFunctionPermission:
     Type: AWS::Lambda::Permission

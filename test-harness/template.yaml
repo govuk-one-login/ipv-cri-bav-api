@@ -153,7 +153,7 @@ Resources:
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
           - DequeueHandler.ts
-        UseNpmCi: True
+        UseNpmCi: true
 
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -163,7 +163,7 @@ Resources:
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
           - DequeueHandler.ts
-        UseNpmCi: True
+        UseNpmCi: true
 
   EventTestBucket:
     Type: "AWS::S3::Bucket"
@@ -467,7 +467,7 @@ Resources:
         Sourcemap: false # Enabling source maps will create the required NODE_OPTIONS environment variables on your lambda function during sam build
         EntryPoints:
           - AthenaQueryHandler.ts
-        UseNpmCi: True
+        UseNpmCi: true
 
   AthenaQueryFunctionLogGroup:
     Type: AWS::Logs::LogGroup

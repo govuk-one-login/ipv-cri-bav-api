@@ -3905,7 +3905,7 @@ Resources:
       Environment:
         Variables:
           POWERTOOLS_SERVICE_NAME: VerifyAccountHandler
-          SAVING_PARTIAL_NAME_DATA: True
+          SAVING_PARTIAL_NAME_DATA: true
           KMS_KEY_ARN:
             Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
           ENCRYPTION_KEY_IDS:
