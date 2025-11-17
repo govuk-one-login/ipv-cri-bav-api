@@ -343,7 +343,7 @@ Resources:
         Variables:
           SIGNING_KEY: 
             Fn::ImportValue: !Sub "${L2KMSStackName}-ipvstub-signing-key"      
-          ADDITIONAL_KEY: 
+          ADDITIONAL_SIGNING_KEY: 
             Fn::ImportValue: !Sub "${L2KMSStackName}-ipvstub-additional-signing-key"
           CLIENT_ID: !FindInMap [Configuration, !Ref Environment, IPVStubID]
           REDIRECT_URI: !If
