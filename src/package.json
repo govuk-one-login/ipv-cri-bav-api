@@ -37,7 +37,7 @@
     "compile": "./node_modules/.bin/tsc",
     "lint": "eslint -c eslint.config.mjs *.ts .",
     "test:infra": "node --experimental-vm-modules ./node_modules/.bin/jest --testMatch '**/infra/?(*.)test.ts' ",
-    "api": "_JUNIT_OUTPUT_NAME=node --experimental-vm-modules api-report.xml ./node_modules/.bin/jest --runInBand --testPathPattern=tests/api/backend/",
+    "api": "_JUNIT_OUTPUT_NAME=api-report.xml node --experimental-vm-modules ./node_modules/.bin/jest --runInBand --testPathPattern=tests/api/backend/",
     "test:api": "npm run compile && npm run api",
     "test:pii": "bash ./check-logs.sh",
     "kill:dynamodblocal": "cd tests/contract; ./scripts/kill-dynamodb-local.sh",
