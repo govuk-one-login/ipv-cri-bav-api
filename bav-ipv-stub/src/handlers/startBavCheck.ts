@@ -121,7 +121,7 @@ export function getConfig(): {
     process.env.JWKS_URI == null ||
     process.env.CLIENT_ID == null ||
     process.env.SIGNING_KEY == null ||
-    process.env.ADDITIONAL_KEY == null ||
+    process.env.ADDITIONAL_SIGNING_KEY == null ||
     process.env.OAUTH_FRONT_BASE_URI == null
   ) {
     throw new Error("Missing configuration");
@@ -132,7 +132,7 @@ export function getConfig(): {
     jwksUri: process.env.JWKS_URI,
     clientId: process.env.CLIENT_ID,
     signingKey: process.env.SIGNING_KEY,
-    additionalKey: process.env.ADDITIONAL_KEY,
+    additionalKey: process.env.ADDITIONAL_SIGNING_KEY,
     oauthUri: process.env.OAUTH_FRONT_BASE_URI,
   };
 }

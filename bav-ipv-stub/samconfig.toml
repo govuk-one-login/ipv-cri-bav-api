@@ -7,5 +7,5 @@ s3_prefix = "bav-ipv-stub"
 region = "eu-west-2"
 confirm_changeset = false
 capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM"
-parameter_overrides = "CodeSigningConfigArn=\"none\" Environment=\"dev\" PermissionsBoundary=\"none\"  VpcStackName=\"vpc-cri\" FrontendStack=\"bav-cri-front\" BackendStack=\"bav-cri-api\""
+parameter_overrides = "CodeSigningConfigArn=\"none\" Environment=\"dev\" PermissionsBoundary=\"none\"  VpcStackName=\"vpc-cri\" FrontendStack=\"bav-cri-front\" BackendStack=\"bav-cri-api\" L2KMSStackName=\"bav-cri-kms\""
 image_repositories = []

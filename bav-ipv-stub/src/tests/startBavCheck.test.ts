@@ -36,7 +36,7 @@ process.env.REDIRECT_URI = "test.com/callback";
 process.env.JWKS_URI = "test.com/.well-known/jwks.json";
 process.env.CLIENT_ID = "test-id";
 process.env.SIGNING_KEY = "key-id";
-process.env.ADDITIONAL_KEY = "additional-key-id"
+process.env.ADDITIONAL_SIGNING_KEY = "additional-key-id"
 process.env.OIDC_API_BASE_URI = "api-target.com";
 process.env.OAUTH_FRONT_BASE_URI = "test-target.com";
 
