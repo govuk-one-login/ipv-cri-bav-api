@@ -12,8 +12,8 @@ beforeAll(() => {
   template = Template.fromJSON(yamlTemplate)
 })
 
-it("should define 2 KMS keys", async () => {
-  template.resourceCountIs('AWS::KMS::Key', 2)
+it("should define 4 KMS keys", async () => {
+  template.resourceCountIs('AWS::KMS::Key', 4)
 })
 
 it("each KMS key should have an alias", async () => {
