@@ -327,11 +327,13 @@ Resources:
       TracingEnabled: true
       Tags:
         Product: GOV.UK Sign In
-        System: BAV Return
+        System: BAV
         Environment: !Ref Environment
         Service: TestHarness
         Name: TestHarnessRestApi
         Source: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
+        FMSRegionalPolicy: false
+        CustomPolicy: true
 
   TestHarnessAPIGatewayAccessLogGroup:
     Type: AWS::Logs::LogGroup
