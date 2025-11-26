@@ -39,7 +39,7 @@ describe("DeleteBucketProcessor", () => {
         }
       });
       global.fetch = jest.fn().mockResolvedValue({ status: 200 });
-      const response = await deleteBucketProcessor.processRequest(VALID_REQUEST)
+      const response = await deleteBucketProcessor.processRequest(VALID_DELETE_REQUEST)
       expect(response).toEqual({ statusCode: HttpCodesEnum.OK, body: "Bucket deleted" })
     });
     
