@@ -37,40 +37,8 @@ export class DeleteBucketProcessor {
 
 		try {
 			if (event.RequestType === "Delete") {
-				const toDelete = []
-				let bucketVersions = await this.s3Client.send(new ListObjectVersionsCommand({ Bucket: bucketName}));
-
-				if (bucketVersions?.Versions) {
-					for (const version of bucketVersions.Versions) {
-						toDelete.push({ Key: version.Key, VersionId: version.VersionId})
-					}
-				}
-
-				if (bucketVersions?.DeleteMarkers) {
-					for (const deleteMarker of bucketVersions.DeleteMarkers) {
-						toDelete.push({ Key: deleteMarker.Key, VersionId: deleteMarker.VersionId })
-					}
-				}
-
-				if (toDelete.length > 0) {
-					await this.s3Client.send(
-						new DeleteObjectsCommand({
-							Bucket: bucketName,
-							Delete: { Objects: toDelete },
-						})
-					);
-        		}
-
-				let bucket = await this.s3Client.send(new ListObjectsV2Command({ Bucket: bucketName }));
-
-				if (bucket?.Contents && bucket?.Contents.length > 0) {
-				await this.s3Client.send(
-					new DeleteObjectsCommand({
-					Bucket: bucketName,
-					Delete: { Objects: bucket.Contents.map((objects) => ({ Key: objects.Key })) },
-					})
-				);
-				}
+				await this.deleteBucketVersions(bucketName)
+				await this.deleteBucket(bucketName)
 
 				await this.sendResponse(event, "SUCCESS", { message: "Bucket deleted"} );
 				return { statusCode: HttpCodesEnum.OK, body: "Bucket deleted" }
@@ -82,10 +50,49 @@ export class DeleteBucketProcessor {
 		} catch(error: any) {
 			await this.sendResponse(event, "FAILED", { message: `Bucket deletion failed with error: ${error}`})
 			return { statusCode: HttpCodesEnum.SERVER_ERROR, body: `Bucket deletion failed with error: ${error}` }	
-		} 
+		}
     }
 
-	async sendResponse(event: any, status: "SUCCESS" | "FAILED", data: any): Promise<any> {
+	private async deleteBucketVersions(bucketName: string) {
+		const toDelete = []
+		let bucketVersions = await this.s3Client.send(new ListObjectVersionsCommand({ Bucket: bucketName}));
+
+		if (bucketVersions?.Versions) {
+			for (const version of bucketVersions.Versions) {
+				toDelete.push({ Key: version.Key, VersionId: version.VersionId})
+			}
+		}
+
+		if (bucketVersions?.DeleteMarkers) {
+			for (const deleteMarker of bucketVersions.DeleteMarkers) {
+				toDelete.push({ Key: deleteMarker.Key, VersionId: deleteMarker.VersionId })
+			}
+		}
+
+		if (toDelete.length > 0) {
+			await this.s3Client.send(
+				new DeleteObjectsCommand({
+					Bucket: bucketName,
+					Delete: { Objects: toDelete },
+				})
+			);
+		}
+	}
+
+	private async deleteBucket(bucketName: string) {
+		let bucket = await this.s3Client.send(new ListObjectsV2Command({ Bucket: bucketName }));
+
+		if (bucket?.Contents) {
+			await this.s3Client.send(
+				new DeleteObjectsCommand({
+				Bucket: bucketName,
+				Delete: { Objects: bucket.Contents.map((objects) => ({ Key: objects.Key })) },
+				})
+			);
+		}
+	}
+
+	private async sendResponse(event: any, status: "SUCCESS" | "FAILED", data: any): Promise<any> {
 
 		const body = JSON.stringify({
 			Status: status,
