@@ -435,6 +435,16 @@ Resources:
             Condition:
               StringNotEquals:
                 "aws:CalledVia": "athena.amazonaws.com"
+          - Effect: Deny
+            Resource:
+              - !GetAtt PartialNameMatchBucket.Arn
+              - !Sub "${PartialNameMatchBucket.Arn}/*"
+            Principal: "*"
+            Action:
+              - "s3:*"
+            Condition:
+              Bool:
+                "aws:SecureTransport": false
     DependsOn: PartialNameMatchBucket
 
   PartialNameMatchBucket:
@@ -500,6 +510,16 @@ Resources:
             Condition:
               StringNotEquals:
                 "aws:CalledVia": "athena.amazonaws.com"
+          - Effect: Deny
+            Resource:
+              - !GetAtt PartialNameMatchAthenaResultsBucket.Arn
+              - !Sub "${PartialNameMatchAthenaResultsBucket.Arn}/*"
+            Principal: "*"
+            Action:
+              - "s3:*"
+            Condition:
+              Bool:
+                "aws:SecureTransport": false
     DependsOn: PartialNameMatchAthenaResultsBucket
 
   PartialNameMatchAthenaResultsBucket:
