@@ -5,6 +5,7 @@ on:
     secrets:
       DEV_CRI_BAV_PRE_MERGE_ROLE_ARN:
         required: true
+  workflow_dispatch: {}      
 
 env:
   AWS_REGION: eu-west-2
