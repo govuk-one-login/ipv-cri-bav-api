@@ -6,6 +6,11 @@ on:
       DEV_CRI_BAV_PRE_MERGE_ROLE_ARN:
         required: true
 
+env:
+  AWS_REGION: eu-west-2
+  BAV_API_STACK_NAME: bav-cri-api-pre-merge-${{ github.run_id }}
+  BAV_TEST_HARNESS_STACK_NAME: bav-cri-test-harness-pre-merge-${{ github.run_id }}
+
 jobs:
   setup:
     runs-on: ubuntu-latest
@@ -53,6 +58,7 @@ jobs:
           key: sam-build-${{ github.sha }}
 
   deploy:
+    if: ${{ github.actor != 'dependabot[bot]' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: setup
@@ -61,6 +67,9 @@ jobs:
     permissions:
       id-token: write
       contents: read
+    defaults:
+      run:
+        working-directory: ./deploy/
     steps:
       - name: Check out repository code
         uses: actions/checkout@v5
@@ -69,14 +78,45 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.DEV_CRI_BAV_PRE_MERGE_ROLE_ARN }}
-          aws-region: eu-west-2
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: Steps for deployments
+      - name: Restore SAM build
+        uses: actions/cache/restore@v4
+        with:
+          path: deploy/.aws-sam
+          key: sam-build-${{ github.sha }}
+          restore-keys: |
+            sam-build-
+
+      - name: Setup SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: Deploy BAV API stack (DEV)
         run: |
-          echo "Deployment steps will be added in separate tickets:"
-          echo "Deploy API stack"
-          echo "Deploy test harness stack"
-          echo "Deploy IPV stub stack"
+          sam deploy \
+            --template-file template.yaml \
+            --stack-name "$BAV_API_STACK_NAME" \
+            --capabilities CAPABILITY_NAMED_IAM \
+            --no-fail-on-empty-changeset \
+            --parameter-overrides \
+              Environment="dev"
+
+      - name: Deploy BAV Test Harness stack (DEV)
+        run: |
+          aws cloudformation deploy \
+            --template-file ../test-harness/template.yaml \
+            --stack-name "$BAV_TEST_HARNESS_STACK_NAME" \
+            --capabilities CAPABILITY_NAMED_IAM \
+            --no-fail-on-empty-changeset \
+            --parameter-overrides \
+              CodeSigningConfigArn="none" \
+              Environment="dev" \
+              PermissionsBoundary="none" \
+              SecretPrefix="none" \
+              VpcStackName="vpc-cri" \
+              BackendStack="$BAV_API_STACK_NAME"
 
   test:
     runs-on: ubuntu-latest
@@ -97,7 +137,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.DEV_CRI_BAV_PRE_MERGE_ROLE_ARN }}
-          aws-region: eu-west-2
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Placeholder for tests
         run: |
