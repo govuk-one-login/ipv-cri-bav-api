@@ -180,7 +180,7 @@ Resources:
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
+              SSEAlgorithm: aws:kms
       LifecycleConfiguration:
         Rules:
           - Id: DeleteAfter24Hours
