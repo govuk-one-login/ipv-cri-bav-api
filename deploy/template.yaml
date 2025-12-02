@@ -704,6 +704,7 @@ Resources:
 
   DeleteBucketFunction:
     Type: AWS::Serverless::Function
+    Condition: IsDevOrBuild
     DependsOn: DeleteBucketFunctionLogGroup
     Properties:
       FunctionName: !Sub "BAV-DeleteBucket-${AWS::StackName}"
@@ -731,6 +732,7 @@ Resources:
 
   DeleteBucketFunctionLogGroup:
     Type: AWS::Logs::LogGroup
+    Condition: IsDevOrBuild
     Properties:
       LogGroupName: !Sub "/aws/lambda/BAV-DeleteBucket-${AWS::StackName}"
       RetentionInDays:
@@ -742,6 +744,7 @@ Resources:
 
   DeleteBucketFunctionPermission:
     Type: AWS::Lambda::Permission
+    Condition: IsDevOrBuild
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref DeleteBucketFunction
