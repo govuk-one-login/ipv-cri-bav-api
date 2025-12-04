@@ -87,7 +87,7 @@ jobs:
       - name: Construct Test Harness URL
         id: test_harness_url
         run: |
-          echo "test_harness_url=https://pre-merge-test-harness-${{ needs.setup.outputs.sha_short }}-testharness.review-bav.dev.account.gov.uk" >> $GITHUB_OUTPUT 
+          echo "test_harness_url=https://pre-merge-test-harness-${{ needs.setup.outputs.sha_short }}-testharness.review-bav.dev.account.gov.uk/" >> $GITHUB_OUTPUT 
 
       - name: Steps for deployments
         run: |
