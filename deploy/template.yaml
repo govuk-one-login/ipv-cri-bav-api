@@ -688,8 +688,8 @@ Resources:
     Condition: IsNotProdLikeEnvironment
     Properties:
       ServiceToken: !GetAtt DeleteBucketFunction.Arn
-      BucketName: !Ref PartialNameMatchAthenaResultsBucket
-    DependsOn: PartialNameMatchAthenaResultsBucket
+      BucketName: !Ref PartialNameMatchBucket
+    DependsOn: PartialNameMatchBucket
 
   EmptyPartialNameMatchAthenaResultsBucket:
     Type: Custom::EmptyBucket
