@@ -673,6 +673,80 @@ Resources:
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
 
+  ### Bucket emptying & deletion
+
+  EmptyJsonWebKeysBucket:
+    Type: Custom::EmptyBucket
+    Condition: IsNotProdLikeEnvironment
+    Properties:
+      ServiceToken: !GetAtt DeleteBucketFunction.Arn
+      BucketName: !Ref JsonWebKeysBucket
+    DependsOn: JsonWebKeysBucket
+
+  EmptyPartialNameMatchBucket:
+    Type: Custom::EmptyBucket
+    Condition: IsNotProdLikeEnvironment
+    Properties:
+      ServiceToken: !GetAtt DeleteBucketFunction.Arn
+      BucketName: !Ref PartialNameMatchBucket
+    DependsOn: PartialNameMatchBucket
+
+  EmptyPartialNameMatchAthenaResultsBucket:
+    Type: Custom::EmptyBucket
+    Condition: IsNotProdLikeEnvironment
+    Properties:
+      ServiceToken: !GetAtt DeleteBucketFunction.Arn
+      BucketName: !Ref PartialNameMatchAthenaResultsBucket
+    DependsOn: PartialNameMatchAthenaResultsBucket
+
+  DeleteBucketFunction:
+    Type: AWS::Serverless::Function
+    Condition: IsNotProdLikeEnvironment
+    DependsOn: DeleteBucketFunctionLogGroup
+    Properties:
+      FunctionName: !Sub "BAV-DeleteBucket-${AWS::StackName}"
+      Handler: DeleteBucketHandler.lambdaHandler
+      CodeUri: ../src/
+      Policies:
+      - Statement:
+          - Effect: Allow
+            Action:
+              - s3:ListBucket
+              - s3:ListBucketVersions
+              - s3:DeleteObject
+              - s3:DeleteObjectVersion
+            Resource: '*'
+
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: false
+        EntryPoints:
+          - DeleteBucketHandler.ts
+        UseNpmCi: true
+
+  DeleteBucketFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Condition: IsNotProdLikeEnvironment
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/BAV-DeleteBucket-${AWS::StackName}"
+      RetentionInDays:
+        !FindInMap [
+          EnvironmentConfiguration,
+          !Ref Environment,
+          logretentionindays,
+        ]
+
+  DeleteBucketFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Condition: IsNotProdLikeEnvironment
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref DeleteBucketFunction
+      Principal: apigateway.amazonaws.com
+
   ### Start of API Gateway definition.
 
   BAVRestApi:
