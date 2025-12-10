@@ -26,7 +26,6 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    # timeout-minutes: 15
     needs: setup
     permissions:
       id-token: write
@@ -70,7 +69,7 @@ jobs:
       - name: Construct API URL
         id: api_url
         run: |
-          echo "api_url=https://api-pre-merge-${{ needs.setup.outputs.sha_short }}.review-bav.dev.account.gov.uk" >> $GITHUB_OUTPUT 
+          echo "api_url=https://api-pre-merge-${{ needs.setup.outputs.sha_short }}.review-bav.dev.account.gov.uk/" >> $GITHUB_OUTPUT 
 
       - name: SAM Build test harness stack
         working-directory: ./test-harness
@@ -99,6 +98,7 @@ jobs:
         run: sam build -t template.yaml
 
       - name: SAM Deploy IPV stub
+        if: ${{ github.actor != 'dependabot[bot]' }}
         working-directory: ./bav-ipv-stub
         run: |
           sam deploy \
