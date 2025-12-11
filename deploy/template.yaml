@@ -110,16 +110,16 @@ Mappings:
       TXMAMESSAGERETENTIONPERIODDAYS: 604800 # Default: 7 days
       PARTIALNAMEMATCHRENTIONPERIODDAYS: 259200 # Default: 3 days
       RESOURCETTLSECS: 1209600 # Default 14 days
-      CLIENTS: 
-          '[
+      CLIENTS: >
+          [
             {
-              "jwksEndpoint":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/.well-known/jwks.json",
+              "jwksEndpoint":"https://${IPVStubStackName}-ipvstub.review-bav.dev.account.gov.uk/.well-known/jwks.json",
               "clientId":"5C584572",
-              "redirectUri":"https://bav-ipv-stub-ipvstub.review-bav.dev.account.gov.uk/redirect?id=bav",
+              "redirectUri":"https://${IPVStubStackName}-ipvstub.review-bav.dev.account.gov.uk/redirect?id=bav",
               "experianTokenEndpoint":"https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev/oauth2/experianone/v1/token",
               "experianVerifyEndpoint":"https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev/services/v0/applications/3"
             }
-          ]'
+          ]
       AUTHSESSIONTTLSECS: 86400 # 1 day in seconds
       TESTHARNESSURL: "https://bav-test-harness-testharness.review-bav.dev.account.gov.uk"
       HMRCBASEURL: "https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev"
@@ -346,6 +346,16 @@ Globals:
           !Ref SecretPrefix,
           !Ref AWS::StackName,
         ]
+        CLIENT_CONFIG: !If
+          - CreateDevResources
+          - !Join ['', [
+                !Select [0, !Split ['${IPVStubStackName}', !FindInMap [EnvironmentVariables, !Ref Environment, CLIENTS]]],
+                !Ref IPVStubStackName,
+                !Select [1, !Split ['${IPVStubStackName}', !FindInMap [EnvironmentVariables, !Ref Environment, CLIENTS]]],
+                !Ref IPVStubStackName,
+                !Select [2, !Split ['${IPVStubStackName}', !FindInMap [EnvironmentVariables, !Ref Environment, CLIENTS]]]
+            ]]
+          - !FindInMap [EnvironmentVariables, !Ref Environment, CLIENTS]
     AutoPublishAlias: live
 
 Resources:
@@ -933,8 +943,6 @@ Resources:
           POWERTOOLS_SERVICE_NAME: SessionHandler
           KMS_KEY_ARN:
             Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
-          CLIENT_CONFIG:
-            !FindInMap [ EnvironmentVariables, !Ref Environment, CLIENTS ]
           ENCRYPTION_KEY_IDS:
             Fn::ImportValue: !Sub "${L2KMSStackName}-encryption-key"
       Policies:
@@ -3208,7 +3216,6 @@ Resources:
           KMS_KEY_ARN:
             Fn::ImportValue: !Sub "${L2KMSStackName}-vc-signing-key"
           DNSSUFFIX: !FindInMap [ EnvironmentVariables, !Ref Environment, DNSSUFFIX ]
-          CLIENT_CONFIG: !FindInMap [ EnvironmentVariables, !Ref Environment, CLIENTS ]
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
@@ -4032,7 +4039,6 @@ Resources:
           EXPERIAN_USERNAME_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/Username"
           EXPERIAN_CLIENT_ID_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/clientId"
           EXPERIAN_CLIENT_SECRET_SSM_PATH: !Sub "/${Environment}/bav-cri-api/CrosscoreV2/clientSecret"
-          CLIENT_CONFIG: !FindInMap [ EnvironmentVariables, !Ref Environment, CLIENTS ]
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSXrayWriteOnlyAccess
