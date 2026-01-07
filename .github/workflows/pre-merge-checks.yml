@@ -143,11 +143,18 @@ jobs:
           role-to-assume: ${{ secrets.DEV_CRI_BAV_PRE_MERGE_ROLE_ARN }}
           aws-region: eu-west-2
 
-      - name: Placeholder for tests
-        run: |
-          echo "Test execution will be added"
-          echo "API URL: $PRE_MERGE_API_URL"
-          echo "Test Harness URL: $PRE_MERGE_TEST_HARNESS_URL"
+      - name: Setup nodeJS v22
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      
+      - name: Install dependencies
+        working-directory: ./src
+        run: npm ci
+
+      - name: Run API tests
+        working-directory: ./src
+        run: npm run test:api
 
       - name: Placeholder for cleanup
         run: |
