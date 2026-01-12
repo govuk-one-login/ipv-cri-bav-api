@@ -231,80 +231,7 @@ const CODE_STYLING_RULES = {
   // "computed-property-spacing": ["error", "always"],
   'comma-spacing': 'error',
   'semi-spacing': 'error',
-  'rest-spread-spacing': 'error',
-  '@typescript-eslint/tslint/config': [
-    'error',
-    {
-      rules: {
-        ban: [
-          true,
-          {
-            name: [
-              'it',
-              'skip'
-            ]
-          },
-          {
-            name: [
-              'it',
-              'only'
-            ]
-          },
-          {
-            name: [
-              'it',
-              'async',
-              'skip'
-            ]
-          },
-          {
-            name: [
-              'it',
-              'async',
-              'only'
-            ]
-          },
-          {
-            name: [
-              'describe',
-              'skip'
-            ]
-          },
-          {
-            name: [
-              'describe',
-              'only'
-            ]
-          },
-          {
-            name: 'parseInt',
-            message: 'tsstyle#type-coercion'
-          },
-          {
-            name: 'parseFloat',
-            message: 'tsstyle#type-coercion'
-          },
-          {
-            name: 'Array',
-            message: 'tsstyle#array-constructor'
-          },
-          {
-            name: [
-              '*',
-              'innerText'
-            ],
-            message: 'Use .textContent instead. tsstyle#browser-oddities'
-          }
-        ],
-        'prefer-method-signature': true,
-        typedef: [
-          true,
-          'call-signature',
-          'property-declaration'
-        ]
-      }
-    }
-  ]
+  'rest-spread-spacing': 'error'
 }
 
 const JEST_RULES = {
@@ -314,6 +241,10 @@ const JEST_RULES = {
 
   // @see https://github.com/jest-community/eslint-plugin-jest/blob/main/docs/rules/require-top-level-describe.md
   'jest/require-top-level-describe': 'error',
+
+  'jest/no-focused-tests': 'error',
+
+  'jest/no-disabled-tests': 'warn',
 
   'jest/prefer-expect-resolves': 'error',
 
@@ -386,7 +317,6 @@ module.exports = {
     'eslint-plugin-jsdoc',
     'eslint-plugin-prefer-arrow',
     '@typescript-eslint',
-    '@typescript-eslint/tslint',
     'jest',
     'security'
   ],
