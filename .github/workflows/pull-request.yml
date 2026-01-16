@@ -48,7 +48,7 @@ jobs:
         working-directory: ./src/
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           submodules: true
 
@@ -75,7 +75,7 @@ jobs:
 
       - name: Archive lint results
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: lint-report
           path: src/reports/eslint/reportFile.html
@@ -101,7 +101,7 @@ jobs:
         working-directory: ./deploy/
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           submodules: true
 
