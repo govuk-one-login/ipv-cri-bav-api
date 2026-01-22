@@ -194,7 +194,7 @@ export async function userInfoPost(accessToken: string): Promise<AxiosResponse<U
 		const postRequest = await API_INSTANCE.post(path, null, { headers: { "Authorization": `${accessToken}` } });
 		return postRequest;
 	} catch (error: any) {
-		console.log(`Error rrsponse from ${path} endpoint ${error}.`);
+		console.log(`Error response from ${path} endpoint ${error}.`);
 		return error.response;
 	}
 }
