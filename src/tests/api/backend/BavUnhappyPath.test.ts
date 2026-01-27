@@ -20,6 +20,9 @@ import { constants } from "../ApiConstants";
 import { BankDetailsPayload } from "../../models/BankDetailsPayload";
 import { randomUUID } from "crypto";
 
+//QualityGateIntegrationTest 
+//QualityGateRegressionTest
+//QualityGateStackTest
 describe("BAV CRI unhappy path tests", () => {
 	describe("/session Endpoint Unhappy Path Tests", () => {
 
