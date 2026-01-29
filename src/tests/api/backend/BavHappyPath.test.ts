@@ -25,6 +25,9 @@ import {
 } from "../ApiTestSteps";
 import { BankDetailsPayload } from "../../models/BankDetailsPayload";
 
+//QualityGateIntegrationTest 
+//QualityGateRegressionTest
+//QualityGateStackTest
 describe("BAV CRI happy path tests", () => {
 	describe("/session Endpoint", () => {
 		let sessionId: string;
