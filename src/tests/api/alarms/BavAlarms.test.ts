@@ -6,6 +6,9 @@ import verifyAccountYesPayload from "../../data/bankDetailsYes.json";
 import { BankDetailsPayload } from "../../models/BankDetailsPayload";
 import { randomUUID } from "crypto";
 
+//QualityGateIntegrationTest 
+//QualityGateRegressionTest
+//QualityGateStackTest
 describe("BAV CRI Alarms Tests", () => {
 
 	it("/session Endpoint 4xx Api Gateway Alarm", async () => {
