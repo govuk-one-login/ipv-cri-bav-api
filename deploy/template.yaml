@@ -115,7 +115,7 @@ Mappings:
             {
               "jwksEndpoint":"https://${IPVStubStackName}-ipvstub.review-bav.dev.account.gov.uk/.well-known/jwks.json",
               "clientId":"5C584572",
-              "redirectUri":"https://${IPVStubStackName}-ipvstub.review-bav.dev.account.gov.uk/redirect?id=bav",
+              "redirectUri":"https://${IPVStubStackName}-ipvstub.review-bav.dev.account.gov.uk/credential-issuer/callback?id=bav",
               "experianTokenEndpoint":"https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev/oauth2/experianone/v1/token",
               "experianVerifyEndpoint":"https://kq8oesdeq6.execute-api.eu-west-2.amazonaws.com/dev/services/v0/applications/3"
             }
@@ -136,14 +136,14 @@ Mappings:
             {
               "jwksEndpoint":"https://ipvstub.review-bav.build.account.gov.uk/.well-known/jwks.json",
               "clientId":"BD7B2A5D",
-              "redirectUri":"https://ipvstub.review-bav.build.account.gov.uk/redirect?id=bav",
+              "redirectUri":"https://ipvstub.review-bav.build.account.gov.uk/credential-issuer/callback?id=bav",
               "experianTokenEndpoint":"https://c99d36403h.execute-api.eu-west-2.amazonaws.com/build/oauth2/experianone/v1/token",
               "experianVerifyEndpoint":"https://c99d36403h.execute-api.eu-west-2.amazonaws.com/build/services/v0/applications/3"
             },
             {
               "jwksEndpoint":"https://ipvstub.review-bav.build.account.gov.uk/.well-known/jwks.json",
               "clientId":"SandboxJourneyFlow",
-              "redirectUri":"https://ipvstub.review-bav.build.account.gov.uk/redirect?id=bav",
+              "redirectUri":"https://ipvstub.review-bav.build.account.gov.uk/credential-issuer/callback?id=bav",
               "experianTokenEndpoint":"https://uk-api.experian.com/oauth2/experianone/v1/token",
               "experianVerifyEndpoint":"https://uk-api.experian.com/decisionanalytics/crosscore/nprxuz82vn3d/services/v0/applications/3"
             }
