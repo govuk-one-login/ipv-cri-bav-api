@@ -86,7 +86,7 @@
     "express": "4.22.1",
     "express-asyncify": "2.1.2",
     "@types/node-jose": "1.1.13",
-    "@pact-foundation/pact": "16.2.0"
+    "@pact-foundation/pact": "12.1.3"
   },
   "engines": {
    "node": "22.*"
