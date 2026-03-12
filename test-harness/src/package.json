@@ -7,7 +7,7 @@
     "compile": "./node_modules/.bin/tsc",
     "unit": "./node_modules/.bin/jest --testPathPatterns=tests/unit --coverage",
     "test:unit": "npm run compile && npm run unit",
-    "lint": "eslint --output-file ./reports/eslint/reportFile.html --format html -c eslint.config.mjs --ext .ts",
+    "lint": "./node_modules/.bin/eslint '*.ts'",
     "lint:fix": "eslint --fix --output-file ./reports/eslint/report.html --format html -c eslint.config.mjs --ext .ts ."
   },
   "author": "GDS",
