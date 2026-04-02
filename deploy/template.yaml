@@ -1186,9 +1186,9 @@ Resources:
         - !ImportValue build-notifications-CriticalAlertsTopicArn
       InsufficientDataActions: [ ]
       Dimensions: [ ]
-      EvaluationPeriods: 1
-      DatapointsToAlarm: 1
-      Threshold: 5
+      EvaluationPeriods: 5
+      DatapointsToAlarm: 3
+      Threshold: 3
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
       Metrics:
@@ -1201,7 +1201,7 @@ Resources:
               Dimensions:
                 - Name: MessageCode
                   Value: FAILED_VERIFYING_JWT
-            Period: 300
+            Period: 60
             Stat: Sum
 
   SessionConcurrency80Alarm:
