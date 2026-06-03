@@ -1,7 +1,7 @@
  
 import { UserInfoRequestProcessor } from "../../../services/UserInfoRequestProcessor";
 import { Metrics } from "@aws-lambda-powertools/metrics";
-import { mock } from "jest-mock-extended";
+import { mock } from "vitest-mock-extended";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { MISSING_AUTH_HEADER_USERINFO, VALID_USERINFO } from "../data/userInfo-events";
 import { BavService } from "../../../services/BavService";
@@ -91,18 +91,18 @@ describe("UserInfoRequestProcessor", () => {
 	});
 
 	beforeEach(() => {
-		jest.clearAllMocks();
+		vi.clearAllMocks();
 		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 		mockSession = getMockSessionItem();
 		mockPerson = getMockPersonItem();
-		jest.clearAllMocks();
-		jest.useFakeTimers();
-		jest.setSystemTime(new Date(1585695600000));
+		vi.clearAllMocks();
+		vi.useFakeTimers();
+		vi.setSystemTime(new Date(1585695600000));
 	});
 
 	afterEach(() => {
-		jest.useRealTimers();
+		vi.useRealTimers();
 	});
 
 	it("Return successful response with 200 OK when user data is found for an accessToken & VC is issued for passing check", async () => {
@@ -111,7 +111,7 @@ describe("UserInfoRequestProcessor", () => {
 		mockBavService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
 		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
-		jest.spyOn(Validations, "eventToSubjectIdentifier").mockResolvedValueOnce("sessionId");
+		vi.spyOn(Validations, "eventToSubjectIdentifier").mockResolvedValueOnce("sessionId");
 		const evidenceInfo: VerifiedCredentialEvidence = {
 			type: "identityCheck",
 			txn: "txn123456789",
@@ -221,7 +221,7 @@ describe("UserInfoRequestProcessor", () => {
 		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 
-		jest.spyOn(Validations, "eventToSubjectIdentifier").mockResolvedValueOnce("sessionId");
+		vi.spyOn(Validations, "eventToSubjectIdentifier").mockResolvedValueOnce("sessionId");
 		const evidenceInfo: VerifiedCredentialEvidence = {
 			type: "identityCheck",
 			txn: "txn123456789",
@@ -338,7 +338,7 @@ describe("UserInfoRequestProcessor", () => {
 		// @ts-expect-error private access manipulation used for testing
 		userInforequestProcessorTest.verifiableCredentialService.kmsJwtAdapter = passingKmsJwtAdapterFactory();
 
-		jest.spyOn(Validations, "eventToSubjectIdentifier").mockResolvedValueOnce("sessionId");
+		vi.spyOn(Validations, "eventToSubjectIdentifier").mockResolvedValueOnce("sessionId");
 
 		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
 		expect(mockBavService.sendToTXMA).toHaveBeenNthCalledWith(1, "TXMA_QUEUE_URL", {
@@ -496,7 +496,7 @@ describe("UserInfoRequestProcessor", () => {
 	});
 
 	it("Return 401 when session (based upon sub) was not found in the DB", async () => {
-		jest.spyOn(Validations, "eventToSubjectIdentifier").mockResolvedValueOnce("sessionId");
+		vi.spyOn(Validations, "eventToSubjectIdentifier").mockResolvedValueOnce("sessionId");
 		mockBavService.getSessionById.mockResolvedValue(undefined);
 
 		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);
@@ -514,7 +514,7 @@ describe("UserInfoRequestProcessor", () => {
 	});
 
 	it("Return 401 when person (based upon sub) was not found in the DB", async () => {
-		jest.spyOn(Validations, "eventToSubjectIdentifier").mockResolvedValueOnce("sessionId");
+		vi.spyOn(Validations, "eventToSubjectIdentifier").mockResolvedValueOnce("sessionId");
 		mockBavService.getSessionById.mockResolvedValue(mockSession);
 		mockBavService.getPersonIdentityBySessionId.mockResolvedValue(undefined);
 
@@ -533,7 +533,7 @@ describe("UserInfoRequestProcessor", () => {
 	});
 
 	it("Return error when person names are missing", async () => {
-		jest.spyOn(Validations, "eventToSubjectIdentifier").mockResolvedValueOnce("sessionId");
+		vi.spyOn(Validations, "eventToSubjectIdentifier").mockResolvedValueOnce("sessionId");
 		mockBavService.getSessionById.mockResolvedValue(mockSession);
 		mockPerson.name[0].nameParts = [];
 		mockBavService.getPersonIdentityBySessionId.mockResolvedValue(mockPerson);
@@ -565,7 +565,7 @@ describe("UserInfoRequestProcessor", () => {
 	});
 
 	it("Return 401 when AuthSessionState is not BAV_ACCESS_TOKEN_ISSUED", async () => {
-		jest.spyOn(Validations, "eventToSubjectIdentifier").mockResolvedValueOnce("sessionId");
+		vi.spyOn(Validations, "eventToSubjectIdentifier").mockResolvedValueOnce("sessionId");
 		mockBavService.getSessionById.mockResolvedValue(mockSession);
 		mockSession.authSessionState = "BAV_AUTH_CODE_ISSUED";
 		const out: APIGatewayProxyResult = await userInforequestProcessorTest.processRequest(VALID_USERINFO);

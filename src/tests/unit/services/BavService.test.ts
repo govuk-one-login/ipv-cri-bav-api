@@ -1,9 +1,7 @@
- 
- 
- 
+import type { Mock } from "vitest";
 import { UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { Logger } from "@aws-lambda-powertools/logger";
-import { mock } from "jest-mock-extended";
+import { mock } from "vitest-mock-extended";
 import { BavService } from "../../../services/BavService";
 import { createDynamoDbClient } from "../../../utils/DynamoDBFactory";
 import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
@@ -29,19 +27,22 @@ let SESSION_RECORD: ISessionItem;
 let PERSON_IDENTITY_RECORD: PersonIdentityItem;
 
 const logger = mock<Logger>();
-const mockDynamoDbClient = jest.mocked(createDynamoDbClient());
-jest.mock("crypto", () => ({
-	...jest.requireActual("crypto"),
+const mockDynamoDbClient = vi.mocked(createDynamoDbClient());
+vi.mock("crypto", () => ({
 	randomUUID: () => "randomId",
 }));
-jest.mock('@aws-sdk/client-sqs', () => ({
-    SQSClient: jest.fn(),
-    SendMessageCommand: jest.fn(),
+vi.mock('@aws-sdk/client-sqs', () => ({
+    SQSClient: vi.fn(),
+    SendMessageCommand: vi.fn(),
 }));
-jest.mock("@aws-sdk/lib-dynamodb", () => ({
-	...jest.requireActual("@aws-sdk/lib-dynamodb"),
-	UpdateCommand: jest.fn().mockImplementation(() => {}),
-}));
+
+vi.mock("@aws-sdk/lib-dynamodb", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@aws-sdk/lib-dynamodb")>();
+  return {
+    ...original,
+    UpdateCommand: vi.fn()
+  };
+});
 
 function createBaseTXMAEventPayload(): TxmaEvent {
 	return {
@@ -60,7 +61,7 @@ function createBaseTXMAEventPayload(): TxmaEvent {
 
 describe("BAV Service", () => {
 	let txmaEventPayload: TxmaEvent;
-	let mockSend: jest.Mock;
+	let mockSend: Mock;
 
 	beforeAll(async () => {
 		txmaEventPayload = createBaseTXMAEventPayload();
@@ -70,31 +71,33 @@ describe("BAV Service", () => {
 	});
 
 	beforeEach(() => {
-		jest.resetAllMocks();
-		jest.restoreAllMocks();
+		vi.resetAllMocks();
+		vi.restoreAllMocks();
 		
 		bavService = BavService.getInstance(tableName, logger, mockDynamoDbClient);
-		jest.useFakeTimers();
-		jest.setSystemTime(new Date(fakeTime * 1000)); // 2023-05-24T13:00:00.123Z
-		mockSend = jest.fn();
-		(SQSClient as jest.Mock).mockImplementation(() => ({
-			send: mockSend,
-		}));
+		vi.useFakeTimers();
+		vi.setSystemTime(new Date(fakeTime * 1000)); // 2023-05-24T13:00:00.123Z
+		mockSend = vi.fn();
+		(SQSClient as Mock).mockImplementation(function () {
+			return {
+				send: mockSend,
+			};
+		});
 	});
 
 	afterEach(() => {
-		jest.useRealTimers();
+		vi.useRealTimers();
 	});
 
 	describe("#getSessionById", () => {
 		it("Should return a session item when passed a valid session Id", async () => {
-			mockDynamoDbClient.send = jest.fn().mockResolvedValue({ Item: SESSION_RECORD });
+			mockDynamoDbClient.send = vi.fn().mockResolvedValue({ Item: SESSION_RECORD });
 			const result = await bavService.getSessionById(sessionId);
 			expect(result).toEqual({ clientId: "ipv-core-stub", "sessionId": "SESSIONID" });
 		});
 	
 		it("Should return undefined when session doesn't exist", async () => {
-			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+			mockDynamoDbClient.send = vi.fn().mockResolvedValue({});
 			await expect(bavService.getSessionById("1234")).resolves.toBeUndefined();
 		});
 
@@ -103,7 +106,7 @@ describe("BAV Service", () => {
 				...SESSION_RECORD,
 				expiryDate: absoluteTimeNow() - 500,
 			};
-			mockDynamoDbClient.send = jest.fn().mockResolvedValue({ Item: expiredSession });
+			mockDynamoDbClient.send = vi.fn().mockResolvedValue({ Item: expiredSession });
 			await expect(bavService.getSessionById("1234")).rejects.toThrow(expect.objectContaining({
 				statusCode: HttpCodesEnum.UNAUTHORIZED,
 				message: "Session with session id: 1234 has expired",
@@ -114,13 +117,13 @@ describe("BAV Service", () => {
 
 	describe("#getPersonIdentityBySessionId", () => {
 		it("Should return a person identity item when passed a valid session Id", async () => {
-			mockDynamoDbClient.send = jest.fn().mockResolvedValue({ Item: PERSON_IDENTITY_RECORD });
+			mockDynamoDbClient.send = vi.fn().mockResolvedValue({ Item: PERSON_IDENTITY_RECORD });
 			const result = await bavService.getPersonIdentityBySessionId(sessionId);
 			expect(result).toEqual(PERSON_IDENTITY_RECORD);
 		});
 	
 		it("Should return undefined when session doesn't exist", async () => {
-			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+			mockDynamoDbClient.send = vi.fn().mockResolvedValue({});
 			await expect(bavService.getPersonIdentityBySessionId("1234")).resolves.toBeUndefined();
 		});
 	});
@@ -207,7 +210,7 @@ describe("BAV Service", () => {
 
 	describe("#createAuthSession", () => {
 		it("should create auth session", async () => {
-			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+			mockDynamoDbClient.send = vi.fn().mockResolvedValue({});
 			await bavService.createAuthSession(SESSION_RECORD);
 			expect(mockDynamoDbClient.send).toHaveBeenCalledWith(expect.objectContaining({
 				input: {
@@ -221,7 +224,7 @@ describe("BAV Service", () => {
 		});
 
 		it("should handle error when sending message to dynamo", async () => {
-			mockDynamoDbClient.send = jest.fn().mockRejectedValueOnce({});
+			mockDynamoDbClient.send = vi.fn().mockRejectedValueOnce({});
 			await expect(bavService.createAuthSession(SESSION_RECORD)).rejects.toThrow(expect.objectContaining({
 				statusCode: HttpCodesEnum.SERVER_ERROR,
 				message: "Failed to save auth session data",
@@ -231,7 +234,7 @@ describe("BAV Service", () => {
 
 	describe("#savePersonIdentity", () => {
 		it("should create and save a PersonIdentity record", async () => {
-			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+			mockDynamoDbClient.send = vi.fn().mockResolvedValue({});
 	
 			await bavService.savePersonIdentity({
 				sharedClaims: personIdentityInputRecord,
@@ -250,7 +253,7 @@ describe("BAV Service", () => {
 		});
 
 		it("should add createdDate and expiryDate to a PersonIdentity record", async () => {
-			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+			mockDynamoDbClient.send = vi.fn().mockResolvedValue({});
 	
 			await bavService.savePersonIdentity({
 				sharedClaims: personIdentityInputRecord,
@@ -272,7 +275,7 @@ describe("BAV Service", () => {
 		});
 
 		it("should handle error when sending message to dynamo", async () => {
-			mockDynamoDbClient.send = jest.fn().mockRejectedValueOnce({});
+			mockDynamoDbClient.send = vi.fn().mockRejectedValueOnce({});
 
 			await expect(bavService.savePersonIdentity({
 				sharedClaims: personIdentityInputRecord,
@@ -288,13 +291,13 @@ describe("BAV Service", () => {
 
 	describe("#getPersonIdentityById", () => {
 		it("Should return a person identity item when passed a valid session Id", async () => {
-			mockDynamoDbClient.send = jest.fn().mockResolvedValue({ Item: personIdentityOutputRecord });
+			mockDynamoDbClient.send = vi.fn().mockResolvedValue({ Item: personIdentityOutputRecord });
 			const result = await bavService.getPersonIdentityById(sessionId);
 			expect(result).toEqual(personIdentityOutputRecord);
 		});
 	
 		it("Should return undefined when person identity doesn't exist", async () => {
-			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+			mockDynamoDbClient.send = vi.fn().mockResolvedValue({});
 			await expect(bavService.getPersonIdentityById(sessionId)).resolves.toBeUndefined();
 		});
 
@@ -303,7 +306,7 @@ describe("BAV Service", () => {
 				...personIdentityOutputRecord,
 				expiryDate: absoluteTimeNow() - 500,
 			};
-			mockDynamoDbClient.send = jest.fn().mockResolvedValue({ Item: expiredSession });
+			mockDynamoDbClient.send = vi.fn().mockResolvedValue({ Item: expiredSession });
 			await expect(bavService.getPersonIdentityById(sessionId)).rejects.toThrow(expect.objectContaining({
 				statusCode: HttpCodesEnum.UNAUTHORIZED,
 				message: `Session with session id: ${sessionId} has expired`,
@@ -312,7 +315,7 @@ describe("BAV Service", () => {
 		});
 
 		it("Should throw an error when DB call fails", async () => {
-			mockDynamoDbClient.send = jest.fn().mockRejectedValue("Error!");
+			mockDynamoDbClient.send = vi.fn().mockRejectedValue("Error!");
 			await expect(bavService.getPersonIdentityById(sessionId)).rejects.toThrow(expect.objectContaining({
 				statusCode: HttpCodesEnum.SERVER_ERROR,
 				message: "Error retrieving record",
@@ -330,7 +333,7 @@ describe("BAV Service", () => {
 		const sortCode = "123456";
 
 		it("saves account information to dynamo", async () => {
-			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+			mockDynamoDbClient.send = vi.fn().mockResolvedValue({});
 
 			await bavService.updateAccountDetails({ sessionId, accountNumber, sortCode });
 
@@ -346,7 +349,7 @@ describe("BAV Service", () => {
 		});
 
 		it("returns an error when account information cannot be saved to dynamo", async () => {
-			mockDynamoDbClient.send = jest.fn().mockRejectedValueOnce("Error!");
+			mockDynamoDbClient.send = vi.fn().mockRejectedValueOnce("Error!");
 
 			await expect(bavService.updateAccountDetails({ sessionId, accountNumber, sortCode }))
 				.rejects.toThrow(expect.objectContaining({
@@ -361,7 +364,7 @@ describe("BAV Service", () => {
 		const copCheckResult = "FULL_MATCH";
 
 		it("saves account information to dynamo", async () => {
-			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+			mockDynamoDbClient.send = vi.fn().mockResolvedValue({});
 
 			await bavService.saveCopCheckResult(sessionId, copCheckResult, 1);
 
@@ -378,7 +381,7 @@ describe("BAV Service", () => {
 		});
 
 		it("saves account information to dynamo without attemptCount", async () => {
-			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+			mockDynamoDbClient.send = vi.fn().mockResolvedValue({});
 
 			await bavService.saveCopCheckResult(sessionId, copCheckResult, undefined);
 
@@ -394,7 +397,7 @@ describe("BAV Service", () => {
 		});
 
 		it("returns an error when account information cannot be saved to dynamo", async () => {
-			mockDynamoDbClient.send = jest.fn().mockRejectedValueOnce("Error!");
+			mockDynamoDbClient.send = vi.fn().mockRejectedValueOnce("Error!");
 
 			await expect(bavService.saveCopCheckResult(sessionId, copCheckResult)).rejects.toThrow(expect.objectContaining({
 				statusCode: HttpCodesEnum.SERVER_ERROR,
@@ -408,7 +411,7 @@ describe("BAV Service", () => {
 		const vendorUuid = "vendorUuid";
 
 		it("saves account information to dynamo", async () => {
-			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+			mockDynamoDbClient.send = vi.fn().mockResolvedValue({});
 
 			await bavService.saveVendorUuid(sessionId, vendorUuid);
 
@@ -423,7 +426,7 @@ describe("BAV Service", () => {
 		});
 
 		it("returns an error when account information cannot be saved to dynamo", async () => {
-			mockDynamoDbClient.send = jest.fn().mockRejectedValueOnce("Error!");
+			mockDynamoDbClient.send = vi.fn().mockRejectedValueOnce("Error!");
 
 			await expect(bavService.saveVendorUuid(sessionId, vendorUuid)).rejects.toThrow(expect.objectContaining({
 				statusCode: HttpCodesEnum.SERVER_ERROR,
@@ -444,7 +447,7 @@ describe("BAV Service", () => {
 		}];
 		
 		it("saves account information to dynamo", async () => {
-			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+			mockDynamoDbClient.send = vi.fn().mockResolvedValue({});
 
 			await bavService.saveExperianCheckResult(sessionId, { expRequestId: "1234568", personalDetailsScore: 9, warningsErrors: undefined, outcome: "CONTINUE" }, experianCheckResultFullMatch, 1);
 
@@ -462,7 +465,7 @@ describe("BAV Service", () => {
 		});
 
 		it("saves account information to dynamo without attemptCount", async () => {
-			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+			mockDynamoDbClient.send = vi.fn().mockResolvedValue({});
 
 			await bavService.saveExperianCheckResult(sessionId, { expRequestId: "1234568", personalDetailsScore: 9, warningsErrors: undefined, outcome: "continue" }, experianCheckResultFullMatch, undefined);
 
@@ -479,7 +482,7 @@ describe("BAV Service", () => {
 		});
 
 		it("saves account information to dynamo with responseCode if present", async () => {
-			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+			mockDynamoDbClient.send = vi.fn().mockResolvedValue({});
 
 			await bavService.saveExperianCheckResult(sessionId, { expRequestId: "1234568", personalDetailsScore: 1, warningsErrors: warningsError2, outcome: "REFER" }, experianCheckResultNoMatch, 1);
 
@@ -497,7 +500,7 @@ describe("BAV Service", () => {
 		});
 
 		it("returns an error when account information cannot be saved to dynamo", async () => {
-			mockDynamoDbClient.send = jest.fn().mockRejectedValueOnce("Error!");
+			mockDynamoDbClient.send = vi.fn().mockRejectedValueOnce("Error!");
 
 			await expect(bavService.saveExperianCheckResult(sessionId, { expRequestId: "1234568", personalDetailsScore: 9, warningsErrors: undefined, outcome: "CONTINUE" }, experianCheckResultFullMatch, undefined)).rejects.toThrow(expect.objectContaining({
 				statusCode: HttpCodesEnum.SERVER_ERROR,
@@ -511,7 +514,7 @@ describe("BAV Service", () => {
 		const authorizationCode = "AUTH_CODE";
 
 		it("saves authorization code information to dynamo", async () => {
-			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+			mockDynamoDbClient.send = vi.fn().mockResolvedValue({});
 
 			await bavService.setAuthorizationCode(sessionId, authorizationCode);
 
@@ -529,7 +532,7 @@ describe("BAV Service", () => {
 		});
 
 		it("returns an error when authorization code information cannot be saved to dynamo", async () => {
-			mockDynamoDbClient.send = jest.fn().mockRejectedValueOnce({});
+			mockDynamoDbClient.send = vi.fn().mockRejectedValueOnce({});
 
 			await expect(bavService.setAuthorizationCode(sessionId, authorizationCode)).rejects.toThrow(expect.objectContaining({
 				statusCode: HttpCodesEnum.SERVER_ERROR,
@@ -540,22 +543,22 @@ describe("BAV Service", () => {
 
 	describe("#generateSessionId", () => {
 		it("returns a unique sessionId", async () => {
-			mockDynamoDbClient.send = jest.fn().mockResolvedValueOnce({});
+			mockDynamoDbClient.send = vi.fn().mockResolvedValueOnce({});
 			const result = await bavService.generateSessionId();
 			expect(result).toBe("randomId");
 		});
 
 		it("makes 3 attempts to generate a unique session ID", async () => {
-			jest.spyOn(bavService, "generateSessionId");
-			mockDynamoDbClient.send = jest.fn().mockResolvedValueOnce({ Item: SESSION_RECORD }).mockResolvedValueOnce({ Item: SESSION_RECORD }).mockResolvedValueOnce({});
+			vi.spyOn(bavService, "generateSessionId");
+			mockDynamoDbClient.send = vi.fn().mockResolvedValueOnce({ Item: SESSION_RECORD }).mockResolvedValueOnce({ Item: SESSION_RECORD }).mockResolvedValueOnce({});
 			const result = await bavService.generateSessionId();
 			expect(result).toBe("randomId");
 			expect(bavService.generateSessionId).toHaveBeenCalledTimes(3);
 		});
 
 		it("throws an error if unique session ID cannot be generated after 3 attempts", async () => {
-			jest.spyOn(bavService, "generateSessionId");
-			mockDynamoDbClient.send = jest.fn().mockResolvedValue({ Item: SESSION_RECORD });
+			vi.spyOn(bavService, "generateSessionId");
+			mockDynamoDbClient.send = vi.fn().mockResolvedValue({ Item: SESSION_RECORD });
 			await expect(bavService.generateSessionId()).rejects.toThrow(expect.objectContaining({
 				statusCode: HttpCodesEnum.SERVER_ERROR,
 				message: "Failed to generate unique sessionId",
@@ -566,13 +569,13 @@ describe("BAV Service", () => {
 
 	describe("#getSessionByAuthorizationCode", () => {
 		it("should return undefined when session item is not found by authorization code", async () => {
-			mockDynamoDbClient.query = jest.fn().mockResolvedValue({ Items: [] });
+			mockDynamoDbClient.query = vi.fn().mockResolvedValue({ Items: [] });
 	
 			await expect(bavService.getSessionByAuthorizationCode("1234")).rejects.toThrow("Error retrieving Session by authorization code");
 		});
 	
 		it("should throw error when multiple session items are found by authorization code", async () => {
-			mockDynamoDbClient.query = jest.fn().mockResolvedValue({ Items: [{ sessionId: "SESSID1" }, { sessionId: "SESSID2" }] });
+			mockDynamoDbClient.query = vi.fn().mockResolvedValue({ Items: [{ sessionId: "SESSID1" }, { sessionId: "SESSID2" }] });
 	
 			await expect(bavService.getSessionByAuthorizationCode("1234")).rejects.toThrow(expect.objectContaining({
 				statusCode: HttpCodesEnum.UNAUTHORIZED,
@@ -586,7 +589,7 @@ describe("BAV Service", () => {
 		});
 	
 		it("should throw error when session item has expired by authorization code", async () => {
-			mockDynamoDbClient.query = jest.fn().mockResolvedValue({
+			mockDynamoDbClient.query = vi.fn().mockResolvedValue({
 				Items: [{
 					sessionId: "SESSID",
 					expiryDate: absoluteTimeNow() - 500,
@@ -605,7 +608,7 @@ describe("BAV Service", () => {
 		});
 	
 		it("should return session item when session is found by authorization code", async () => {
-			mockDynamoDbClient.query = jest.fn().mockResolvedValue({
+			mockDynamoDbClient.query = vi.fn().mockResolvedValue({
 				Items: [{
 					sessionId: "SESSID",
 					expiryDate: absoluteTimeNow() + 500,
@@ -625,7 +628,7 @@ describe("BAV Service", () => {
 
 	describe("#updateSessionWithAccessTokenDetails", () => {
 		it("should throw 500 if request fails during update Session data with access token details", async () => {
-			mockDynamoDbClient.send = jest.fn().mockRejectedValueOnce({});
+			mockDynamoDbClient.send = vi.fn().mockRejectedValueOnce({});
 	
 			await expect(bavService.updateSessionWithAccessTokenDetails("SESSID", 12345)).rejects.toThrow(expect.objectContaining({
 				statusCode: HttpCodesEnum.SERVER_ERROR,
@@ -633,7 +636,7 @@ describe("BAV Service", () => {
 		});
 
 		it("should update Session data with access token details", async () => {			
-			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+			mockDynamoDbClient.send = vi.fn().mockResolvedValue({});
 			await bavService.updateSessionWithAccessTokenDetails("SESSID", 12345);			
 
 			expect(UpdateCommand).toHaveBeenCalledWith(expect.objectContaining({
@@ -650,7 +653,7 @@ describe("BAV Service", () => {
 		});
 
 		it("should update session auth state", async () => {
-			mockDynamoDbClient.send = jest.fn().mockResolvedValue({});
+			mockDynamoDbClient.send = vi.fn().mockResolvedValue({});
 			await bavService.updateSessionAuthState("SESSID", "AUTH_STATE");			
 
 			expect(UpdateCommand).toHaveBeenCalledWith(expect.objectContaining({

@@ -2,7 +2,7 @@
  
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
-import { mock } from "jest-mock-extended";
+import { mock } from "vitest-mock-extended";
 import { ExperianCheckResults } from "../../../models/enums/Experian";
 import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../../../models/enums/MessageCodes";
@@ -15,8 +15,7 @@ import { Constants } from "../../../utils/Constants";
 
 
 const vendorUuid = "new vendorUuid";
-jest.mock("crypto", () => ({
-	...jest.requireActual("crypto"),
+vi.mock("crypto", () => ({
 	randomUUID: () => vendorUuid,
 }));
 const mockBavService = mock<BavService>();
@@ -79,13 +78,13 @@ describe("VerifyAccountRequestProcessor", () => {
 	});
 
 	beforeEach(() => {
-		jest.clearAllMocks();
-		jest.useFakeTimers();
-		jest.setSystemTime(new Date(1585695600000));
+		vi.clearAllMocks();
+		vi.useFakeTimers();
+		vi.setSystemTime(new Date(1585695600000));
 	});
 
 	afterEach(() => {
-		jest.useRealTimers();
+		vi.useRealTimers();
 	});
 
 	describe("getInstance", () => {

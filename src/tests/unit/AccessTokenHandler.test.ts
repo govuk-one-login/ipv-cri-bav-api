@@ -1,5 +1,5 @@
  
-import { mock } from "jest-mock-extended";
+import { mock } from "vitest-mock-extended";
 import { AccessTokenRequestProcessor } from "../../services/AccessTokenRequestProcessor";
 import { lambdaHandler } from "../../AccessTokenHandler";
 import { CONTEXT } from "./data/context";
@@ -10,7 +10,7 @@ const mockedAccessTokenRequestProcessor = mock<AccessTokenRequestProcessor>();
 
 describe("AccessTokenHandler", () => {
 	it("return success response for accessToken", async () => {
-		AccessTokenRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedAccessTokenRequestProcessor);
+		AccessTokenRequestProcessor.getInstance = vi.fn().mockReturnValue(mockedAccessTokenRequestProcessor);
 
 		await lambdaHandler(VALID_ACCESSTOKEN, CONTEXT);
 
@@ -18,7 +18,7 @@ describe("AccessTokenHandler", () => {
 	});
 
 	it("return error when AccessTokenRequestProcessor throws an error", async () => {
-		AccessTokenRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedAccessTokenRequestProcessor);
+		AccessTokenRequestProcessor.getInstance = vi.fn().mockReturnValue(mockedAccessTokenRequestProcessor);
 		mockedAccessTokenRequestProcessor.processRequest.mockRejectedValueOnce("Error");
 
 		const response = await lambdaHandler(VALID_ACCESSTOKEN, CONTEXT);

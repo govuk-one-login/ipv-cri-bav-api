@@ -2,7 +2,7 @@
  
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics } from "@aws-lambda-powertools/metrics";
-import { mock } from "jest-mock-extended";
+import { mock } from "vitest-mock-extended";
 import { JWTPayload } from "jose";
 import { VALID_SESSION, SESSION_WITH_INVALID_CLIENT } from "../data/session-events";
 import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
@@ -69,10 +69,10 @@ const decryptedJwtPayloadFactory = ():JWTPayload => {
 
 describe("SessionRequestProcessor", () => {
 	beforeEach(() => {
-		jest.spyOn(TxmaEventUtils, "buildCoreEventFields");
+		vi.spyOn(TxmaEventUtils, "buildCoreEventFields");
 
-		jest.useFakeTimers();
-		jest.setSystemTime(new Date(1585695600000)); // == 2020-03-31T23:00:00.000Z
+		vi.useFakeTimers();
+		vi.setSystemTime(new Date(1585695600000)); // == 2020-03-31T23:00:00.000Z
 		sessionRequestProcessor = new SessionRequestProcessor(logger, metrics);
 		// @ts-expect-error private access manipulation used for testing
 		sessionRequestProcessor.BavService = mockBavService;
@@ -81,13 +81,13 @@ describe("SessionRequestProcessor", () => {
 	});
 
 	afterEach(() => {
-		jest.useRealTimers();
-		jest.resetAllMocks();
-		jest.restoreAllMocks();
+		vi.useRealTimers();
+		vi.resetAllMocks();
+		vi.restoreAllMocks();
 	});
 
 	it("should throw error where client config cannot be processed", async () => {
-		jest.spyOn(envVarUtils, "checkEnvironmentVariable").mockReturnValue("test");
+		vi.spyOn(envVarUtils, "checkEnvironmentVariable").mockReturnValue("test");
 		sessionRequestProcessor = new SessionRequestProcessor(logger, metrics);
 
 		const response = await sessionRequestProcessor.processRequest(VALID_SESSION);
@@ -186,7 +186,7 @@ describe("SessionRequestProcessor", () => {
 		mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
 		mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
 		mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
-		jest.spyOn(Validations, "isJwtValid").mockReturnValue("errors");
+		vi.spyOn(Validations, "isJwtValid").mockReturnValue("errors");
 
 		const response = await sessionRequestProcessor.processRequest(VALID_SESSION);
 
@@ -203,8 +203,8 @@ describe("SessionRequestProcessor", () => {
 		mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
 		mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
 		mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
-		jest.spyOn(Validations, "isJwtValid").mockReturnValue("");
-		jest.spyOn(Validations, "isPersonNameValid").mockReturnValue(false);
+		vi.spyOn(Validations, "isJwtValid").mockReturnValue("");
+		vi.spyOn(Validations, "isPersonNameValid").mockReturnValue(false);
 
 		const response = await sessionRequestProcessor.processRequest(VALID_SESSION);
 
@@ -222,8 +222,8 @@ describe("SessionRequestProcessor", () => {
 		mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
 		mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
 		mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
-		jest.spyOn(Validations, "isJwtValid").mockReturnValue("");
-		jest.spyOn(Validations, "isPersonNameValid").mockReturnValue(true);
+		vi.spyOn(Validations, "isJwtValid").mockReturnValue("");
+		vi.spyOn(Validations, "isPersonNameValid").mockReturnValue(true);
 
 		await sessionRequestProcessor.processRequest(VALID_SESSION);
 
@@ -237,8 +237,8 @@ describe("SessionRequestProcessor", () => {
 			mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
 			mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
 			mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
-			jest.spyOn(Validations, "isJwtValid").mockReturnValue("");
-			jest.spyOn(Validations, "isPersonNameValid").mockReturnValue(true);
+			vi.spyOn(Validations, "isJwtValid").mockReturnValue("");
+			vi.spyOn(Validations, "isPersonNameValid").mockReturnValue(true);
 
 			const sessionWithOutHeaders = JSON.parse(JSON.stringify(VALID_SESSION));
 			delete sessionWithOutHeaders.headers;
@@ -273,8 +273,8 @@ describe("SessionRequestProcessor", () => {
 			mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
 			mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
 			mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
-			jest.spyOn(Validations, "isJwtValid").mockReturnValue("");
-			jest.spyOn(Validations, "isPersonNameValid").mockReturnValue(true);
+			vi.spyOn(Validations, "isJwtValid").mockReturnValue("");
+			vi.spyOn(Validations, "isPersonNameValid").mockReturnValue(true);
 
 			await sessionRequestProcessor.processRequest({ ...VALID_SESSION, headers: {} });
 
@@ -306,8 +306,8 @@ describe("SessionRequestProcessor", () => {
 			mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
 			mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
 			mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
-			jest.spyOn(Validations, "isJwtValid").mockReturnValue("");
-			jest.spyOn(Validations, "isPersonNameValid").mockReturnValue(true);
+			vi.spyOn(Validations, "isJwtValid").mockReturnValue("");
+			vi.spyOn(Validations, "isPersonNameValid").mockReturnValue(true);
 			const xForwardedFor = "x-forwarded-for";
 
 			await sessionRequestProcessor.processRequest({
@@ -345,8 +345,8 @@ describe("SessionRequestProcessor", () => {
 		mockKmsJwtAdapter.decrypt.mockResolvedValue("success");
 		mockKmsJwtAdapter.decode.mockReturnValue(decodedJwtFactory());
 		mockKmsJwtAdapter.verifyWithJwks.mockResolvedValue(decryptedJwtPayloadFactory());
-		jest.spyOn(Validations, "isJwtValid").mockReturnValue("");
-		jest.spyOn(Validations, "isPersonNameValid").mockReturnValue(true);
+		vi.spyOn(Validations, "isJwtValid").mockReturnValue("");
+		vi.spyOn(Validations, "isPersonNameValid").mockReturnValue(true);
 
 		const response = await sessionRequestProcessor.processRequest(VALID_SESSION);
 

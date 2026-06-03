@@ -1,9 +1,8 @@
- 
- 
+import type { MockInstance } from "vitest";
 import { lambdaHandler, logger } from "../../AbortHandler";
 import { VALID_ABORT } from "./data/abort-events";
 import { CONTEXT } from "./data/context";
-import { mock } from "jest-mock-extended";
+import { mock } from "vitest-mock-extended";
 import { HttpCodesEnum } from "../../models/enums/HttpCodesEnum";
 import { AbortRequestProcessor } from "../../services/AbortRequestProcessor";
 import { Constants } from "../../utils/Constants";
@@ -12,10 +11,10 @@ import { MessageCodes } from "../../models/enums/MessageCodes";
 const mockedAbortRequestProcessor = mock<AbortRequestProcessor>();
 
 describe("AbortHandler", () => {
-	let loggerSpy: jest.SpyInstance;
+	let loggerSpy: MockInstance;
 
 	beforeEach(() => {
-		loggerSpy = jest.spyOn(logger, "error");
+		loggerSpy = vi.spyOn(logger, "error");
 	});
 
 	it("returns error when x-govuk-signin-session-id header isn't passed", async () => {
@@ -39,7 +38,7 @@ describe("AbortHandler", () => {
 	});
 
 	it("return success when AbortRequestProcessor completes successfully", async () => {
-		AbortRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedAbortRequestProcessor);
+		AbortRequestProcessor.getInstance = vi.fn().mockReturnValue(mockedAbortRequestProcessor);
 
 		await lambdaHandler(VALID_ABORT, CONTEXT);
 
@@ -47,7 +46,7 @@ describe("AbortHandler", () => {
 	});
 
 	it("return error when AbortRequestProcessor throws an error", async () => {
-		AbortRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedAbortRequestProcessor);
+		AbortRequestProcessor.getInstance = vi.fn().mockReturnValue(mockedAbortRequestProcessor);
 		mockedAbortRequestProcessor.processRequest.mockRejectedValueOnce("Error");
 
 		const response = await lambdaHandler(VALID_ABORT, CONTEXT);

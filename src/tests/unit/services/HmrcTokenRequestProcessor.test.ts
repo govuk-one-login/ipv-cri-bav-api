@@ -1,6 +1,6 @@
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
-import { mock } from "jest-mock-extended";
+import { mock } from "vitest-mock-extended";
 import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
 import { HmrcService } from "../../../services/HmrcService";
 import { HmrcTokenRequestProcessor } from "../../../services/HmrcTokenRequestProcessor";
@@ -12,9 +12,9 @@ const metrics = new Metrics({ namespace: "BAV" });
 const HMRC_CLIENT_ID = "clientId";
 const HMRC_CLIENT_SECRET = "client-secret";
 const HMRC_TOKEN_SSM_PATH = "/dev/HMRC/TOKEN";
-jest.mock("../../../utils/Config", () => {
+vi.mock("../../../utils/Config", () => {
 	return {
-		putParameter: jest.fn(() => {return;}),
+		putParameter: vi.fn(() => {return;}),
 	};
 });
 const tokenResponse = {
@@ -35,7 +35,7 @@ describe("HmrcTokenRequestProcessor", () => {
 	});
 
 	beforeEach(() => {
-		jest.clearAllMocks();
+		vi.clearAllMocks();
 	});
 
 	it("throws error if hmrc token generation failed", async () => {

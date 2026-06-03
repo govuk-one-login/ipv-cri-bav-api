@@ -8,25 +8,9 @@ import {
   QueryExecutionState,
   StartQueryExecutionCommand,
 } from "@aws-sdk/client-athena";
-import "aws-sdk-client-mock-jest";
+import "aws-sdk-client-mock-vitest";
 
 const athenaMock = mockClient(AthenaClient);
-
-jest.mock("@aws-lambda-powertools/logger", () => ({
-  Logger: jest.fn().mockImplementation(() => ({
-    info: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
-    setPersistentLogAttributes: jest.fn(),
-    addContext: jest.fn(),
-  })),
-}));
-
-jest.mock("@aws-lambda-powertools/metrics", () => ({
-  Metrics: jest.fn().mockImplementation(() => ({
-    logMetrics: jest.fn(),
-  })),
-}));
 
 describe("AthenaQueryHandler", () => {
   const lambdaProxyEvent = {

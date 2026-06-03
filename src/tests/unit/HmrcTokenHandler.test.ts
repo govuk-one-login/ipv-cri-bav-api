@@ -1,19 +1,19 @@
  
 import { lambdaHandler } from "../../HmrcTokenHandler";
-import { mock } from "jest-mock-extended";
+import { mock } from "vitest-mock-extended";
 import { HmrcTokenRequestProcessor } from "../../services/HmrcTokenRequestProcessor";
 
 const mockedHmrcTokenRequestProcessor = mock<HmrcTokenRequestProcessor>();
-jest.mock("../../utils/Config", () => {
+vi.mock("../../utils/Config", () => {
 	return {
-		getParameter: jest.fn(() => {return "dgsdgsg";}),
+		getParameter: vi.fn(() => {return "dgsdgsg";}),
 	};
 });
 
 describe("HmrcTokenHandler", () => {
 	
 	it("return success when HmrcTokenRequestProcessor completes successfully", async () => {
-		HmrcTokenRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedHmrcTokenRequestProcessor);
+		HmrcTokenRequestProcessor.getInstance = vi.fn().mockReturnValue(mockedHmrcTokenRequestProcessor);
 
 		await lambdaHandler();
 
@@ -21,7 +21,7 @@ describe("HmrcTokenHandler", () => {
 	});
 
 	it("return error when HmrcTokenRequestProcessor throws an error", async () => {
-		HmrcTokenRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedHmrcTokenRequestProcessor);
+		HmrcTokenRequestProcessor.getInstance = vi.fn().mockReturnValue(mockedHmrcTokenRequestProcessor);
 		mockedHmrcTokenRequestProcessor.processRequest.mockRejectedValueOnce("Error");
 
 		await expect(lambdaHandler()).rejects.toThrow(expect.objectContaining({

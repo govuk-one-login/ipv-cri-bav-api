@@ -2,7 +2,7 @@
  
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
-import { mock } from "jest-mock-extended";
+import { mock } from "vitest-mock-extended";
 import { AuthSessionState } from "../../../models/enums/AuthSessionState";
 import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
 import { ISessionItem } from "../../../models/ISessionItem";
@@ -40,8 +40,7 @@ const authResponse = {
 
 const mockBavService = mock<BavService>();
 const logger = mock<Logger>();
-jest.mock("crypto", () => ({
-	...jest.requireActual("crypto"),
+vi.mock("crypto", () => ({
 	randomUUID: () => authorizationCode,
 }));
 
@@ -53,13 +52,13 @@ describe("AuthorizationRequestProcessor", () => {
 	});
 
 	beforeEach(() => {
-		jest.clearAllMocks();
-		jest.useFakeTimers();
-		jest.setSystemTime(new Date(1585695600000));
+		vi.clearAllMocks();
+		vi.useFakeTimers();
+		vi.setSystemTime(new Date(1585695600000));
 	});
 
 	afterEach(() => {
-		jest.useRealTimers();
+		vi.useRealTimers();
 	});
 
 	it("throws error if session cannot be found", async () => {

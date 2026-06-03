@@ -7,8 +7,6 @@ import format from "ecdsa-sig-formatter";
 // @ts-ignore
 import testData from "../events/startEvents";
 
-jest.setTimeout(30000);
-
 const mockJwks = {
   keys: [
     {
@@ -43,9 +41,9 @@ const kmsClient = mockClient(KMSClient);
 
 describe("Start BAV Check Endpoint", () => {
   beforeEach(() => {
-    jest.useFakeTimers();
-    jest.setSystemTime(new Date(1585695600000)); // == 2020-03-31T23:00:00.000Z
-    jest.spyOn(axios, "get").mockResolvedValue({ data: mockJwks });
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(1585695600000)); // == 2020-03-31T23:00:00.000Z
+    vi.spyOn(axios, "get").mockResolvedValue({ data: mockJwks });
 
     kmsClient.on(SignCommand).resolves({
       Signature: new Uint8Array([
@@ -54,7 +52,7 @@ describe("Start BAV Check Endpoint", () => {
       ]),
     });
 
-    jest
+    vi
       .spyOn(format, "derToJose")
       .mockReturnValue(
         "PmBhykH4w94xj3dSDSR-tE5XSh60SjKAP6hHGc6c_fx7ia87hEkKgfhSTCT000RaDhH0MaV47FsUjztCb0m1qg"
@@ -62,8 +60,8 @@ describe("Start BAV Check Endpoint", () => {
   });
 
   afterEach(() => {
-    jest.useRealTimers();
-    jest.resetAllMocks();
+    vi.useRealTimers();
+    vi.resetAllMocks();
   });
 
   it("returns JAR data and target uri", async () => {

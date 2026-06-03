@@ -7,9 +7,9 @@ import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
 import { VALID_USERINFO, MISSING_AUTH_HEADER_USERINFO } from "../data/userInfo-events";
 import { Constants } from "../../../utils/Constants";
 import { Logger } from "@aws-lambda-powertools/logger";
-import { mock } from "jest-mock-extended";
+import { mock } from "vitest-mock-extended";
 
-jest.mock("../../../utils/KmsJwtAdapter");
+vi.mock("../../../utils/KmsJwtAdapter");
 const logger = mock<Logger>();
 
 describe("Validations", () => {
@@ -88,14 +88,14 @@ describe("Validations", () => {
 		it("throws an error if JWT verification fails", async () => {
 			const invalidHeaderEvent = VALID_USERINFO;
 			invalidHeaderEvent.headers.Authorization = "Bearer invalid-token";
-			jest.spyOn(jwtAdapter, "verify").mockResolvedValue(false);
+			vi.spyOn(jwtAdapter, "verify").mockResolvedValue(false);
 			await expect(eventToSubjectIdentifier(jwtAdapter, invalidHeaderEvent))
 				.rejects.toThrow(new AppError(HttpCodesEnum.UNAUTHORIZED, "Failed to verify signature"));
 		});
 
 		it("throws an error if JWT expiration is invalid or expired", async () => {
-			jest.spyOn(jwtAdapter, "verify").mockResolvedValue(true);
-			jest.spyOn(jwtAdapter, "decode").mockReturnValue({
+			vi.spyOn(jwtAdapter, "verify").mockResolvedValue(true);
+			vi.spyOn(jwtAdapter, "decode").mockReturnValue({
 				payload: {
 					sub: "SESSIONID",
 					exp: 123,
@@ -110,8 +110,8 @@ describe("Validations", () => {
 		});
 
 		it("throws an error if sub is missing in JWT", async () => {
-			jest.spyOn(jwtAdapter, "verify").mockResolvedValue(true);
-			jest.spyOn(jwtAdapter, "decode").mockReturnValue({
+			vi.spyOn(jwtAdapter, "verify").mockResolvedValue(true);
+			vi.spyOn(jwtAdapter, "decode").mockReturnValue({
 				payload: {
 					exp: 2646908639,
 				},
@@ -125,8 +125,8 @@ describe("Validations", () => {
 		});
 
 		it("returns sub if JWT is valid", async () => {
-			jest.spyOn(jwtAdapter, "verify").mockResolvedValue(true);
-			jest.spyOn(jwtAdapter, "decode").mockReturnValue({
+			vi.spyOn(jwtAdapter, "verify").mockResolvedValue(true);
+			vi.spyOn(jwtAdapter, "decode").mockReturnValue({
 				payload: {
 					sub: "SESSIONID",
 					exp: 2646908639,

@@ -2,7 +2,7 @@
 import { lambdaHandler } from "../../AuthorizationHandler";
 import { VALID_AUTH } from "./data/auth-events";
 import { CONTEXT } from "./data/context";
-import { mock } from "jest-mock-extended";
+import { mock } from "vitest-mock-extended";
 import { HttpCodesEnum } from "../../models/enums/HttpCodesEnum";
 import { AuthorizationRequestProcessor } from "../../services/AuthorizationRequestProcessor";
 import { Constants } from "../../utils/Constants";
@@ -11,7 +11,7 @@ const mockedAuthorizationRequestProcessor = mock<AuthorizationRequestProcessor>(
 
 describe("AuthorizationHandler", () => {
 	it("throws an error if no session ID header has been provided", async () => {
-		AuthorizationRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedAuthorizationRequestProcessor);
+		AuthorizationRequestProcessor.getInstance = vi.fn().mockReturnValue(mockedAuthorizationRequestProcessor);
 
 		const response = await lambdaHandler({ ...VALID_AUTH, headers: { [Constants.SESSION_ID]: undefined } }, CONTEXT);
 
@@ -20,7 +20,7 @@ describe("AuthorizationHandler", () => {
 	});
 
 	it("throws an error if session ID header is not valid UUID", async () => {
-		AuthorizationRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedAuthorizationRequestProcessor);
+		AuthorizationRequestProcessor.getInstance = vi.fn().mockReturnValue(mockedAuthorizationRequestProcessor);
 
 		const response = await lambdaHandler({ ...VALID_AUTH, headers: { [Constants.SESSION_ID]: "test" } }, CONTEXT);
 
@@ -29,7 +29,7 @@ describe("AuthorizationHandler", () => {
 	});
 
 	it("return success when SessionRequestProcessor completes successfully", async () => {
-		AuthorizationRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedAuthorizationRequestProcessor);
+		AuthorizationRequestProcessor.getInstance = vi.fn().mockReturnValue(mockedAuthorizationRequestProcessor);
 
 		await lambdaHandler(VALID_AUTH, CONTEXT);
 
@@ -37,7 +37,7 @@ describe("AuthorizationHandler", () => {
 	});
 
 	it("return error when SessionRequestProcessor throws an error", async () => {
-		AuthorizationRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedAuthorizationRequestProcessor);
+		AuthorizationRequestProcessor.getInstance = vi.fn().mockReturnValue(mockedAuthorizationRequestProcessor);
 		mockedAuthorizationRequestProcessor.processRequest.mockRejectedValueOnce("Error");
 
 		const response = await lambdaHandler(VALID_AUTH, CONTEXT);

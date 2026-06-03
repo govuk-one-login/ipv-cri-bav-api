@@ -1,6 +1,5 @@
 import { handler } from "../handlers/callback";
 import callbackSuccess from "../events/callbackSuccess.json";
-import callbackFailed from "../events/callbackFailure.json";
 import axios from "axios";
 
 const mockVc = {
@@ -19,10 +18,10 @@ const token = {
   },
 };
 
-jest.mock("axios");
+vi.mock("axios");
 
 describe("Callback Endpoint", () => {
-  const mockedAxios = axios as jest.Mocked<typeof axios>;
+  const mockedAxios = axios as vi.Mocked<typeof axios>;
 
   beforeEach(() => {
     mockedAxios.post
