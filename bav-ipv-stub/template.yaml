@@ -415,7 +415,12 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         Minify: true
-        Target: "es2020"
+        Target: es2022
+        Format: esm
+        OutExtension:
+          - .js=.mjs
+        Banner:
+          - js=import { createRequire } from 'module'; const require = createRequire(import.meta.url);
         Sourcemap: true
         EntryPoints:
           - handlers/startBavCheck.ts
@@ -467,7 +472,12 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         Minify: true
-        Target: "es2020"
+        Target: es2022
+        Format: esm
+        OutExtension:
+          - .js=.mjs
+        Banner:
+          - js=import { createRequire } from 'module'; const require = createRequire(import.meta.url);
         Sourcemap: true
         EntryPoints:
           - handlers/generateTokenRequest.ts
@@ -519,7 +529,12 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         Minify: true
-        Target: "es2020"
+        Target: es2022
+        Format: esm
+        OutExtension:
+          - .js=.mjs
+        Banner:
+          - js=import { createRequire } from 'module'; const require = createRequire(import.meta.url);
         Sourcemap: true
         EntryPoints:
           - handlers/jsonWebKeys.ts
@@ -562,7 +577,12 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         Minify: true
-        Target: "es2020"
+        Target: es2022
+        Format: esm
+        OutExtension:
+          - .js=.mjs
+        Banner:
+          - js=import { createRequire } from 'module'; const require = createRequire(import.meta.url);
         Sourcemap: true
         EntryPoints:
           - handlers/callback.ts
