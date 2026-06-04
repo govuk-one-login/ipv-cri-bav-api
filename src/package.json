@@ -31,13 +31,13 @@
     "node-rsa": "1.1.1"
   },
   "scripts": {
-    "unit": "vitest run tests/unit --coverage",
+    "unit": "./node_modules/.bin/vitest run tests/unit --coverage",
     "test:unit": "npm run compile && npm run unit",
     "lint:fix": "eslint --fix --output-file ./reports/eslint/report.html --format html -c eslint.config.mjs --ext *.ts .",
     "compile": "./node_modules/.bin/tsc",
     "lint": "eslint -c eslint.config.mjs *.ts .",
-    "test:infra": "vitest run tests/infra",
-    "api": "_JUNIT_OUTPUT_NAME=api-report.xml node --experimental-vm-modules vitest run tests/api/backend/",
+    "test:infra": "./node_modules/.bin/vitest run tests/infra",
+    "api": "_JUNIT_OUTPUT_NAME=api-report.xml node --experimental-vm-modules ./node_modules/.bin/vitest run tests/api/backend/",
     "test:api": "npm run compile && npm run api",
     "test:pii": "bash ./check-logs.sh",
     "kill:dynamodblocal": "cd tests/contract; ./scripts/kill-dynamodb-local.sh",
@@ -45,7 +45,7 @@
     "test:pactconnection": "cd tests/contract; ./scripts/test-pact-connection.sh",
     "start:contract": "npm run start:dynamodblocal && npm run test:pactconnection && npm run wait-start:contract",
     "wait-start:contract": "wait-on tcp:127.0.0.1:8000 && cd tests/contract && ts-node ./app.ts",
-    "test:provider": "vitest run tests/contract/BavCriProvider.test.ts",
+    "test:provider": "vitest run tests/contract/BavCriProvider.test.ts --coverage=false",
     "test:contract": "wait-on tcp:127.0.0.1:3000; cd tests/contract; npm run test:provider && npm run kill:dynamodblocal",
     "test:contract:ci": "dotenv -e.env.contract -- bash -c 'npm run start:contract & npm run test:contract && kill $!'" 
   },
