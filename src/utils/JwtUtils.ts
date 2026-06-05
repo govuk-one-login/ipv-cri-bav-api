@@ -1,4 +1,4 @@
-import * as jose from "node-jose";
+import * as jose from "jose";
 import crypto from "crypto";
 
 export const jwtUtils = {

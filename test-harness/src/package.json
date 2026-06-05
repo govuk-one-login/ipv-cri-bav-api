@@ -44,5 +44,6 @@
   },
   "engines": {
    "node": "22.*"
-  }
+  },
+  "type": "module"
 }
