@@ -7,11 +7,6 @@ export default defineConfig({
     setupFiles: ["./vitest.setup.ts"],
     include: ["**/tests/**/*.test.ts"],
     clearMocks: true,
-    coverage: {
-      enabled: true,
-      provider: "v8",
-      reportsDirectory: "coverage",
-    },
     reporters: ["default"],
   },
 });
