@@ -9,7 +9,7 @@
     "axios": "1.16.0",
     "ecdsa-sig-formatter": "1.0.11",
     "esbuild": "0.25.2",
-    "node-jose": "2.2.0"
+    "jose": "6.2.3"
   },
   "devDependencies": {
     "@types/aws-lambda": "8.10.148",
@@ -38,7 +38,5 @@
   "engines": {
     "node": "22.*"
   },
-  "overrides": {
-    "form-data": ">=4.0.4"
-  }
+  "type": "module"
 }

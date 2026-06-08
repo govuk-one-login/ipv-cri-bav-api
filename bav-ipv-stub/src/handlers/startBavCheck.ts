@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { KMSClient, SignCommand } from "@aws-sdk/client-kms";
 import crypto from "node:crypto";
-import { util } from "node-jose";
+import { base64url } from "jose";
 import format from "ecdsa-sig-formatter";
 import { NodeHttpHandler } from "@smithy/node-http-handler";
 import { JWTPayload, Jwks, JwtHeader } from "../auth.types";
@@ -165,13 +165,11 @@ async function sign(payload: JWTPayload, keyId: string, invalidKeyId: string | u
   const alg = "ECDSA_SHA_256";
   const jwtHeader: JwtHeader = { alg: "ES256", typ: "JWT", kid: hashedKid };
   const tokenComponents = {
-    header: util.base64url.encode(
-      Buffer.from(JSON.stringify(jwtHeader)),
-      "utf8"
+    header: base64url.encode(
+      new Uint8Array(Buffer.from(JSON.stringify(jwtHeader)))
     ),
-    payload: util.base64url.encode(
-      Buffer.from(JSON.stringify(payload)),
-      "utf8"
+    payload: base64url.encode(
+      new Uint8Array(Buffer.from(JSON.stringify(jwtHeader)))
     ),
     signature: "",
   };
@@ -207,9 +205,8 @@ async function encrypt(
     alg: "RSA-OAEP-256",
     enc: "A256GCM",
   };
-  const protectedHeader: string = util.base64url.encode(
-    Buffer.from(JSON.stringify(header)),
-    "utf8"
+  const protectedHeader: string = base64url.encode(
+    new Uint8Array(Buffer.from(JSON.stringify(header)))
   );
   const aesParams: AesGcmParams = {
     additionalData: new Uint8Array(Buffer.from(protectedHeader)),
@@ -244,11 +241,9 @@ async function encrypt(
 
   return (
     `${protectedHeader}.` +
-    `${util.base64url.encode(Buffer.from(new Uint8Array(encryptedKey)))}.` +
-    `${util.base64url.encode(
-      Buffer.from(new Uint8Array(initialisationVector))
-    )}.` +
-    `${util.base64url.encode(Buffer.from(ciphertext))}.` +
-    `${util.base64url.encode(Buffer.from(tag))}`
+    `${base64url.encode(new Uint8Array(encryptedKey))}.` +
+    `${base64url.encode(initialisationVector)}.` +
+    `${base64url.encode(ciphertext)}.` +
+    `${base64url.encode(tag)}`
   );
 }

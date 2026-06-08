@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { KMSClient, SignCommand } from "@aws-sdk/client-kms";
 import crypto from "node:crypto";
-import { util } from "node-jose";
+import { base64url } from "jose";
 import format from "ecdsa-sig-formatter";
 import { NodeHttpHandler } from "@smithy/node-http-handler";
 import { JWTPayload, JwtHeader } from "../auth.types";
@@ -78,13 +78,11 @@ async function sign(payload: JWTPayload, keyId: string, invalidKeyId: string | u
   const alg = "ECDSA_SHA_256";
   const jwtHeader: JwtHeader = { alg: "ES256", typ: "JWT", kid: hashedKid };
   const tokenComponents = {
-    header: util.base64url.encode(
-      Buffer.from(JSON.stringify(jwtHeader)),
-      "utf8"
+    header: base64url.encode(
+      new Uint8Array(Buffer.from(JSON.stringify(jwtHeader)))
     ),
-    payload: util.base64url.encode(
-      Buffer.from(JSON.stringify(payload)),
-      "utf8"
+    payload: base64url.encode(
+      new Uint8Array(Buffer.from(JSON.stringify(jwtHeader)))
     ),
     signature: "",
   };
