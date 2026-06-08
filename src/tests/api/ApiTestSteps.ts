@@ -55,6 +55,7 @@ interface KidOptions {
 }
 
 export async function stubStartPost(bavStubPayload?: StubStartRequest, options?: KidOptions): Promise<AxiosResponse<StubStartResponse>> {
+	console.log("API ENV VALUE:", constants.DEV_IPV_BAV_STUB_URL)
 	const path = constants.DEV_IPV_BAV_STUB_URL! + "/start";
 
 	let postRequest: AxiosResponse<StubStartResponse>;
