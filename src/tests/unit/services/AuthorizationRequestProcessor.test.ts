@@ -40,7 +40,8 @@ const authResponse = {
 
 const mockBavService = mock<BavService>();
 const logger = mock<Logger>();
-vi.mock("crypto", () => ({
+vi.mock("crypto", async () => ({
+	...(await vi.importActual<typeof import("crypto")>("crypto")),
 	randomUUID: () => authorizationCode,
 }));
 

@@ -21,7 +21,7 @@ const token = {
 vi.mock("axios");
 
 describe("Callback Endpoint", () => {
-  const mockedAxios = axios as vi.Mocked<typeof axios>;
+  const mockedAxios = vi.mocked(axios);
 
   beforeEach(() => {
     mockedAxios.post

@@ -29,7 +29,8 @@ vi.useFakeTimers();
 vi.spyOn(Date, "now").mockReturnValue(1728637200); // 11/10/2024 10:00:00.000 - Return value is mocked for 'checkExperianToken()', set as the same time valid token was issued
 vi.setSystemTime(new Date("2024-10-11T09:00:00.000Z"));
 
-vi.mock("crypto", () => ({
+vi.mock("crypto", async () => ({
+	...(await vi.importActual<typeof import("crypto")>("crypto")),
 	randomUUID: () => "randomId",
 }));
 

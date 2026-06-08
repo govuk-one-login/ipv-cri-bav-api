@@ -15,7 +15,8 @@ import { Constants } from "../../../utils/Constants";
 
 
 const vendorUuid = "new vendorUuid";
-vi.mock("crypto", () => ({
+vi.mock("crypto", async () => ({
+	...(await vi.importActual<typeof import("crypto")>("crypto")),
 	randomUUID: () => vendorUuid,
 }));
 const mockBavService = mock<BavService>();

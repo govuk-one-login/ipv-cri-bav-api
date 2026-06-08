@@ -7,7 +7,10 @@ export default defineConfig({
     environment: 'node',
     clearMocks: true,
     setupFiles: ['./vitest.setup.ts'],
-    reporters: ['default'],
+    reporters: ['default', 'junit'],
+    outputFile: {
+      junit: "./results/api-report.xml",
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],

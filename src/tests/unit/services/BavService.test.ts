@@ -28,7 +28,8 @@ let PERSON_IDENTITY_RECORD: PersonIdentityItem;
 
 const logger = mock<Logger>();
 const mockDynamoDbClient = vi.mocked(createDynamoDbClient());
-vi.mock("crypto", () => ({
+vi.mock("crypto", async () => ({
+	...(await vi.importActual<typeof import("crypto")>("crypto")),
 	randomUUID: () => "randomId",
 }));
 vi.mock('@aws-sdk/client-sqs', () => ({
