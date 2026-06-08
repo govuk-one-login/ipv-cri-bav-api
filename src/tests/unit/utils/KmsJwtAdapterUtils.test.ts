@@ -5,38 +5,23 @@ import { Constants } from "../../../utils/Constants";
 import { absoluteTimeNow } from "../../../utils/DateTimeUtils";
 import { jwtUtils } from "../../../utils/JwtUtils";
 import { Logger } from "@aws-lambda-powertools/logger";
-import { mock } from "jest-mock-extended";
+import { mock } from "vitest-mock-extended";
 import axios from "axios";
 
 const logger = mock<Logger>();
 
-jest.mock("@aws-sdk/client-kms", () => ({
-	KMS: jest.fn().mockImplementation(() => ({
-		sign: jest.fn().mockImplementation(() => ({
-			Signature: "signature",
-		})),
-		verify: jest.fn().mockImplementation(() => ({
-			SignatureValid: true,
-		}))
-	})),
-	SigningAlgorithmSpec: {
-		ECDSA_SHA_256: "ECDSA_SHA_256",
+vi.mock("ecdsa-sig-formatter", () => ({
+	default: {
+		derToJose: vi.fn().mockImplementation(() => "JOSE-formatted signature"),
+		joseToDer: vi.fn().mockImplementation(() => "DER-formatted signature"),
 	},
-	MessageType: {
-		RAW: "RAW"
-	}
 }));
 
-jest.mock("ecdsa-sig-formatter", () => ({
-	derToJose: jest.fn().mockImplementation(() => "JOSE-formatted signature"),
-	joseToDer: jest.fn().mockImplementation(() => "DER-formatted signature"),
-}));
-
-jest.mock("../../../utils/JwtUtils", () => ({
+vi.mock("../../../utils/JwtUtils", () => ({
 	jwtUtils: {
-		base64Encode: jest.fn().mockImplementation((args) => JSON.parse(args)),
-		base64DecodeToString: jest.fn().mockImplementation((args) => JSON.stringify(args)),
-		getHashedKid: jest.fn().mockImplementation((args) => {return args;}),
+		base64Encode: vi.fn().mockImplementation((args) => JSON.parse(args)),
+		base64DecodeToString: vi.fn().mockImplementation((args) => JSON.stringify(args)),
+		getHashedKid: vi.fn().mockImplementation((args) => {return args;}),
 	},
 }));
 
@@ -47,6 +32,12 @@ describe("KmsJwtAdapter utils", () => {
 	beforeEach(() => {
 		process.env.USE_MOCKED="false";
 		kmsJwtAdapter = new KmsJwtAdapter(process.env.KMS_KEY_ARN!, logger);
+		vi.spyOn(kmsJwtAdapter.kms, "sign").mockImplementation(() => ({
+			Signature: "signature",
+		}));
+		vi.spyOn(kmsJwtAdapter.kms, "verify").mockImplementation(() => ({
+			SignatureValid: true,
+		}));
 	});
 
 	describe("#sign", () => {
@@ -75,7 +66,7 @@ describe("KmsJwtAdapter utils", () => {
 				exp: absoluteTimeNow() + Constants.TOKEN_EXPIRY_SECONDS,
 			};
 
-			jest.spyOn(kmsJwtAdapter.kms, "sign").mockImplementationOnce(() => ({ Signature: null }));
+			vi.spyOn(kmsJwtAdapter.kms, "sign").mockImplementationOnce(() => ({ Signature: null }));
 
 			await expect(kmsJwtAdapter.sign(jwtPayload, dnsSuffix)).rejects.toThrow(expect.objectContaining({ message: "Failed to sign Jwt" }));
 		});
@@ -96,7 +87,7 @@ describe("KmsJwtAdapter utils", () => {
 		});
 
 		it("returns false if jwt is invalid", async () => {
-			jest.spyOn(kmsJwtAdapter.kms, "verify").mockImplementationOnce(() => ({ SignatureValid: null }));
+			vi.spyOn(kmsJwtAdapter.kms, "verify").mockImplementationOnce(() => ({ SignatureValid: null }));
 
 			const isValid = await kmsJwtAdapter.verify("header.payload.signature");
 
@@ -104,7 +95,7 @@ describe("KmsJwtAdapter utils", () => {
 		});
 
 		it("error is thrown if jwt can't be verified", async () => {
-			jest.spyOn(kmsJwtAdapter.kms, "verify").mockImplementationOnce(() => {
+			vi.spyOn(kmsJwtAdapter.kms, "verify").mockImplementationOnce(() => {
 				throw new Error("cannot verify signature");
 			});
 
@@ -162,7 +153,7 @@ describe("KmsJwtAdapter utils", () => {
 		}
 
 		beforeEach(() => {
-			jest.spyOn(axios, "get").mockResolvedValue(mockJwksResponse);
+			vi.spyOn(axios, "get").mockResolvedValue(mockJwksResponse);
 		});
 
 		// Jose validation is not mocked for this test

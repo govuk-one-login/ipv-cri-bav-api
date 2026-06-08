@@ -2,7 +2,7 @@
  
 import { Logger } from "@aws-lambda-powertools/logger";
 import axios, { AxiosRequestConfig } from "axios";
-import { mock } from "jest-mock-extended";
+import { mock } from "vitest-mock-extended";
 import { hmrcVerifyResponse } from "../data/hmrcEvents";
 import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../../../models/enums/MessageCodes";
@@ -20,8 +20,8 @@ const tokenResponse = {
 	"token_type": "bearer",
 };
 const logger = mock<Logger>();
-jest.mock(("../../../utils/Sleep"), () => ({
-	sleep: jest.fn(),
+vi.mock(("../../../utils/Sleep"), () => ({
+	sleep: vi.fn(),
 }));
 
 describe("HMRC Service", () => {
@@ -38,7 +38,7 @@ describe("HMRC Service", () => {
 
 		it("calls HMRC verify endpoint with correct params and headers", async () => {
 			const endpoint = `${hmrcServiceTest.hmrcBaseUrl}/${Constants.HMRC_VERIFY_ENDPOINT_PATH}`;
-			jest.spyOn(axios, "post").mockResolvedValueOnce({ data: hmrcVerifyResponse });
+			vi.spyOn(axios, "post").mockResolvedValueOnce({ data: hmrcVerifyResponse });
 
 			const response = await hmrcServiceTest.verify({ accountNumber, sortCode, name, uuid }, hmrcTokenSsmPath);
 
@@ -77,7 +77,7 @@ describe("HMRC Service", () => {
 					status: 500, message: "Server error",
 				},
 			};
-			jest.spyOn(axios, "post").mockRejectedValue(error);
+			vi.spyOn(axios, "post").mockRejectedValue(error);
 
 			await expect(hmrcServiceTest.verify({ accountNumber, sortCode, name, uuid }, hmrcTokenSsmPath)).rejects.toThrow(
 				new AppError(HttpCodesEnum.SERVER_ERROR, "Error sending COP verify request to HMRC"),
@@ -112,7 +112,7 @@ describe("HMRC Service", () => {
 					status: 429, message: "Server error",
 				},
 			};
-			jest.spyOn(axios, "post").mockRejectedValue(error);
+			vi.spyOn(axios, "post").mockRejectedValue(error);
 
 			await expect(hmrcServiceTest.verify({ accountNumber, sortCode, name, uuid }, hmrcTokenSsmPath)).rejects.toThrow(
 				new AppError(HttpCodesEnum.SERVER_ERROR, "Error sending COP verify request to HMRC"),
@@ -146,7 +146,7 @@ describe("HMRC Service", () => {
 					status: 400, message: "Bad requesr",
 				},
 			};
-			jest.spyOn(axios, "post").mockRejectedValueOnce(error);
+			vi.spyOn(axios, "post").mockRejectedValueOnce(error);
 
 			 
 			await expect(hmrcServiceTest.verify({ accountNumber, sortCode, name, uuid }, hmrcTokenSsmPath))
@@ -174,7 +174,7 @@ describe("HMRC Service", () => {
 		};
 
 		it("Should return a valid access_token response", async () => {
-			jest.spyOn(axios, "post").mockResolvedValue({ data: tokenResponse });
+			vi.spyOn(axios, "post").mockResolvedValue({ data: tokenResponse });
 			const data = await hmrcServiceTest.generateToken(hmrcClientSecret, hmrcClientId);
 			expect(axios.post).toHaveBeenCalledWith(`${hmrcBaseUrl}${Constants.HMRC_TOKEN_ENDPOINT_PATH}`,
 				expectedParams,
@@ -188,7 +188,7 @@ describe("HMRC Service", () => {
 					status: 400, message: "Bad request",
 				},
 			};
-			jest.spyOn(axios, "post").mockRejectedValue(error);
+			vi.spyOn(axios, "post").mockRejectedValue(error);
 
 			await expect(hmrcServiceTest.generateToken(hmrcClientSecret, hmrcClientId)).rejects.toThrow(
 				new AppError(HttpCodesEnum.SERVER_ERROR, "Error generating HMRC token"),
@@ -206,7 +206,7 @@ describe("HMRC Service", () => {
 					status: 500, message: "Server error",
 				},
 			};
-			jest.spyOn(axios, "post").mockRejectedValue(error);
+			vi.spyOn(axios, "post").mockRejectedValue(error);
 
 			await expect(hmrcServiceTest.generateToken(hmrcClientSecret, hmrcClientId)).rejects.toThrow(
 				new AppError(HttpCodesEnum.SERVER_ERROR, "Error generating HMRC token"),

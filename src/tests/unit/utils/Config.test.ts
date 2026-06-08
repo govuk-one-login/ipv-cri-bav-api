@@ -1,13 +1,19 @@
 import { getParameter, putParameter } from "../../../utils/Config";
 
 const path = "dev/HMRC/TOKEN";
-const sendMock = jest.fn();
-jest.mock("@aws-sdk/client-ssm", () => ({
-	SSMClient: jest.fn().mockImplementation(() => ({
-		send: sendMock,
-	})),
-	GetParameterCommand: jest.fn().mockImplementation((args) => args),
-	PutParameterCommand: jest.fn().mockImplementation((args) => args),
+const sendMock = vi.fn();
+vi.mock("@aws-sdk/client-ssm", () => ({
+	SSMClient: vi.fn().mockImplementation(function() {
+		return {
+			send: sendMock,
+		}
+	}),
+	PutParameterCommand: vi.fn().mockImplementation(function (args) {
+		return args;
+	}),
+	GetParameterCommand: vi.fn().mockImplementation(function (args) {
+		return args;
+	}),
 	ParameterType: {
 		STRING: "String"
 	}

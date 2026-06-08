@@ -1,13 +1,13 @@
  
 import { lambdaHandler } from "../../UserInfoHandler";
-import { mock } from "jest-mock-extended";
+import { mock } from "vitest-mock-extended";
 import { VALID_USERINFO } from "./data/userInfo-events";
 import { UserInfoRequestProcessor } from "../../services/UserInfoRequestProcessor";
 import { HttpCodesEnum } from "../../models/enums/HttpCodesEnum";
 import { CONTEXT } from "./data/context";
 
 const mockedUserInfoRequestProcessor = mock<UserInfoRequestProcessor>();
-jest.mock("../../utils/Config", () => ({
+vi.mock("../../utils/Config", () => ({
 	getParameter: (parameter: string) => parameter,
 }));
 
@@ -17,7 +17,7 @@ describe("UserInfoHandler", () => {
 	});
 
 	it("return success when UserInfoRequestProcessor completes successfully", async () => {
-		UserInfoRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedUserInfoRequestProcessor);
+		UserInfoRequestProcessor.getInstance = vi.fn().mockReturnValue(mockedUserInfoRequestProcessor);
 
 		await lambdaHandler(VALID_USERINFO, CONTEXT);
 
@@ -25,7 +25,7 @@ describe("UserInfoHandler", () => {
 	});
 
 	it("return error when UserInfoRequestProcessor throws an error", async () => {
-		UserInfoRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedUserInfoRequestProcessor);
+		UserInfoRequestProcessor.getInstance = vi.fn().mockReturnValue(mockedUserInfoRequestProcessor);
 		mockedUserInfoRequestProcessor.processRequest.mockRejectedValueOnce("Error");
 
 		const response = await lambdaHandler(VALID_USERINFO, CONTEXT);

@@ -1,0 +1,28 @@
+import 'dotenv/config';
+import { defineConfig } from "vitest/config";
+
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'node',
+    clearMocks: true,
+    setupFiles: ['./vitest.setup.ts'],
+    reporters: ['default', 'junit'],
+    outputFile: {
+      junit: "./results/api-report.xml",
+    },
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      include: ['./**/*.ts'],
+      exclude: [
+        './**/tests/**/*.ts',
+        './tests/**/*.ts',
+        './vitest.config.ts',
+        'config.ts',
+      ],
+    },
+    include: ['**/tests/**/*.test.ts'],
+    testTimeout: 30000,
+  },
+});

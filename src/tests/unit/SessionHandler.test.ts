@@ -1,6 +1,6 @@
  
 import { lambdaHandler } from "../../SessionHandler";
-import { mock } from "jest-mock-extended";
+import { mock } from "vitest-mock-extended";
 import { VALID_SESSION } from "./data/session-events";
 import { SessionRequestProcessor } from "../../services/SessionRequestProcessor";
 import { CONTEXT } from "./data/context";
@@ -10,7 +10,7 @@ const mockedSessionRequestProcessor = mock<SessionRequestProcessor>();
 
 describe("SessionHandler", () => {
 	it("return success when SessionRequestProcessor completes successfully", async () => {
-		SessionRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedSessionRequestProcessor);
+		SessionRequestProcessor.getInstance = vi.fn().mockReturnValue(mockedSessionRequestProcessor);
 
 		await lambdaHandler(VALID_SESSION, CONTEXT);
 
@@ -18,7 +18,7 @@ describe("SessionHandler", () => {
 	});
 
 	it("return error when SessionRequestProcessor throws an error", async () => {
-		SessionRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedSessionRequestProcessor);
+		SessionRequestProcessor.getInstance = vi.fn().mockReturnValue(mockedSessionRequestProcessor);
 		mockedSessionRequestProcessor.processRequest.mockRejectedValueOnce("Error");
 
 		const response = await lambdaHandler(VALID_SESSION, CONTEXT);

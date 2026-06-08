@@ -17,4 +17,3 @@ accessTokenRouter.post("/", async (req, res) => {
 	res.setHeader(Constants.HTTP_CONTENT_TYPE_HEADER, Constants.JSON_CONTENT_TYPE);
 	res.send(tokenResponse.body);	
 });
-

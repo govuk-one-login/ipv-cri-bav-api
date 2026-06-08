@@ -2,7 +2,7 @@
  
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
-import { mock } from "jest-mock-extended";
+import { mock } from "vitest-mock-extended";
 import { hmrcVerifyResponse } from "../data/hmrcEvents";
 import { CopCheckResults } from "../../../models/enums/Hmrc";
 import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
@@ -15,8 +15,8 @@ import { HmrcService } from "../../../services/HmrcService";
 import { Constants } from "../../../utils/Constants";
 
 const vendorUuid = "new vendorUuid";
-jest.mock("crypto", () => ({
-	...jest.requireActual("crypto"),
+vi.mock("crypto", async () => ({
+	...(await vi.importActual<typeof import("crypto")>("crypto")),
 	randomUUID: () => vendorUuid,
 }));
 const mockBavService = mock<BavService>();
@@ -69,13 +69,13 @@ describe("VerifyAccountRequestProcessor", () => {
 	});
 
 	beforeEach(() => {
-		jest.clearAllMocks();
-		jest.useFakeTimers();
-		jest.setSystemTime(new Date(1585695600000));
+		vi.clearAllMocks();
+		vi.useFakeTimers();
+		vi.setSystemTime(new Date(1585695600000));
 	});
 
 	afterEach(() => {
-		jest.useRealTimers();
+		vi.useRealTimers();
 	});
 
 	describe("#processRequest", () => {
@@ -284,8 +284,8 @@ describe("VerifyAccountRequestProcessor", () => {
 		});
 
 		it("calls savePartialNameInfo if CopCheckResults is PARTIAL_MATCH with a sortCodeBankName value", async () => {
-			jest.useFakeTimers();
-			jest.setSystemTime(new Date(1585695600000)); // == 2020-03-31T23:00:00.000Z
+			vi.useFakeTimers();
+			vi.setSystemTime(new Date(1585695600000)); // == 2020-03-31T23:00:00.000Z
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
 			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, attemptCount: 0 });
 			mockHmrcService.verify.mockResolvedValueOnce({ ...hmrcVerifyResponse, nameMatches: "partial" });
@@ -295,12 +295,12 @@ describe("VerifyAccountRequestProcessor", () => {
 			expect(mockBavService.savePartialNameInfo).toHaveBeenCalledWith("PARTIALMATCH_QUEUE", { "accountExists": "yes", "accountName": "Mr Peter Smith", "cicName": "Frederick Joseph Flintstone", "itemNumber": "new vendorUuid", "nameMatches": "partial", "sortCodeBankName": "THE ROYAL BANK OF SCOTLAND PLC", "timeStamp": 1585695600 });
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
 			expect(response.body).toBe(JSON.stringify({ message:"Success", attemptCount: 1 }));
-			jest.useRealTimers();
+			vi.useRealTimers();
 		});
 
 		it("calls savePartialNameInfo if CopCheckResults is PARTIAL_MATCH without sortCodeBankName value", async () => {
-			jest.useFakeTimers();
-			jest.setSystemTime(new Date(1585695600000)); // == 2020-03-31T23:00:00.000Z
+			vi.useFakeTimers();
+			vi.setSystemTime(new Date(1585695600000)); // == 2020-03-31T23:00:00.000Z
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
 			mockBavService.getSessionById.mockResolvedValueOnce({ ...session, attemptCount: 0 });
 			mockHmrcService.verify.mockResolvedValueOnce({ ...hmrcVerifyResponse, nameMatches: "partial", sortCodeBankName: undefined });
@@ -310,7 +310,7 @@ describe("VerifyAccountRequestProcessor", () => {
 			expect(mockBavService.savePartialNameInfo).toHaveBeenCalledWith("PARTIALMATCH_QUEUE", { "accountExists": "yes", "accountName": "Mr Peter Smith", "cicName": "Frederick Joseph Flintstone", "itemNumber": "new vendorUuid", "nameMatches": "partial", "sortCodeBankName": undefined, "timeStamp": 1585695600 });
 			expect(response.statusCode).toEqual(HttpCodesEnum.OK);
 			expect(response.body).toBe(JSON.stringify({ message:"Success", attemptCount: 1 }));
-			jest.useRealTimers();
+			vi.useRealTimers();
 		});
 	});
 });

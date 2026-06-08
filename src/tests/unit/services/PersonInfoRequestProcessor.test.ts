@@ -2,7 +2,7 @@
  
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
-import { mock } from "jest-mock-extended";
+import { mock } from "vitest-mock-extended";
 import NodeRSA from "node-rsa";
 import { HttpCodesEnum } from "../../../models/enums/HttpCodesEnum";
 import { MessageCodes } from "../../../models/enums/MessageCodes";
@@ -11,12 +11,17 @@ import { PersonIdentityItem } from "../../../models/PersonIdentityItem";
 import { BavService } from "../../../services/BavService";
 import { PersonInfoRequestProcessor } from "../../../services/PersonInfoRequestProcessor";
 
-const encryptMock = jest.fn();
-jest.mock("node-rsa", () => {
-	return jest.fn().mockImplementation(() => ({
-		encrypt: encryptMock,
-	}));
+const encryptMock = vi.fn();
+vi.mock("node-rsa", () => {
+	return {
+		default: vi.fn(function () {
+			return {
+				encrypt: encryptMock,
+			};
+		}),
+	};
 });
+
 
 const mockBavService = mock<BavService>();
 const logger = mock<Logger>();
@@ -87,7 +92,7 @@ describe("PersonInfoRequestProcessor", () => {
 		it("returns succesfull response with encrypted name", async () => {
 			mockBavService.getPersonIdentityById.mockResolvedValueOnce(person);
 			mockBavService.getSessionById.mockResolvedValueOnce(session);
-			const encryptSpy = jest.spyOn(personInfoRequestProcessorTest, "encryptResponse").mockReturnValueOnce("Encrypted name");
+			const encryptSpy = vi.spyOn(personInfoRequestProcessorTest, "encryptResponse").mockReturnValueOnce("Encrypted name");
 
 			const response = await personInfoRequestProcessorTest.processRequest(sessionId);
 

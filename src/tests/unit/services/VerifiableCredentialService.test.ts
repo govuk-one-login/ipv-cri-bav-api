@@ -1,6 +1,6 @@
  
  
-import { mock } from "jest-mock-extended";
+import { mock } from "vitest-mock-extended";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { ISessionItem } from "../../../models/ISessionItem";
 import { VerifiableCredentialService, VerifiableCredentialBuilder } from "../../../services/VerifiableCredentialService";

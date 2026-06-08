@@ -1,6 +1,5 @@
- 
- 
-import { mock } from "jest-mock-extended";
+ import type { MockInstance } from "vitest";
+import { mock } from "vitest-mock-extended";
 import { CONTEXT } from "./data/context";
 import { VALID_VERIFY_ACCOUNT } from "./data/verify-account-events";
 import { HttpCodesEnum } from "../../models/enums/HttpCodesEnum";
@@ -10,21 +9,21 @@ import { VerifyAccountRequestProcessor } from "../../services/VerifyAccountReque
 import { lambdaHandler, logger } from "../../VerifyAccountHandler";
 
 const mockedVerifyAccountRequestProcessor = mock<VerifyAccountRequestProcessor>();
-jest.mock("../../utils/Config", () => ({
+vi.mock("../../utils/Config", () => ({
 	getParameter: (parameter: string) => parameter,
 }));
 
 process.env.THIRDPARTY_DIRECT_SUBMISSION = "false";
 
 describe("VerifyAccountHandler", () => {
-	let loggerSpy: jest.SpyInstance;
+	let loggerSpy: MockInstance;
   
 	beforeEach(() => {
-		loggerSpy = jest.spyOn(logger, "error");
+		loggerSpy = vi.spyOn(logger, "error");
 	});
 
 	it("returns success response for correct request", async () => {
-		VerifyAccountRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedVerifyAccountRequestProcessor);
+		VerifyAccountRequestProcessor.getInstance = vi.fn().mockReturnValue(mockedVerifyAccountRequestProcessor);
 
 		await lambdaHandler(VALID_VERIFY_ACCOUNT, CONTEXT);
 
@@ -32,7 +31,7 @@ describe("VerifyAccountHandler", () => {
 	});
 
 	it("calls VerifyAccountRequestProcessor with clientIpAddress from X_FORWARDED_FOR header if present", async () => {
-		VerifyAccountRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedVerifyAccountRequestProcessor);
+		VerifyAccountRequestProcessor.getInstance = vi.fn().mockReturnValue(mockedVerifyAccountRequestProcessor);
 
 		await lambdaHandler({ ...VALID_VERIFY_ACCOUNT, headers: { ...VALID_VERIFY_ACCOUNT.headers, [Constants.X_FORWARDED_FOR]: "x-forwarded-for" } }, CONTEXT);
 
@@ -50,7 +49,7 @@ describe("VerifyAccountHandler", () => {
 	});
 
 	it("calls VerifyAccountRequestProcessor with clientIpAddress from sourceIp if X_FORWARDED_FOR header is not present", async () => {
-		VerifyAccountRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedVerifyAccountRequestProcessor);
+		VerifyAccountRequestProcessor.getInstance = vi.fn().mockReturnValue(mockedVerifyAccountRequestProcessor);
 
 		await lambdaHandler(VALID_VERIFY_ACCOUNT, CONTEXT);
 
@@ -154,7 +153,7 @@ describe("VerifyAccountHandler", () => {
 	});
 
 	it("returns error when VerifyAccountRequestProcessor throws an error", async () => {
-		VerifyAccountRequestProcessor.getInstance = jest.fn().mockReturnValue(mockedVerifyAccountRequestProcessor);
+		VerifyAccountRequestProcessor.getInstance = vi.fn().mockReturnValue(mockedVerifyAccountRequestProcessor);
 		mockedVerifyAccountRequestProcessor.processExperianRequest.mockRejectedValueOnce("Error");
 
 		const response = await lambdaHandler(VALID_VERIFY_ACCOUNT, CONTEXT);
