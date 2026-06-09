@@ -3,7 +3,9 @@ import { mockClient } from "aws-sdk-client-mock";
 import { KMSClient, SignCommand } from "@aws-sdk/client-kms";
 import format from "ecdsa-sig-formatter";
 
-const testData = require("../events/startEvents.js")
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import testData from "../events/startEvents.js";
 
 process.env.SIGNING_KEY = "key-id";
 process.env.ADDITIONAL_SIGNING_KEY = "additional-key-id"

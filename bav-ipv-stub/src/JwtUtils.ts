@@ -1,4 +1,4 @@
-import * as jose from "node-jose";
+import * as jose from "jose";
 
 export const jwtUtils = {
   // convert non-base64 string or uint8array into base64 encoded string

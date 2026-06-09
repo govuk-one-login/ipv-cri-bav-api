@@ -20,5 +20,6 @@
         "test": "npm run infra",
         "infra":"./node_modules/.bin/vitest run tests/infra",
         "test:infra": "npm run infra"
-    }
+    },
+    "type": "module"
 }
