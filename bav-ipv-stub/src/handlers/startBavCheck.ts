@@ -169,7 +169,7 @@ async function sign(payload: JWTPayload, keyId: string, invalidKeyId: string | u
       new Uint8Array(Buffer.from(JSON.stringify(jwtHeader)))
     ),
     payload: base64url.encode(
-      new Uint8Array(Buffer.from(JSON.stringify(jwtHeader)))
+      new Uint8Array(Buffer.from(JSON.stringify(payload)))
     ),
     signature: "",
   };
