@@ -1,5 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
+import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { BavService } from "./BavService";
 import { AuthSessionState } from "../models/enums/AuthSessionState";
@@ -46,7 +46,7 @@ export class UserInfoRequestProcessor {
   	this.logger = logger;
   	this.metrics = metrics;
   	logger.debug("metrics is  " + JSON.stringify(this.metrics));
-  	this.metrics.addMetric("Called", MetricUnits.Count, 1);
+		this.metrics.addMetric("Called", MetricUnit.Count, 1);
 
   	const sessionTableName: string = checkEnvironmentVariable(EnvironmentVariables.SESSION_TABLE, this.logger);
   	const signinKeyIds: string = checkEnvironmentVariable(EnvironmentVariables.KMS_KEY_ARN, this.logger);
@@ -113,7 +113,7 @@ export class UserInfoRequestProcessor {
 			},
 		});
   
-		this.metrics.addMetric("found session data", MetricUnits.Count, 1);
+		this.metrics.addMetric("found session data", MetricUnit.Count, 1);
 
 		const personInfo = await this.BavService.getPersonIdentityBySessionId(sessionId, this.personIdentityTableName);
 		if (!personInfo) {
@@ -123,7 +123,7 @@ export class UserInfoRequestProcessor {
 			return Response(HttpCodesEnum.UNAUTHORIZED, "Missing Person Identity");
 		}
 
-		this.metrics.addMetric("found person identity data", MetricUnits.Count, 1);
+		this.metrics.addMetric("found person identity data", MetricUnit.Count, 1);
 
 		if (session.authSessionState !== AuthSessionState.BAV_ACCESS_TOKEN_ISSUED) {
 			this.logger.error("Session is in wrong Auth state", {
@@ -151,7 +151,7 @@ export class UserInfoRequestProcessor {
 				},
 				absoluteTimeNow);
 
-			this.metrics.addMetric("Generated signed verifiable credential jwt", MetricUnits.Count, 1);
+			this.metrics.addMetric("Generated signed verifiable credential jwt", MetricUnit.Count, 1);
 
 			await this.BavService.updateSessionAuthState(session.sessionId, AuthSessionState.BAV_CRI_VC_ISSUED);
 			await this.sendTXMAEvents(session, evidenceInfo, personInfo);

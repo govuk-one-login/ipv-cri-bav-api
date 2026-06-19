@@ -9,7 +9,7 @@ import { DynamoDBDocument, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb"
 import { randomUUID } from "crypto";
 import { logResponseCode } from "../utils/LogResponseCode";
 import { checkEnvironmentVariable } from "../utils/EnvironmentVariables";
-import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
+import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import { ExperianVerifyResponse } from "../models/IVeriCredential";
 
 export class ExperianService {
@@ -133,7 +133,7 @@ export class ExperianService {
     		const expRequestId = responseHeader?.expRequestId;
 
     		const decision = responseHeader?.overallResponse?.decision;
-    		this.metrics.addMetric("Experian-" + decision, MetricUnits.Count, 1);
+				this.metrics.addMetric("Experian-" + decision, MetricUnit.Count, 1);
 
     		let warningsErrors = undefined;
     		let personalDetailsScore = undefined;
@@ -159,7 +159,7 @@ export class ExperianService {
     			if (scores) {
     				personalDetailsScore = scores.find((object: { name: string; score: number }) => object.name === "Personal details")?.score;
     				this.logger.info("Personal details score is " + personalDetailsScore);
-    				this.metrics.addMetric("PersonalDetailsScore-" + personalDetailsScore, MetricUnits.Count, 1);
+						this.metrics.addMetric("PersonalDetailsScore-" + personalDetailsScore, MetricUnit.Count, 1);
     			} else {
     				this.logger.warn("No scores present in response");
     			}
@@ -206,7 +206,7 @@ export class ExperianService {
     		eventOutcome,
     	});
     	if (eventOutcome) {
-    		this.metrics.addMetric("Experian-" + eventOutcome.replace(" ", "_"), MetricUnits.Count, 1);
+			this.metrics.addMetric("Experian-" + eventOutcome.replace(" ", "_"), MetricUnit.Count, 1);
     	}
     }
 
@@ -329,4 +329,3 @@ export class ExperianService {
     	} 
     }
 }
-

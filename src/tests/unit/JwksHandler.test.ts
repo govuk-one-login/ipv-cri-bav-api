@@ -93,6 +93,32 @@ describe("JwksHandler", () => {
 			vi.spyOn(handlerClass.kmsClient, "getPublicKey").mockImplementationOnce(() => ({
 				KeySpec: "ECC_NIST_P256",
 				KeyId: keyId,
+				KeyUsage: "SIGN_VERIFY",
+				PublicKey: publicKey,
+			}));
+
+			const result = await handlerClass.getAsJwk(keyId);
+
+			expect(handlerClass.kmsClient.getPublicKey).toHaveBeenCalledWith({ KeyId: keyId });
+			expect(crypto.createPublicKey).toHaveBeenCalledWith({
+				key: publicKey as unknown as Buffer,
+				type: "spki",
+				format: "der",
+			});
+			expect(result).toEqual({
+				key: "123456789",
+				use: "sig",
+				kid: keyId.split("/").pop(),
+				alg: "ES256" as Algorithm,
+			} as unknown as Jwk);
+		});
+
+		it("returns RSA encryption jwk with RSA-OAEP-256 alg", async () => {
+			const keyId = "bav-cri-api-encryption-key";
+			const publicKey = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQE";
+			vi.spyOn(handlerClass.kmsClient, "getPublicKey").mockImplementationOnce(() => ({
+				KeySpec: "RSA_2048",
+				KeyId: keyId,
 				KeyUsage: "ENCRYPT_DECRYPT",
 				PublicKey: publicKey,
 			}));
@@ -109,7 +135,7 @@ describe("JwksHandler", () => {
 				key: "123456789",
 				use: "enc",
 				kid: keyId.split("/").pop(),
-				alg: "ES256" as Algorithm,
+				alg: "RSA-OAEP-256" as Algorithm,
 			} as unknown as Jwk);
 		});
 

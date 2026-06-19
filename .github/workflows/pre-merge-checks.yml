@@ -112,7 +112,7 @@ jobs:
         id: ipv_stub_url
         run: |
           echo "ipv_stub_url=https://pre-merge-ipv-stub-${{ needs.setup.outputs.sha_short }}-ipvstub.review-bav.dev.account.gov.uk" >> $GITHUB_OUTPUT
-        
+
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -140,10 +140,10 @@ jobs:
           role-to-assume: ${{ secrets.DEV_CRI_BAV_PRE_MERGE_ROLE_ARN }}
           aws-region: eu-west-2
 
-      - name: Setup nodeJS v22
+      - name: Setup nodeJS v24
         uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
       
       - name: Install dependencies
         working-directory: ./src

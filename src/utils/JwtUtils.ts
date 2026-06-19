@@ -1,5 +1,6 @@
 import * as jose from "jose";
 import crypto from "crypto";
+import type { WithImplicitCoercion } from "node:buffer";
 
 export const jwtUtils = {
 

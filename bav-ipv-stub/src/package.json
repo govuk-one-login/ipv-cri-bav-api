@@ -14,7 +14,7 @@
   "devDependencies": {
     "@types/aws-lambda": "8.10.148",
     "@types/js-yaml": "4.0.9",
-    "@types/node": "20.14.8",
+    "@types/node": "24.0.0",
     "@types/uuid": "8.3.4",
     "@typescript-eslint/eslint-plugin": "8.56.1",
     "@typescript-eslint/parser": "8.56.1",
@@ -35,7 +35,7 @@
     "compile": "./node_modules/.bin/tsc"
   },
   "engines": {
-    "node": "22.*"
+    "node": "24.*"
   },
   "type": "module"
 }

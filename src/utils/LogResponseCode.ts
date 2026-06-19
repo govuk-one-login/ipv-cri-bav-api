@@ -1,4 +1,4 @@
-import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
+import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 
 export const logResponseCode = (warningsErrors: Array<{ responseType: string; responseCode: string; responseMessage: string }>, logger: any, metrics: Metrics): any => {
 
@@ -8,6 +8,6 @@ export const logResponseCode = (warningsErrors: Array<{ responseType: string; re
 			logger.info(`Response code: ${warningError?.responseCode}, Response message: ${warningError?.responseMessage}`);
 			responseCodeMetric.addDimension("experian-response-code", warningError?.responseCode);
 		});
-		responseCodeMetric.addMetric("ResponseCodes", MetricUnits.Count, 1); 
+		responseCodeMetric.addMetric("ResponseCodes", MetricUnit.Count, 1);
 	}
 };

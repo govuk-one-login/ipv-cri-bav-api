@@ -29,7 +29,7 @@ export interface Jwks {
   keys: JsonWebKey[];
 }
 export interface JsonWebKey {
-  alg: "ES256" | "RS256";
+  alg: "ES256" | "RS256" | "RSA-OAEP-256";
   kid: string;
   kty: "EC" | "RSA";
   use: "sig" | "enc";

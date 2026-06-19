@@ -1,5 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { LambdaInterface } from "@aws-lambda-powertools/commons";
+import { LambdaInterface } from "@aws-lambda-powertools/commons/types";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Constants } from "./utils/Constants";
@@ -16,7 +16,7 @@ import {
 } from "@aws-sdk/client-athena";
 import { setTimeout } from "timers/promises";
 import { convertAthenaResultsToListOfRecords } from "./utils/ConvertAthenaResultToListOfRecords";
-import { LogLevel } from "@aws-lambda-powertools/logger/lib/types";
+import { LogLevel } from "@aws-lambda-powertools/logger/types";
 
 const POWERTOOLS_METRICS_NAMESPACE =
   process.env.POWERTOOLS_METRICS_NAMESPACE ?? Constants.BAV_METRICS_NAMESPACE;

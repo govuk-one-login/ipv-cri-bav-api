@@ -1,14 +1,15 @@
 import * as jose from "jose";
+import type { WithImplicitCoercion } from "node:buffer";
 
 export const jwtUtils = {
   // convert non-base64 string or uint8array into base64 encoded string
   base64Encode(value: string | WithImplicitCoercion<string>): string {
-    return jose.util.base64url.encode(Buffer.from(value), "utf8");
+    return jose.base64url.encode(new Uint8Array(Buffer.from(value)));
   },
 
   // convert base64 into uint8array
   base64DecodeToUint8Array(value: string): Uint8Array {
-    return new Uint8Array(jose.util.base64url.decode(value));
+    return jose.base64url.decode(value);
   },
 
   // convert base64 encoded string into non-base64 string

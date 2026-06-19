@@ -1,5 +1,6 @@
-import { LambdaInterface } from "@aws-lambda-powertools/commons";
+import { LambdaInterface } from "@aws-lambda-powertools/commons/types";
 import { Logger } from "@aws-lambda-powertools/logger";
+import { LogLevel } from "@aws-lambda-powertools/logger/types";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { SessionRequestProcessor } from "./services/SessionRequestProcessor";
@@ -11,7 +12,7 @@ import { Constants } from "./utils/Constants";
 const { POWERTOOLS_METRICS_NAMESPACE = Constants.BAV_METRICS_NAMESPACE, POWERTOOLS_LOG_LEVEL = "DEBUG", POWERTOOLS_SERVICE_NAME = Constants.SESSION_LOGGER_SVC_NAME } = process.env;
 
 const logger = new Logger({
-	logLevel: POWERTOOLS_LOG_LEVEL,
+	logLevel: POWERTOOLS_LOG_LEVEL as LogLevel,
 	serviceName: POWERTOOLS_SERVICE_NAME,
 });
 

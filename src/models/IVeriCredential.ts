@@ -13,6 +13,7 @@ export type Algorithm =
 	"RS256" | "RS384" | "RS512" |
 	"ES256" | "ES384" | "ES512" |
 	"PS256" | "PS384" | "PS512" |
+	"RSA-OAEP-256" |
 	"none";
 	
 export interface CredentialJwt {

@@ -1,4 +1,4 @@
-import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
+import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { randomUUID } from "crypto";
 import { BavService } from "./BavService";
@@ -47,7 +47,7 @@ export class AuthorizationRequestProcessor {
 		}
 
 		this.logger.appendKeys({ govuk_signin_journey_id: session.clientSessionId });
-		this.metrics.addMetric("found session", MetricUnits.Count, 1);
+		this.metrics.addMetric("found session", MetricUnit.Count, 1);
 
 		switch (session.authSessionState) {
 			case AuthSessionState.BAV_DATA_RECEIVED:
@@ -64,7 +64,7 @@ export class AuthorizationRequestProcessor {
 
 		const authorizationCode = randomUUID();
 		await this.BavService.setAuthorizationCode(sessionId, authorizationCode);
-		this.metrics.addMetric("Set authorization code", MetricUnits.Count, 1);
+		this.metrics.addMetric("Set authorization code", MetricUnit.Count, 1);
 
 		const authResponse = {
 			authorizationCode: {
