@@ -1,5 +1,6 @@
 import { Logger } from "@aws-lambda-powertools/logger";
-import { LambdaInterface } from "@aws-lambda-powertools/commons";
+import { LogLevel } from "@aws-lambda-powertools/logger/types";
+import { LambdaInterface } from "@aws-lambda-powertools/commons/types";
 import { Constants, EnvironmentVariables } from "./utils/Constants";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { MessageCodes } from "./models/enums/MessageCodes";
@@ -11,7 +12,7 @@ import { HttpCodesEnum } from "./models/enums/HttpCodesEnum";
 
 const { POWERTOOLS_METRICS_NAMESPACE = Constants.BAV_METRICS_NAMESPACE, POWERTOOLS_LOG_LEVEL = "DEBUG", POWERTOOLS_SERVICE_NAME = Constants.HMRC_TOKEN_LOGGER_SVC_NAME } = process.env;
 export const logger = new Logger({
-	logLevel: POWERTOOLS_LOG_LEVEL,
+	logLevel: POWERTOOLS_LOG_LEVEL as LogLevel,
 	serviceName: POWERTOOLS_SERVICE_NAME,
 });
 export const metrics = new Metrics({ namespace: POWERTOOLS_METRICS_NAMESPACE, serviceName: POWERTOOLS_SERVICE_NAME });

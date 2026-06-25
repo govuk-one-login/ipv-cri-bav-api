@@ -146,9 +146,17 @@ async function getPublicEncryptionKey(config: {
     await axios.get(`${config.jwksUri}/.well-known/jwks.json`)
   ).data as Jwks;
   const publicKey = oauthProviderJwks.keys.find((key) => key.use === "enc");
+  if (publicKey == null) {
+    throw new Error("Missing encryption key in JWKS");
+  }
+
+  const publicRsaOaepKey = {
+    ...publicKey,
+    alg: "RSA-OAEP-256",
+  };
   const publicEncryptionKey: CryptoKey = await webcrypto.subtle.importKey(
     "jwk",
-    publicKey as JsonWebKey,
+    publicRsaOaepKey as JsonWebKey,
     { name: "RSA-OAEP", hash: "SHA-256" },
     true,
     ["encrypt"]

@@ -1,5 +1,5 @@
  
-import { Metrics, MetricUnits } from "@aws-lambda-powertools/metrics";
+import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { randomUUID } from "crypto";
 import { BavService } from "./BavService";
@@ -56,7 +56,7 @@ export class VerifyAccountRequestProcessor {
   	this.metrics = metrics;
   	this.credentialVendor = CREDENTIAL_VENDOR;
   	logger.debug("metrics is  " + JSON.stringify(this.metrics));
-  	this.metrics.addMetric("Called", MetricUnits.Count, 1);
+		this.metrics.addMetric("Called", MetricUnit.Count, 1);
 
   	this.txmaQueueUrl = checkEnvironmentVariable(EnvironmentVariables.TXMA_QUEUE_URL, this.logger);
   	this.issuer = checkEnvironmentVariable(EnvironmentVariables.ISSUER, this.logger);
@@ -211,7 +211,7 @@ export class VerifyAccountRequestProcessor {
   		} else {
   			attemptCount = 1;
   		}
-  		this.metrics.addMetric("retry-attempt-" + attemptCount, MetricUnits.Count, 1);
+			this.metrics.addMetric("retry-attempt-" + attemptCount, MetricUnit.Count, 1);
 		  }
 
 		  await this.BavService.saveExperianCheckResult(sessionId, verifyResponse, experianCheckResult, attemptCount, cis);
@@ -224,7 +224,7 @@ export class VerifyAccountRequestProcessor {
   private logCis(cis: string[] | undefined, metrics: Metrics): void {
   	if (cis) {
   		cis.forEach(function (ci): void {
-  			metrics.addMetric("ci-" + ci, MetricUnits.Count, 1);
+				metrics.addMetric("ci-" + ci, MetricUnit.Count, 1);
   		});
   	}
   }
@@ -411,15 +411,15 @@ export class VerifyAccountRequestProcessor {
 	  warningError.forEach(function (value): void {
 		  if (value?.responseType === "warning") {
 			  if (criticalWarnings.includes(value.responseCode)) {
-				  metrics.addMetric("critical-experian-response-code" + value.responseCode, MetricUnits.Count, 1);
+				  metrics.addMetric("critical-experian-response-code" + value.responseCode, MetricUnit.Count, 1);
 				  isCriticalResponse = true;
 			  }
 		  }
 		  if (value?.responseType === "error") {
 			  if (criticalErrors.includes(value.responseCode)) {
-  					metrics.addMetric("critical-experian-response-code" + value.responseCode, MetricUnits.Count, 1);
-  					isCriticalResponse = true;
-  				}
+						metrics.addMetric("critical-experian-response-code" + value.responseCode, MetricUnit.Count, 1);
+						isCriticalResponse = true;
+					}
 		  }
 		  if (value.responseType === undefined || value.responseType === "") {
   				logger.info("Captured empty response type in warning and errors array ");

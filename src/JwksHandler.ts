@@ -1,5 +1,6 @@
 import { Logger } from "@aws-lambda-powertools/logger";
-import { LambdaInterface } from "@aws-lambda-powertools/commons";
+import { LogLevel } from "@aws-lambda-powertools/logger/types";
+import { LambdaInterface } from "@aws-lambda-powertools/commons/types";
 import { Constants, EnvironmentVariables } from "./utils/Constants";
 import { Jwk, JWKSBody, Algorithm } from "./models/IVeriCredential";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
@@ -11,7 +12,7 @@ import { checkEnvironmentVariable } from "./utils/EnvironmentVariables";
 const POWERTOOLS_LOG_LEVEL = process.env.POWERTOOLS_LOG_LEVEL ? process.env.POWERTOOLS_LOG_LEVEL : "DEBUG";
 const POWERTOOLS_SERVICE_NAME = process.env.POWERTOOLS_SERVICE_NAME ? process.env.POWERTOOLS_SERVICE_NAME : Constants.JWKS_LOGGER_SVC_NAME;
 export const logger = new Logger({
-	logLevel: POWERTOOLS_LOG_LEVEL,
+	logLevel: POWERTOOLS_LOG_LEVEL as LogLevel,
 	serviceName: POWERTOOLS_SERVICE_NAME,
 });
 
@@ -78,11 +79,12 @@ class JwksHandler implements LambdaInterface {
 		const map = this.getKeySpecMap(kmsKey?.KeySpec);
 		if (
 			kmsKey != null &&
-					map != null &&
-					kmsKey.KeyId != null &&
-					kmsKey.PublicKey != null
+			map != null &&
+			kmsKey.KeyId != null &&
+			kmsKey.PublicKey != null
 		) {
 			const use = kmsKey.KeyUsage === "ENCRYPT_DECRYPT" ? "enc" : "sig";
+			const alg = use === "enc" ? "RSA-OAEP-256" : map.algorithm;
 			const publicKey = crypto
 				.createPublicKey({
 					key: kmsKey.PublicKey as Buffer,
@@ -94,7 +96,7 @@ class JwksHandler implements LambdaInterface {
 				...publicKey,
 				use,
 				kid: keyId.split("/").pop(),
-				alg: map.algorithm,
+				alg,
 			} as unknown as Jwk;
 		}
 		logger.error({ message: "Failed to build JWK from key" + keyId }, JSON.stringify(map));

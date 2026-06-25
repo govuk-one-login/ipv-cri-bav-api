@@ -1,5 +1,5 @@
 import format from "ecdsa-sig-formatter";
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import { Jwt, JwtHeader, JwtPayload, JsonWebTokenError, Jwk } from "../models/IVeriCredential";
 import { jwtUtils } from "./JwtUtils";
 import { DecryptCommand, DecryptCommandInput, DecryptCommandOutput, KMS, MessageType, SigningAlgorithmSpec } from "@aws-sdk/client-kms";

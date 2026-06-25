@@ -1,7 +1,8 @@
 import { Context, SQSBatchResponse, SQSEvent } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
+import { LogLevel } from "@aws-lambda-powertools/logger/types";
 import { Metrics } from "@aws-lambda-powertools/metrics";
-import { LambdaInterface } from "@aws-lambda-powertools/commons";
+import { LambdaInterface } from "@aws-lambda-powertools/commons/types";
 import { Constants, EnvironmentVariables } from "./utils/Constants";
 import { failEntireBatch, passEntireBatch } from "./utils/SqsBatchResponseHelper";
 import { PutObjectCommand, S3Client, ServerSideEncryption } from "@aws-sdk/client-s3";
@@ -12,7 +13,7 @@ import { absoluteTimeNow } from "./utils/DateTimeUtils";
 const { POWERTOOLS_METRICS_NAMESPACE = Constants.BAV_METRICS_NAMESPACE, POWERTOOLS_LOG_LEVEL = "DEBUG", POWERTOOLS_SERVICE_NAME = Constants.PARTIAL_NAME_MATCH_HANDLER } = process.env;
 
 export const logger = new Logger({
-	logLevel: POWERTOOLS_LOG_LEVEL,
+	logLevel: POWERTOOLS_LOG_LEVEL as LogLevel,
 	serviceName: POWERTOOLS_SERVICE_NAME,
 });
 
@@ -87,4 +88,3 @@ class PartialNameMatchHandler implements LambdaInterface {
 
 const handlerClass = new PartialNameMatchHandler();
 export const lambdaHandler = handlerClass.handler.bind(handlerClass);
-
