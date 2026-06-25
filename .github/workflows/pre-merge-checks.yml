@@ -153,6 +153,19 @@ jobs:
         working-directory: ./src
         run: npm run test:api
 
+      - name: Debug IPV stub Lambda
+        if: always()
+        run: |
+          aws lambda get-function-configuration \
+            --region eu-west-2 \
+            --function-name StartBAVCheckFunction-pre-merge-ipv-stub-${{ needs.setup.outputs.sha_short }} \
+            --query '{Runtime:Runtime,State:State,LastUpdateStatus:LastUpdateStatus,Handler:Handler}' || true
+
+          aws logs tail \
+            /aws/lambda/StartBAVCheckFunction-pre-merge-ipv-stub-${{ needs.setup.outputs.sha_short }} \
+            --region eu-west-2 \
+            --since 1h || true
+
   cleanup:
     runs-on: ubuntu-latest
     timeout-minutes: 45
