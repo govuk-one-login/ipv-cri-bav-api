@@ -28,7 +28,7 @@ class HmrcTokenHandler implements LambdaInterface {
 	private readonly HMRC_CLIENT_SECRET_SSM_PATH = checkEnvironmentVariable(EnvironmentVariables.HMRC_CLIENT_SECRET_SSM_PATH, logger);
 
 	async handler(): Promise<void> {
-		logger.setPersistentLogAttributes({});
+		logger.resetKeys();
 		
 		try {
 			logger.info("Generating a new HMRC token");
@@ -66,4 +66,3 @@ class HmrcTokenHandler implements LambdaInterface {
 
 export const handlerClass = new HmrcTokenHandler();
 export const lambdaHandler = handlerClass.handler.bind(handlerClass);
-

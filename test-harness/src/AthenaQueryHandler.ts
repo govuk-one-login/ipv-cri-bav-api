@@ -46,7 +46,7 @@ class AthenaQueryHandler implements LambdaInterface {
 		event: APIGatewayProxyEvent,
 		context: any
   ): Promise<APIGatewayProxyResult> {
-		logger.setPersistentLogAttributes({});
+		logger.resetKeys();
 		logger.addContext(context);
 		logger.info("Starting AthenaQueryHandler");
 

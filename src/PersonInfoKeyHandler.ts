@@ -26,7 +26,7 @@ export class PersonInfoKeyHandler implements LambdaInterface {
 	@metrics.logMetrics({ throwOnEmptyMetrics: false, captureColdStartMetric: true })
 
 	async handler(event: APIGatewayProxyEvent, context: any): Promise<APIGatewayProxyResult> {
-		logger.setPersistentLogAttributes({});
+		logger.resetKeys();
 		logger.addContext(context);
 
 		try {
