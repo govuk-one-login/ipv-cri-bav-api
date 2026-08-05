@@ -36,8 +36,8 @@ class PartialNameMatchHandler implements LambdaInterface {
 			});
 		}
 
-		// clear PersistentLogAttributes set by any previous invocation, and add lambda context for this invocation
-		logger.setPersistentLogAttributes({});
+		// clear logger state set by any previous invocation, and add lambda context for this invocation
+		logger.resetKeys();
 		logger.addContext(context);
 
 		const partialMatchesBucketName = checkEnvironmentVariable(EnvironmentVariables.PARTIAL_MATCHES_BUCKET, logger);

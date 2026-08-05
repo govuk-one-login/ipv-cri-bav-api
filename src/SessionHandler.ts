@@ -23,7 +23,7 @@ class Session implements LambdaInterface {
 
 	async handler(event: APIGatewayProxyEvent, context: any): Promise<APIGatewayProxyResult> {
 
-		logger.setPersistentLogAttributes({});
+		logger.resetKeys();
 		logger.addContext(context);
 
 		try {
