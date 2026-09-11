@@ -27,12 +27,12 @@
     "@types/node": "24.0.0",
     "@typescript-eslint/eslint-plugin": "8.65.0",
     "@typescript-eslint/parser": "8.65.0",
-    "@vitest/coverage-v8": "4.1.10",
+    "@vitest/coverage-v8": "5.0.0",
     "aws-sdk-client-mock": "4.0.1",
     "aws-sdk-client-mock-vitest": "7.0.1",
     "eslint": "10.7.0",
     "typescript": "5.1.6",
-    "vitest": "4.1.10"
+    "vitest": "5.0.0"
   },
   "babel": {
     "presets": [
